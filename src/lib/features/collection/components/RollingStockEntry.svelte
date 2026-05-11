@@ -1,9 +1,33 @@
+<script lang="ts" module>
+  import type { PrototypeView as CachedPrototypeView } from '$lib/bindings';
+  import { commands } from '$lib/bindings';
+
+  let cachedPrototypes: CachedPrototypeView[] | null = null;
+  let prototypeRequest: Promise<CachedPrototypeView[]> | null = null;
+
+  async function loadPrototypes(): Promise<CachedPrototypeView[]> {
+    if (cachedPrototypes) return cachedPrototypes;
+    if (!prototypeRequest) {
+      prototypeRequest = commands.getPrototypes(null).then((result) => {
+        if (result.status === 'ok') {
+          cachedPrototypes = result.data.flatMap((group) => group.prototypes);
+          return cachedPrototypes;
+        }
+        return [];
+      });
+    }
+
+    return prototypeRequest;
+  }
+</script>
+
 <script lang="ts">
+  import { onMount } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
   import { Input, Button } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
-  import type { RailwayCompany, RollingStockCategory } from '$lib/bindings';
+  import type { PrototypeView, RailwayCompany, RollingStockCategory } from '$lib/bindings';
   import type { RollingStockFormEntry } from '$lib/features/collection/types/AddModelFormTypes';
   import rollingStockCategories from '$lib/data/constants/rollingStockCategories.json';
   import { getSubcategoryOptions } from '$lib/components/model-details/components/constants';
@@ -79,6 +103,57 @@
       label: categoryLabelMap[cat.labelKey]?.() ?? cat.labelKey
     }))
   );
+
+  let prototypes = $state<PrototypeView[]>([]);
+  let searchPrototypeData = $state('');
+  let prototypeSearchOpen = $state(false);
+  let isPrototypeLoading = $state(false);
+
+  onMount(async () => {
+    isPrototypeLoading = true;
+    prototypes = await loadPrototypes();
+    isPrototypeLoading = false;
+  });
+
+  const filteredPrototypes = $derived.by(() => {
+    const query = searchPrototypeData.trim().toLowerCase();
+    if (!query) return [];
+
+    return prototypes
+      .filter(
+        (prototype) =>
+          prototype.series_code.toLowerCase().includes(query) ||
+          (prototype.friendly_name ?? '').toLowerCase().includes(query)
+      )
+      .slice(0, 8);
+  });
+
+  function mapPrototypeCategory(specificationType: string): RollingStockCategory | null {
+    switch (specificationType) {
+      case 'LOCOMOTIVE':
+      case 'PASSENGER_CAR':
+      case 'FREIGHT_CAR':
+      case 'RAILCAR':
+      case 'ELECTRIC_MULTIPLE_UNIT':
+        return specificationType;
+      default:
+        return null;
+    }
+  }
+
+  function selectPrototype(prototype: PrototypeView) {
+    entry.seriesCode = prototype.series_code;
+
+    const mappedCategory = mapPrototypeCategory(prototype.specification_type);
+    if (mappedCategory) {
+      entry.category = mappedCategory;
+    }
+
+    searchPrototypeData = prototype.friendly_name
+      ? `${prototype.series_code} - ${prototype.friendly_name}`
+      : prototype.series_code;
+    prototypeSearchOpen = false;
+  }
 </script>
 
 <div
@@ -89,6 +164,60 @@
   class:bg-card={!dark}
   class:text-card-foreground={!dark}
 >
+  <div class="space-y-1">
+    <label
+      for="prototype-search-{entry.uid}"
+      class="block text-[10px] text-muted-foreground uppercase"
+    >
+      {m.add_model_search_prototype_data()}
+    </label>
+    <div class="relative">
+      <Input
+        id="prototype-search-{entry.uid}"
+        type="text"
+        bind:value={searchPrototypeData}
+        placeholder={m.rolling_stock_prototype_search_placeholder()}
+        class={dark ? `${darkInput} font-mono` : 'w-full font-mono'}
+        onfocus={() => (prototypeSearchOpen = true)}
+        oninput={() => (prototypeSearchOpen = true)}
+        onblur={() => {
+          setTimeout(() => {
+            prototypeSearchOpen = false;
+          }, 120);
+        }}
+      />
+
+      {#if prototypeSearchOpen && searchPrototypeData.trim().length > 0}
+        <div
+          class="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-md border border-layout-border bg-zinc-900 shadow-xl"
+        >
+          {#if isPrototypeLoading}
+            <p class="px-3 py-2 text-xs text-muted-foreground">
+              {m.add_model_searching_prototypes()}
+            </p>
+          {:else if filteredPrototypes.length === 0}
+            <p class="px-3 py-2 text-xs text-muted-foreground">
+              {m.rolling_stock_prototype_no_results()}
+            </p>
+          {:else}
+            {#each filteredPrototypes as prototype (prototype.id)}
+              <button
+                type="button"
+                class="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-primary/15"
+                onclick={() => selectPrototype(prototype)}
+              >
+                <span class="font-mono text-xs text-foreground">{prototype.series_code}</span>
+                <span class="truncate pl-3 text-xs text-muted-foreground"
+                  >{prototype.friendly_name ?? prototype.company_name}</span
+                >
+              </button>
+            {/each}
+          {/if}
+        </div>
+      {/if}
+    </div>
+  </div>
+
   <!-- Row 1: Railway Company | (empty) -->
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <FormSelect
