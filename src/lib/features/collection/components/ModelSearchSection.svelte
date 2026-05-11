@@ -2,7 +2,7 @@
   import type { Manufacturer, RailwayCompany, SellerView } from '$lib/bindings';
   import type { AddModelFormState } from '$lib/features/collection/types/AddModelFormTypes';
   import * as m from '$lib/paraglide/messages.js';
-  import { ChevronDown, Plus } from 'lucide-svelte';
+  import { ChevronDown, Plus, TrainFront } from 'lucide-svelte';
   import { Collapsible as CollapsiblePrimitive } from 'bits-ui';
   import { Button } from '$lib/components';
   import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';
@@ -85,6 +85,7 @@
       class="flex w-full items-center justify-between px-4 py-3 text-left transition-all duration-300 hover:bg-zinc-900"
     >
       <div class="flex items-center gap-3">
+        <TrainFront size={14} class="text-muted-foreground" />
         <p class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
           {m.add_model_section_rolling_stock()}
         </p>

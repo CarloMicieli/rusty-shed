@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { ChevronDown } from 'lucide-svelte';
+  import { ChevronDown, ReceiptText } from 'lucide-svelte';
   import { Textarea, CurrencyInput, DatePickerField } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
@@ -76,13 +76,16 @@
     onclick={onToggle}
     aria-expanded={expanded}
   >
-    {#if dark}
-      <p class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-        {m.add_model_section_purchase()}
-      </p>
-    {:else}
-      <h3 class="text-lg font-semibold">{m.add_model_section_purchase()}</h3>
-    {/if}
+    <div class="flex items-center gap-3">
+      <ReceiptText size={14} class="text-muted-foreground" />
+      {#if dark}
+        <p class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+          {m.add_model_section_purchase()}
+        </p>
+      {:else}
+        <h3 class="text-lg font-semibold">{m.add_model_section_purchase()}</h3>
+      {/if}
+    </div>
     <ChevronDown
       size={16}
       class={`text-muted-foreground transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
