@@ -4,7 +4,6 @@
   import * as m from '$lib/paraglide/messages.js';
   import { ChevronDown, Plus, TrainFront } from 'lucide-svelte';
   import { Collapsible as CollapsiblePrimitive } from 'bits-ui';
-  import { fade } from 'svelte/transition';
   import { Button } from '$lib/components';
   import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';
   import RollingStockEntry from './RollingStockEntry.svelte';
@@ -125,7 +124,6 @@
       {#if form.rollingStocks.length === 0}
         <div
           class="flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-zinc-800 bg-zinc-950/30 px-6 py-6 text-center"
-          transition:fade={{ duration: 250 }}
         >
           <TrainFront size={44} class="mb-3 text-zinc-700 opacity-20" />
           <p class="text-sm font-medium text-zinc-400">
@@ -138,10 +136,10 @@
           <Button
             type="button"
             variant="ghost"
-            class="mt-4 border border-zinc-700 bg-zinc-900/80 text-zinc-100 hover:bg-zinc-800"
+            class="mt-4 border border-primary bg-background/50 text-primary hover:bg-primary/10"
             onclick={onAddRollingStock}
           >
-            <Plus size={16} class="text-orange-500" />
+            <Plus size={16} />
             <span>{m.add_model_add_first_rolling_stock()}</span>
           </Button>
         </div>
