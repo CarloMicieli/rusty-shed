@@ -29,7 +29,10 @@
   }: Props = $props();
 
   const darkTextarea =
-    'w-full rounded-md border border-layout-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 focus:outline-none resize-none';
+    'w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 focus:outline-none resize-none';
+
+  const darkCurrencyInputClass =
+    'border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30';
 
   // Map sellers to FormSelect option shape
   const sellerOptions = $derived(sellers.map((s) => ({ value: s.id, label: s.name })));
@@ -193,9 +196,7 @@
               placeholder={m.placeholder_amount()}
               class="w-full"
               label={m.add_model_price()}
-              inputClass={dark
-                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
-                : ''}
+              inputClass={dark ? darkCurrencyInputClass : ''}
             />
           </div>
         </div>
@@ -222,9 +223,7 @@
               placeholder={m.placeholder_amount()}
               class="w-full"
               label={m.add_model_deposit_amount()}
-              inputClass={dark
-                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
-                : ''}
+              inputClass={dark ? darkCurrencyInputClass : ''}
             />
           </div>
 
@@ -248,9 +247,7 @@
               placeholder={m.placeholder_amount()}
               class="w-full"
               label={m.add_model_preorder_total()}
-              inputClass={dark
-                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
-                : ''}
+              inputClass={dark ? darkCurrencyInputClass : ''}
             />
           </div>
         </div>
