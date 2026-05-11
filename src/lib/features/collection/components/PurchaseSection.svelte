@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { ChevronDown, ChevronRight } from 'lucide-svelte';
+  import { ChevronDown } from 'lucide-svelte';
   import { Textarea, CurrencyInput, DatePickerField } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
@@ -63,19 +63,16 @@
 </script>
 
 <div
-  class="purchase-section rounded-lg border"
-  class:border-layout-border={dark}
-  class:bg-layout-surface={dark}
-  class:border-border={!dark}
-  class:bg-card={!dark}
-  class:text-card-foreground={!dark}
+  class={`purchase-section overflow-hidden rounded-lg border ${
+    dark ? 'border-layout-border bg-zinc-950/90' : 'border-border bg-card text-card-foreground'
+  }`}
 >
   <!-- Section Header -->
   <button
     type="button"
-    class="flex w-full items-center justify-between p-4 text-left text-foreground"
-    class:hover:bg-[rgba(255,255,255,0.03)]={dark}
-    class:hover:bg-muted={!dark}
+    class={`flex w-full items-center justify-between px-4 py-3 text-left text-foreground transition-all duration-300 ${
+      dark ? 'hover:bg-zinc-900' : 'hover:bg-muted'
+    }`}
     onclick={onToggle}
     aria-expanded={expanded}
   >
@@ -86,17 +83,16 @@
     {:else}
       <h3 class="text-lg font-semibold">{m.add_model_section_purchase()}</h3>
     {/if}
-    {#if expanded}
-      <ChevronDown size={20} />
-    {:else}
-      <ChevronRight size={20} />
-    {/if}
+    <ChevronDown
+      size={16}
+      class={`text-muted-foreground transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+    />
   </button>
 
   <!-- Section Content -->
   {#if expanded}
     <div
-      class="space-y-4 border-t p-4"
+      class="space-y-4 border-t bg-zinc-900/60 px-4 py-4 transition-all duration-300"
       class:border-layout-border={dark}
       class:border-border={!dark}
     >
