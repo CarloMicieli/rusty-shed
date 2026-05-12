@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import * as m from '$lib/paraglide/messages.js';
+import { wishlistPrioritySchema } from './common';
+import { scaleSchema, powerMethodSchema, categorySchema } from './railway-model';
 
 // ---------------------------------------------------------------------------
 // Helper: nullable field that is required on submit.
@@ -20,11 +22,11 @@ export const wishlistFormSchema = z.object({
   manufacturerId: nullableRequired(m.wishlist_modal_missing_manufacturer()),
   productCode: z.string().min(1, m.wishlist_modal_missing_product_code()),
   description: z.string().min(1, m.wishlist_modal_missing_description()),
-  category: z.string().nullable().default(null),
-  scale: z.string().default(''),
-  powerMethod: z.string().default(''),
+  category: categorySchema.nullable().default(null),
+  scale: z.union([scaleSchema, z.literal('')]).default(''),
+  powerMethod: z.union([powerMethodSchema, z.literal('')]).default(''),
   epoch: z.string().nullable().default(null),
-  priority: z.string().default('NORMAL'),
+  priority: wishlistPrioritySchema.default('NORMAL'),
   desiredPrice: z.number().positive(m.wishlist_modal_invalid_price()).nullable().default(null)
 });
 

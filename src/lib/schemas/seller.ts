@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sellerTypeSchema } from './common';
 
 /**
  * Seller Form Schema
@@ -7,7 +8,7 @@ import { z } from 'zod';
 export const sellerSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Seller name is required'),
-  sellerType: z.enum(['SHOP', 'PRIVATE', 'MANUFACTURER']),
+  sellerType: sellerTypeSchema,
   email: z.string().email('Invalid email address').nullable().or(z.literal('')).optional(),
   phone: z.string().nullable().or(z.literal('')).optional(),
   websiteUrl: z.string().url('Invalid URL').nullable().or(z.literal('')).optional(),
