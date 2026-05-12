@@ -19,9 +19,9 @@ export const SCALE_DISPLAY_MAP: Record<Scale, string> = {
   TT: 'TT (1:120)',
   Z: 'Z (1:220)',
   G: 'G (1:22.5)',
-  Scale1: '1 (1:32)',
-  Scale0: '0 (1:43.5)',
-  Scale00: '00 (1:76.2)'
+  '1': '1 (1:32)',
+  '0': '0 (1:43.5)',
+  '00': '00 (1:76.2)'
 };
 
 export const SCALES: Scale[] = Object.keys(SCALE_DISPLAY_MAP) as Scale[];

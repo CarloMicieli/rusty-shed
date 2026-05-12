@@ -28,7 +28,11 @@ describe('railway-model schemas', () => {
       it('accepts valid scales', () => {
         expect(scaleSchema.parse('H0')).toBe('H0');
         expect(scaleSchema.parse('N')).toBe('N');
+        expect(scaleSchema.parse('Z')).toBe('Z');
         expect(scaleSchema.parse('G')).toBe('G');
+        expect(scaleSchema.parse('1')).toBe('1');
+        expect(scaleSchema.parse('0')).toBe('0');
+        expect(scaleSchema.parse('00')).toBe('00');
       });
 
       it('rejects invalid scales', () => {

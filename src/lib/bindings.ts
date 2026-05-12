@@ -4101,11 +4101,11 @@ export type Scale =
 /**  G scale (garden) (1:22.5) */
 "G" | 
 /**  1 scale (1:32) */
-"Scale1" | 
+"1" | 
 /**  0 scale (1:43.5) */
-"Scale0" | 
+"0" | 
 /**  00 (double-zero) scale (1:76.2) */
-"Scale00";
+"00";
 
 /**  Arguments for full-text search across railway model translations. */
 export type SearchRailwayModelsArgs = {

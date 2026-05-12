@@ -13,18 +13,7 @@ import { z } from 'zod';
 
 export const powerMethodSchema = z.enum(['AC', 'DC', 'TRIX_EXPRESS']);
 
-export const scaleSchema = z.enum([
-  'H0',
-  'H0m',
-  'H0e',
-  'N',
-  'TT',
-  'Z',
-  'G',
-  'Scale1',
-  'Scale0',
-  'Scale00'
-]);
+export const scaleSchema = z.enum(['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', 'G', '1', '0', '00']);
 
 export const categorySchema = z.enum([
   'LOCOMOTIVES',
