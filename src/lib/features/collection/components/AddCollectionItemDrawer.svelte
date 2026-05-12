@@ -43,6 +43,7 @@
   let isSubmitting = $state(false);
   let isLoadingData = $state(false);
   let showPurchaseSection = $state(false);
+  let isRollingStockExpanded = $state(false);
   let formEl: HTMLFormElement | undefined = $state();
 
   function createDefaultRollingStock(): RollingStockFormEntry {
@@ -84,7 +85,7 @@
       scale: null,
       powerMethod: null,
       epoch: null,
-      rollingStocks: [createDefaultRollingStock()],
+      rollingStocks: [],
       purchase: createDefaultPurchaseState()
     };
   }
@@ -131,6 +132,7 @@
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     reset({ data: createDefaultFormState() as any });
     showPurchaseSection = false;
+    isRollingStockExpanded = false;
 
     // Load all reference data from backend to ensure IDs match database
     isLoadingData = true;
@@ -160,7 +162,6 @@
 
   function handleRemoveRollingStock(uid: string) {
     const stocks = $form.rollingStocks as RollingStockFormEntry[];
-    if (stocks.length <= 1) return;
     $form.rollingStocks = stocks.filter((rs) => rs.uid !== uid);
   }
 
@@ -254,6 +255,7 @@
       {railwayCompanies}
       {sellers}
       bind:showPurchaseSection
+      bind:isRollingStockExpanded
       validationErrors={mappedErrors}
       isLoading={isLoadingData}
       onAddRollingStock={handleAddRollingStock}

@@ -57,7 +57,7 @@ export const addCollectionSchema = z.object({
   scale: nullableRequired(m.add_model_validation_scale()),
   powerMethod: nullableRequired(m.add_model_validation_power()),
   epoch: nullableRequired(m.add_model_validation_epoch()),
-  rollingStocks: z.array(rollingStockEntrySchema).min(1, m.add_model_validation_rs_required()),
+  rollingStocks: z.array(rollingStockEntrySchema),
   purchase: purchaseSchema
 });
 

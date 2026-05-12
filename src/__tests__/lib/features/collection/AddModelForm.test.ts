@@ -20,9 +20,17 @@ function createDefaultFormState(): AddModelFormState {
     scale: null,
     powerMethod: null,
     epoch: null,
-    rollingStocks: [createDefaultRollingStock()],
+    rollingStocks: [],
     purchase: createDefaultPurchaseState()
   };
+}
+
+function ensureRollingStock(form: AddModelFormState): RollingStockFormEntry {
+  if (form.rollingStocks.length === 0) {
+    form.rollingStocks = [createDefaultRollingStock()];
+  }
+
+  return form.rollingStocks[0]!;
 }
 
 /**
@@ -93,9 +101,7 @@ function validateForm(form: AddModelFormState): ValidationErrors {
   if (!form.epoch) errors.epoch = 'Epoch is required';
 
   // Rolling stocks validation
-  if (form.rollingStocks.length === 0) {
-    errors.rollingStocks = 'At least one rolling stock is required';
-  } else {
+  if (form.rollingStocks.length > 0) {
     const rsErrors = form.rollingStocks.map((rs) => {
       const err: { railwayCompanyId?: string; seriesCode?: string; category?: string } = {};
       if (!rs.railwayCompanyId) err.railwayCompanyId = 'Railway company is required';
@@ -164,7 +170,7 @@ function toAddRailwayModelArgs(form: AddModelFormState): AddRailwayModelToCollec
 // Tests
 
 describe('AddModelForm - Form State Initialization', () => {
-  it('should create default form state with one empty rolling stock', () => {
+  it('should create default form state with optional empty rolling stock list', () => {
     const form = createDefaultFormState();
 
     expect(form.manufacturerId).toBeNull();
@@ -174,10 +180,7 @@ describe('AddModelForm - Form State Initialization', () => {
     expect(form.scale).toBeNull();
     expect(form.powerMethod).toBeNull();
     expect(form.epoch).toBeNull();
-    expect(form.rollingStocks).toHaveLength(1);
-    expect(form.rollingStocks[0].uid).toBeTruthy();
-    expect(form.rollingStocks[0].railwayCompanyId).toBeNull();
-    expect(form.rollingStocks[0].seriesCode).toBe('');
+    expect(form.rollingStocks).toHaveLength(0);
   });
 
   it('should create default purchase state with EUR currency', () => {
@@ -219,18 +222,17 @@ describe('AddModelForm - Validation', () => {
     expect(errors.epoch).toBeDefined();
   });
 
-  it('should validate at least one rolling stock is required', () => {
+  it('should allow saving without rolling stocks', () => {
     const form = createDefaultFormState();
-    form.rollingStocks = [];
 
     const errors = validateForm(form);
 
-    expect(errors.rollingStocks).toBe('At least one rolling stock is required');
+    expect(errors.rollingStocks).toBeUndefined();
   });
 
   it('should validate rolling stock required fields', () => {
     const form = createDefaultFormState();
-    // Rolling stock has empty required fields
+    ensureRollingStock(form);
 
     const errors = validateForm(form);
 
@@ -249,9 +251,10 @@ describe('AddModelForm - Validation', () => {
     form.scale = 'H0';
     form.powerMethod = 'AC';
     form.epoch = 'IV';
-    form.rollingStocks[0].railwayCompanyId = 'trn:railway-company:db';
-    form.rollingStocks[0].seriesCode = '218';
-    form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
+    const stock = ensureRollingStock(form);
+    stock.railwayCompanyId = 'trn:railway-company:db';
+    stock.seriesCode = '218';
+    stock.category = 'DIESEL_LOCOMOTIVE';
 
     const errors = validateForm(form);
 
@@ -268,11 +271,12 @@ describe('AddModelForm - Validation', () => {
     form.scale = 'H0';
     form.powerMethod = 'AC';
     form.epoch = 'IV';
-    form.rollingStocks[0].railwayCompanyId = 'trn:railway-company:db';
-    form.rollingStocks[0].seriesCode = '218';
-    form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
+    const stock = ensureRollingStock(form);
+    stock.railwayCompanyId = 'trn:railway-company:db';
+    stock.seriesCode = '218';
+    stock.category = 'DIESEL_LOCOMOTIVE';
     // roadNumber is optional
-    form.rollingStocks[0].roadNumber = '';
+    stock.roadNumber = '';
 
     const errors = validateForm(form);
 
@@ -290,10 +294,11 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     form.scale = 'H0';
     form.powerMethod = 'AC';
     form.epoch = 'IV';
-    form.rollingStocks[0].railwayCompanyId = 'trn:railway-company:db';
-    form.rollingStocks[0].seriesCode = '218';
-    form.rollingStocks[0].roadNumber = '218 101-3';
-    form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
+    const stock = ensureRollingStock(form);
+    stock.railwayCompanyId = 'trn:railway-company:db';
+    stock.seriesCode = '218';
+    stock.roadNumber = '218 101-3';
+    stock.category = 'DIESEL_LOCOMOTIVE';
     form.purchase.priceAmount = 24999;
     form.purchase.sellerId = 'trn:seller:modellbahnshop';
 
@@ -325,9 +330,10 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     form.scale = 'H0';
     form.powerMethod = 'AC';
     form.epoch = 'IV';
-    form.rollingStocks[0].railwayCompanyId = 'test';
-    form.rollingStocks[0].seriesCode = 'test';
-    form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
+    const stock = ensureRollingStock(form);
+    stock.railwayCompanyId = 'test';
+    stock.seriesCode = 'test';
+    stock.category = 'DIESEL_LOCOMOTIVE';
 
     // Test various price formats
     form.purchase.priceAmount = 9999;
@@ -397,9 +403,10 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     form.scale = 'H0';
     form.powerMethod = 'AC';
     form.epoch = 'IV';
-    form.rollingStocks[0].railwayCompanyId = 'test';
-    form.rollingStocks[0].seriesCode = 'test';
-    form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
+    const stock = ensureRollingStock(form);
+    stock.railwayCompanyId = 'test';
+    stock.seriesCode = 'test';
+    stock.category = 'DIESEL_LOCOMOTIVE';
 
     // Leave purchase fields empty
     form.purchase.sellerId = null;
@@ -426,9 +433,10 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     form.scale = 'H0';
     form.powerMethod = 'AC';
     form.epoch = 'IV';
-    form.rollingStocks[0].railwayCompanyId = 'test';
-    form.rollingStocks[0].seriesCode = 'test';
-    form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
+    const stock = ensureRollingStock(form);
+    stock.railwayCompanyId = 'test';
+    stock.seriesCode = 'test';
+    stock.category = 'DIESEL_LOCOMOTIVE';
 
     const args = toAddRailwayModelArgs(form);
     const today = new Date().toISOString().split('T')[0];

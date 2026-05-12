@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { ChevronDown, ChevronRight } from 'lucide-svelte';
+  import { ChevronDown, ReceiptText } from 'lucide-svelte';
   import { Textarea, CurrencyInput, DatePickerField } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
@@ -29,7 +29,10 @@
   }: Props = $props();
 
   const darkTextarea =
-    'w-full rounded-md border border-layout-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 focus:outline-none resize-none';
+    'w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 focus:outline-none resize-none';
+
+  const darkCurrencyInputClass =
+    'border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30';
 
   // Map sellers to FormSelect option shape
   const sellerOptions = $derived(sellers.map((s) => ({ value: s.id, label: s.name })));
@@ -63,40 +66,39 @@
 </script>
 
 <div
-  class="purchase-section rounded-lg border"
-  class:border-layout-border={dark}
-  class:bg-layout-surface={dark}
-  class:border-border={!dark}
-  class:bg-card={!dark}
-  class:text-card-foreground={!dark}
+  class={`purchase-section overflow-hidden rounded-lg border ${
+    dark ? 'border-layout-border bg-zinc-950/90' : 'border-border bg-card text-card-foreground'
+  }`}
 >
   <!-- Section Header -->
   <button
     type="button"
-    class="flex w-full items-center justify-between p-4 text-left text-foreground"
-    class:hover:bg-[rgba(255,255,255,0.03)]={dark}
-    class:hover:bg-muted={!dark}
+    class={`flex w-full items-center justify-between px-4 py-3 text-left text-foreground transition-all duration-300 ${
+      dark ? 'hover:bg-zinc-900' : 'hover:bg-muted'
+    }`}
     onclick={onToggle}
     aria-expanded={expanded}
   >
-    {#if dark}
-      <p class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-        {m.add_model_section_purchase()}
-      </p>
-    {:else}
-      <h3 class="text-lg font-semibold">{m.add_model_section_purchase()}</h3>
-    {/if}
-    {#if expanded}
-      <ChevronDown size={20} />
-    {:else}
-      <ChevronRight size={20} />
-    {/if}
+    <div class="flex items-center gap-3">
+      <ReceiptText size={14} class="text-muted-foreground" />
+      {#if dark}
+        <p class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+          {m.add_model_section_purchase()}
+        </p>
+      {:else}
+        <h3 class="text-lg font-semibold">{m.add_model_section_purchase()}</h3>
+      {/if}
+    </div>
+    <ChevronDown
+      size={16}
+      class={`text-muted-foreground transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+    />
   </button>
 
   <!-- Section Content -->
   {#if expanded}
     <div
-      class="space-y-4 border-t p-4"
+      class="space-y-4 border-t bg-zinc-900/60 px-4 py-4 transition-all duration-300"
       class:border-layout-border={dark}
       class:border-border={!dark}
     >
@@ -194,9 +196,7 @@
               placeholder={m.placeholder_amount()}
               class="w-full"
               label={m.add_model_price()}
-              inputClass={dark
-                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
-                : ''}
+              inputClass={dark ? darkCurrencyInputClass : ''}
             />
           </div>
         </div>
@@ -223,9 +223,7 @@
               placeholder={m.placeholder_amount()}
               class="w-full"
               label={m.add_model_deposit_amount()}
-              inputClass={dark
-                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
-                : ''}
+              inputClass={dark ? darkCurrencyInputClass : ''}
             />
           </div>
 
@@ -249,9 +247,7 @@
               placeholder={m.placeholder_amount()}
               class="w-full"
               label={m.add_model_preorder_total()}
-              inputClass={dark
-                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
-                : ''}
+              inputClass={dark ? darkCurrencyInputClass : ''}
             />
           </div>
         </div>
