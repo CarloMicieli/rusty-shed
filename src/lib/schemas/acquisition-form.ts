@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import * as m from '$lib/paraglide/messages.js';
+import { scaleSchema, powerMethodSchema } from './railway-model';
 
 // ---------------------------------------------------------------------------
 // Helper: nullable field required on submit.
@@ -30,8 +31,8 @@ export const acquisitionItemSchema = z.object({
 // ---------------------------------------------------------------------------
 
 const batchDefaultsSchema = z.object({
-  scale: z.string().nullable().default(null),
-  powerMethod: z.string().nullable().default(null)
+  scale: scaleSchema.nullable().default(null),
+  powerMethod: powerMethodSchema.nullable().default(null)
 });
 
 // ---------------------------------------------------------------------------

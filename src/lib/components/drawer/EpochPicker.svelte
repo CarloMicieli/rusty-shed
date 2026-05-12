@@ -2,6 +2,7 @@
   import * as Tooltip from '$lib/components/ui/tooltip';
 
   const BASE_EPOCHS = ['I', 'II', 'III', 'IV', 'V', 'Vm', 'VI'] as const;
+  const HALF_EPOCHS = ['IIa', 'IIb', 'IIIa', 'IIIb', 'IVa', 'IVb'] as const;
 
   const EPOCH_RANGES = {
     I: { start: 1835, end: 1920, context: 'State Railways' },
@@ -40,6 +41,11 @@
       ? selected.filter((e) => e !== epoch)
       : [...selected, epoch];
     value = next.length > 0 ? next.join('/') : null;
+    onchange?.(value);
+  }
+
+  function selectHalf(epoch: string) {
+    value = value === epoch ? null : epoch;
     onchange?.(value);
   }
 </script>
@@ -93,6 +99,23 @@
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
+    {/each}
+  </div>
+
+  <div class="flex flex-wrap gap-1.5 pt-1">
+    {#each HALF_EPOCHS as epoch (epoch)}
+      <button
+        type="button"
+        {disabled}
+        class="rounded-sm border px-2.5 py-0.5 text-[11px] font-medium transition-colors
+          {value === epoch
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'border-border bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-foreground'}
+          {disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
+        onclick={() => selectHalf(epoch)}
+      >
+        {epoch}
+      </button>
     {/each}
   </div>
   {#if error}

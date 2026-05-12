@@ -13,18 +13,7 @@ import { z } from 'zod';
 
 export const powerMethodSchema = z.enum(['AC', 'DC', 'TRIX_EXPRESS']);
 
-export const scaleSchema = z.enum([
-  'H0',
-  'H0m',
-  'H0e',
-  'N',
-  'TT',
-  'Z',
-  'G',
-  'Scale1',
-  'Scale0',
-  'Scale00'
-]);
+export const scaleSchema = z.enum(['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', 'G', '1', '0', '00']);
 
 export const categorySchema = z.enum([
   'LOCOMOTIVES',
@@ -134,6 +123,8 @@ export const couplingSocketSchema = z.enum([
   'NEM_365'
 ]);
 
+export const railcarTypeSchema = z.enum(['POWER_CAR', 'TRAILER_CAR', 'TRAILER_BAGGAGE_CAR']);
+
 export const featureFlagSchema = z.enum(['YES', 'NO', 'NOT_APPLICABLE']);
 
 export const bodyShellChassisTypeSchema = z.enum(['PLASTIC', 'METAL_DIE_CAST']);
@@ -224,6 +215,7 @@ const railcarSchema = baseRollingStockSchema.extend({
   road_number: z.string().nullable(),
   series: z.string().nullable(),
   depot: z.string().nullable(),
+  railcar_type: railcarTypeSchema,
   control: controlSchema.nullable(),
   dcc_interface: dccInterfaceSchema.nullable()
 });

@@ -5,6 +5,7 @@ import {
   scaleSchema,
   categorySchema,
   controlSchema,
+  railcarTypeSchema,
   rollingStockSchema
 } from '$lib/schemas/railway-model';
 import type { CreateRailwayModelInput } from '$lib/schemas/railway-model';
@@ -28,7 +29,11 @@ describe('railway-model schemas', () => {
       it('accepts valid scales', () => {
         expect(scaleSchema.parse('H0')).toBe('H0');
         expect(scaleSchema.parse('N')).toBe('N');
+        expect(scaleSchema.parse('Z')).toBe('Z');
         expect(scaleSchema.parse('G')).toBe('G');
+        expect(scaleSchema.parse('1')).toBe('1');
+        expect(scaleSchema.parse('0')).toBe('0');
+        expect(scaleSchema.parse('00')).toBe('00');
       });
 
       it('rejects invalid scales', () => {
@@ -182,6 +187,58 @@ describe('railway-model schemas', () => {
       };
       const result = rollingStockSchema.parse(freightCar);
       expect(result.category).toBe('FreightCar');
+    });
+
+    it('validates a railcar with required railcar_type', () => {
+      const railcar = {
+        category: 'Railcar',
+        friendly_name: 'VT 95 Railcar',
+        series_code: 'VT-95',
+        road_number: '95 001',
+        livery: 'Red',
+        series: null,
+        depot: null,
+        railway_company_id: 'company-1',
+        railcar_type: 'POWER_CAR',
+        control: 'DCC_READY',
+        dcc_interface: null,
+        length_over_buffers: null,
+        technical_specifications: null
+      };
+      const result = rollingStockSchema.parse(railcar);
+      expect(result.category).toBe('Railcar');
+      if (result.category === 'Railcar') {
+        expect(result.railcar_type).toBe('POWER_CAR');
+      }
+    });
+
+    it('validates all railcar_type values', () => {
+      expect(railcarTypeSchema.parse('POWER_CAR')).toBe('POWER_CAR');
+      expect(railcarTypeSchema.parse('TRAILER_CAR')).toBe('TRAILER_CAR');
+      expect(railcarTypeSchema.parse('TRAILER_BAGGAGE_CAR')).toBe('TRAILER_BAGGAGE_CAR');
+    });
+
+    it('rejects invalid railcar_type', () => {
+      expect(() => railcarTypeSchema.parse('LOCOMOTIVE')).toThrow();
+      expect(() => railcarTypeSchema.parse('')).toThrow();
+    });
+
+    it('rejects a railcar missing railcar_type', () => {
+      const invalid = {
+        category: 'Railcar',
+        friendly_name: 'VT 95 Railcar',
+        series_code: 'VT-95',
+        road_number: null,
+        livery: null,
+        series: null,
+        depot: null,
+        railway_company_id: 'company-1',
+        control: null,
+        dcc_interface: null,
+        length_over_buffers: null,
+        technical_specifications: null
+      };
+      expect(() => rollingStockSchema.parse(invalid)).toThrow();
     });
 
     it('requires series_code', () => {

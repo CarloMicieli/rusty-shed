@@ -1,5 +1,11 @@
 import { z } from 'zod';
 import * as m from '$lib/paraglide/messages.js';
+import {
+  currencySchema,
+  purchaseConditionSchema,
+  modelConditionSchema,
+  boxConditionSchema
+} from './common';
 
 // ---------------------------------------------------------------------------
 // Helper: nullable field that is required on submit.
@@ -31,17 +37,17 @@ export const rollingStockEntrySchema = z.object({
 const purchaseSchema = z.object({
   sellerId: z.string().nullable().default(null),
   priceAmount: z.number().nullable().default(null),
-  priceCurrency: z.string().default('EUR'),
-  purchaseCondition: z.string().nullable().default(null),
-  modelCondition: z.string().nullable().default(null),
-  boxCondition: z.string().nullable().default(null),
+  priceCurrency: currencySchema.default('EUR'),
+  purchaseCondition: purchaseConditionSchema.nullable().default(null),
+  modelCondition: modelConditionSchema.nullable().default(null),
+  boxCondition: boxConditionSchema.nullable().default(null),
   notes: z.string().default(''),
   purchaseDate: z.string().default(''),
   purchaseType: z.enum(['STANDARD', 'PREORDER']).default('STANDARD'),
   depositAmount: z.number().nullable().default(null),
-  depositCurrency: z.string().nullable().default(null),
+  depositCurrency: currencySchema.nullable().default(null),
   preorderTotalAmount: z.number().nullable().default(null),
-  preorderTotalCurrency: z.string().nullable().default(null),
+  preorderTotalCurrency: currencySchema.nullable().default(null),
   expectedDate: z.string().nullable().default(null)
 });
 

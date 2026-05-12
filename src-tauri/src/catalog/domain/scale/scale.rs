@@ -27,10 +27,13 @@ pub enum Scale {
     /// G scale (garden) (1:22.5)
     G,
     /// 1 scale (1:32)
+    #[serde(rename = "1")]
     Scale1,
     /// 0 scale (1:43.5)
+    #[serde(rename = "0")]
     Scale0,
     /// 00 (double-zero) scale (1:76.2)
+    #[serde(rename = "00")]
     Scale00,
 }
 
@@ -252,5 +255,26 @@ mod tests {
     #[case(Scale::Scale00, Gauge::DOUBLE_ZERO)]
     fn gauge_mappings(#[case] scale: Scale, #[case] expected: Gauge) {
         assert_eq!(scale.gauge(), expected);
+    }
+
+    #[rstest]
+    #[case(Scale::Z, "\"Z\"")]
+    #[case(Scale::Scale1, "\"1\"")]
+    #[case(Scale::Scale0, "\"0\"")]
+    #[case(Scale::Scale00, "\"00\"")]
+    fn serde_serializes_to_codes(#[case] scale: Scale, #[case] expected_json: &str) {
+        let serialized = serde_json::to_string(&scale).expect("serialization should succeed");
+        assert_eq!(serialized, expected_json);
+    }
+
+    #[rstest]
+    #[case("\"Z\"", Scale::Z)]
+    #[case("\"1\"", Scale::Scale1)]
+    #[case("\"0\"", Scale::Scale0)]
+    #[case("\"00\"", Scale::Scale00)]
+    fn serde_deserializes_from_codes(#[case] input_json: &str, #[case] expected: Scale) {
+        let parsed: Scale =
+            serde_json::from_str(input_json).expect("deserialization should succeed");
+        assert_eq!(parsed, expected);
     }
 }

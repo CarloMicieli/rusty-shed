@@ -137,9 +137,9 @@
     { id: 'TT', label: 'TT (1:120)' },
     { id: 'Z', label: 'Z (1:220)' },
     { id: 'G', label: 'G (1:22.5)' },
-    { id: 'Scale1', label: '1 (1:32)' },
-    { id: 'Scale0', label: '0 (1:43.5)' },
-    { id: 'Scale00', label: '00 (1:76.2)' }
+    { id: '1', label: '1 (1:32)' },
+    { id: '0', label: '0 (1:43.5)' },
+    { id: '00', label: '00 (1:76.2)' }
   ];
 
   // Era options

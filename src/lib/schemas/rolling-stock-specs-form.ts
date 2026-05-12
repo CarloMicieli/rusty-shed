@@ -1,6 +1,11 @@
 import { z } from 'zod';
-
-const featureFlagSchema = z.enum(['YES', 'NO', 'NOT_APPLICABLE']);
+import {
+  featureFlagSchema,
+  controlSchema,
+  dccInterfaceSchema,
+  couplingSocketSchema,
+  bodyShellChassisTypeSchema
+} from './railway-model';
 
 export const rollingStockSpecsSchema = z.object({
   category: z.string().default(''),
@@ -13,13 +18,13 @@ export const rollingStockSpecsSchema = z.object({
   depot: z.string().default(''),
   flywheelFitted: featureFlagSchema.default('NOT_APPLICABLE'),
   sprungBuffers: featureFlagSchema.default('NOT_APPLICABLE'),
-  bodyShell: z.string().default(''),
-  chassis: z.string().default(''),
+  bodyShell: z.union([bodyShellChassisTypeSchema, z.literal('')]).default(''),
+  chassis: z.union([bodyShellChassisTypeSchema, z.literal('')]).default(''),
   interiorLights: featureFlagSchema.default('NOT_APPLICABLE'),
   lights: featureFlagSchema.default('NOT_APPLICABLE'),
-  dccInterface: z.string().default(''),
-  control: z.string().default(''),
-  couplingSocket: z.string().default(''),
+  dccInterface: z.union([dccInterfaceSchema, z.literal('')]).default(''),
+  control: z.union([controlSchema, z.literal('')]).default(''),
+  couplingSocket: z.union([couplingSocketSchema, z.literal('')]).default(''),
   closeCouplers: featureFlagSchema.default('NOT_APPLICABLE'),
   digitalShunting: featureFlagSchema.default('NOT_APPLICABLE'),
   selectedCouplerTypeId: z.string().nullable().default(null),
