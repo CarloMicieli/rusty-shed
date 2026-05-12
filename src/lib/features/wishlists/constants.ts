@@ -15,7 +15,6 @@ export const EPOCHS: string[] = [
   'II',
   'IIa',
   'IIb',
-  'IIc',
   'III',
   'IIIa',
   'IIIb',
