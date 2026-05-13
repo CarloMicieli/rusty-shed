@@ -271,9 +271,7 @@ pub fn run() {
                 ])
                 .build(),
         )
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -329,24 +327,27 @@ pub fn run() {
 
             // Setup viewport and icon for main window
             if let Some(window) = app.get_webview_window("main") {
-                // Set window icon explicitly so GNOME shows it during `tauri dev`
-                // (no .desktop file exists in dev mode, so we push the pixel buffer directly)
-                let icon_path = app
-                    .path()
-                    .resolve("icons/128x128.png", BaseDirectory::Resource)
-                    .map_err(|e| anyhow::anyhow!("Failed to resolve icon path: {e}"))?;
+                #[cfg(not(target_os = "android"))]
+                {
+                    // Set window icon explicitly so GNOME shows it during `tauri dev`
+                    // (no .desktop file exists in dev mode, so we push the pixel buffer directly)
+                    let icon_path = app
+                        .path()
+                        .resolve("icons/128x128.png", BaseDirectory::Resource)
+                        .map_err(|e| anyhow::anyhow!("Failed to resolve icon path: {e}"))?;
 
-                match tauri::image::Image::from_path(&icon_path) {
-                    Ok(icon) => {
-                        if let Err(e) = window.set_icon(icon) {
-                            tracing::warn!(error = %e, "failed to set window icon");
+                    match tauri::image::Image::from_path(&icon_path) {
+                        Ok(icon) => {
+                            if let Err(e) = window.set_icon(icon) {
+                                tracing::warn!(error = %e, "failed to set window icon");
+                            }
                         }
+                        Err(e) => tracing::warn!(
+                            "Failed to load window icon from {}: {}",
+                            icon_path.display(),
+                            e
+                        ),
                     }
-                    Err(e) => tracing::warn!(
-                        "Failed to load window icon from {}: {}",
-                        icon_path.display(),
-                        e
-                    ),
                 }
 
                 if let Err(e) = crate::viewport::setup_viewport(&window) {
@@ -354,27 +355,40 @@ pub fn run() {
                 }
             }
 
-            // Register Ctrl+N global shortcut to open the acquisition drawer
-            use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
-            app.global_shortcut()
-                .on_shortcut("CommandOrControl+N", |app, _shortcut, event| {
-                    if event.state == ShortcutState::Pressed {
-                        app.emit("open-acquisition-drawer", ()).ok();
-                    }
-                })
-                .map_err(|e| anyhow::anyhow!("Failed to register global shortcut: {e}"))?;
+            // Register global shortcuts (desktop only)
+            #[cfg(not(target_os = "android"))]
+            {
+                use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
-            // Register Ctrl+L global shortcut to open the maintenance drawer
-            app.global_shortcut()
-                .on_shortcut("CommandOrControl+L", |app, _shortcut, event| {
-                    if event.state == ShortcutState::Pressed {
-                        app.emit("open-maintenance-drawer", ()).ok();
-                    }
-                })
-                .map_err(|e| anyhow::anyhow!("Failed to register global shortcut: {e}"))?;
+                // Register Ctrl+N global shortcut to open the acquisition drawer
+                app.global_shortcut()
+                    .on_shortcut("CommandOrControl+N", |app, _shortcut, event| {
+                        if event.state == ShortcutState::Pressed {
+                            app.emit("open-acquisition-drawer", ()).ok();
+                        }
+                    })
+                    .map_err(|e| anyhow::anyhow!("Failed to register global shortcut: {e}"))?;
+
+                // Register Ctrl+L global shortcut to open the maintenance drawer
+                app.global_shortcut()
+                    .on_shortcut("CommandOrControl+L", |app, _shortcut, event| {
+                        if event.state == ShortcutState::Pressed {
+                            app.emit("open-maintenance-drawer", ()).ok();
+                        }
+                    })
+                    .map_err(|e| anyhow::anyhow!("Failed to register global shortcut: {e}"))?;
+            }
 
             Ok(())
         });
+
+    // Desktop-only plugins
+    #[cfg(not(target_os = "android"))]
+    {
+        builder = builder
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+            .plugin(tauri_plugin_window_state::Builder::default().build());
+    }
 
     // Only enable the bridge in debug mode for safety
     #[cfg(debug_assertions)]

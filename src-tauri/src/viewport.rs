@@ -4,7 +4,10 @@
 //! based on the physical screen width. It supports Desktop and Android platforms with
 //! proper guards for mobile-incompatible APIs.
 
-use tauri::{LogicalSize, Runtime, WebviewWindow};
+use tauri::{Runtime, WebviewWindow};
+
+#[cfg(not(mobile))]
+use tauri::LogicalSize;
 
 /// Calculates the minimum logical window dimensions based on physical screen width.
 ///

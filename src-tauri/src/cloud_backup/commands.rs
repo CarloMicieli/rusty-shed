@@ -1,8 +1,7 @@
 use crate::cloud_backup::application;
 use crate::cloud_backup::domain::*;
-use crate::cloud_backup::infrastructure::secure_storage::SecureStorage;
 use crate::cloud_backup::infrastructure::{
-    DriveClient, GoogleDriveClient, KeyringStorage, OAuthService, check_connectivity,
+    DriveClient, GoogleDriveClient, OAuthService, check_connectivity, create_platform_storage,
 };
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -66,7 +65,7 @@ impl From<CloudBackupError> for CommandError {
 pub async fn cloud_backup_get_connection_status_inner(
     state: &AppState,
 ) -> std::result::Result<ConnectionStatusResponse, CommandError> {
-    let storage = Arc::new(KeyringStorage::new(STORAGE_SERVICE.to_string()));
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let user_email = state.connected_email();
 
     let mut response = application::get_connection_status(storage, user_email)
@@ -97,7 +96,7 @@ pub async fn cloud_backup_connect_google(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> std::result::Result<ConnectionStatusResponse, CommandError> {
-    let storage = Arc::new(KeyringStorage::new(STORAGE_SERVICE.to_string()));
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let oauth_service = Arc::new(OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage));
 
     let response = application::connect_google(app, oauth_service)
@@ -120,7 +119,7 @@ pub async fn cloud_backup_disconnect_google_inner(
         .connected_email()
         .ok_or_else(|| CommandError::BusinessRule("NOT_CONNECTED: Not connected".into()))?;
 
-    let storage = Arc::new(KeyringStorage::new(STORAGE_SERVICE.to_string()));
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let oauth_service = Arc::new(OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage));
 
     application::disconnect_google(user_email, oauth_service)
@@ -172,7 +171,7 @@ pub async fn cloud_backup_sync_now_inner(
         .connected_email()
         .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
 
-    let storage = KeyringStorage::new(STORAGE_SERVICE.to_string());
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let tokens = storage
         .retrieve_tokens(&user_email)
         .await
@@ -231,7 +230,7 @@ pub async fn cloud_backup_list_backups_inner(
         .connected_email()
         .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
 
-    let storage = Arc::new(KeyringStorage::new(STORAGE_SERVICE.to_string()));
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
 
     let args = ListBackupsArgs {};
@@ -296,7 +295,7 @@ pub async fn cloud_backup_restore_inner(
         .connected_email()
         .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
 
-    let storage = Arc::new(KeyringStorage::new(STORAGE_SERVICE.to_string()));
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
 
     // Retrieve tokens, refreshing if expired, then build the Drive client
