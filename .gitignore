@@ -29,6 +29,9 @@ build.rs
 # Test export archives
 src-tauri/test_exports/
 
+# Tauri 2 generated mobile files
+src-tauri/gen/
+
 # Logs and temp
 npm-debug.log*
 yarn-debug.log*
