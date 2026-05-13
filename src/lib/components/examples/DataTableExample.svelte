@@ -1,7 +1,6 @@
 <!--
   Example: Data Table with Sorting
-  Feature: 012-shadcn-migration
-  
+
   This example demonstrates:
   - Table component usage
   - Sorting functionality

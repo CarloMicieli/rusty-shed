@@ -2,7 +2,6 @@
   /**
    * PageHeader Component
    * Standardized 3-tier page header following "My Collection" template
-   * Feature: 012-shadcn-migration
    *
    * Tier 1: Subtitle/Section (uppercase, tracking-widest)
    * Tier 2: Title (h2, bold)

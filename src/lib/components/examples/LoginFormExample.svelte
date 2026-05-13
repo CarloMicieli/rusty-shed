@@ -1,7 +1,6 @@
 <!--
   Example: Simple Form with shadcn-svelte components
-  Feature: 012-shadcn-migration
-  
+
   This example demonstrates:
   - Form input handling with Svelte 5 Runes
   - Component composition

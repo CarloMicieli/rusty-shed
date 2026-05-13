@@ -1,7 +1,6 @@
 <!--
   Example: Modal Dialog with Form
-  Feature: 012-shadcn-migration
-  
+
   This example demonstrates:
   - Dialog component usage
   - Form handling within dialogs
