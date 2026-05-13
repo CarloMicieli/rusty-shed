@@ -8,6 +8,7 @@ use tokio::sync::oneshot;
 type Result<T> = std::result::Result<T, CloudBackupError>;
 
 /// Extract the `code` query parameter from an OAuth callback URL.
+#[cfg(not(target_os = "android"))]
 fn extract_auth_code(url: &str) -> Option<String> {
     url::Url::parse(url).ok().and_then(|parsed| {
         parsed
@@ -94,7 +95,7 @@ pub async fn connect_google(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(target_os = "android")))]
 mod tests {
     use super::*;
 

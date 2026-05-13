@@ -17,6 +17,21 @@ pub use secure_storage::KeyringStorage;
 #[cfg(target_os = "android")]
 pub use secure_storage::StrongholdStorage;
 
+/// Create the platform-appropriate secure storage backend.
+pub fn create_platform_storage(
+    service: String,
+) -> std::sync::Arc<dyn secure_storage::SecureStorage> {
+    #[cfg(not(target_os = "android"))]
+    {
+        std::sync::Arc::new(secure_storage::KeyringStorage::new(service))
+    }
+    #[cfg(target_os = "android")]
+    {
+        let _ = service;
+        std::sync::Arc::new(secure_storage::StrongholdStorage::new())
+    }
+}
+
 /// Trait defining core Google Drive operations for cloud backup management.
 ///
 /// Abstracting over the concrete `GoogleDriveClient` enables dependency injection
