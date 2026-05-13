@@ -52,8 +52,10 @@ use crate::trains::interface::command_handlers as trains_command_handlers;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use specta_typescript::Typescript;
 use std::fs;
+#[cfg(not(target_os = "android"))]
+use tauri::Emitter;
+use tauri::Manager;
 use tauri::path::BaseDirectory;
-use tauri::{Emitter, Manager};
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
 use tracing::Instrument;
