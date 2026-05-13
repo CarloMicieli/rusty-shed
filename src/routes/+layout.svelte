@@ -15,10 +15,6 @@
   import * as m from '$lib/paraglide/messages.js';
   import { generateErrorId } from '$lib/services/error-id';
   import {
-    createCollectionState,
-    setCollectionContext
-  } from '$lib/features/collection/CollectionState.svelte';
-  import {
     createWishlistState,
     setWishlistContext
   } from '$lib/features/wishlists/WishlistState.svelte';
@@ -30,14 +26,10 @@
   import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
   import { createDepotState, setDepotContext } from '$lib/features/depot/DepotState.svelte';
   import { TrackInventoryService, setTrackInventoryContext } from '$lib/features/track-inventory';
-  import {
-    createExportController,
-    setExportContext
-  } from '$lib/features/export/export.controller.svelte';
   import { Toaster } from '$lib/components/ui/sonner';
   import * as Tooltip from '$lib/components/ui/tooltip';
   import { safeInvoke } from '$lib/services';
-  import { onDestroy, onMount, setContext } from 'svelte';
+  import { onMount, setContext } from 'svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { collectionStore } from '$lib/state/collection.svelte';
@@ -57,12 +49,11 @@
 
   const constrainedPagePrefixes: string[] = [];
 
-  const useConstrainedPageContent = $derived.by(() => {
-    const pathname = $page.url.pathname;
-    return constrainedPagePrefixes.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-    );
-  });
+  const useConstrainedPageContent = $derived(
+    constrainedPagePrefixes.some(
+      (prefix) => $page.url.pathname === prefix || $page.url.pathname.startsWith(`${prefix}/`)
+    )
+  );
 
   // Close all layout-level drawers when the user navigates to another page
   beforeNavigate(() => {
@@ -87,21 +78,17 @@
   });
 
   // Create and provide contexts
-  const collectionState = createCollectionState();
   const wishlistState = createWishlistState();
   const dashboardState = createDashboardState();
   const budgetService = createBudgetService();
   const budgetState = createBudgetState(budgetService);
   const depotState = createDepotState();
   const trackInventoryService = new TrackInventoryService();
-  const exportController = createExportController();
 
-  setCollectionContext(collectionState);
   setWishlistContext(wishlistState);
   setDashboardContext(dashboardState);
   setDepotContext(depotState);
   setTrackInventoryContext(trackInventoryService);
-  setExportContext(exportController);
 
   const FINANCE_SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
 
@@ -119,28 +106,36 @@
     }
   }
 
-  let unlistenAcquisition: (() => void) | undefined;
-  let unlistenMaintenance: (() => void) | undefined;
+  // Manage Tauri event listeners and finance state subscription using $effect
+  // so setup and cleanup are co-located.
+  $effect(() => {
+    let unlistenAcquisition: (() => void) | undefined;
+    let unlistenMaintenance: (() => void) | undefined;
 
-  onDestroy(() => {
-    unlistenAcquisition?.();
-    unlistenMaintenance?.();
-    financeState.stopListening();
+    const setupListeners = async () => {
+      try {
+        unlistenAcquisition = await listen('open-acquisition-drawer', () => {
+          showAcquisitionDrawer = true;
+        });
+        unlistenMaintenance = await listen('open-maintenance-drawer', () => {
+          showLogMaintenanceDrawer = true;
+        });
+      } catch {
+        // Tauri not available (e.g. test environment) — skip listener
+      }
+      await financeState.startListening();
+    };
+
+    setupListeners();
+
+    return () => {
+      unlistenAcquisition?.();
+      unlistenMaintenance?.();
+      financeState.stopListening();
+    };
   });
 
   onMount(async () => {
-    // Listen for global shortcut events
-    try {
-      unlistenAcquisition = await listen('open-acquisition-drawer', () => {
-        showAcquisitionDrawer = true;
-      });
-      unlistenMaintenance = await listen('open-maintenance-drawer', () => {
-        showLogMaintenanceDrawer = true;
-      });
-    } catch {
-      // Tauri not available (e.g. test environment) — skip listener
-    }
-
     // 0. Initialize settings on first run (detects OS language)
     try {
       await settingsState.initialize();
@@ -150,8 +145,6 @@
 
     // 0a. Detect OS locale for regional formatting
     await regionalManager.init();
-
-    await financeState.startListening();
 
     // 1. Initialize theme from settings
     await themeState.initializeFromSettings();
@@ -275,6 +268,7 @@
               <SearchBar />
 
               <button
+                type="button"
                 class="relative rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
                 aria-label={m.notifications_label()}
               >

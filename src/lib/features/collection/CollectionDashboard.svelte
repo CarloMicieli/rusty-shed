@@ -3,13 +3,13 @@
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { getCollectionContext, availableScales } from './CollectionState.svelte';
+  import { collectionState, availableScales } from './CollectionState.svelte';
   import type { StatusFilter } from './CollectionState.svelte';
   import { Button, Badge } from '$lib/components';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { commands } from '$lib/bindings';
 
-  const collectionService = getCollectionContext();
+  const collectionService = collectionState;
 
   import type {
     CollectionStats,

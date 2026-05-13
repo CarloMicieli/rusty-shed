@@ -5,7 +5,7 @@
   import { zod4 as zod } from 'sveltekit-superforms/adapters';
   import { addCollectionSchema } from '$lib/schemas/collection-form';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
-  import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
+  import { collectionState } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
     RollingStockFormEntry,
@@ -32,7 +32,7 @@
 
   let { open, onClose, onSuccess }: Props = $props();
 
-  const collectionService = getCollectionContext();
+  const collectionService = collectionState;
 
   // Reference data (loaded from backend to ensure IDs match database)
   let manufacturers = $state<Manufacturer[]>([]);

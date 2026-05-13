@@ -10,7 +10,7 @@
   import SellCollectionItemDialog from './SellCollectionItemDialog.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { CollectionItemView, CollectionItemUpdateArgs, SellerView } from '$lib/bindings';
-  import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
+  import { collectionState } from '$lib/features/collection/CollectionState.svelte';
 
   interface Props {
     item: CollectionItemView;
@@ -20,7 +20,7 @@
 
   let { item, seller, onItemUpdated }: Props = $props();
 
-  const collectionService = getCollectionContext();
+  const collectionService = collectionState;
   let isReceiving = $state(false);
 
   let isPriceEditing = $state(false);

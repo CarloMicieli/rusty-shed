@@ -54,6 +54,9 @@ export class ExportController {
   }
 }
 
+/** Singleton instance — import this directly instead of using setContext/getContext. */
+export const exportController = new ExportController();
+
 export function createExportController(): ExportController {
   return new ExportController();
 }

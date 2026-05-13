@@ -376,6 +376,9 @@ export class CollectionState {
   };
 }
 
+/** Singleton instance — import this directly instead of using setContext/getContext. */
+export const collectionState = new CollectionState();
+
 const COLLECTION_CONTEXT_KEY = Symbol('collection-context');
 
 export function createCollectionState() {
