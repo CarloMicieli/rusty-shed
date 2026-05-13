@@ -109,26 +109,41 @@
   // Manage Tauri event listeners and finance state subscription using $effect
   // so setup and cleanup are co-located.
   $effect(() => {
+    let cancelled = false;
     let unlistenAcquisition: (() => void) | undefined;
     let unlistenMaintenance: (() => void) | undefined;
 
     const setupListeners = async () => {
       try {
-        unlistenAcquisition = await listen('open-acquisition-drawer', () => {
+        const u1 = await listen('open-acquisition-drawer', () => {
           showAcquisitionDrawer = true;
         });
-        unlistenMaintenance = await listen('open-maintenance-drawer', () => {
+        const u2 = await listen('open-maintenance-drawer', () => {
           showLogMaintenanceDrawer = true;
         });
+
+        // If the effect was torn down while we were awaiting, clean up immediately.
+        if (cancelled) {
+          u1();
+          u2();
+          return;
+        }
+
+        unlistenAcquisition = u1;
+        unlistenMaintenance = u2;
       } catch {
         // Tauri not available (e.g. test environment) — skip listener
       }
-      await financeState.startListening();
+
+      if (!cancelled) {
+        await financeState.startListening();
+      }
     };
 
     setupListeners();
 
     return () => {
+      cancelled = true;
       unlistenAcquisition?.();
       unlistenMaintenance?.();
       financeState.stopListening();
