@@ -55,9 +55,6 @@ vi.mock('$lib/components/PageHeader.svelte', () => ({
 vi.mock('$lib/components/StatsCard.svelte', () => ({
   default: function StatsCardStub() {}
 }));
-vi.mock('$lib/components/AddWishlistItemModal.svelte', () => ({
-  default: function AddWishlistItemModalStub() {}
-}));
 vi.mock('$lib/features/dashboard', () => ({
   DashboardCharts: function DashboardChartsStub() {},
   PurchaseGroupCard: function PurchaseGroupCardStub() {}

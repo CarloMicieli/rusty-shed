@@ -3,8 +3,6 @@
  *
  * This file provides a single import point for all UI components used in the app.
  * Import components like: import { Button, Card } from '$lib/components';
- *
- * Feature: 012-shadcn-migration
  */
 
 // shadcn-svelte UI Components
@@ -30,16 +28,12 @@ export { default as SidebarNavigation } from './SidebarNavigation.svelte';
 export { default as SearchBar } from './SearchBar.svelte';
 export { default as PageHeader } from './PageHeader.svelte';
 export { default as StatsCard } from './StatsCard.svelte';
-export { default as StatusBadge } from './StatusBadge.svelte';
-export { default as RecentItemCard } from './RecentItemCard.svelte';
 export { default as QuickActionButtons } from './QuickActionButtons.svelte';
-export { default as SmartImage } from './SmartImage.svelte';
 export { default as CurrencyInput } from './CurrencyInput.svelte';
 export { default as DatePickerField } from './DatePickerField.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
 
 // Feature-specific components
-export { default as SellerForm } from './SellerForm.svelte';
 export { default as SettingsForm } from './SettingsForm.svelte';
 
 // Re-export shadcn-svelte UI components
