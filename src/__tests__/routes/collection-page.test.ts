@@ -19,6 +19,44 @@ vi.mock('$lib/toaster', () => ({
 // Provide a stable mock context so CollectionDashboard renders without the
 // full context hierarchy from the layout.
 vi.mock('$lib/features/collection/CollectionState.svelte', () => ({
+  collectionState: {
+    collection: null,
+    isLoading: false,
+    error: null,
+    filters: {
+      query: '',
+      scale: null,
+      scales: new Set(),
+      companies: new Set(),
+      categories: new Set(),
+      epochs: new Set(),
+      tags: new Set()
+    },
+    filteredItems: [],
+    rawItems: [],
+    items: [],
+    summary: null,
+    availableTags: [],
+    availableScaleIds: [],
+    availableCompanies: [],
+    availableCategories: [],
+    availableEpochs: [],
+    hasActiveFilters: false,
+    filterCount: 0,
+    fetchCollection: vi.fn(),
+    setFilter: vi.fn(),
+    setQuery: vi.fn(),
+    setScale: vi.fn(),
+    toggleTag: vi.fn(),
+    toggleScale: vi.fn(),
+    toggleCompany: vi.fn(),
+    toggleCategory: vi.fn(),
+    toggleEpoch: vi.fn(),
+    clearFilters: vi.fn(),
+    deleteItem: vi.fn(),
+    addItem: vi.fn(),
+    updateItem: vi.fn()
+  },
   getCollectionContext: vi.fn(() => ({
     collection: null,
     isLoading: false,
