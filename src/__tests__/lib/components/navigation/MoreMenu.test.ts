@@ -1,18 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SvelteComponent } from 'svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import type { SvelteComponent } from 'svelte';
 import type { NavigationItem } from '$lib/components/navigation/types';
+import MoreMenu from '$lib/components/navigation/MoreMenu.svelte';
+import IconStub from '../../../stubs/IconStub.svelte';
 
-// Mock $app/stores
+const iconStub = IconStub as unknown as typeof SvelteComponent<Record<string, never>>;
+
+let currentPathname = '/maintenance';
+
 vi.mock('$app/stores', () => ({
   page: {
-    subscribe: vi.fn((cb) => {
-      cb({
-        url: {
-          pathname: '/maintenance'
-        }
-      });
+    subscribe: (cb: (value: { url: { pathname: string } }) => void) => {
+      cb({ url: { pathname: currentPathname } });
       return () => {};
-    })
+    }
   }
 }));
 
@@ -21,53 +23,37 @@ vi.mock('$app/paths', () => ({
   resolve: (path: string) => path
 }));
 
-// Mock paraglide messages
-vi.mock('$lib/paraglide/messages.js', () => ({
-  app_more: () => 'More',
-  app_maintenance: () => 'Maintenance',
-  app_depot: () => 'Depot',
-  app_digital_dcc: () => 'Digital (DCC)',
-  app_railway_tracks: () => 'Railway Tracks'
+vi.mock('$lib/components/ui/sheet', async () => ({
+  Sheet: (await import('../../../stubs/SheetStub.svelte')).default
 }));
-
-// Mock Sheet component from shadcn-svelte
-vi.mock('$lib/components/shadcn/sheet', () => ({
-  Sheet: {
-    name: 'Sheet',
-    props: ['open', 'side', 'onOpenChange']
-  }
-}));
-
-// Mock icon component
-
-const MockIcon = class {} as any as typeof SvelteComponent<any>;
 
 const mockSecondaryItems: NavigationItem[] = [
   {
     id: 'maintenance',
     label: () => 'Maintenance',
-    icon: MockIcon,
+    icon: iconStub,
     href: '/maintenance',
-    isPrimary: false
+    isPrimary: false,
+    usePrefixMatch: true
   },
   {
     id: 'depot',
     label: () => 'Depot',
-    icon: MockIcon,
+    icon: iconStub,
     href: '/depot',
     isPrimary: false
   },
   {
     id: 'digital-dcc',
     label: () => 'Digital (DCC)',
-    icon: MockIcon,
+    icon: iconStub,
     href: '/digital-dcc',
     isPrimary: false
   },
   {
     id: 'railway-tracks',
     label: () => 'Railway Tracks',
-    icon: MockIcon,
+    icon: iconStub,
     href: '/railway-tracks',
     isPrimary: false,
     usePrefixMatch: true
@@ -77,73 +63,73 @@ const mockSecondaryItems: NavigationItem[] = [
 describe('MoreMenu', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    currentPathname = '/maintenance';
   });
 
-  it('accepts open, onClose, and items props', () => {
+  it('marks active route link with aria-current', () => {
     const onClose = vi.fn();
 
-    // Component should be able to be created with these props
-    expect(() => {
-      const props = {
+    render(MoreMenu, {
+      props: {
         open: true,
         onClose,
         items: mockSecondaryItems
-      };
-
-      // Verify props structure
-      expect(props.open).toBe(true);
-      expect(props.onClose).toBeDefined();
-      expect(props.items.length).toBe(4);
-    }).not.toThrow();
-  });
-
-  it('has 4 secondary features in items array', () => {
-    expect(mockSecondaryItems).toHaveLength(4);
-
-    // Verify each item has required properties
-    mockSecondaryItems.forEach((item) => {
-      expect(item.id).toBeDefined();
-      expect(item.label).toBeDefined();
-      expect(item.href).toBeDefined();
-      expect(item.isPrimary).toBe(false);
+      }
     });
+
+    const maintenanceLink = screen.getByRole('link', { name: /Maintenance/i });
+    const depotLink = screen.getByRole('link', { name: /Depot/i });
+
+    expect(maintenanceLink).toHaveAttribute('aria-current', 'page');
+    expect(depotLink).not.toHaveAttribute('aria-current');
   });
 
-  it('secondary items have correct routes', () => {
-    const expectedRoutes = ['/maintenance', '/depot', '/digital-dcc', '/railway-tracks'];
-
-    mockSecondaryItems.forEach((item, index) => {
-      expect(item.href).toBe(expectedRoutes[index]);
-    });
-  });
-
-  it('More button closes menu when onClose is called', () => {
+  it('uses prefix matching when pathname is nested under a section', () => {
+    currentPathname = '/railway-tracks/layout-a';
     const onClose = vi.fn();
 
-    // Simulate close handler
-    onClose();
+    render(MoreMenu, {
+      props: {
+        open: true,
+        onClose,
+        items: mockSecondaryItems
+      }
+    });
 
-    expect(onClose).toHaveBeenCalled();
+    const tracksLink = screen.getByRole('link', { name: /Railway Tracks/i });
+    expect(tracksLink).toHaveAttribute('aria-current', 'page');
   });
 
-  it('uses sheet component with bottom side', () => {
-    // The MoreMenu uses Sheet with side="bottom"
-    // This is tested through component structure and styling
-    expect(true).toBe(true);
+  it('calls onClose when a menu item is clicked', async () => {
+    const onClose = vi.fn();
+
+    render(MoreMenu, {
+      props: {
+        open: true,
+        onClose,
+        items: mockSecondaryItems
+      }
+    });
+
+    await fireEvent.click(screen.getByRole('link', { name: /Depot/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('displays secondary item labels', () => {
-    const labels = mockSecondaryItems.map((item) => item.label());
+  it('closes when sheet emits open=false and ignores open=true', async () => {
+    const onClose = vi.fn();
 
-    expect(labels).toContain('Maintenance');
-    expect(labels).toContain('Depot');
-    expect(labels).toContain('Digital (DCC)');
-    expect(labels).toContain('Railway Tracks');
-  });
+    render(MoreMenu, {
+      props: {
+        open: true,
+        onClose,
+        items: mockSecondaryItems
+      }
+    });
 
-  it('supports prefix matching for railway-tracks', () => {
-    const railwayTracksItem = mockSecondaryItems.find((i) => i.id === 'railway-tracks');
+    await fireEvent.click(screen.getByTestId('sheet-open'));
+    expect(onClose).not.toHaveBeenCalled();
 
-    expect(railwayTracksItem?.usePrefixMatch).toBe(true);
+    await fireEvent.click(screen.getByTestId('sheet-close'));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
