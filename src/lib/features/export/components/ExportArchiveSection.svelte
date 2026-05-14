@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Button } from '$lib/components';
-  import { getExportContext } from '../export.controller.svelte';
+  import { exportController } from '../export.controller.svelte';
   import ImportDrawer from '$lib/features/import/components/ImportDrawer.svelte';
   import * as m from '$lib/paraglide/messages.js';
 
-  const controller = getExportContext();
+  const controller = exportController;
 
   let isExporting = $derived(controller.isExporting);
   let importDrawerOpen = $state(false);

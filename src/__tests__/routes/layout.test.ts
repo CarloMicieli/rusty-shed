@@ -91,6 +91,7 @@ vi.mock('$lib/state/collection.svelte', () => ({
 // ── Feature contexts ──
 
 vi.mock('$lib/features/collection/CollectionState.svelte', () => ({
+  collectionState: {},
   createCollectionState: vi.fn(() => ({})),
   setCollectionContext: vi.fn(),
   getCollectionContext: vi.fn(() => ({})),
@@ -151,6 +152,7 @@ vi.mock('$lib/features/track-inventory', () => ({
 }));
 
 vi.mock('$lib/features/export/export.controller.svelte', () => ({
+  exportController: {},
   createExportController: vi.fn(() => ({})),
   setExportContext: vi.fn(),
   getExportContext: vi.fn(() => ({}))
