@@ -2,11 +2,11 @@
 
 **Date**: 2026-05-15  
 **Feature**: 040-quick-add-entities  
-**Scope**: Frontend state only — no new database tables or migrations in this feature. All persistence changes are owned by feature **041-entity-management**.
+**Scope**: Feature 040 includes both persisted entity creation support and frontend quick-add state. No new tables are introduced, but the feature owns the create command additions and case-insensitive uniqueness migrations required for the Quick-Add flow.
 
 ---
 
-## Existing Persisted Entities (read from DB; write via 041)
+## Existing Persisted Entities
 
 ### Manufacturer
 
@@ -17,7 +17,7 @@ _Specta binding_: `src/lib/bindings.ts → Manufacturer`
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `TEXT` PK | UUID as string; pattern `trn:manufacturer:{slug}` |
-| `name` | `TEXT NOT NULL` | Unique (case-insensitive after 041 migration) |
+| `name` | `TEXT NOT NULL` | Unique via case-insensitive index introduced in 040 |
 | `registered_company_name` | `TEXT` | Optional formal name |
 | `status` | `TEXT NOT NULL DEFAULT 'ACTIVE'` | `ACTIVE \| MERGED \| OUT_OF_BUSINESS` |
 | `country_code` | `TEXT` | ISO 3166-1 alpha-2 |
@@ -25,8 +25,8 @@ _Specta binding_: `src/lib/bindings.ts → Manufacturer`
 | `created_at` / `updated_at` | `TEXT NOT NULL` | ISO 8601 |
 | `version` | `INTEGER NOT NULL DEFAULT 0` | Optimistic concurrency |
 
-**Missing (needed from 041)**:
-- `is_system_seeded BOOLEAN NOT NULL DEFAULT false` — required by 041/FR-012 but not needed by 040 UI
+**Scope note**:
+- `is_system_seeded` is not required for the Quick-Add workflow and is out of scope for Feature 040.
 
 **TypeScript type** (current bindings):
 ```typescript
@@ -51,7 +51,7 @@ _Specta binding_: `src/lib/bindings.ts → SellerView`
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `TEXT` PK | UUID slug |
-| `name` | `TEXT NOT NULL` | Unique expression index after 041 migration |
+| `name` | `TEXT NOT NULL` | Unique via case-insensitive index introduced in 040 |
 | `type` | `TEXT NOT NULL` | `SHOP \| PRIVATE \| MARKETPLACE \| DISTRIBUTOR` |
 | `email` | `TEXT` | Optional |
 | `phone` | `TEXT` | Optional |
@@ -60,7 +60,7 @@ _Specta binding_: `src/lib/bindings.ts → SellerView`
 | `created_at` / `updated_at` | `TEXT NOT NULL` | ISO 8601 |
 | `version` | `INTEGER NOT NULL DEFAULT 0` | Optimistic concurrency |
 
-**"Buyer" mapping**: No separate buyers table exists. Buyers are represented as Seller records. When the Quick-Add form is opened from a "Buyer" field, the drawer title reads "Add Buyer" but the backend command is `create_seller` with `seller_type = "SHOP"` as default (overridable by user).
+**"Buyer" mapping**: No separate buyers table exists. Buyers are represented using the Seller persistence model. When the Quick-Add form is opened from a "Buyer" field, the UI labels the flow as "Add Buyer", but the backend command remains `create_seller` with a fixed default `seller_type` suitable for Quick-Add.
 
 **TypeScript type** (current bindings):
 ```typescript
@@ -77,7 +77,7 @@ type SellerView = {
 
 ---
 
-## Frontend-Only State Model (new in this feature)
+## Frontend State Model (new in this feature)
 
 ### QuickAddContext
 

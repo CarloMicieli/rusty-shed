@@ -7,7 +7,7 @@
 
 ## Dependencies
 
-- **Requires**: [`041-entity-management`](../041-entity-management/spec.md) — the shared entity form component (FR-011) and the CRUD backend commands must be delivered by feature 041 before this feature can be implemented.
+- **Implementation ownership**: Feature 040 is self-contained for the Quick-Add scope described in this specification. It owns the required backend create commands, supporting database uniqueness migrations, shared quick-add UI components, and frontend wiring needed to deliver the flow end-to-end.
 
 ## Overview
 
@@ -111,7 +111,7 @@ On a smaller screen (phone or tablet), a user filling in an acquisition form tri
 - **FR-008**: Upon successful save, a non-blocking confirmation notification MUST be shown identifying the entity type and name that was added and selected.
 - **FR-009**: If the save operation fails, the Quick-Add drawer MUST remain open with the user's data intact and display a clear error message.
 - **FR-010**: Dismissing or cancelling the Quick-Add drawer MUST return full focus to the parent form with no data loss and no entity persisted.
-- **FR-011**: The Quick-Add entity form MUST be the same shared component used in the Settings page for the same entity type, ensuring a single source of truth.
+- **FR-011**: The Quick-Add entity form MUST be implemented as a reusable shared component so the same form logic, validation rules, and field set can be used consistently across the Acquisition, Collection Item, and Wishlist Item flows without duplication.
 - **FR-012**: On desktop, the parent form MUST be visually de-emphasised (reduced opacity) while the Quick-Add drawer is active, and MUST NOT accept input during that time.
 - **FR-013**: On mobile viewports, the Quick-Add form MUST appear as a bottom sheet supporting swipe-to-dismiss, and the Save button MUST remain accessible when the on-screen keyboard is displayed.
 - **FR-014**: Only one Quick-Add drawer MAY be open at any given time; attempting to open a second one while one is already active MUST be prevented.
@@ -120,8 +120,8 @@ On a smaller screen (phone or tablet), a user filling in an acquisition form tri
 ### Key Entities
 
 - **Manufacturer**: Represents a model railway manufacturer. Key attributes: Name (unique, required), Website (optional), Country (optional). Linked to collection items, acquisitions, and wishlist items.
-- **Seller**: Represents a seller involved in an acquisition transaction. Key attributes: Name (unique, required), Website (optional), Country (optional). Linked to acquisitions.
-- **Buyer**: Represents a buyer involved in an acquisition transaction. Key attributes: Name (unique, required), Website (optional), Country (optional). Linked to acquisitions.
+- **Seller**: Represents a commercial counterparty involved in acquisition and purchase-related flows. Key attributes: Name (unique, required), Website (optional), Country (optional). Linked to acquisitions and other purchase-related records.
+- **Buyer**: Represents the buyer role in an acquisition-related transaction. Buyers are not stored in a separate table; they reuse the Seller persistence model and are distinguished by UI context and field labeling.
 
 ## Success Criteria _(mandatory)_
 
@@ -130,14 +130,14 @@ On a smaller screen (phone or tablet), a user filling in an acquisition form tri
 - **SC-001**: Users can add a missing manufacturer, seller, or buyer and have it selected in the parent form in under 60 seconds from clicking the `+` trigger.
 - **SC-002**: Zero data loss — returning to the parent form after Quick-Add (save or cancel) must always preserve 100% of previously entered data.
 - **SC-003**: The duplicate-check warning appears within 500 milliseconds of the user finishing typing a name.
-- **SC-004**: The Quick-Add form is the same component reused in the Settings page; a change to the form in one place is automatically reflected in the other.
+- **SC-004**: The Quick-Add form is implemented as a reusable shared component, and Acquisition, Collection, and Wishlist flows all use that shared implementation rather than duplicating create-form logic.
 - **SC-005**: The Quick-Add flow works correctly on both desktop and mobile viewports with no layout breakage.
-- **SC-006**: 95% of users can complete the Quick-Add flow without consulting documentation or help text, based on usability testing.
+- **SC-006**: Internal peer review confirms that the `+` trigger is discoverable and the Quick-Add flow can be completed successfully in a simulated acquisition session without clarification from the implementer.
 
 ## Assumptions
 
 - The existing Acquisition, Collection Item, and Wishlist Item forms already have Manufacturer, Seller, and Buyer dropdown fields implemented.
-- The Settings page already has dedicated forms for adding manufacturers, sellers, and buyers; the Quick-Add component will reuse those forms.
-- Entity names (Manufacturer, Seller, Buyer) are treated as case-insensitively unique within their respective tables; the uniqueness check uses `LOWER(name)` comparison at the database layer (see FR-004).
+- Feature 040 establishes the reusable shared Quick-Add form component for this workflow; broader entity-management reuse outside these flows may be adopted later without changing the shared form contract introduced here.
+- Entity names are treated as case-insensitively unique within their respective persisted tables; the uniqueness check uses `LOWER(name)` comparison at the database layer (see FR-004).
 - A "mobile viewport" is defined as screen width below 768 px for the purpose of the bottom-sheet behaviour.
-- Optional fields (Website, Country) can be left blank at creation time and populated later via the Settings page.
+- Optional fields (Website, Country) can be left blank at creation time and populated later through the broader entity-management UI.

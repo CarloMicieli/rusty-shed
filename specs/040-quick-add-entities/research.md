@@ -11,9 +11,9 @@
 
 **Finding**: No. The current backend exposes only `get_manufacturers` and `get_manufacturer_by_id` ([catalog/interface/manufacturers.rs](../../src-tauri/src/catalog/interface/manufacturers.rs)). There is no write path for manufacturers.
 
-**Decision**: The write commands (`create_manufacturer`, `update_manufacturer`, `delete_manufacturer`) will be delivered by feature **041-entity-management** as its Rust layer. Feature 040 consumes them as an upstream dependency. No new Rust code is created in this feature for the manufacturer domain.
+**Decision**: Feature 040 owns the addition of `create_manufacturer` for the Quick-Add scope. The command is implemented in the existing manufacturer interface and returns the full created `Manufacturer` object so the frontend can append it locally and auto-select it without a re-fetch.
 
-**Alternatives considered**: Creating a minimal `quick_create_manufacturer` command scoped to 040 only — rejected because it would duplicate domain logic that 041 must own anyway, violating the Modular Library-First principle.
+**Alternatives considered**: Deferring manufacturer creation to another feature — rejected because it would keep Quick-Add partially blocked and leave the specification, plan, and task list inconsistent.
 
 ---
 
@@ -25,7 +25,7 @@
 
 **Decision**: The "Quick-Add Buyer" flow in 040 reuses the **Seller** creation path (`create_seller`). The Quick-Add drawer for the "Buyer" field is identical to the Quick-Add drawer for the "Seller" field. No new entity type is introduced. The spec's FR-003 (Website + Country as optional fields) is satisfied by `CreateSellerPayload`; the `seller_type` field defaults to `SellerType::Private` when entering via the Quick-Add path.
 
-**Alternatives considered**: Creating a separate `buyers` table — deferred to 041 where the full data model for entity management is defined. 040 will not block on this.
+**Alternatives considered**: Creating a separate `buyers` table — rejected because the existing schema already models buyer selection through seller-backed records, and duplicating the persistence model would add unnecessary complexity for no functional gain in Quick-Add.
 
 ---
 
@@ -47,7 +47,7 @@
 
 **Finding**: `CreateSellerPayload.seller_type: SellerType` is non-optional. `SellerType` defaults to `SellerType::Shop` (via `#[default]`). The spec calls for minimal fields (Name, Website, Country) in QUICK mode.
 
-**Decision**: The Quick-Add form for sellers/buyers sends `seller_type: "SHOP"` as a fixed default for Quick-Add entries. Users can correct the type later via the Settings Library page (feature 041). This removes a friction-adding selector from the Quick-Add UX while satisfying the backend constraint.
+**Decision**: The Quick-Add form for sellers and buyers sends `seller_type: "SHOP"` as a fixed default for Quick-Add entries. This keeps the quick-add interaction minimal while satisfying the backend payload contract. Broader type editing remains outside the Quick-Add flow.
 
 ---
 
@@ -73,7 +73,7 @@ The parent `DrawerShell` receives a new optional boolean prop `dimmed?: boolean`
 
 **Finding**: All three parent forms store the entity list in a local `$state` array (e.g., `let manufacturers: Manufacturer[] = $state([])`). The `Select.Root` / `SearchableSelect` components read from this array reactively.
 
-**Decision**: The `create_manufacturer` command (from 041) returns the full `Manufacturer` object. The `create_seller` command already returns `Seller`. On quick-add success the owning form:
+**Decision**: The `create_manufacturer` command added in Feature 040 returns the full `Manufacturer` object. The existing `create_seller` command returns `Seller`. On quick-add success the owning form:
 
 ```typescript
 manufacturers = [...manufacturers, newManufacturer]; // push into local state
@@ -90,11 +90,11 @@ No re-fetch, no event bus, no store. Pure local state mutation matching existing
 
 **Finding**: The migration creates `CREATE UNIQUE INDEX IF NOT EXISTS idx_manufacturers_name ON manufacturers (name)`. This is a case-**sensitive** index. Similarly for `sellers`: `CREATE INDEX IF NOT EXISTS idx_sellers_name ON sellers(name)` — this is not even a unique index.
 
-**Decision**: Feature 041 must add a migration that:
-1. Replaces `idx_manufacturers_name` with a unique expression index: `CREATE UNIQUE INDEX idx_manufacturers_name_ci ON manufacturers (LOWER(name))`
-2. Adds a similar unique expression index for `sellers`: `CREATE UNIQUE INDEX idx_sellers_name_ci ON sellers (LOWER(name))`
+**Decision**: Feature 040 adds a migration that:
+1. Replaces `idx_manufacturers_name` with a unique expression index on `LOWER(name)`
+2. Adds a similar unique expression index for `sellers` on `LOWER(name)`
 
-Feature 040 depends on 041 for this; the client-side duplicate check (Finding 3) uses `LOWER()` in JavaScript to be consistent with the planned database constraint.
+The client-side duplicate check continues to use `name.trim().toLowerCase()` so the UX warning matches the database-enforced uniqueness rule.
 
 ---
 
@@ -118,11 +118,11 @@ Both `en.json` and `it.json` must be populated before the task is considered com
 
 | # | Unknown | Decision |
 |---|---------|----------|
-| 1 | `create_manufacturer` missing | Delivered by 041; 040 is frontend-only |
+| 1 | `create_manufacturer` missing | Implemented in 040 as part of Quick-Add delivery |
 | 2 | "Buyers" entity doesn't exist | Reuse Seller domain; default `seller_type = SHOP` |
 | 3 | Duplicate check strategy | Client-side LOWER() comparison; no extra Tauri call |
 | 4 | `seller_type` required field | Fixed default `SHOP` in Quick-Add mode |
 | 5 | Stacked drawer visual pattern | `QuickAddShell` at z-110 + scrim z-105 + `dimmed` prop |
 | 6 | Post-save state hand-off | Push new entity into local `$state` array + auto-select |
-| 7 | Name uniqueness uses exact case | Migration in 041 adds LOWER() expression indexes |
+| 7 | Name uniqueness uses exact case | 040 adds `LOWER(name)` unique indexes |
 | 8 | Toast + i18n keys | `toaster.success(m.quick_add_*())` with new Paraglide keys |

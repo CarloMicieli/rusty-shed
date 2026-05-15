@@ -2,7 +2,7 @@
 
 **Date**: 2026-05-15  
 **Audience**: Developer implementing this feature  
-**Prerequisite**: Feature **041-entity-management** must be merged first (provides `create_manufacturer` Tauri command and LOWER() unique indexes on entity name columns).
+**Prerequisite**: No external feature prerequisite. Feature 040 owns the create command additions, case-insensitive uniqueness migrations, shared quick-add UI, and parent-form integrations required for end-to-end delivery.
 
 ---
 
@@ -11,13 +11,18 @@
 Before starting:
 
 ```bash
-# Ensure 041 is merged and bindings are up to date
-pnpm specta:generate          # regenerates src/lib/bindings.ts from Rust types
-pnpm svelte-check             # no TypeScript errors
-pnpm test                     # all tests pass
+pnpm specta:generate
+pnpm svelte-check
+pnpm test
+pnpm prepare
+pnpm run rust:test
+pnpm run rust:clippy
 ```
 
-Verify that `commands.createManufacturer` is available in `src/lib/bindings.ts`.
+Verify that:
+- `commands.createManufacturer` is present in `src/lib/bindings.ts`
+- the manufacturer and seller name indexes are case-insensitive
+- Paraglide messages compile successfully after new quick-add keys are added
 
 ---
 
@@ -37,7 +42,7 @@ Add all keys from [contracts/ipc-commands.md → New i18n Keys Required](contrac
 - `messages/en.json`
 - `messages/it.json`
 
-Run `pnpm run paraglide:compile` (or the equivalent `prepare` script) to regenerate the compiled message module.
+Run `pnpm prepare` to regenerate the compiled message module and verify there are no missing quick-add keys.
 
 ---
 
@@ -217,11 +222,23 @@ Both already have `manufacturers` loaded; both already use the same `Select.Root
 ### Step 9 — Regenerate specta bindings & run checks
 
 ```bash
-pnpm specta:generate      # only if new Rust commands were added by 041
+pnpm specta:generate
 pnpm svelte-check
 pnpm lint
 pnpm test
+pnpm prepare
+pnpm run rust:test
+pnpm run rust:clippy
 ```
+
+### Step 10 — Capture performance evidence
+
+Collect lightweight local evidence for the performance targets defined in `plan.md`:
+
+1. Seed or load a dataset representative of the expected quick-add scale (up to ~500 manufacturers and ~500 sellers visible to the client-side duplicate checker).
+2. Measure duplicate-check latency in the quick-add form and confirm the warning appears within 500 ms after input settles.
+3. Measure the `create_manufacturer` command duration locally and confirm the common-case execution remains under the target threshold.
+4. Record any mitigation notes if the measurements miss the stated targets.
 
 ---
 
@@ -242,7 +259,7 @@ pnpm test
 | MODIFY | `messages/en.json` |
 | MODIFY | `messages/it.json` |
 
-**Rust files (zero changes in 040)** — all write commands are owned by 041.
+**Rust files are part of 040** — this feature adds the missing manufacturer create path and supporting uniqueness migration required by Quick-Add.
 
 ---
 
