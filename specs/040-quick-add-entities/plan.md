@@ -27,6 +27,7 @@ This plan is self-contained for Feature 040 and includes all required backend, f
 - No `unwrap()` in Rust
 - One quick-add drawer active at a time
 - Parent form data must remain intact across open/save/cancel/error
+- SQLite `LOWER()` uniqueness is ASCII-oriented by default; if extended Unicode folding is required later, plan a dedicated ICU/collation strategy
 **Scale/Scope**:
 - Up to ~500 manufacturers and ~500 sellers loaded in parent form state
 - Create flows for: manufacturer (all target forms), seller (acquisition), buyer (acquisition, mapped to seller domain)
@@ -127,8 +128,9 @@ src/__tests__/
 1. Add migration for case-insensitive uniqueness:
 - Manufacturer: unique index on `LOWER(name)`.
 - Seller: unique index on `LOWER(name)`.
-2. Keep migration idempotent and safe for existing data.
+2. Keep migration idempotent and safe for existing data using `CREATE UNIQUE INDEX IF NOT EXISTS`.
 3. Document or handle index creation failures caused by existing duplicates (explicit conflict remediation path in migration comments or pre-check logic).
+4. Add a migration note that `LOWER()` is ASCII-oriented in stock SQLite builds; record this as an explicit limitation for accented/non-ASCII case-folding.
 
 ### 3. Specta and Typed Frontend Integration
 
@@ -145,6 +147,8 @@ src/__tests__/
 - Required: Name
 - Optional: Website, Country
 5. Ensure quick-add shows no edit/delete controls.
+6. Scrim must be click-to-dismiss, but if form is dirty (name/website/country changed) dismissal must trigger a localized confirmation prompt before closing.
+7. Add keyboard-aware safe area handling for mobile (for example viewport/visualViewport-aware bottom padding) so the Save action remains visible above the virtual keyboard.
 
 ### 5. Parent Form Wiring (All Required Contexts)
 
@@ -166,6 +170,7 @@ src/__tests__/
 - duplicate detected
 - request in progress
 3. Backend remains source of truth; race conflicts from concurrent writes must display error and keep drawer data intact.
+4. Parent/quick-add handshake on success must always run in this order: append entity to local options, select new id, close quick-add, show success toast.
 
 ### 7. Success/Error UX and i18n
 
@@ -183,6 +188,8 @@ src/__tests__/
 - Success inserts entity locally and auto-selects parent field.
 - Cancel/dismiss preserves parent form state.
 - Failed save keeps drawer open with entered values and error message.
+- Scrim click dismisses when pristine, but asks confirmation when form is dirty.
+- On mobile viewport + virtual keyboard, Save remains visible and actionable.
 2. Backend tests (minimum):
 - `create_manufacturer` validation failures.
 - Duplicate conflict behavior (case-insensitive).
