@@ -50,7 +50,6 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   enum_scale_vi: () => 'VI',
   enum_scale_vii: () => 'VII',
   quick_add_drawer_title_seller: () => 'Add Seller',
-  quick_add_drawer_title_buyer: () => 'Add Buyer',
   quick_add_drawer_title_manufacturer: () => 'Add Manufacturer'
 }));
 
@@ -113,13 +112,11 @@ describe('Acquisition quick-add triggers', () => {
             address: null
           }
         ],
-        onQuickAddSeller: vi.fn(),
-        onQuickAddBuyer: vi.fn()
+        onQuickAddSeller: vi.fn()
       }
     });
 
     await user.click(screen.getByRole('button', { name: 'Add Seller' }));
-    await user.click(screen.getByRole('button', { name: 'Add Buyer' }));
 
     expect(onSellerChange).not.toHaveBeenCalled();
     expect(onDateChange).not.toHaveBeenCalled();
@@ -138,34 +135,11 @@ describe('Acquisition quick-add triggers', () => {
         batchDefaults: { scale: null, powerMethod: null },
         onBatchDefaultChange: vi.fn(),
         sellers: [],
-        onQuickAddSeller,
-        onQuickAddBuyer: vi.fn()
+        onQuickAddSeller
       }
     });
 
     await user.click(screen.getByRole('button', { name: 'Add Seller' }));
     expect(onQuickAddSeller).toHaveBeenCalledOnce();
-  });
-
-  it('emits buyer quick-add callback (seller-backed)', async () => {
-    const user = userEvent.setup();
-    const onQuickAddBuyer = vi.fn();
-
-    render(AcquisitionBatchFields, {
-      props: {
-        sellerId: null,
-        onSellerChange: vi.fn(),
-        purchaseDate: '2026-05-17',
-        onDateChange: vi.fn(),
-        batchDefaults: { scale: null, powerMethod: null },
-        onBatchDefaultChange: vi.fn(),
-        sellers: [],
-        onQuickAddSeller: vi.fn(),
-        onQuickAddBuyer
-      }
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Add Buyer' }));
-    expect(onQuickAddBuyer).toHaveBeenCalledOnce();
   });
 });

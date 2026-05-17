@@ -154,9 +154,9 @@
     quickAddItemUid = itemUid;
   }
 
-  function openSellerQuickAdd(target: 'seller' | 'buyer') {
+  function openSellerQuickAdd() {
     if (quickAddTarget) return;
-    quickAddTarget = target;
+    quickAddTarget = 'seller';
     quickAddItemUid = null;
   }
 
@@ -188,11 +188,7 @@
       };
       sellers = [...sellers, nextSeller];
       $form.sellerId = created.id;
-      if (quickAddTarget === 'buyer') {
-        toaster.success(m.quick_add_buyer_success({ name: created.name }));
-      } else {
-        toaster.success(m.quick_add_seller_success({ name: created.name }));
-      }
+      toaster.success(m.quick_add_seller_success({ name: created.name }));
     }
 
     quickAddTarget = null;
@@ -204,8 +200,6 @@
     switch (quickAddTarget) {
       case 'manufacturer':
         return m.quick_add_drawer_title_manufacturer();
-      case 'buyer':
-        return m.quick_add_drawer_title_buyer();
       case 'seller':
         return m.quick_add_drawer_title_seller();
       default:
@@ -248,8 +242,7 @@
       <AcquisitionBatchFields
         sellerId={$form.sellerId as string | null}
         onSellerChange={(id) => ($form.sellerId = id)}
-        onQuickAddSeller={() => openSellerQuickAdd('seller')}
-        onQuickAddBuyer={() => openSellerQuickAdd('buyer')}
+        onQuickAddSeller={openSellerQuickAdd}
         purchaseDate={$form.purchaseDate as string}
         onDateChange={(date) => ($form.purchaseDate = date)}
         batchDefaults={$form.batchDefaults as BatchDefaults}

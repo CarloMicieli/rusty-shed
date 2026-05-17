@@ -23,7 +23,6 @@
     onBatchDefaultChange: (field: 'scale' | 'powerMethod', value: string | null) => void;
     sellers: SellerView[];
     onQuickAddSeller: () => void;
-    onQuickAddBuyer: () => void;
   }
 
   let {
@@ -34,8 +33,7 @@
     batchDefaults,
     onBatchDefaultChange,
     sellers,
-    onQuickAddSeller,
-    onQuickAddBuyer
+    onQuickAddSeller
   }: Props = $props();
 
   const today = $derived.by(() => {
@@ -68,14 +66,6 @@
         class="rounded-sm border border-border p-2 text-muted-foreground hover:text-foreground"
         aria-label={m.quick_add_drawer_title_seller()}
         onclick={onQuickAddSeller}
-      >
-        <Plus size={12} />
-      </button>
-      <button
-        type="button"
-        class="rounded-sm border border-border p-2 text-muted-foreground hover:text-foreground"
-        aria-label={m.quick_add_drawer_title_buyer()}
-        onclick={onQuickAddBuyer}
       >
         <Plus size={12} />
       </button>
