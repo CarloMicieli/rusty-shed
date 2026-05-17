@@ -19,6 +19,7 @@ export const commands = {
 	status: ManufacturerStatus,
 	websiteUrl: string | null,
 } | null, CommandError>(__TAURI_INVOKE("get_manufacturer_by_id", { manufacturerId })),
+	createManufacturer: (args: CreateManufacturerArgs) => typedError<Manufacturer, CommandError>(__TAURI_INVOKE("create_manufacturer", { args })),
 	/**  Tauri command to retrieve a railway model by its identifier. */
 	getRailwayModelById: (railwayModelId: RailwayModelId, lang: Language) => typedError<{
 	/**  Unique identifier for the railway model. */
@@ -1765,6 +1766,12 @@ export type CreateCustomPrototypeArgs = {
 /**  Arguments for `create_formation_category`. */
 export type CreateFormationCategoryArgs = {
 	name: string,
+};
+
+export type CreateManufacturerArgs = {
+	name: string,
+	websiteUrl: string | null,
+	countryCode: string | null,
 };
 
 /**  Arguments for creating a new railway model (transport from IPC to application). */

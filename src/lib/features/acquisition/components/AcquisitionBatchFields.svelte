@@ -1,8 +1,9 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { DatePickerField } from '$lib/components';
+  import { Button, DatePickerField } from '$lib/components';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
+  import { Plus } from 'lucide-svelte';
   import { CalendarDate } from '@internationalized/date';
   import type { SellerView } from '$lib/bindings';
   import type { BatchDefaults } from '../types.js';
@@ -21,6 +22,7 @@
     batchDefaults: BatchDefaults;
     onBatchDefaultChange: (field: 'scale' | 'powerMethod', value: string | null) => void;
     sellers: SellerView[];
+    onQuickAddSeller: () => void;
   }
 
   let {
@@ -30,7 +32,8 @@
     onDateChange,
     batchDefaults,
     onBatchDefaultChange,
-    sellers
+    sellers,
+    onQuickAddSeller
   }: Props = $props();
 
   const today = $derived.by(() => {
@@ -48,13 +51,27 @@
     >
       {m.acquisition_seller_label()}
     </label>
-    <SearchableSelect
-      id="acq-seller"
-      options={sellers.map((s) => ({ value: s.id, label: s.name }))}
-      value={sellerId ?? ''}
-      placeholder="—"
-      onSelect={(v: string) => onSellerChange(v || null)}
-    />
+    <div class="flex items-center gap-2">
+      <div class="min-w-0 flex-1">
+        <SearchableSelect
+          id="acq-seller"
+          options={sellers.map((s) => ({ value: s.id, label: s.name }))}
+          value={sellerId ?? ''}
+          placeholder="—"
+          onSelect={(v: string) => onSellerChange(v || null)}
+        />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-lg"
+        class="variant-steampunk-lever h-10 w-10 rounded-sm border border-border bg-card p-0 text-muted-foreground shadow-none transition-all duration-150 ease-out hover:border-primary hover:bg-primary/10 hover:text-primary"
+        aria-label={m.quick_add_drawer_title_seller()}
+        onclick={onQuickAddSeller}
+      >
+        <Plus size={16} />
+      </Button>
+    </div>
   </div>
 
   <!-- Purchase Date -->

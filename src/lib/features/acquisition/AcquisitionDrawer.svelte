@@ -5,6 +5,7 @@
     commands,
     type Manufacturer,
     type PowerMethod,
+    type Seller,
     type Scale,
     type SellerView
   } from '$lib/bindings';
@@ -15,7 +16,9 @@
   import { createDefaultFormState, createDefaultItem, toRecordAcquisitionArgs } from './types.js';
   import AcquisitionBatchFields from './components/AcquisitionBatchFields.svelte';
   import AcquisitionItemCard from './components/AcquisitionItemCard.svelte';
-  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter, QuickAddShell } from '$lib/components/drawer';
+  import QuickAddEntityForm from '$lib/features/quick-add/QuickAddEntityForm.svelte';
+  import type { QuickAddTarget } from '$lib/features/quick-add/types';
   import { superForm } from 'sveltekit-superforms';
   import { zod4 as zod } from 'sveltekit-superforms/adapters';
   import { acquisitionSchema } from '$lib/schemas/acquisition-form';
@@ -36,6 +39,9 @@
   let isSubmitting = $state(false);
   let isLoadingData = $state(false);
   let formEl: HTMLFormElement | undefined = $state();
+  let quickAddTarget = $state<QuickAddTarget | null>(null);
+  let quickAddItemUid = $state<string | null>(null);
+  let quickAddDirty = $state(false);
 
   function getDefaults() {
     return {
@@ -141,6 +147,72 @@
   function handleSubmit() {
     formEl?.requestSubmit();
   }
+
+  function openManufacturerQuickAdd(itemUid: string) {
+    if (quickAddTarget) return;
+    quickAddTarget = 'manufacturer';
+    quickAddItemUid = itemUid;
+  }
+
+  function openSellerQuickAdd() {
+    if (quickAddTarget) return;
+    quickAddTarget = 'seller';
+    quickAddItemUid = null;
+  }
+
+  function closeQuickAdd() {
+    if (quickAddDirty && !window.confirm(m.quick_add_dirty_discard_confirm())) {
+      return;
+    }
+    quickAddTarget = null;
+    quickAddItemUid = null;
+    quickAddDirty = false;
+  }
+
+  function handleQuickAddSuccess(entity: Manufacturer | Seller) {
+    if (quickAddTarget === 'manufacturer' && quickAddItemUid) {
+      const created = entity as Manufacturer;
+      manufacturers = [...manufacturers, created];
+      handleUpdateItem(quickAddItemUid, { manufacturerId: created.id });
+      toaster.success(m.quick_add_manufacturer_success({ name: created.name }));
+    } else {
+      const created = entity as Seller;
+      const nextSeller: SellerView = {
+        id: created.id,
+        name: created.name,
+        sellerType: created.sellerType,
+        email: created.email,
+        phone: created.phone,
+        websiteUrl: created.websiteUrl,
+        address: created.address
+      };
+      sellers = [...sellers, nextSeller];
+      $form.sellerId = created.id;
+      toaster.success(m.quick_add_seller_success({ name: created.name }));
+    }
+
+    quickAddTarget = null;
+    quickAddItemUid = null;
+    quickAddDirty = false;
+  }
+
+  const quickAddTitle = $derived.by(() => {
+    switch (quickAddTarget) {
+      case 'manufacturer':
+        return m.quick_add_drawer_title_manufacturer();
+      case 'seller':
+        return m.quick_add_drawer_title_seller();
+      default:
+        return '';
+    }
+  });
+
+  const quickAddNames = $derived.by(() => {
+    if (quickAddTarget === 'manufacturer') {
+      return manufacturers.map((entry) => entry.name);
+    }
+    return sellers.map((entry) => entry.name);
+  });
 </script>
 
 <DrawerShell
@@ -148,6 +220,7 @@
   {onClose}
   size="xl"
   {hasChanges}
+  dimmed={quickAddTarget !== null}
   labelledby="acquisition-drawer-title"
   discardTitle={m.acquisition_discard_title()}
   discardDescription={m.acquisition_discard_description()}
@@ -169,6 +242,7 @@
       <AcquisitionBatchFields
         sellerId={$form.sellerId as string | null}
         onSellerChange={(id) => ($form.sellerId = id)}
+        onQuickAddSeller={openSellerQuickAdd}
         purchaseDate={$form.purchaseDate as string}
         onDateChange={(date) => ($form.purchaseDate = date)}
         batchDefaults={$form.batchDefaults as BatchDefaults}
@@ -209,6 +283,7 @@
           onUpdate={handleUpdateItem}
           onDuplicate={handleDuplicate}
           onRemove={handleRemove}
+          onQuickAddManufacturer={openManufacturerQuickAdd}
         />
       {/each}
     {/if}
@@ -239,3 +314,19 @@
     </DrawerFooter>
   {/snippet}
 </DrawerShell>
+
+<QuickAddShell open={quickAddTarget !== null} title={quickAddTitle} onDismiss={closeQuickAdd}>
+  {#if quickAddTarget}
+    <QuickAddEntityForm
+      target={quickAddTarget}
+      existingNames={quickAddNames}
+      onSuccess={handleQuickAddSuccess}
+      onCancel={closeQuickAdd}
+      onDirtyChange={(dirty) => (quickAddDirty = dirty)}
+    />
+  {/if}
+
+  {#snippet footer()}
+    <div class="text-xs text-muted-foreground">{m.quick_add_footer_hint()}</div>
+  {/snippet}
+</QuickAddShell>

@@ -1,10 +1,10 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { CurrencyInput } from '$lib/components';
+  import { Button, CurrencyInput } from '$lib/components';
   import { DrawerInput, EpochPicker } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
-  import { Copy, Trash2 } from 'lucide-svelte';
+  import { Copy, Plus, Trash2 } from 'lucide-svelte';
   import type { Category, Manufacturer } from '$lib/bindings';
   import type { AcquisitionItemEntry, AcquisitionItemErrors } from '../types.js';
   import { categoryOptions, categoryLabel } from '$lib/utils/enum-options';
@@ -19,6 +19,7 @@
     onUpdate: (uid: string, patch: Partial<AcquisitionItemEntry>) => void;
     onDuplicate: (uid: string) => void;
     onRemove: (uid: string) => void;
+    onQuickAddManufacturer: (uid: string) => void;
   }
 
   let {
@@ -30,14 +31,15 @@
     canRemove,
     onUpdate,
     onDuplicate,
-    onRemove
+    onRemove,
+    onQuickAddManufacturer
   }: Props = $props();
 
   const LABEL_CLASS = 'text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase';
   const TRIGGER_CLASS =
-    'h-10 w-full border-border bg-background text-foreground data-[placeholder]:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary';
+    'h-10 w-full rounded-sm border border-border bg-background px-3 text-foreground data-[placeholder]:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none';
   const TRIGGER_ERROR_CLASS =
-    'h-10 w-full border-destructive bg-background text-foreground ring-1 ring-destructive';
+    'h-10 w-full rounded-sm border border-destructive bg-background px-3 text-foreground ring-1 ring-destructive';
   const SELECT_CONTENT_CLASS = 'border-border bg-background text-foreground';
 
   const selectedManufacturer = $derived(
@@ -80,33 +82,47 @@
       <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
         {m.acquisition_item_manufacturer_label()}
       </label>
-      <Select.Root
-        type="single"
-        value={item.manufacturerId ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { manufacturerId: v || null })}
-      >
-        <Select.Trigger
-          id="item-{item.uid}-manufacturer"
-          class={errors.manufacturerId ? TRIGGER_ERROR_CLASS : TRIGGER_CLASS}
-          aria-invalid={!!errors.manufacturerId}
-          aria-describedby={errors.manufacturerId
-            ? `item-${item.uid}-manufacturer-error`
-            : undefined}
-        >
-          {#if selectedManufacturer}
-            {selectedManufacturer.name}
-          {:else}
-            <span class="text-muted-foreground"
-              >{m.acquisition_item_manufacturer_placeholder()}</span
+      <div class="flex items-center gap-2">
+        <div class="min-w-0 flex-1">
+          <Select.Root
+            type="single"
+            value={item.manufacturerId ?? undefined}
+            onValueChange={(v) => onUpdate(item.uid, { manufacturerId: v || null })}
+          >
+            <Select.Trigger
+              id="item-{item.uid}-manufacturer"
+              class={errors.manufacturerId ? TRIGGER_ERROR_CLASS : TRIGGER_CLASS}
+              aria-invalid={!!errors.manufacturerId}
+              aria-describedby={errors.manufacturerId
+                ? `item-${item.uid}-manufacturer-error`
+                : undefined}
             >
-          {/if}
-        </Select.Trigger>
-        <Select.Content class={SELECT_CONTENT_CLASS}>
-          {#each manufacturers as mfg (mfg.id)}
-            <Select.Item value={mfg.id} label={mfg.name} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
+              {#if selectedManufacturer}
+                {selectedManufacturer.name}
+              {:else}
+                <span class="text-muted-foreground"
+                  >{m.acquisition_item_manufacturer_placeholder()}</span
+                >
+              {/if}
+            </Select.Trigger>
+            <Select.Content class={SELECT_CONTENT_CLASS}>
+              {#each manufacturers as mfg (mfg.id)}
+                <Select.Item value={mfg.id} label={mfg.name} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-lg"
+          class="variant-steampunk-lever h-10 w-10 rounded-sm border border-border bg-card p-0 text-muted-foreground shadow-none transition-all duration-150 ease-out hover:border-primary hover:bg-primary/10 hover:text-primary"
+          aria-label={m.quick_add_drawer_title_manufacturer()}
+          onclick={() => onQuickAddManufacturer(item.uid)}
+        >
+          <Plus size={16} />
+        </Button>
+      </div>
       {#if errors.manufacturerId}
         <p id="item-{item.uid}-manufacturer-error" class="mt-1 text-xs text-destructive">
           {errors.manufacturerId}

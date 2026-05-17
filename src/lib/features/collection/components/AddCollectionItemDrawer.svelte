@@ -4,7 +4,7 @@
   import { superForm } from 'sveltekit-superforms';
   import { zod4 as zod } from 'sveltekit-superforms/adapters';
   import { addCollectionSchema } from '$lib/schemas/collection-form';
-  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter, QuickAddShell } from '$lib/components/drawer';
   import { collectionState } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -17,9 +17,11 @@
     SellerView,
     AddRailwayModelToCollectionArgs
   } from '$lib/bindings';
-  import { commands } from '$lib/bindings';
+  import { commands, type Seller } from '$lib/bindings';
+  import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import ModelSearchSection from './ModelSearchSection.svelte';
+  import QuickAddEntityForm from '$lib/features/quick-add/QuickAddEntityForm.svelte';
 
   interface Props {
     /** Controls drawer visibility */
@@ -45,6 +47,8 @@
   let showPurchaseSection = $state(false);
   let isRollingStockExpanded = $state(false);
   let formEl: HTMLFormElement | undefined = $state();
+  let quickAddTarget = $state<'manufacturer' | 'seller' | null>(null);
+  let quickAddDirty = $state(false);
 
   function createDefaultRollingStock(): RollingStockFormEntry {
     return {
@@ -233,9 +237,50 @@
   function handleSubmit() {
     formEl?.requestSubmit();
   }
+
+  function closeQuickAdd() {
+    if (quickAddDirty && !window.confirm(m.quick_add_dirty_discard_confirm())) {
+      return;
+    }
+    quickAddTarget = null;
+    quickAddDirty = false;
+  }
+
+  function handleQuickAddSuccess(entity: Manufacturer | Seller) {
+    if (quickAddTarget === 'seller') {
+      const created = entity as Seller;
+      const nextSeller: SellerView = {
+        id: created.id,
+        name: created.name,
+        sellerType: created.sellerType,
+        email: created.email,
+        phone: created.phone,
+        websiteUrl: created.websiteUrl,
+        address: created.address
+      };
+      sellers = [...sellers, nextSeller];
+      $form.purchase.sellerId = created.id;
+      toaster.success(m.quick_add_seller_success({ name: created.name }));
+    } else {
+      const created = entity as Manufacturer;
+      manufacturers = [...manufacturers, created];
+      $form.manufacturerId = created.id;
+      toaster.success(m.quick_add_manufacturer_success({ name: created.name }));
+    }
+
+    quickAddTarget = null;
+    quickAddDirty = false;
+  }
 </script>
 
-<DrawerShell {open} {onClose} size="xl" {hasChanges} labelledby="drawer-title">
+<DrawerShell
+  {open}
+  {onClose}
+  size="xl"
+  {hasChanges}
+  dimmed={quickAddTarget !== null}
+  labelledby="drawer-title"
+>
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="drawer-title"
@@ -261,6 +306,12 @@
       onAddRollingStock={handleAddRollingStock}
       onRemoveRollingStock={handleRemoveRollingStock}
       onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
+      onQuickAddManufacturer={() => {
+        if (!quickAddTarget) quickAddTarget = 'manufacturer';
+      }}
+      onQuickAddSeller={() => {
+        if (!quickAddTarget) quickAddTarget = 'seller';
+      }}
     />
   </form>
 
@@ -275,3 +326,25 @@
     />
   {/snippet}
 </DrawerShell>
+
+<QuickAddShell
+  open={quickAddTarget !== null}
+  title={quickAddTarget === 'seller'
+    ? m.quick_add_drawer_title_seller()
+    : m.quick_add_drawer_title_manufacturer()}
+  onDismiss={closeQuickAdd}
+>
+  <QuickAddEntityForm
+    target={quickAddTarget === 'seller' ? 'seller' : 'manufacturer'}
+    existingNames={(quickAddTarget === 'seller' ? sellers : manufacturers).map(
+      (entry) => entry.name
+    )}
+    onSuccess={handleQuickAddSuccess}
+    onCancel={closeQuickAdd}
+    onDirtyChange={(dirty) => (quickAddDirty = dirty)}
+  />
+
+  {#snippet footer()}
+    <div class="text-xs text-muted-foreground">{m.quick_add_footer_hint()}</div>
+  {/snippet}
+</QuickAddShell>

@@ -10,14 +10,17 @@
     DrawerShell,
     DrawerHeader,
     DrawerFooter,
+    QuickAddShell,
     ModelInfoSection,
     WishlistPickerSection,
     WishlistPreferencesSection
   } from '$lib/components/drawer';
   import { onMount } from 'svelte';
+  import { toaster } from '$lib/toaster';
   import { superForm } from 'sveltekit-superforms';
   import { zod4 as zod } from 'sveltekit-superforms/adapters';
   import { wishlistFormSchema } from '$lib/schemas/wishlist-form';
+  import QuickAddEntityForm from '$lib/features/quick-add/QuickAddEntityForm.svelte';
 
   const wishlistService = getWishlistContext();
 
@@ -53,6 +56,8 @@
   let isLoadingData = $state(false);
   let isSubmitting = $state(false);
   let asyncError = $state<string | null>(null);
+  let quickAddOpen = $state(false);
+  let quickAddDirty = $state(false);
 
   const { form, errors, tainted, reset, isTainted, validateForm } = superForm(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,6 +183,22 @@
       isSubmitting = false;
     }
   }
+
+  function closeQuickAdd() {
+    if (quickAddDirty && !window.confirm(m.quick_add_dirty_discard_confirm())) {
+      return;
+    }
+    quickAddOpen = false;
+    quickAddDirty = false;
+  }
+
+  function handleQuickAddSuccess(entity: Manufacturer) {
+    manufacturers = [...manufacturers, entity];
+    $form.manufacturerId = entity.id;
+    quickAddOpen = false;
+    quickAddDirty = false;
+    toaster.success(m.quick_add_manufacturer_success({ name: entity.name }));
+  }
 </script>
 
 <DrawerShell
@@ -185,6 +206,7 @@
   onClose={resetAndClose}
   size="xl"
   {hasChanges}
+  dimmed={quickAddOpen}
   labelledby="wishlist-item-drawer-title"
   error={formError}
   discardTitle={m.wishlist_add_item_drawer_discard_title()}
@@ -225,6 +247,9 @@
         {manufacturers}
         isLoading={isLoadingData}
         disabled={isSubmitting}
+        onQuickAddManufacturer={() => {
+          if (!quickAddOpen) quickAddOpen = true;
+        }}
       />
 
       <!-- Section 3: Wishlist Preferences -->
@@ -248,3 +273,21 @@
     />
   {/snippet}
 </DrawerShell>
+
+<QuickAddShell
+  open={quickAddOpen}
+  title={m.quick_add_drawer_title_manufacturer()}
+  onDismiss={closeQuickAdd}
+>
+  <QuickAddEntityForm
+    target="manufacturer"
+    existingNames={manufacturers.map((entry) => entry.name)}
+    onSuccess={(entity) => handleQuickAddSuccess(entity as Manufacturer)}
+    onCancel={closeQuickAdd}
+    onDirtyChange={(dirty) => (quickAddDirty = dirty)}
+  />
+
+  {#snippet footer()}
+    <div class="text-xs text-muted-foreground">{m.quick_add_footer_hint()}</div>
+  {/snippet}
+</QuickAddShell>
