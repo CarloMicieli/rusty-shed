@@ -37,9 +37,9 @@
 
   const LABEL_CLASS = 'text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase';
   const TRIGGER_CLASS =
-    'h-10 w-full border-border bg-background text-foreground data-[placeholder]:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary';
+    'h-10 w-full rounded-sm border border-border bg-background px-3 text-foreground data-[placeholder]:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none';
   const TRIGGER_ERROR_CLASS =
-    'h-10 w-full border-destructive bg-background text-foreground ring-1 ring-destructive';
+    'h-10 w-full rounded-sm border border-destructive bg-background px-3 text-foreground ring-1 ring-destructive';
   const SELECT_CONTENT_CLASS = 'border-border bg-background text-foreground';
 
   const selectedManufacturer = $derived(
@@ -79,48 +79,50 @@
   <div class="grid grid-cols-2 items-start gap-3">
     <!-- Manufacturer -->
     <div class="min-w-0 space-y-1">
-      <div class="flex items-center justify-between gap-2">
-        <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
-          {m.acquisition_item_manufacturer_label()}
-        </label>
+      <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
+        {m.acquisition_item_manufacturer_label()}
+      </label>
+      <div class="flex items-center gap-2">
+        <div class="min-w-0 flex-1">
+          <Select.Root
+            type="single"
+            value={item.manufacturerId ?? undefined}
+            onValueChange={(v) => onUpdate(item.uid, { manufacturerId: v || null })}
+          >
+            <Select.Trigger
+              id="item-{item.uid}-manufacturer"
+              class={errors.manufacturerId ? TRIGGER_ERROR_CLASS : TRIGGER_CLASS}
+              aria-invalid={!!errors.manufacturerId}
+              aria-describedby={errors.manufacturerId
+                ? `item-${item.uid}-manufacturer-error`
+                : undefined}
+            >
+              {#if selectedManufacturer}
+                {selectedManufacturer.name}
+              {:else}
+                <span class="text-muted-foreground"
+                  >{m.acquisition_item_manufacturer_placeholder()}</span
+                >
+              {/if}
+            </Select.Trigger>
+            <Select.Content class={SELECT_CONTENT_CLASS}>
+              {#each manufacturers as mfg (mfg.id)}
+                <Select.Item value={mfg.id} label={mfg.name} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
         <Button
           type="button"
-          size="icon-sm"
           variant="outline"
-          class="variant-steampunk-lever rounded-sm border-border bg-background text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+          size="icon-lg"
+          class="variant-steampunk-lever h-10 w-10 rounded-sm border border-border bg-card p-0 text-muted-foreground shadow-none transition-all duration-150 ease-out hover:border-primary hover:bg-primary/10 hover:text-primary"
           aria-label={m.quick_add_drawer_title_manufacturer()}
           onclick={() => onQuickAddManufacturer(item.uid)}
         >
-          <Plus size={12} />
+          <Plus size={16} />
         </Button>
       </div>
-      <Select.Root
-        type="single"
-        value={item.manufacturerId ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { manufacturerId: v || null })}
-      >
-        <Select.Trigger
-          id="item-{item.uid}-manufacturer"
-          class={errors.manufacturerId ? TRIGGER_ERROR_CLASS : TRIGGER_CLASS}
-          aria-invalid={!!errors.manufacturerId}
-          aria-describedby={errors.manufacturerId
-            ? `item-${item.uid}-manufacturer-error`
-            : undefined}
-        >
-          {#if selectedManufacturer}
-            {selectedManufacturer.name}
-          {:else}
-            <span class="text-muted-foreground"
-              >{m.acquisition_item_manufacturer_placeholder()}</span
-            >
-          {/if}
-        </Select.Trigger>
-        <Select.Content class={SELECT_CONTENT_CLASS}>
-          {#each manufacturers as mfg (mfg.id)}
-            <Select.Item value={mfg.id} label={mfg.name} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
       {#if errors.manufacturerId}
         <p id="item-{item.uid}-manufacturer-error" class="mt-1 text-xs text-destructive">
           {errors.manufacturerId}

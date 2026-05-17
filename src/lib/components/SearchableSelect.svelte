@@ -94,16 +94,16 @@
     {id}
     {disabled}
     bind:ref={triggerRef}
-    class="flex h-12 w-full items-center justify-between rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm transition-colors
-      focus-visible:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/30 focus-visible:outline-none
+    class="flex h-10 w-full items-center justify-between rounded-sm border border-border bg-background px-3 text-sm text-foreground transition-colors
+      focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none
       disabled:cursor-not-allowed disabled:opacity-50
-      {open ? 'border-amber-500/50' : ''}"
+      {open ? 'border-primary/60' : ''}"
   >
     <span class="flex min-w-0 items-center gap-3">
       {#if LeadingIcon}
-        <LeadingIcon size={16} class="shrink-0 text-zinc-600" />
+        <LeadingIcon size={16} class="shrink-0 text-muted-foreground" />
       {/if}
-      <span class="truncate {value ? 'text-zinc-100' : 'text-zinc-500'}">
+      <span class="truncate {value ? 'text-foreground' : 'text-muted-foreground'}">
         {#if trigger}
           {@render trigger(selectedOption)}
         {:else if selectedLabel}
@@ -115,7 +115,7 @@
     </span>
     <ChevronDown
       size={16}
-      class="ml-2 shrink-0 text-zinc-600 transition-transform duration-150 {open
+      class="ml-2 shrink-0 text-muted-foreground transition-transform duration-150 {open
         ? 'rotate-180'
         : ''}"
     />
@@ -131,14 +131,14 @@
     <div class="relative mb-2">
       <Search
         size={13}
-        class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-zinc-600"
+        class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground"
       />
       <input
         bind:this={searchInputEl}
         type="text"
         bind:value={filter}
         placeholder="Search…"
-        class="h-8 w-full rounded-lg bg-zinc-900 pr-3 pl-7 text-xs text-zinc-100 placeholder-zinc-600 ring-1 ring-white/5 outline-none focus:ring-amber-500/40"
+        class="h-8 w-full rounded-sm border border-border bg-background pr-3 pl-7 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-1 focus:ring-primary focus:outline-none"
         onkeydown={(e) => {
           if (e.key === 'Escape') {
             open = false;
@@ -155,13 +155,14 @@
         {#each filtered as opt (opt.value)}
           <button
             type="button"
-            class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors
-              hover:bg-amber-500/10
-              {value === opt.value ? 'bg-amber-500/10 text-amber-400' : 'text-zinc-100'}"
+            class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm transition-colors hover:bg-primary/10 hover:text-primary {value ===
+            opt.value
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'text-foreground'}"
             onclick={() => select(opt)}
           >
             {#if value === opt.value}
-              <Check size={13} class="shrink-0 text-amber-400" />
+              <Check size={13} class="shrink-0 text-primary" />
             {:else}
               <span class="w-[13px] shrink-0"></span>
             {/if}

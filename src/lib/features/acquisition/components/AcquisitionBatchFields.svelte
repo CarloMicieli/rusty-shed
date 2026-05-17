@@ -63,13 +63,13 @@
       </div>
       <Button
         type="button"
-        size="icon-sm"
         variant="outline"
-        class="variant-steampunk-lever rounded-sm border-border bg-background text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+        size="icon-lg"
+        class="variant-steampunk-lever h-10 w-10 rounded-sm border border-border bg-card p-0 text-muted-foreground shadow-none transition-all duration-150 ease-out hover:border-primary hover:bg-primary/10 hover:text-primary"
         aria-label={m.quick_add_drawer_title_seller()}
         onclick={onQuickAddSeller}
       >
-        <Plus size={12} />
+        <Plus size={16} />
       </Button>
     </div>
   </div>
