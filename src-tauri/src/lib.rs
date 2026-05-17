@@ -128,6 +128,7 @@ fn create_specta_builder() -> Builder<tauri::Wry> {
             manufacturers_command_handlers::get_manufacturers,
             manufacturers_command_handlers::get_manufacturer_by_id,
             manufacturers_command_handlers::create_manufacturer,
+            manufacturers_command_handlers::update_manufacturer,
             catalog_command_handlers::get_railway_model_by_id,
             railway_companies_command_handlers::get_railway_companies,
             railway_companies_command_handlers::get_railway_company_by_id,

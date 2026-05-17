@@ -5,7 +5,7 @@
   import QuickAddEntityForm from '$lib/features/quick-add/QuickAddEntityForm.svelte';
   import type { QuickAddTarget } from '$lib/features/quick-add/types';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
-  import type { CommandError, Manufacturer, Seller } from '$lib/bindings';
+  import { commands, type CommandError, type Manufacturer, type Seller } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import {
     getBuyers,
@@ -16,39 +16,81 @@
   import EntitySearch from './EntitySearch.svelte';
   import EntityTabs from './EntityTabs.svelte';
 
-  let manufacturers = $state<LibraryEntityRow[]>([]);
-  let sellers = $state<LibraryEntityRow[]>([]);
-  let buyers = $state<LibraryEntityRow[]>([]);
+  let quickFormIntent = $state<'create' | 'edit'>('create');
   let quickAddTarget = $state<QuickAddTarget | null>(null);
+  let editingRow = $state<LibraryEntityRow | null>(null);
 
   const query = $derived(settingsState.librarySearchQuery.trim().toLowerCase());
 
   const filteredManufacturers = $derived.by(() =>
-    manufacturers.filter((row) =>
+    settingsState.libraryManufacturers.filter((row) =>
       `${row.name} ${row.countryCode ?? ''}`.toLowerCase().includes(query)
     )
   );
 
   const filteredSellers = $derived.by(() =>
-    sellers.filter((row) => `${row.name} ${row.countryCode ?? ''}`.toLowerCase().includes(query))
+    settingsState.librarySellers.filter((row) =>
+      `${row.name} ${row.countryCode ?? ''}`.toLowerCase().includes(query)
+    )
   );
 
   const filteredBuyers = $derived.by(() =>
-    buyers.filter((row) => `${row.name} ${row.countryCode ?? ''}`.toLowerCase().includes(query))
+    settingsState.libraryBuyers.filter((row) =>
+      `${row.name} ${row.countryCode ?? ''}`.toLowerCase().includes(query)
+    )
   );
 
   const quickAddTitle = $derived.by(() => {
+    if (quickFormIntent === 'edit') {
+      if (quickAddTarget === 'manufacturer') return m.settings_library_edit_manufacturer_title();
+      if (quickAddTarget === 'buyer') return m.settings_library_edit_buyer_title();
+      return m.settings_library_edit_seller_title();
+    }
+
     if (quickAddTarget === 'manufacturer') return m.settings_library_add_manufacturer_title();
     if (quickAddTarget === 'buyer') return m.settings_library_add_buyer_title();
     return m.settings_library_add_seller_title();
   });
 
-  const quickAddNames = $derived.by(() => {
-    if (quickAddTarget === 'manufacturer') {
-      return manufacturers.map((row) => row.name);
+  const quickSubmitLabel = $derived.by(() =>
+    quickFormIntent === 'edit' ? m.settings_library_update_action() : m.quick_add_save()
+  );
+
+  const quickFormInitialValues = $derived.by(() => {
+    if (!editingRow) {
+      return {
+        name: '',
+        websiteUrl: '',
+        countryCode: '',
+        notes: ''
+      };
     }
 
-    const merged = [...sellers.map((row) => row.name), ...buyers.map((row) => row.name)];
+    return {
+      name: editingRow.name,
+      websiteUrl: '',
+      countryCode: editingRow.countryCode ?? '',
+      notes: ''
+    };
+  });
+
+  const quickAddNames = $derived.by(() => {
+    const editingId = editingRow?.id ?? null;
+
+    if (quickAddTarget === 'manufacturer') {
+      return settingsState.libraryManufacturers
+        .filter((row) => row.id !== editingId)
+        .map((row) => row.name);
+    }
+
+    const merged = [
+      ...settingsState.librarySellers
+        .filter((row) => row.id !== editingId)
+        .map((row) => row.name),
+      ...settingsState.libraryBuyers
+        .filter((row) => row.id !== editingId)
+        .map((row) => row.name)
+    ];
     return [...new Set(merged)];
   });
 
@@ -72,9 +114,11 @@
       getBuyers()
     ]);
 
-    if (manufacturerRes.status === 'ok') manufacturers = manufacturerRes.data;
-    if (sellerRes.status === 'ok') sellers = sellerRes.data;
-    if (buyerRes.status === 'ok') buyers = buyerRes.data;
+    settingsState.setLibraryRows({
+      manufacturers: manufacturerRes.status === 'ok' ? manufacturerRes.data : [],
+      sellers: sellerRes.status === 'ok' ? sellerRes.data : [],
+      buyers: buyerRes.status === 'ok' ? buyerRes.data : []
+    });
 
     const firstError = [manufacturerRes, sellerRes, buyerRes].find((result) => result.status === 'error');
     if (firstError && firstError.status === 'error') {
@@ -85,6 +129,9 @@
   }
 
   function openQuickAdd(): void {
+    quickFormIntent = 'create';
+    editingRow = null;
+
     if (settingsState.libraryActiveTab === 'manufacturers') {
       quickAddTarget = 'manufacturer';
       return;
@@ -100,11 +147,25 @@
 
   function closeQuickAdd(): void {
     quickAddTarget = null;
+    editingRow = null;
+    quickFormIntent = 'create';
   }
 
-  function prependUnique(rows: LibraryEntityRow[], row: LibraryEntityRow): LibraryEntityRow[] {
-    const remaining = rows.filter((entry) => entry.id !== row.id);
-    return [row, ...remaining];
+  function openQuickEdit(row: LibraryEntityRow): void {
+    quickFormIntent = 'edit';
+    editingRow = row;
+
+    if (settingsState.libraryActiveTab === 'manufacturers') {
+      quickAddTarget = 'manufacturer';
+      return;
+    }
+
+    if (settingsState.libraryActiveTab === 'buyers') {
+      quickAddTarget = 'buyer';
+      return;
+    }
+
+    quickAddTarget = 'seller';
   }
 
   function toLibraryRow(entity: Manufacturer | Seller): LibraryEntityRow {
@@ -131,16 +192,25 @@
     const row = toLibraryRow(entity);
 
     if (quickAddTarget === 'manufacturer') {
-      manufacturers = prependUnique(manufacturers, row);
-      toaster.success(m.settings_library_create_success_manufacturer({ name: row.name }));
+      settingsState.upsertLibraryManufacturer(row);
+      toaster.success(
+        quickFormIntent === 'edit'
+          ? m.settings_library_update_success_manufacturer({ name: row.name })
+          : m.settings_library_create_success_manufacturer({ name: row.name })
+      );
       closeQuickAdd();
       return;
     }
 
-    sellers = prependUnique(sellers, row);
-    buyers = prependUnique(buyers, row);
+    settingsState.upsertCanonicalParty(row);
 
-    if (quickAddTarget === 'buyer') {
+    if (quickFormIntent === 'edit') {
+      if (quickAddTarget === 'buyer') {
+        toaster.success(m.settings_library_update_success_buyer({ name: row.name }));
+      } else {
+        toaster.success(m.settings_library_update_success_seller({ name: row.name }));
+      }
+    } else if (quickAddTarget === 'buyer') {
       toaster.success(m.settings_library_create_success_buyer({ name: row.name }));
     } else {
       toaster.success(m.settings_library_create_success_seller({ name: row.name }));
@@ -153,6 +223,59 @@
     toaster.signal(m.signal_toast_title(), {
       description: m.settings_library_create_error({ message })
     });
+  }
+
+  async function handleQuickSubmit(values: {
+    name: string;
+    websiteUrl: string;
+    countryCode: string;
+    notes: string;
+  }): Promise<Manufacturer | Seller> {
+    if (quickFormIntent !== 'edit' || !editingRow || !quickAddTarget) {
+      throw new Error(m.settings_library_edit_error_missing_target());
+    }
+
+    if (quickAddTarget === 'manufacturer') {
+      const result = await commands.updateManufacturer({
+        id: editingRow.id,
+        name: values.name.trim(),
+        websiteUrl: values.websiteUrl.trim() || null,
+        countryCode: values.countryCode.trim().toUpperCase() || null
+      });
+
+      if (result.status === 'ok') {
+        return result.data;
+      }
+
+      throw new Error(getCommandErrorMessage(result.error));
+    }
+
+    const payload = {
+      id: editingRow.id,
+      name: values.name.trim(),
+      sellerType: 'SHOP' as const,
+      email: null,
+      phone: null,
+      websiteUrl: values.websiteUrl.trim() || null,
+      streetAddress: null,
+      extendedAddress: null,
+      city: null,
+      stateRegion: null,
+      postalCode: null,
+      countryCode: values.countryCode.trim().toUpperCase() || null,
+      createdAt: null
+    };
+
+    const result =
+      quickAddTarget === 'buyer'
+        ? await commands.updateBuyer(payload)
+        : await commands.updateSeller(payload);
+
+    if (result.status === 'ok') {
+      return result.data;
+    }
+
+    throw new Error(getCommandErrorMessage(result.error));
   }
 
   onMount(() => {
@@ -188,6 +311,7 @@
     <EntityTabs
       activeTab={settingsState.libraryActiveTab}
       onTabChange={(tab) => settingsState.setLibraryTab(tab)}
+      onEdit={openQuickEdit}
       manufacturers={filteredManufacturers}
       sellers={filteredSellers}
       buyers={filteredBuyers}
@@ -201,6 +325,9 @@
       target={quickAddTarget}
       mode="FULL"
       existingNames={quickAddNames}
+      initialValues={quickFormInitialValues}
+      submitLabel={quickSubmitLabel}
+      onSubmit={quickFormIntent === 'edit' ? handleQuickSubmit : undefined}
       onSuccess={handleQuickAddSuccess}
       onCancel={closeQuickAdd}
       onError={handleQuickAddError}

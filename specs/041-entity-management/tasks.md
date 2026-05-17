@@ -89,15 +89,15 @@
 
 ### Tests for User Story 3
 
-- [ ] T029 [P] [US3] Add edit/protection UI tests in `src/__tests__/settings/library/EditEntityProtection.test.ts`
-- [ ] T030 [P] [US3] Add backend update/protection tests in `src-tauri/tests/library/update_entities_tests.rs`
+- [X] T029 [P] [US3] Add edit/protection UI tests in `src/__tests__/settings/library/EditEntityProtection.test.ts`
+- [X] T030 [P] [US3] Add backend update/protection tests in `src-tauri/tests/library/update_entities_tests.rs`
 
 ### Implementation for User Story 3
 
-- [ ] T031 [P] [US3] Implement edit action and prefilled FULL form in `src/lib/features/settings/components/library/EntityRowActions.svelte`
-- [ ] T032 [US3] Implement backend update handlers enforcing `is_system_seeded` name protection in `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs` and `src-tauri/src/buyers/interface/command_handlers.rs`
-- [ ] T033 [US3] Implement canonical shared-party update propagation across Buyers/Sellers tabs in `src/lib/features/settings/SettingsState.svelte.ts`
-- [ ] T034 [US3] Add protected badge rendering and disabled controls in `src/lib/features/settings/components/library/EntityTable.svelte`
+- [X] T031 [P] [US3] Implement edit action and prefilled FULL form in `src/lib/features/settings/components/library/EntityRowActions.svelte`
+- [X] T032 [US3] Implement backend update handlers enforcing `is_system_seeded` name protection in `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs` and `src-tauri/src/buyers/interface/command_handlers.rs`
+- [X] T033 [US3] Implement canonical shared-party update propagation across Buyers/Sellers tabs in `src/lib/features/settings/SettingsState.svelte.ts`
+- [X] T034 [US3] Add protected badge rendering and disabled controls in `src/lib/features/settings/components/library/EntityTable.svelte`
 
 **Checkpoint**: User Story 3 is independently functional and testable
 

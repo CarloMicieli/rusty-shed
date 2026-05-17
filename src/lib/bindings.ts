@@ -18,8 +18,11 @@ export const commands = {
 	countryCode: string | null,
 	status: ManufacturerStatus,
 	websiteUrl: string | null,
+	isSystemSeeded: boolean,
+	usageCount: number,
 } | null, CommandError>(__TAURI_INVOKE("get_manufacturer_by_id", { manufacturerId })),
 	createManufacturer: (args: CreateManufacturerArgs) => typedError<Manufacturer, CommandError>(__TAURI_INVOKE("create_manufacturer", { args })),
+	updateManufacturer: (args: UpdateManufacturerArgs) => typedError<Manufacturer, CommandError>(__TAURI_INVOKE("update_manufacturer", { args })),
 	/**  Tauri command to retrieve a railway model by its identifier. */
 	getRailwayModelById: (railwayModelId: RailwayModelId, lang: Language) => typedError<{
 	/**  Unique identifier for the railway model. */
@@ -359,6 +362,10 @@ export const commands = {
 	websiteUrl: string | null,
 	/**  Address of the seller. */
 	address: Address | null,
+	/**  Whether this row is system-seeded and protected. */
+	isSystemSeeded: boolean,
+	/**  Total usage count across buyer and seller references. */
+	usageCount: number,
 } | null, CommandError>(__TAURI_INVOKE("get_seller_by_id", { id })),
 	/**
 	 *  Command handler to create a new seller.
@@ -427,6 +434,10 @@ export const commands = {
 	websiteUrl: string | null,
 	/**  Address of the seller. */
 	address: Address | null,
+	/**  Whether this row is system-seeded and protected. */
+	isSystemSeeded: boolean,
+	/**  Total usage count across buyer and seller references. */
+	usageCount: number,
 } | null, CommandError>(__TAURI_INVOKE("get_buyer_by_id", { id })),
 	createBuyer: (payload: CreateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("create_buyer", { payload })),
 	updateBuyer: (payload: UpdateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("update_buyer", { payload })),
@@ -2838,6 +2849,8 @@ export type Manufacturer = {
 	countryCode: string | null,
 	status: ManufacturerStatus,
 	websiteUrl: string | null,
+	isSystemSeeded: boolean,
+	usageCount: number,
 };
 
 /**
@@ -4209,6 +4222,10 @@ export type SellerView = {
 	websiteUrl: string | null,
 	/**  Address of the seller. */
 	address: Address | null,
+	/**  Whether this row is system-seeded and protected. */
+	isSystemSeeded: boolean,
+	/**  Total usage count across buyer and seller references. */
+	usageCount: number,
 };
 
 /**
@@ -4590,6 +4607,13 @@ export type UpdateCollectionItemArgs = {
 	collectionItemId: string,
 	/**  The concrete field update payload. */
 	update: CollectionItemUpdateArgs,
+};
+
+export type UpdateManufacturerArgs = {
+	id: ManufacturerId,
+	name: string,
+	websiteUrl: string | null,
+	countryCode: string | null,
 };
 
 /**

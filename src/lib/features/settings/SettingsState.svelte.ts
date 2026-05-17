@@ -8,6 +8,7 @@ import { safeInvoke } from '$lib/services';
 import type { UpdateSettingsInput, UserSettings_Serialize } from '$lib/bindings';
 import type { LibraryTab } from './library-types';
 import { log } from '$lib/tauri-logger';
+import type { LibraryEntityRow } from '$lib/services/entityLibrary';
 
 export class SettingsState {
   settings = $state<UserSettings_Serialize>({
@@ -27,6 +28,9 @@ export class SettingsState {
   librarySearchQuery = $state('');
   libraryLoading = $state(false);
   libraryError = $state<string | null>(null);
+  libraryManufacturers = $state<LibraryEntityRow[]>([]);
+  librarySellers = $state<LibraryEntityRow[]>([]);
+  libraryBuyers = $state<LibraryEntityRow[]>([]);
 
   /**
    * Load settings from backend
@@ -97,6 +101,28 @@ export class SettingsState {
 
   setLibrarySearchQuery(query: string): void {
     this.librarySearchQuery = query;
+  }
+
+  setLibraryRows(payload: {
+    manufacturers: LibraryEntityRow[];
+    sellers: LibraryEntityRow[];
+    buyers: LibraryEntityRow[];
+  }): void {
+    this.libraryManufacturers = payload.manufacturers;
+    this.librarySellers = payload.sellers;
+    this.libraryBuyers = payload.buyers;
+  }
+
+  upsertLibraryManufacturer(row: LibraryEntityRow): void {
+    this.libraryManufacturers = [
+      row,
+      ...this.libraryManufacturers.filter((entry) => entry.id !== row.id)
+    ];
+  }
+
+  upsertCanonicalParty(row: LibraryEntityRow): void {
+    this.librarySellers = [row, ...this.librarySellers.filter((entry) => entry.id !== row.id)];
+    this.libraryBuyers = [row, ...this.libraryBuyers.filter((entry) => entry.id !== row.id)];
   }
 }
 

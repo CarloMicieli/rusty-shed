@@ -15,8 +15,8 @@ function mapManufacturer(row: Manufacturer): LibraryEntityRow {
     id: row.id,
     name: row.name,
     countryCode: row.countryCode,
-    usageCount: 0,
-    isSystemSeeded: false
+    usageCount: row.usageCount,
+    isSystemSeeded: row.isSystemSeeded
   };
 }
 
@@ -25,8 +25,8 @@ function mapSeller(row: SellerView): LibraryEntityRow {
     id: row.id,
     name: row.name,
     countryCode: row.address?.country ?? null,
-    usageCount: 0,
-    isSystemSeeded: false
+    usageCount: row.usageCount,
+    isSystemSeeded: row.isSystemSeeded
   };
 }
 

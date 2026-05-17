@@ -10,6 +10,7 @@ describe('LibraryView', () => {
       props: {
         activeTab: 'manufacturers',
         onTabChange,
+        onEdit: vi.fn(),
         manufacturers: [
           { id: 'm1', name: 'Acme', countryCode: 'IT', usageCount: 0, isSystemSeeded: false }
         ],

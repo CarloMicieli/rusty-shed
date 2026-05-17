@@ -10,6 +10,9 @@
     target: QuickAddTarget;
     mode?: QuickAddMode;
     existingNames: string[];
+    initialValues?: Partial<QuickAddFormState>;
+    submitLabel?: string;
+    onSubmit?: (values: QuickAddFormState) => Promise<Manufacturer | Seller>;
     onSuccess: (entity: Manufacturer | Seller) => void;
     onCancel: () => void;
     onError?: (message: string) => void;
@@ -23,13 +26,32 @@
     notes: string;
   }
 
-  let { target, mode = 'QUICK', existingNames, onSuccess, onCancel, onError, onDirtyChange }: Props =
-    $props();
+  let {
+    target,
+    mode = 'QUICK',
+    existingNames,
+    initialValues = {},
+    submitLabel,
+    onSubmit,
+    onSuccess,
+    onCancel,
+    onError,
+    onDirtyChange
+  }: Props = $props();
 
   let values = $state<QuickAddFormState>({ name: '', websiteUrl: '', countryCode: '', notes: '' });
   let isSaving = $state(false);
   let saveError = $state<string | null>(null);
   let fieldError = $state<string | null>(null);
+
+  $effect(() => {
+    values = {
+      name: initialValues.name ?? '',
+      websiteUrl: initialValues.websiteUrl ?? '',
+      countryCode: initialValues.countryCode ?? '',
+      notes: initialValues.notes ?? ''
+    };
+  });
 
   const entityLabel = $derived.by(() => {
     switch (target) {
@@ -78,6 +100,12 @@
 
     isSaving = true;
     try {
+      if (onSubmit) {
+        const entity = await onSubmit(values);
+        onSuccess(entity);
+        return;
+      }
+
       if (target === 'manufacturer') {
         const result = await commands.createManufacturer({
           name: values.name.trim(),
@@ -231,7 +259,7 @@
       onclick={handleSave}
       disabled={!canSave}
     >
-      {isSaving ? m.settings_saving_button() : m.quick_add_save()}
+      {isSaving ? m.settings_saving_button() : (submitLabel ?? m.quick_add_save())}
     </Button>
   </div>
 </div>

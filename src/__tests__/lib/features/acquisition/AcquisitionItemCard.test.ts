@@ -71,7 +71,9 @@ const manufacturers: Manufacturer[] = [
     registeredCompanyName: null,
     countryCode: null,
     status: 'ACTIVE',
-    websiteUrl: null
+    websiteUrl: null,
+    isSystemSeeded: false,
+    usageCount: 0
   }
 ];
 

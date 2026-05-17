@@ -217,7 +217,9 @@ describe('PurchaseSection', () => {
         email: null,
         phone: null,
         websiteUrl: null,
-        address: null
+        address: null,
+        isSystemSeeded: false,
+        usageCount: 0
       },
       {
         id: 'seller-2',
@@ -226,7 +228,9 @@ describe('PurchaseSection', () => {
         email: null,
         phone: null,
         websiteUrl: null,
-        address: null
+        address: null,
+        isSystemSeeded: false,
+        usageCount: 0
       }
     ];
 

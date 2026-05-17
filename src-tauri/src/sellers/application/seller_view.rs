@@ -25,6 +25,10 @@ pub struct SellerView {
     pub website_url: Option<String>,
     /// Address of the seller.
     pub address: Option<Address>,
+    /// Whether this row is system-seeded and protected.
+    pub is_system_seeded: bool,
+    /// Total usage count across buyer and seller references.
+    pub usage_count: i64,
 }
 
 impl From<Seller> for SellerView {
@@ -37,6 +41,8 @@ impl From<Seller> for SellerView {
             phone: s.phone,
             website_url: s.website_url,
             address: s.address,
+            is_system_seeded: false,
+            usage_count: 0,
         }
     }
 }
