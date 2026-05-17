@@ -1,4 +1,5 @@
 export { default as DrawerShell } from './DrawerShell.svelte';
+export { default as QuickAddShell } from './QuickAddShell.svelte';
 export { default as DrawerHeader } from './DrawerHeader.svelte';
 export { default as DrawerFooter } from './DrawerFooter.svelte';
 export { default as DrawerInput } from './DrawerInput.svelte';

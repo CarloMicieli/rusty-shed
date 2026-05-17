@@ -23,6 +23,7 @@
     };
     isLoading?: boolean;
     disabled?: boolean;
+    onQuickAddManufacturer?: () => void;
   }
 
   let {
@@ -36,7 +37,8 @@
     manufacturers,
     errors = {},
     isLoading = false,
-    disabled = false
+    disabled = false,
+    onQuickAddManufacturer
   }: Props = $props();
 </script>
 
@@ -52,6 +54,7 @@
     {manufacturers}
     {isLoading}
     {disabled}
+    {onQuickAddManufacturer}
     {errors}
   />
 </DrawerSectionCard>

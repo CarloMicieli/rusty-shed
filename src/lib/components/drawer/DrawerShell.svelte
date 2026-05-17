@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components/ui/button';
+  import { cn } from '$lib/utils';
 
   interface Props {
     open: boolean;
@@ -13,6 +14,7 @@
     children: Snippet;
     footer: Snippet<[{ requestClose: () => void }]>;
     stickyBand?: Snippet;
+    dimmed?: boolean;
     error?: string | null;
     discardTitle?: string;
     discardDescription?: string;
@@ -30,6 +32,7 @@
     children,
     footer,
     stickyBand,
+    dimmed = false,
     error = null,
     discardTitle,
     discardDescription,
@@ -114,7 +117,7 @@
     {/if}
 
     <!-- Scrollable body -->
-    <div class="flex-1 overflow-y-auto p-4">
+    <div class={cn('flex-1 overflow-y-auto p-4 transition-opacity', dimmed && 'pointer-events-none opacity-70')}>
       {@render children()}
 
       {#if error}

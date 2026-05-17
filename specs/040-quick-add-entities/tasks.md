@@ -17,9 +17,9 @@
 
 **Purpose**: Establish feature scaffolding and task/test structure before core implementation.
 
-- [ ] T001 Create quick-add feature scaffolding in `src/lib/features/quick-add/types.ts`, `src/lib/features/quick-add/QuickAddEntityForm.svelte`, and `src/lib/components/drawer/QuickAddShell.svelte`
-- [ ] T002 [P] Create quick-add validation scaffolding in `src/lib/schemas/quick-add-form.ts`
-- [ ] T003 [P] Create test scaffolding files `src/__tests__/quick-add/QuickAddEntityForm.test.ts`, `src/__tests__/acquisition/AcquisitionDrawer.test.ts`, `src/__tests__/collection/AddCollectionItemDrawer.test.ts`, and `src/__tests__/wishlists/AddWishlistItemDrawer.test.ts`
+- [X] T001 Create quick-add feature scaffolding in `src/lib/features/quick-add/types.ts`, `src/lib/features/quick-add/QuickAddEntityForm.svelte`, and `src/lib/components/drawer/QuickAddShell.svelte`
+- [X] T002 [P] Create quick-add validation scaffolding in `src/lib/schemas/quick-add-form.ts`
+- [X] T003 [P] Create test scaffolding files `src/__tests__/quick-add/QuickAddEntityForm.test.ts`, `src/__tests__/acquisition/AcquisitionDrawer.test.ts`, `src/__tests__/collection/AddCollectionItemDrawer.test.ts`, and `src/__tests__/wishlists/AddWishlistItemDrawer.test.ts`
 
 ---
 
@@ -29,16 +29,16 @@
 
 **⚠️ CRITICAL**: No user story implementation starts before this phase completes.
 
-- [ ] T004 Add case-insensitive uniqueness migration with `CREATE UNIQUE INDEX IF NOT EXISTS` in `src-tauri/migrations/0007_quick_add_case_insensitive_indexes.sql`
-- [ ] T005 [P] Implement `CreateManufacturerArgs` and `create_manufacturer` command in `src-tauri/src/catalog/interface/manufacturers.rs`
-- [ ] T006 Register `create_manufacturer` command in `src-tauri/src/lib.rs`
-- [ ] T007 [P] Add manufacturer command tests (validation/conflict/success) in `src-tauri/src/catalog/interface/manufacturers.rs`
-- [ ] T008 Regenerate IPC bindings after Rust changes in `src/lib/bindings.ts` using `pnpm specta:generate`
-- [ ] T009 Implement shared quick-add form schema in `src/lib/schemas/quick-add-form.ts`
-- [ ] T010 [P] Implement stacked drawer shell with scrim and modal semantics in `src/lib/components/drawer/QuickAddShell.svelte`
-- [ ] T011 [P] Add `dimmed` support to parent shell in `src/lib/components/drawer/DrawerShell.svelte`
-- [ ] T012 Implement shared create-only quick-add form behavior in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
-- [ ] T013 Add baseline quick-add translation keys in `messages/en.json` and `messages/it.json`
+- [X] T004 Add case-insensitive uniqueness migration with `CREATE UNIQUE INDEX IF NOT EXISTS` in `src-tauri/migrations/0007_quick_add_case_insensitive_indexes.sql`
+- [X] T005 [P] Implement `CreateManufacturerArgs` and `create_manufacturer` command in `src-tauri/src/catalog/interface/manufacturers.rs`
+- [X] T006 Register `create_manufacturer` command in `src-tauri/src/lib.rs`
+- [X] T007 [P] Add manufacturer command tests (validation/conflict/success) in `src-tauri/src/catalog/interface/manufacturers.rs`
+- [X] T008 Regenerate IPC bindings after Rust changes in `src/lib/bindings.ts` using `pnpm specta:generate`
+- [X] T009 Implement shared quick-add form schema in `src/lib/schemas/quick-add-form.ts`
+- [X] T010 [P] Implement stacked drawer shell with scrim and modal semantics in `src/lib/components/drawer/QuickAddShell.svelte`
+- [X] T011 [P] Add `dimmed` support to parent shell in `src/lib/components/drawer/DrawerShell.svelte`
+- [X] T012 Implement shared create-only quick-add form behavior in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
+- [X] T013 Add baseline quick-add translation keys in `messages/en.json` and `messages/it.json`
 
 **Checkpoint**: Foundation complete. User stories can now be implemented and tested independently.
 
@@ -57,10 +57,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Add manufacturer quick-add trigger UI in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`
-- [ ] T017 [US1] Implement manufacturer quick-add handshake (append, select, close, toast) in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
-- [ ] T018 [US1] Add manufacturer success/error localized messages in `messages/en.json` and `messages/it.json`
-- [ ] T019 [US1] Wire manufacturer duplicate-name source list and drawer open guard in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
+- [X] T016 [US1] Add manufacturer quick-add trigger UI in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`
+- [X] T017 [US1] Implement manufacturer quick-add handshake (append, select, close, toast) in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
+- [X] T018 [US1] Add manufacturer success/error localized messages in `messages/en.json` and `messages/it.json`
+- [X] T019 [US1] Wire manufacturer duplicate-name source list and drawer open guard in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
 
 **Checkpoint**: US1 is independently functional and testable.
 
@@ -79,10 +79,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Add seller/buyer quick-add trigger callbacks in `src/lib/features/acquisition/components/AcquisitionBatchFields.svelte`
-- [ ] T023 [US2] Implement seller/buyer quick-add orchestration and auto-selection in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
-- [ ] T024 [US2] Implement seller quick-add payload defaults (`sellerType`) and error handling in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
-- [ ] T025 [US2] Add seller/buyer localized strings and toasts in `messages/en.json` and `messages/it.json`
+- [X] T022 [US2] Add seller/buyer quick-add trigger callbacks in `src/lib/features/acquisition/components/AcquisitionBatchFields.svelte`
+- [X] T023 [US2] Implement seller/buyer quick-add orchestration and auto-selection in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
+- [X] T024 [US2] Implement seller quick-add payload defaults (`sellerType`) and error handling in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
+- [X] T025 [US2] Add seller/buyer localized strings and toasts in `messages/en.json` and `messages/it.json`
 
 **Checkpoint**: US2 is independently functional and testable.
 
@@ -96,14 +96,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T026 [P] [US3] Add collection manufacturer quick-add test in `src/__tests__/collection/AddCollectionItemDrawer.test.ts`
-- [ ] T027 [P] [US3] Add wishlist manufacturer quick-add test in `src/__tests__/wishlists/AddWishlistItemDrawer.test.ts`
+- [X] T026 [P] [US3] Add collection manufacturer quick-add test in `src/__tests__/collection/AddCollectionItemDrawer.test.ts`
+- [X] T027 [P] [US3] Add wishlist manufacturer quick-add test in `src/__tests__/wishlists/AddWishlistItemDrawer.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Wire manufacturer quick-add trigger and selection flow in `src/lib/features/collection/components/AddCollectionItemDrawer.svelte`
-- [ ] T029 [US3] Wire manufacturer quick-add trigger and selection flow in `src/lib/features/wishlists/AddWishlistItemDrawer.svelte`
-- [ ] T030 [US3] Enforce single active quick-add drawer per parent form session in `src/lib/features/collection/components/AddCollectionItemDrawer.svelte` and `src/lib/features/wishlists/AddWishlistItemDrawer.svelte`
+- [X] T028 [US3] Wire manufacturer quick-add trigger and selection flow in `src/lib/features/collection/components/AddCollectionItemDrawer.svelte`
+- [X] T029 [US3] Wire manufacturer quick-add trigger and selection flow in `src/lib/features/wishlists/AddWishlistItemDrawer.svelte`
+- [X] T030 [US3] Enforce single active quick-add drawer per parent form session in `src/lib/features/collection/components/AddCollectionItemDrawer.svelte` and `src/lib/features/wishlists/AddWishlistItemDrawer.svelte`
 
 **Checkpoint**: US3 is independently functional and testable.
 
@@ -123,9 +123,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T034 [US4] Implement mobile bottom-sheet and swipe-to-dismiss interactions in `src/lib/components/drawer/QuickAddShell.svelte`
-- [ ] T035 [US4] Implement keyboard-aware safe-area/visualViewport handling in `src/lib/components/drawer/QuickAddShell.svelte`
-- [ ] T036 [US4] Implement dirty-dismiss confirmation flow in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
+- [X] T034 [US4] Implement mobile bottom-sheet and swipe-to-dismiss interactions in `src/lib/components/drawer/QuickAddShell.svelte`
+- [X] T035 [US4] Implement keyboard-aware safe-area/visualViewport handling in `src/lib/components/drawer/QuickAddShell.svelte`
+- [X] T036 [US4] Implement dirty-dismiss confirmation flow in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
 
 **Checkpoint**: US4 is independently functional and testable.
 
@@ -137,7 +137,7 @@
 
 - [ ] T037 [P] Run frontend verification (`pnpm svelte-check`, `pnpm lint`, `pnpm test`) and resolve issues in `src/lib/features/quick-add/QuickAddEntityForm.svelte`, `src/lib/components/drawer/QuickAddShell.svelte`, and related test files under `src/__tests__/`
 - [ ] T038 [P] Run backend verification (`cargo test`, `cargo clippy -- -D warnings`) and resolve issues in `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/lib.rs`
-- [ ] T039 [P] Regenerate and verify typed command bindings in `src/lib/bindings.ts` using `pnpm specta:generate`
+- [X] T039 [P] Regenerate and verify typed command bindings in `src/lib/bindings.ts` using `pnpm specta:generate`
 - [ ] T040 Update implementation/runbook notes and validation outcomes in `specs/040-quick-add-entities/quickstart.md`
 
 ---

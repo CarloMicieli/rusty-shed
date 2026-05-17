@@ -44,6 +44,7 @@
     onAddRollingStock: () => void;
     onRemoveRollingStock: (uid: string) => void;
     onTogglePurchaseSection: () => void;
+    onQuickAddManufacturer?: () => void;
   }
 
   let {
@@ -57,7 +58,8 @@
     isLoading = false,
     onAddRollingStock,
     onRemoveRollingStock,
-    onTogglePurchaseSection
+    onTogglePurchaseSection,
+    onQuickAddManufacturer
   }: Props = $props();
 
   const rollingStockCountLabel = $derived(m.add_model_rolling_stock_items_label());
@@ -74,6 +76,7 @@
   bind:epoch={form.epoch}
   {manufacturers}
   {isLoading}
+  {onQuickAddManufacturer}
   errors={validationErrors}
 />
 

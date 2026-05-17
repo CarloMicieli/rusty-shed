@@ -4,7 +4,7 @@
   import { superForm } from 'sveltekit-superforms';
   import { zod4 as zod } from 'sveltekit-superforms/adapters';
   import { addCollectionSchema } from '$lib/schemas/collection-form';
-  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter, QuickAddShell } from '$lib/components/drawer';
   import { collectionState } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -18,8 +18,10 @@
     AddRailwayModelToCollectionArgs
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
+  import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import ModelSearchSection from './ModelSearchSection.svelte';
+  import QuickAddEntityForm from '$lib/features/quick-add/QuickAddEntityForm.svelte';
 
   interface Props {
     /** Controls drawer visibility */
@@ -45,6 +47,8 @@
   let showPurchaseSection = $state(false);
   let isRollingStockExpanded = $state(false);
   let formEl: HTMLFormElement | undefined = $state();
+  let quickAddOpen = $state(false);
+  let quickAddDirty = $state(false);
 
   function createDefaultRollingStock(): RollingStockFormEntry {
     return {
@@ -233,9 +237,25 @@
   function handleSubmit() {
     formEl?.requestSubmit();
   }
+
+  function closeQuickAdd() {
+    if (quickAddDirty && !window.confirm(m.quick_add_dirty_discard_confirm())) {
+      return;
+    }
+    quickAddOpen = false;
+    quickAddDirty = false;
+  }
+
+  function handleQuickAddSuccess(entity: Manufacturer) {
+    manufacturers = [...manufacturers, entity];
+    $form.manufacturerId = entity.id;
+    quickAddOpen = false;
+    quickAddDirty = false;
+    toaster.success(m.quick_add_manufacturer_success({ name: entity.name }));
+  }
 </script>
 
-<DrawerShell {open} {onClose} size="xl" {hasChanges} labelledby="drawer-title">
+<DrawerShell {open} {onClose} size="xl" {hasChanges} dimmed={quickAddOpen} labelledby="drawer-title">
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="drawer-title"
@@ -261,6 +281,9 @@
       onAddRollingStock={handleAddRollingStock}
       onRemoveRollingStock={handleRemoveRollingStock}
       onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
+      onQuickAddManufacturer={() => {
+        if (!quickAddOpen) quickAddOpen = true;
+      }}
     />
   </form>
 
@@ -275,3 +298,21 @@
     />
   {/snippet}
 </DrawerShell>
+
+<QuickAddShell
+  open={quickAddOpen}
+  title={m.quick_add_drawer_title_manufacturer()}
+  onDismiss={closeQuickAdd}
+>
+  <QuickAddEntityForm
+    target="manufacturer"
+    existingNames={manufacturers.map((entry) => entry.name)}
+    onSuccess={(entity) => handleQuickAddSuccess(entity as Manufacturer)}
+    onCancel={closeQuickAdd}
+    onDirtyChange={(dirty) => (quickAddDirty = dirty)}
+  />
+
+  {#snippet footer()}
+    <div class="text-xs text-muted-foreground">{m.quick_add_footer_hint()}</div>
+  {/snippet}
+</QuickAddShell>

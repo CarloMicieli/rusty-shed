@@ -4,7 +4,7 @@
   import { CurrencyInput } from '$lib/components';
   import { DrawerInput, EpochPicker } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
-  import { Copy, Trash2 } from 'lucide-svelte';
+  import { Copy, Plus, Trash2 } from 'lucide-svelte';
   import type { Category, Manufacturer } from '$lib/bindings';
   import type { AcquisitionItemEntry, AcquisitionItemErrors } from '../types.js';
   import { categoryOptions, categoryLabel } from '$lib/utils/enum-options';
@@ -19,6 +19,7 @@
     onUpdate: (uid: string, patch: Partial<AcquisitionItemEntry>) => void;
     onDuplicate: (uid: string) => void;
     onRemove: (uid: string) => void;
+    onQuickAddManufacturer: (uid: string) => void;
   }
 
   let {
@@ -30,7 +31,8 @@
     canRemove,
     onUpdate,
     onDuplicate,
-    onRemove
+    onRemove,
+    onQuickAddManufacturer
   }: Props = $props();
 
   const LABEL_CLASS = 'text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase';
@@ -77,9 +79,19 @@
   <div class="grid grid-cols-2 items-start gap-3">
     <!-- Manufacturer -->
     <div class="min-w-0 space-y-1">
-      <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
-        {m.acquisition_item_manufacturer_label()}
-      </label>
+      <div class="flex items-center justify-between gap-2">
+        <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
+          {m.acquisition_item_manufacturer_label()}
+        </label>
+        <button
+          type="button"
+          class="rounded-sm border border-border p-1 text-muted-foreground hover:text-foreground"
+          aria-label={m.quick_add_drawer_title_manufacturer()}
+          onclick={() => onQuickAddManufacturer(item.uid)}
+        >
+          <Plus size={12} />
+        </button>
+      </div>
       <Select.Root
         type="single"
         value={item.manufacturerId ?? undefined}
