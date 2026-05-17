@@ -14,6 +14,16 @@
 
 The application currently has no dedicated view for managing the reference data that underpins the collection — Manufacturers, Sellers, and Buyers. This feature adds a **Library** section to the Settings page providing a full Create, Read, Update, and Delete interface for all three entity types. It also introduces an ownership model that distinguishes system-seeded (read-only) records from user-created ones, and enforces referential integrity before any deletion. As a follow-up to feature 040, this feature extends the existing shared quick-add form into a mode-based shared entity form (`QUICK` and `FULL`) while preserving existing quick-add behavior.
 
+## Clarifications
+
+### Session 2026-05-17
+
+- Q: In the shared buyer/seller table model, should usage count and deletion checks consider only the current role tab or all references to the shared party record? → A: Usage count and deletion checks must consider all references to the shared party record across both buyer and seller contexts.
+- Q: In the shared buyer/seller table model, should Buyers and Sellers tabs represent one canonical shared party record or separate per-tab projections? → A: Use one canonical shared party record shown in both tabs with role-context labels; edits apply to the same underlying party.
+- Q: When creating from Buyers or Sellers tab, should the new shared party appear only in the originating tab or in both tabs immediately? → A: Create one shared party and show it immediately in both tabs.
+- Q: For API boundaries, should Buyer and Seller use distinct command surfaces or a single generic party command set? → A: Use distinct buyer and seller command surfaces while sharing repository/table logic internally.
+- Q: For shared buyer/seller records, should merge operate per-tab or on canonical records across all contexts? → A: Merge operates on canonical shared party records and re-links buyer and seller references in one atomic transaction.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Browse and Search All Entities (Priority: P1)
@@ -128,20 +138,23 @@ On a narrow screen, the tabular layout shifts to a card-based view so entity row
 ### Functional Requirements
 
 - **FR-001**: The Settings page MUST include a **Library** section containing a tabbed view with three tabs: Manufacturers, Sellers, and Buyers.
-- **FR-002**: Each tab MUST display a table (desktop) or card list (mobile) of all entities of that type, showing at minimum: Name, Country, Usage Count, Origin badge, and available Actions.
+- **FR-002**: Each tab MUST display a table (desktop) or card list (mobile) of all entities of that type, showing at minimum: Name, Country, Usage Count, Origin badge, and available Actions. Buyer/Seller tabs MUST render the same canonical shared party records with role-context labeling rather than separate duplicated records.
 - **FR-003**: A search bar MUST filter the visible entity list in real time by Name or Country using a case-insensitive match.
 - **FR-004**: Each tab MUST provide an "Add New" button that opens the shared entity form drawer in **full-field mode** (Name, Website, Country, Notes).
 - **FR-005**: The "Add New" form MUST perform a real-time, case-insensitive duplicate check on the Name field and disable Save while a duplicate is detected or the Name is empty/whitespace.
 - **FR-006**: Clicking Edit on a user-created entity MUST open the same shared entity form drawer pre-populated with that entity's current data; saving MUST persist the changes and update all linked records atomically.
 - **FR-007**: System-seeded entities (`is_system_seeded = true`) MUST NOT expose Edit-Name or Delete controls; their Name field MUST be read-only in any form view. Extended metadata fields (e.g., Notes) MAY remain editable.
-- **FR-008**: The Delete control MUST be visible only for user-created entities with zero linked records. When an entity has linked records, the control MUST be replaced by a "Locked" indicator showing the usage count.
-- **FR-009**: Before executing a deletion the backend MUST re-validate that `is_system_seeded = false` AND `usage_count = 0`; if either condition fails the operation MUST be rejected and the UI MUST display the reason.
+- **FR-008**: The Delete control MUST be visible only for user-created entities with zero linked records. When an entity has linked records, the control MUST be replaced by a "Locked" indicator showing the usage count. For seller/buyer records stored in the shared table, usage count MUST include all links to the shared party record across both buyer and seller contexts.
+- **FR-009**: Before executing a deletion the backend MUST re-validate that `is_system_seeded = false` AND `usage_count = 0`; if either condition fails the operation MUST be rejected and the UI MUST display the reason. For seller/buyer records stored in the shared table, this re-validation MUST use total usage across both buyer and seller contexts.
 - **FR-010**: A confirmation modal MUST be shown before any deletion, stating the entity name and confirming it has no linked items.
-- **FR-011**: The Merge action MUST allow selecting exactly two user-created entities of the same type, choosing the canonical name to retain, and atomically re-linking all records from the removed entity to the surviving one before deleting the duplicate.
+- **FR-011**: The Merge action MUST allow selecting exactly two user-created entities of the same type, choosing the canonical name to retain, and atomically re-linking all records from the removed entity to the surviving one before deleting the duplicate. For shared buyer/seller records, merge MUST operate on canonical party records and re-link references across both buyer and seller contexts in the same transaction.
 - **FR-012**: Every entity record MUST carry an `is_system_seeded` boolean flag set at the time of creation. User-created records always have `is_system_seeded = false`; system-provided seed records have `is_system_seeded = true`.
 - **FR-013**: The shared entity form component MUST accept a `mode` parameter (`QUICK` or `FULL`) that controls which fields are shown; `FULL` mode exposes all fields (used in Settings); `QUICK` mode shows only Name, Website, and Country (used in the Quick-Add drawer in feature 040).
 - **FR-014**: A system-seeded entity row MUST display a visible "Protected / System" badge; a user-created entity in use MUST display an "In Use (N)" badge; an unused user-created entity MUST display an "Unused" badge.
 - **FR-015**: Buyers and sellers MUST be exposed as distinct aggregates and command surfaces in the application layer, while persisting to the same underlying database table. Buyer/Seller behavior is distinguished by context and command intent, not by separate storage tables.
+- **FR-016**: Editing a shared buyer/seller party record from either tab MUST update the same canonical underlying record, and the updated values MUST be reflected immediately in both tabs.
+- **FR-017**: Creating a new buyer/seller party from either tab MUST create one shared canonical party record and that record MUST appear immediately in both Buyers and Sellers tabs.
+- **FR-018**: The backend command contract MUST expose distinct Buyer and Seller command/query entry points (e.g., `create_buyer` and `create_seller`) even when both execute against shared repository logic and a shared underlying table.
 
 ### Key Entities
 
