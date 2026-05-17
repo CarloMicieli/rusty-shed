@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
+  import { DrawerInput } from '$lib/components/drawer';
   import { commands, type Manufacturer, type Seller } from '$lib/bindings';
   import { quickAddFormSchema, type QuickAddFormValues } from '$lib/schemas/quick-add-form';
   import type { QuickAddTarget } from './types';
@@ -119,15 +120,13 @@
 
 <div class="space-y-4">
   <div class="space-y-1">
-    <label
-      for="quick-add-name"
-      class="text-xs uppercase tracking-wider text-muted-foreground"
-    >
+    <label for="quick-add-name" class="text-xs tracking-wider text-muted-foreground uppercase">
       {m.quick_add_field_name()}
     </label>
-    <input
+    <DrawerInput
       id="quick-add-name"
-      class="h-10 w-full rounded-sm border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+      type="text"
+      placeholder={m.quick_add_name_placeholder()}
       value={values.name}
       oninput={(event) => (values.name = (event.currentTarget as HTMLInputElement).value)}
       aria-invalid={fieldError ? 'true' : undefined}
@@ -135,38 +134,35 @@
   </div>
 
   <div class="space-y-1">
-    <label
-      for="quick-add-website"
-      class="text-xs uppercase tracking-wider text-muted-foreground"
-    >
+    <label for="quick-add-website" class="text-xs tracking-wider text-muted-foreground uppercase">
       {m.quick_add_field_website()}
     </label>
-    <input
+    <DrawerInput
       id="quick-add-website"
-      class="h-10 w-full rounded-sm border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+      type="text"
+      placeholder={m.quick_add_website_placeholder()}
       value={values.websiteUrl}
       oninput={(event) => (values.websiteUrl = (event.currentTarget as HTMLInputElement).value)}
     />
   </div>
 
   <div class="space-y-1">
-    <label
-      for="quick-add-country"
-      class="text-xs uppercase tracking-wider text-muted-foreground"
-    >
+    <label for="quick-add-country" class="text-xs tracking-wider text-muted-foreground uppercase">
       {m.quick_add_field_country()}
     </label>
-    <input
+    <DrawerInput
       id="quick-add-country"
+      type="text"
       maxlength="2"
-      class="h-10 w-full rounded-sm border border-border bg-background px-3 text-sm uppercase text-foreground placeholder:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+      placeholder={m.quick_add_country_placeholder()}
+      class="uppercase"
       value={values.countryCode}
       oninput={(event) => (values.countryCode = (event.currentTarget as HTMLInputElement).value)}
     />
   </div>
 
   {#if isDuplicate}
-    <p class="text-xs text-warning">
+    <p class="text-warning text-xs">
       {m.quick_add_duplicate_warning({ entity: entityLabel })}
     </p>
   {/if}
@@ -183,14 +179,14 @@
     <Button
       type="button"
       variant="outline"
-      class="rounded-sm border-border bg-background uppercase tracking-widest text-foreground"
+      class="rounded-sm border-border bg-background tracking-widest text-foreground uppercase"
       onclick={handleCancel}
     >
       {m.quick_add_cancel()}
     </Button>
     <Button
       type="button"
-      class="variant-steampunk-lever rounded-sm bg-primary font-bebas uppercase tracking-widest text-primary-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:bg-primary/90"
+      class="variant-steampunk-lever rounded-sm bg-primary font-bebas tracking-widest text-primary-foreground uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:bg-primary/90"
       onclick={handleSave}
       disabled={!canSave}
     >
