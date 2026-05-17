@@ -12,6 +12,7 @@
     existingNames: string[];
     onSuccess: (entity: Manufacturer | Seller) => void;
     onCancel: () => void;
+    onError?: (message: string) => void;
     onDirtyChange?: (dirty: boolean) => void;
   }
 
@@ -22,7 +23,7 @@
     notes: string;
   }
 
-  let { target, mode = 'QUICK', existingNames, onSuccess, onCancel, onDirtyChange }: Props =
+  let { target, mode = 'QUICK', existingNames, onSuccess, onCancel, onError, onDirtyChange }: Props =
     $props();
 
   let values = $state<QuickAddFormState>({ name: '', websiteUrl: '', countryCode: '', notes: '' });
@@ -88,8 +89,27 @@
           onSuccess(result.data);
           return;
         }
-      } else {
+      } else if (target === 'seller') {
         const result = await commands.createSeller({
+          name: values.name.trim(),
+          sellerType: 'SHOP',
+          email: null,
+          phone: null,
+          websiteUrl: values.websiteUrl.trim() || null,
+          streetAddress: null,
+          extendedAddress: null,
+          city: null,
+          stateRegion: null,
+          postalCode: null,
+          countryCode: values.countryCode.trim().toUpperCase() || null
+        });
+
+        if (result.status === 'ok') {
+          onSuccess(result.data);
+          return;
+        }
+      } else {
+        const result = await commands.createBuyer({
           name: values.name.trim(),
           sellerType: 'SHOP',
           email: null,
@@ -110,8 +130,10 @@
       }
 
       saveError = m.quick_add_save_failed();
+      onError?.(saveError);
     } catch {
       saveError = m.quick_add_save_failed();
+      onError?.(saveError);
     } finally {
       isSaving = false;
     }

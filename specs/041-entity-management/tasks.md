@@ -72,10 +72,10 @@
 ### Implementation for User Story 2
 
 - [X] T024 [P] [US2] Extend shared entity form fields for FULL mode (Name, Website, Country, Notes) in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
-- [ ] T025 [P] [US2] Implement Add New trigger and drawer orchestration per tab in `src/lib/features/settings/components/library/LibrarySection.svelte`
+- [X] T025 [P] [US2] Implement Add New trigger and drawer orchestration per tab in `src/lib/features/settings/components/library/LibrarySection.svelte`
 - [X] T026 [US2] Implement create commands for missing entity surfaces (`create_buyer`, updated `create_manufacturer`/`create_seller`) in `src-tauri/src/buyers/interface/command_handlers.rs` and `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs
-- [ ] T027 [US2] Implement immediate insertion/update of canonical shared party state so newly created buyer/seller appears in both Buyers and Sellers tabs without reload in `src/lib/features/settings/SettingsState.svelte.ts`
-- [ ] T028 [US2] Add create success/error toasts and messages in `messages/en.json` and `messages/it.json`
+- [X] T027 [US2] Implement immediate insertion/update of canonical shared party state so newly created buyer/seller appears in both Buyers and Sellers tabs without reload in `src/lib/features/settings/SettingsState.svelte.ts`
+- [X] T028 [US2] Add create success/error toasts and messages in `messages/en.json` and `messages/it.json`
 
 **Checkpoint**: User Story 2 is independently functional and testable
 

@@ -411,6 +411,26 @@ export const commands = {
 	 *  - `Err(CommandError)` when the use-case returns an error.
 	 */
 	deleteSeller: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_seller", { id })),
+	getBuyers: () => typedError<SellerView[], CommandError>(__TAURI_INVOKE("get_buyers")),
+	getBuyerById: (id: SellerId) => typedError<{
+	/**  Unique identifier for the seller. */
+	id: SellerId,
+	/**  Name of the seller. */
+	name: string,
+	/**  Type of the seller. */
+	sellerType: SellerType,
+	/**  Contact email of the seller. */
+	email: string | null,
+	/**  Contact phone number of the seller. */
+	phone: string | null,
+	/**  Website URL of the seller. */
+	websiteUrl: string | null,
+	/**  Address of the seller. */
+	address: Address | null,
+} | null, CommandError>(__TAURI_INVOKE("get_buyer_by_id", { id })),
+	createBuyer: (payload: CreateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("create_buyer", { payload })),
+	updateBuyer: (payload: UpdateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("update_buyer", { payload })),
+	deleteBuyer: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_buyer", { id })),
 	/**
 	 *  Command handler to create a new track inventory.
 	 * 
