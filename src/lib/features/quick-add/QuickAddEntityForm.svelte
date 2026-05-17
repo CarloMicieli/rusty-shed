@@ -153,7 +153,7 @@
     <DrawerInput
       id="quick-add-country"
       type="text"
-      maxlength="2"
+      maxLength={2}
       placeholder={m.quick_add_country_placeholder()}
       class="uppercase"
       value={values.countryCode}

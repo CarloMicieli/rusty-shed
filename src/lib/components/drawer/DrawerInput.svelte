@@ -6,6 +6,7 @@
     type?: string;
     min?: string | number;
     max?: string | number;
+    maxLength?: number;
     value?: string | number | null;
     placeholder?: string;
     disabled?: boolean;
