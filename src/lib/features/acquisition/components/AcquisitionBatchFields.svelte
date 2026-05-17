@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { DatePickerField } from '$lib/components';
+  import { Button, DatePickerField } from '$lib/components';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
   import { Plus } from 'lucide-svelte';
   import { CalendarDate } from '@internationalized/date';
@@ -61,14 +61,16 @@
           onSelect={(v: string) => onSellerChange(v || null)}
         />
       </div>
-      <button
+      <Button
         type="button"
-        class="rounded-sm border border-border p-2 text-muted-foreground hover:text-foreground"
+        size="icon-sm"
+        variant="outline"
+        class="variant-steampunk-lever rounded-sm border-border bg-background text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
         aria-label={m.quick_add_drawer_title_seller()}
         onclick={onQuickAddSeller}
       >
         <Plus size={12} />
-      </button>
+      </Button>
     </div>
   </div>
 

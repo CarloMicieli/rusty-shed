@@ -34,6 +34,7 @@ vi.mock('$lib/components/ui/select', () => ({
 }));
 
 vi.mock('$lib/components', () => ({
+  Button: function Button() {},
   CurrencyInput: function CurrencyInput() {}
 }));
 

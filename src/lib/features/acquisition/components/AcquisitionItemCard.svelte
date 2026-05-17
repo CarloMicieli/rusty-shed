@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { CurrencyInput } from '$lib/components';
+  import { Button, CurrencyInput } from '$lib/components';
   import { DrawerInput, EpochPicker } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { Copy, Plus, Trash2 } from 'lucide-svelte';
@@ -83,14 +83,16 @@
         <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
           {m.acquisition_item_manufacturer_label()}
         </label>
-        <button
+        <Button
           type="button"
-          class="rounded-sm border border-border p-1 text-muted-foreground hover:text-foreground"
+          size="icon-sm"
+          variant="outline"
+          class="variant-steampunk-lever rounded-sm border-border bg-background text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
           aria-label={m.quick_add_drawer_title_manufacturer()}
           onclick={() => onQuickAddManufacturer(item.uid)}
         >
           <Plus size={12} />
-        </button>
+        </Button>
       </div>
       <Select.Root
         type="single"

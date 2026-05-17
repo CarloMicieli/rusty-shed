@@ -68,7 +68,7 @@
   ></div>
 
   <div
-    class="fixed inset-x-0 bottom-0 z-[110] flex h-[82vh] max-h-[82vh] w-full flex-col rounded-t-xl border border-border bg-card shadow-2xl transition-transform md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:w-full md:max-w-md md:rounded-none"
+    class="fixed inset-x-0 bottom-0 z-[110] flex h-[82vh] max-h-[82vh] w-full flex-col rounded-sm border border-border bg-card shadow-2xl transition-transform md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:w-full md:max-w-md md:rounded-sm"
     style={`transform: translateY(${touchDeltaY}px); padding-bottom: ${keyboardInset}px;`}
     role="dialog"
     tabindex="-1"
@@ -81,7 +81,9 @@
     <div class="mx-auto mt-2 mb-1 h-1.5 w-10 rounded-full bg-muted md:hidden"></div>
 
     <header class="border-b border-border px-4 py-3">
-      <h2 id="quick-add-title" class="font-bebas text-xl tracking-wider uppercase">{title}</h2>
+      <h2 id="quick-add-title" class="font-bebas text-lg tracking-widest uppercase">
+        {title}
+      </h2>
     </header>
 
     <div class="flex-1 overflow-y-auto p-4">
