@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { Button, DatePickerField } from '$lib/components';
+  import { Button } from '$lib/components';
+  import DatePickerInput from '$lib/components/DatePickerInput.svelte';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
   import { Plus } from 'lucide-svelte';
   import { CalendarDate } from '@internationalized/date';
@@ -82,9 +83,9 @@
     >
       {m.acquisition_date_label()}
     </label>
-    <DatePickerField
+    <DatePickerInput
       id="acq-date"
-      value={purchaseDate}
+      bind:value={purchaseDate}
       onSelect={(date) => onDateChange(date ?? new Date().toISOString().split('T')[0])}
       maxValue={today}
     />

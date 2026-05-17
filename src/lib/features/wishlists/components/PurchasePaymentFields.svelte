@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { CurrencyInput, DatePickerField } from '$lib/components';
+  import { CurrencyInput } from '$lib/components';
+  import DatePickerInput from '$lib/components/DatePickerInput.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { CalendarDate } from '@internationalized/date';
   import type { SellerView } from '$lib/bindings';
@@ -101,13 +102,10 @@
 
 <!-- Purchase Date -->
 <div class="space-y-2">
-  <label
-    for="purchase-date"
-    class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-  >
+  <label for="purchase-date" class="text-xs tracking-wider text-muted-foreground uppercase">
     {m.purchase_dialog_date_label()}
   </label>
-  <DatePickerField
+  <DatePickerInput
     id="purchase-date"
     bind:value={purchaseDate}
     maxValue={todayCalendar}

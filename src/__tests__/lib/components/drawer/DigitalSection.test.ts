@@ -9,19 +9,17 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   digital_roster_date_label: () => 'Installation Date'
 }));
 
-// DatePickerField uses @internationalized/date — stub the bits that DrawerShell pulls in
+// DatePickerInput uses @internationalized/date — stub the bits that DrawerShell pulls in
 vi.mock('@internationalized/date', () => ({
   today: () => ({ year: 2026, month: 3, day: 17 }),
   getLocalTimeZone: () => 'Europe/Rome'
 }));
 
-// DatePickerField is a complex bits-ui component; stub it to a simple input so
+// DatePickerInput is a complex bits-ui component; stub it to a simple input so
 // DigitalSection tests focus on its own logic rather than the datepicker internals.
-vi.mock('$lib/components', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('$lib/components')>();
+vi.mock('$lib/components/DatePickerInput.svelte', async () => {
   return {
-    ...actual,
-    DatePickerField: (await import('./__mocks__/DatePickerFieldMock.svelte')).default
+    default: (await import('./__mocks__/DatePickerFieldMock.svelte')).default
   };
 });
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { CalendarDate } from '@internationalized/date';
-  import { DatePickerField } from '$lib/components';
+  import { DatePickerInput } from '$lib/components';
   import type { MaintenanceType } from '$lib/bindings';
 
   interface Card {
@@ -93,7 +93,7 @@
   >
     {m.maintenance_add_event_date_label()}
   </label>
-  <DatePickerField
+  <DatePickerInput
     id="event-date-performed"
     value={datePerformed}
     onSelect={onDateChange}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as Dialog from '$lib/components/ui/dialog';
-  import { Button, CurrencyInput, Input, DatePickerField } from '$lib/components';
+  import { Button, CurrencyInput, Input, DatePickerInput } from '$lib/components';
   import { commands } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
@@ -104,7 +104,7 @@
           <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             {m.collection_item_sale_date()}
           </p>
-          <DatePickerField value={saleDate} onSelect={(iso) => (saleDate = iso)} placeholder="—" />
+          <DatePickerInput bind:value={saleDate} placeholder="—" />
         </div>
 
         <div class="space-y-1">

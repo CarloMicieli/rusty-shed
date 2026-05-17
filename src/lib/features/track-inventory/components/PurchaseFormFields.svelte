@@ -3,7 +3,8 @@
   import { Plus, Tag, Store } from 'lucide-svelte';
   import type { TrackProductView, SellerView, Currency } from '$lib/bindings';
   import type { Component } from 'svelte';
-  import { Input, Button, DatePickerField } from '$lib/components';
+  import { Input, Button } from '$lib/components';
+  import DatePickerInput from '$lib/components/DatePickerInput.svelte';
   import { FormPrice } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
@@ -167,7 +168,7 @@
     >
       {m.track_purchase_field_transaction_date()}
     </label>
-    <DatePickerField id="purchase-date" bind:value={purchaseDate} disabled={submitting} />
+    <DatePickerInput id="purchase-date" bind:value={purchaseDate} disabled={submitting} />
   </div>
 
   {#if error}

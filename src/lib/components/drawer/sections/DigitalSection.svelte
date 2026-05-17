@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { FormInput } from '$lib/components/drawer';
-  import { DatePickerField } from '$lib/components';
+  import DatePickerInput from '$lib/components/DatePickerInput.svelte';
   import { today, getLocalTimeZone } from '@internationalized/date';
 
   interface Props {
@@ -65,9 +65,11 @@
       <!-- Installation Date -->
       <div class="space-y-1">
         <label for="digital-section-install-date" class="block">
-          <span class="text-sm text-muted-foreground">{m.digital_roster_date_label()}</span>
+          <span class="text-xs tracking-wider text-muted-foreground uppercase"
+            >{m.digital_roster_date_label()}</span
+          >
         </label>
-        <DatePickerField
+        <DatePickerInput
           id="digital-section-install-date"
           bind:value={installationDate}
           maxValue={today(getLocalTimeZone())}

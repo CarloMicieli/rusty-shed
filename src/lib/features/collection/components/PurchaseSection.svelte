@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { ChevronDown, ReceiptText } from 'lucide-svelte';
-  import { Textarea, CurrencyInput, DatePickerField } from '$lib/components';
+  import { Textarea, CurrencyInput } from '$lib/components';
+  import DatePickerInput from '$lib/components/DatePickerInput.svelte';
   import { FormSelect } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { SellerView } from '$lib/bindings';
@@ -158,24 +159,16 @@
 
         <!-- Purchase Date (label changes for preorders) -->
         <div>
-          <label for="purchase-date" class="mb-1 block">
-            {#if dark}
-              <span class="text-[10px] text-muted-foreground uppercase">
-                {purchase.purchaseType === 'PREORDER'
-                  ? m.add_model_preorder_date()
-                  : m.add_model_purchase_date()}
-              </span>
-              <span class="ml-1 text-muted-foreground/50">(optional)</span>
-            {:else}
-              <span class="text-sm text-muted-foreground">
-                {purchase.purchaseType === 'PREORDER'
-                  ? m.add_model_preorder_date()
-                  : m.add_model_purchase_date()}
-              </span>
-              <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
-            {/if}
+          <label
+            for="purchase-date"
+            class="mb-1 block text-xs tracking-wider text-muted-foreground uppercase"
+          >
+            {purchase.purchaseType === 'PREORDER'
+              ? m.add_model_preorder_date()
+              : m.add_model_purchase_date()}
+            <span class="ml-1 opacity-50">(optional)</span>
           </label>
-          <DatePickerField id="purchase-date" bind:value={purchase.purchaseDate} />
+          <DatePickerInput id="purchase-date" bind:value={purchase.purchaseDate} />
         </div>
       </div>
 
@@ -273,18 +266,14 @@
 
         <!-- Expected Delivery Date -->
         <div>
-          <label for="expected-date" class="mb-1 block">
-            {#if dark}
-              <span class="text-[10px] text-muted-foreground uppercase"
-                >{m.add_model_expected_date()}</span
-              >
-              <span class="ml-1 text-muted-foreground/50">(optional)</span>
-            {:else}
-              <span class="text-sm text-muted-foreground">{m.add_model_expected_date()}</span>
-              <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
-            {/if}
+          <label
+            for="expected-date"
+            class="mb-1 block text-xs tracking-wider text-muted-foreground uppercase"
+          >
+            {m.add_model_expected_date()}
+            <span class="ml-1 opacity-50">(optional)</span>
           </label>
-          <DatePickerField id="expected-date" bind:value={purchase.expectedDate} />
+          <DatePickerInput id="expected-date" bind:value={purchase.expectedDate} />
         </div>
       {/if}
 

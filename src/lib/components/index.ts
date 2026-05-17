@@ -30,7 +30,7 @@ export { default as PageHeader } from './PageHeader.svelte';
 export { default as StatsCard } from './StatsCard.svelte';
 export { default as QuickActionButtons } from './QuickActionButtons.svelte';
 export { default as CurrencyInput } from './CurrencyInput.svelte';
-export { default as DatePickerField } from './DatePickerField.svelte';
+export { default as DatePickerInput } from './DatePickerInput.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
 
 // Feature-specific components

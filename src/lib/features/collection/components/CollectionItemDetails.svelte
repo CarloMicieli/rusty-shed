@@ -6,7 +6,7 @@
   import { commands } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { Button, CurrencyInput, DatePickerField } from '$lib/components';
+  import { Button, CurrencyInput, DatePickerInput } from '$lib/components';
   import SellCollectionItemDialog from './SellCollectionItemDialog.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { CollectionItemView, CollectionItemUpdateArgs, SellerView } from '$lib/bindings';
@@ -358,7 +358,7 @@
         {#if isSold}
           <span class="h-6 font-mono text-xs text-foreground">{acquisitionDate ?? '—'}</span>
         {:else}
-          <DatePickerField
+          <DatePickerInput
             value={acquisitionDate}
             onSelect={(iso: string | null) =>
               saveUpdate({ kind: 'purchaseDate', data: { purchase_date: iso } })}

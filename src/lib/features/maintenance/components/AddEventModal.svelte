@@ -2,7 +2,7 @@
   import { X, ClipboardList } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import * as Dialog from '$lib/components/ui/dialog';
-  import { Button, DatePickerField } from '$lib/components';
+  import { Button, DatePickerInput } from '$lib/components';
   import { CalendarDate } from '@internationalized/date';
   import { getMaintenanceDetailState } from '../MaintenanceDetailState.svelte';
   import { getMaintenanceTypes } from '../utils/maintenanceTypes';
@@ -134,7 +134,7 @@
         >
           {m.maintenance_add_event_date_label()}
         </label>
-        <DatePickerField id="add-event-date" bind:value={datePerformed} maxValue={today} />
+        <DatePickerInput id="add-event-date" bind:value={datePerformed} maxValue={today} />
         {#if !datePerformed}
           <p class="text-xs font-medium text-red-500">{m.maintenance_event_date_required()}</p>
         {/if}
