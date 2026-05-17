@@ -45,6 +45,7 @@
     onRemoveRollingStock: (uid: string) => void;
     onTogglePurchaseSection: () => void;
     onQuickAddManufacturer?: () => void;
+    onQuickAddSeller?: () => void;
   }
 
   let {
@@ -59,7 +60,8 @@
     onAddRollingStock,
     onRemoveRollingStock,
     onTogglePurchaseSection,
-    onQuickAddManufacturer
+    onQuickAddManufacturer,
+    onQuickAddSeller
   }: Props = $props();
 
   const rollingStockCountLabel = $derived(m.add_model_rolling_stock_items_label());
@@ -171,4 +173,5 @@
   {sellers}
   bind:expanded={showPurchaseSection}
   onToggle={onTogglePurchaseSection}
+  {onQuickAddSeller}
 />

@@ -17,7 +17,7 @@
     SellerView,
     AddRailwayModelToCollectionArgs
   } from '$lib/bindings';
-  import { commands } from '$lib/bindings';
+  import { commands, type Seller } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import ModelSearchSection from './ModelSearchSection.svelte';
@@ -47,7 +47,7 @@
   let showPurchaseSection = $state(false);
   let isRollingStockExpanded = $state(false);
   let formEl: HTMLFormElement | undefined = $state();
-  let quickAddOpen = $state(false);
+  let quickAddTarget = $state<'manufacturer' | 'seller' | null>(null);
   let quickAddDirty = $state(false);
 
   function createDefaultRollingStock(): RollingStockFormEntry {
@@ -242,16 +242,34 @@
     if (quickAddDirty && !window.confirm(m.quick_add_dirty_discard_confirm())) {
       return;
     }
-    quickAddOpen = false;
+    quickAddTarget = null;
     quickAddDirty = false;
   }
 
-  function handleQuickAddSuccess(entity: Manufacturer) {
-    manufacturers = [...manufacturers, entity];
-    $form.manufacturerId = entity.id;
-    quickAddOpen = false;
+  function handleQuickAddSuccess(entity: Manufacturer | Seller) {
+    if (quickAddTarget === 'seller') {
+      const created = entity as Seller;
+      const nextSeller: SellerView = {
+        id: created.id,
+        name: created.name,
+        sellerType: created.sellerType,
+        email: created.email,
+        phone: created.phone,
+        websiteUrl: created.websiteUrl,
+        address: created.address
+      };
+      sellers = [...sellers, nextSeller];
+      $form.purchase.sellerId = created.id;
+      toaster.success(m.quick_add_seller_success({ name: created.name }));
+    } else {
+      const created = entity as Manufacturer;
+      manufacturers = [...manufacturers, created];
+      $form.manufacturerId = created.id;
+      toaster.success(m.quick_add_manufacturer_success({ name: created.name }));
+    }
+
+    quickAddTarget = null;
     quickAddDirty = false;
-    toaster.success(m.quick_add_manufacturer_success({ name: entity.name }));
   }
 </script>
 
@@ -260,7 +278,7 @@
   {onClose}
   size="xl"
   {hasChanges}
-  dimmed={quickAddOpen}
+  dimmed={quickAddTarget !== null}
   labelledby="drawer-title"
 >
   {#snippet header({ requestClose })}
@@ -289,7 +307,10 @@
       onRemoveRollingStock={handleRemoveRollingStock}
       onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
       onQuickAddManufacturer={() => {
-        if (!quickAddOpen) quickAddOpen = true;
+        if (!quickAddTarget) quickAddTarget = 'manufacturer';
+      }}
+      onQuickAddSeller={() => {
+        if (!quickAddTarget) quickAddTarget = 'seller';
       }}
     />
   </form>
@@ -307,14 +328,18 @@
 </DrawerShell>
 
 <QuickAddShell
-  open={quickAddOpen}
-  title={m.quick_add_drawer_title_manufacturer()}
+  open={quickAddTarget !== null}
+  title={quickAddTarget === 'seller'
+    ? m.quick_add_drawer_title_seller()
+    : m.quick_add_drawer_title_manufacturer()}
   onDismiss={closeQuickAdd}
 >
   <QuickAddEntityForm
-    target="manufacturer"
-    existingNames={manufacturers.map((entry) => entry.name)}
-    onSuccess={(entity) => handleQuickAddSuccess(entity as Manufacturer)}
+    target={quickAddTarget === 'seller' ? 'seller' : 'manufacturer'}
+    existingNames={(quickAddTarget === 'seller' ? sellers : manufacturers).map(
+      (entry) => entry.name
+    )}
+    onSuccess={handleQuickAddSuccess}
     onCancel={closeQuickAdd}
     onDirtyChange={(dirty) => (quickAddDirty = dirty)}
   />

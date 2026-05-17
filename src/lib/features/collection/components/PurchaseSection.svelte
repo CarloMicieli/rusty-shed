@@ -18,6 +18,8 @@
     onToggle: () => void;
     /** Enable mechanical dark mode styling */
     dark?: boolean;
+    /** Optional quick-add callback for the seller select */
+    onQuickAddSeller?: () => void;
   }
 
   let {
@@ -25,7 +27,8 @@
     sellers,
     expanded = $bindable(),
     onToggle,
-    dark = false
+    dark = false,
+    onQuickAddSeller
   }: Props = $props();
 
   const darkTextarea =
@@ -110,6 +113,8 @@
           options={sellerOptions}
           bind:value={purchase.sellerId}
           placeholder="-- {m.add_model_seller()} --"
+          onQuickAdd={onQuickAddSeller}
+          quickAddLabel={m.quick_add_drawer_title_seller()}
         />
 
         <!-- Purchase Type toggle -->
