@@ -1,0 +1,418 @@
+openapi: 3.0.3
+info:
+  title: Entity Management Contract (Planning)
+  version: 0.1.0
+  description: |
+    Planning contract for feature 041. Runtime transport remains Tauri IPC commands
+    with specta-generated TypeScript bindings.
+servers:
+  - url: tauri://ipc
+paths:
+  /library/manufacturers:
+    get:
+      summary: List manufacturers
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Case-insensitive search by name or country
+      responses:
+        '200':
+          description: Manufacturers list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManufacturerRow'
+    post:
+      summary: Create manufacturer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManufacturerCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManufacturerRow'
+        '409':
+          description: Duplicate name
+  /library/manufacturers/{id}:
+    patch:
+      summary: Update manufacturer
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManufacturerUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManufacturerRow'
+        '403':
+          description: Protected record
+        '409':
+          description: Duplicate name
+    delete:
+      summary: Delete manufacturer
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Protected or in-use
+  /library/manufacturers/merge:
+    post:
+      summary: Merge two manufacturers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergeRequest'
+      responses:
+        '200':
+          description: Merge complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergeResult'
+        '403':
+          description: Protected record involved
+
+  /library/sellers:
+    get:
+      summary: List sellers (canonical shared party records in seller context)
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sellers list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PartyRow'
+    post:
+      summary: Create seller (distinct command surface)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyCreate'
+      responses:
+        '201':
+          description: Created canonical party record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartyRow'
+        '409':
+          description: Duplicate name
+  /library/sellers/{id}:
+    patch:
+      summary: Update seller view of canonical party
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyUpdate'
+      responses:
+        '200':
+          description: Updated canonical party
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartyRow'
+        '403':
+          description: Protected record
+        '409':
+          description: Duplicate name
+    delete:
+      summary: Delete seller canonical party
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Protected or in-use
+  /library/sellers/merge:
+    post:
+      summary: Merge two seller canonical party records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergeRequest'
+      responses:
+        '200':
+          description: Merge complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergeResult'
+        '403':
+          description: Protected record involved
+
+  /library/buyers:
+    get:
+      summary: List buyers (same canonical shared party records in buyer context)
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Buyers list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PartyRow'
+    post:
+      summary: Create buyer (distinct command surface, shared storage)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyCreate'
+      responses:
+        '201':
+          description: Created canonical party record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartyRow'
+        '409':
+          description: Duplicate name
+  /library/buyers/{id}:
+    patch:
+      summary: Update buyer view of canonical party
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyUpdate'
+      responses:
+        '200':
+          description: Updated canonical party
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartyRow'
+        '403':
+          description: Protected record
+        '409':
+          description: Duplicate name
+    delete:
+      summary: Delete buyer canonical party
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Protected or in-use
+  /library/buyers/merge:
+    post:
+      summary: Merge two buyer canonical party records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergeRequest'
+      responses:
+        '200':
+          description: Merge complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergeResult'
+        '403':
+          description: Protected record involved
+
+components:
+  parameters:
+    EntityId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ManufacturerCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        website:
+          type: string
+          format: uri
+          nullable: true
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    ManufacturerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        website:
+          type: string
+          format: uri
+          nullable: true
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    PartyCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        website:
+          type: string
+          format: uri
+          nullable: true
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    PartyUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        website:
+          type: string
+          format: uri
+          nullable: true
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    MergeRequest:
+      type: object
+      required: [sourceId, targetId]
+      properties:
+        sourceId:
+          type: string
+          format: uuid
+        targetId:
+          type: string
+          format: uuid
+    MergeResult:
+      type: object
+      required: [sourceId, targetId, relinkedCount]
+      properties:
+        sourceId:
+          type: string
+        targetId:
+          type: string
+        relinkedCount:
+          type: integer
+          minimum: 0
+    ManufacturerRow:
+      type: object
+      required: [id, name, isSystemSeeded, usageCount]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        website:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        isSystemSeeded:
+          type: boolean
+        usageCount:
+          type: integer
+          minimum: 0
+    PartyRow:
+      type: object
+      required: [id, name, isSystemSeeded, usageCount]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        website:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        isSystemSeeded:
+          type: boolean
+        usageCount:
+          type: integer
+          minimum: 0
+        buyerUsageCount:
+          type: integer
+          minimum: 0
+        sellerUsageCount:
+          type: integer
+          minimum: 0

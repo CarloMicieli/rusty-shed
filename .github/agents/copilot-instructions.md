@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-01-30
 
 ## Active Technologies
+- Rust 1.93.0 (edition 2024), TypeScript 5.9.3 (strict), Svelte 5.55.7 (Runes) + Tauri 2.11.x, specta 2 RC, sqlx 0.8.x, garde, SvelteKit 2.60.x, shadcn-svelte/bits-ui, Paraglide-JS (041-entity-management)
+- SQLite (via Rust/sqlx; migrations in `src-tauri/migrations`) (041-entity-management)
 
 - TypeScript 5.9.3 (strict mode), Rust 1.93.0 (edition 2024) + SvelteKit (Svelte 5.48.2), Vite 7.3.1, Tauri 2.9.x, shadcn-svelte, Tailwind CSS 4.1.18 (017-dashboard-redesign)
 - SQLite via sqlx (existing tables: `purchase_infos`, `collection_items`, `sellers`) (017-dashboard-redesign)
@@ -32,11 +34,11 @@ cargo test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECH
 Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend): Follow standard conventions
 
 ## Recent Changes
+- 041-entity-management: Added Rust 1.93.0 (edition 2024), TypeScript 5.9.3 (strict), Svelte 5.55.7 (Runes) + Tauri 2.11.x, specta 2 RC, sqlx 0.8.x, garde, SvelteKit 2.60.x, shadcn-svelte/bits-ui, Paraglide-JS
 - 040-quick-add-entities: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 - 017-dashboard-redesign: Added TypeScript 5.9.3 (strict mode), Rust 1.93.0 (edition 2024) + SvelteKit (Svelte 5.48.2), Vite 7.3.1, Tauri 2.9.x, shadcn-svelte, Tailwind CSS 4.1.18
 
-- 015-model-image-upload: Added Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend)
 
 <<<<<<< HEAD
 
