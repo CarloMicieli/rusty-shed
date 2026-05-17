@@ -6,6 +6,7 @@
 
 import { safeInvoke } from '$lib/services';
 import type { UpdateSettingsInput, UserSettings_Serialize } from '$lib/bindings';
+import type { LibraryTab } from './library-types';
 import { log } from '$lib/tauri-logger';
 
 export class SettingsState {
@@ -21,6 +22,11 @@ export class SettingsState {
 
   loading = $state(false);
   error = $state<string | null>(null);
+
+  libraryActiveTab = $state<LibraryTab>('manufacturers');
+  librarySearchQuery = $state('');
+  libraryLoading = $state(false);
+  libraryError = $state<string | null>(null);
 
   /**
    * Load settings from backend
@@ -83,6 +89,14 @@ export class SettingsState {
       log.error(`Failed to initialize settings: ${result.error.message}`);
       throw new Error(result.error.message);
     }
+  }
+
+  setLibraryTab(tab: LibraryTab): void {
+    this.libraryActiveTab = tab;
+  }
+
+  setLibrarySearchQuery(query: string): void {
+    this.librarySearchQuery = query;
   }
 }
 

@@ -26,3 +26,5 @@ export type {
 } from './settings';
 export { exportDatabase, importDatabase } from './database-backup';
 export type { ExportDatabaseResponse, ImportDatabaseResponse } from './database-backup';
+export { getManufacturers, getSellers, getBuyers } from './entityLibrary';
+export type { LibraryEntityRow } from './entityLibrary';

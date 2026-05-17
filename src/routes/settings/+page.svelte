@@ -8,6 +8,7 @@
   import SyncButton from '$lib/features/cloud-backup/components/SyncButton.svelte';
   import BackupList from '$lib/features/cloud-backup/components/BackupList.svelte';
   import RestoreConfirmModal from '$lib/features/cloud-backup/components/RestoreConfirmModal.svelte';
+  import LibrarySection from '$lib/features/settings/components/library/LibrarySection.svelte';
   import { getCloudBackupController } from '$lib/features/cloud-backup';
   import ExportArchiveSection from '$lib/features/export/components/ExportArchiveSection.svelte';
   import {
@@ -152,6 +153,8 @@
         {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerMethod}`}
           <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
         {/key}
+
+        <LibrarySection />
 
         <!-- Archive Export/Import Section -->
         <ExportArchiveSection />

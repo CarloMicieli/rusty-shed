@@ -7,10 +7,10 @@
 
 **Purpose**: Prepare feature scaffolding and shared type contracts
 
-- [ ] T001 Create Settings Library feature module scaffolding in `src/lib/features/settings/components/library/`
-- [ ] T002 Create buyer bounded-context module scaffolding in `src-tauri/src/buyers/`
-- [ ] T003 [P] Create feature test directories in `src/__tests__/settings/library/` and `src-tauri/tests/library/`
-- [ ] T004 [P] Add feature-level i18n key placeholders in `messages/en.json` and `messages/it.json`
+- [X] T001 Create Settings Library feature module scaffolding in `src/lib/features/settings/components/library/`
+- [X] T002 Create buyer bounded-context module scaffolding in `src-tauri/src/buyers/`
+- [X] T003 [P] Create feature test directories in `src/__tests__/settings/library/` and `src-tauri/tests/library/`
+- [X] T004 [P] Add feature-level i18n key placeholders in `messages/en.json` and `messages/it.json`
 
 ---
 
@@ -20,14 +20,14 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Add migrations for `is_system_seeded` and case-insensitive unique indexes in `src-tauri/migrations/`
-- [ ] T006 Add shared usage-count query primitives for manufacturers and canonical parties in `src-tauri/src/core/`
-- [ ] T007 Implement canonical shared-party repository operations in `src-tauri/src/sellers/infrastructure/`
-- [ ] T008 Implement buyer command registration and module wiring in `src-tauri/src/lib.rs` and `src-tauri/src/buyers/mod.rs`
-- [ ] T009 [P] Extend specta IPC type exports for new buyer/seller/manufacturer management DTOs in `src-tauri/src/bin/gen_types.rs`
-- [ ] T010 Extend shared entity form to support `mode: 'QUICK' | 'FULL'` in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
-- [ ] T011 Add common Library state store (tabs/search/loading/errors) in `src/lib/features/settings/SettingsState.svelte.ts`
-- [ ] T012 Add centralized protection/lock badge utility in `src/lib/features/settings/types.ts`
+- [X] T005 Add migrations for `is_system_seeded` and case-insensitive unique indexes in `src-tauri/migrations/`
+- [X] T006 Add shared usage-count query primitives for manufacturers and canonical parties in `src-tauri/src/core/`
+- [X] T007 Implement canonical shared-party repository operations in `src-tauri/src/sellers/infrastructure/`
+- [X] T008 Implement buyer command registration and module wiring in `src-tauri/src/lib.rs` and `src-tauri/src/buyers/mod.rs`
+- [X] T009 [P] Extend specta IPC type exports for new buyer/seller/manufacturer management DTOs in `src-tauri/src/bin/gen_types.rs`
+- [X] T010 Extend shared entity form to support `mode: 'QUICK' | 'FULL'` in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
+- [X] T011 Add common Library state store (tabs/search/loading/errors) in `src/lib/features/settings/SettingsState.svelte.ts`
+- [X] T012 Add centralized protection/lock badge utility in `src/lib/features/settings/types.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -41,18 +41,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T013 [P] [US1] Add Library page render/search integration tests in `src/__tests__/settings/library/LibraryView.test.ts`
-- [ ] T014 [P] [US1] Add backend list/query command tests for manufacturers/sellers/buyers in `src-tauri/tests/library/list_entities_tests.rs`
+- [X] T013 [P] [US1] Add Library page render/search integration tests in `src/__tests__/settings/library/LibraryView.test.ts`
+- [X] T014 [P] [US1] Add backend list/query command tests for manufacturers/sellers/buyers in `src-tauri/tests/library/list_entities_tests.rs`
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Implement Library section host component in `src/lib/features/settings/components/library/LibrarySection.svelte`
-- [ ] T016 [P] [US1] Implement tabbed entity list component in `src/lib/features/settings/components/library/EntityTabs.svelte`
-- [ ] T017 [P] [US1] Implement shared search input and empty state in `src/lib/features/settings/components/library/EntitySearch.svelte`
-- [ ] T018 [US1] Integrate Library section into Settings route in `src/routes/settings/+page.svelte`
-- [ ] T019 [US1] Implement frontend query calls (`getManufacturers`, `getSellers`, `getBuyers`) in `src/lib/services/`
-- [ ] T020 [US1] Implement buyer list/query command handlers in `src-tauri/src/buyers/interface/command_handlers.rs`
-- [ ] T021 [US1] Regenerate and consume bindings for new list/query commands in `src/lib/bindings.ts`
+- [X] T015 [P] [US1] Implement Library section host component in `src/lib/features/settings/components/library/LibrarySection.svelte`
+- [X] T016 [P] [US1] Implement tabbed entity list component in `src/lib/features/settings/components/library/EntityTabs.svelte`
+- [X] T017 [P] [US1] Implement shared search input and empty state in `src/lib/features/settings/components/library/EntitySearch.svelte`
+- [X] T018 [US1] Integrate Library section into Settings route in `src/routes/settings/+page.svelte`
+- [X] T019 [US1] Implement frontend query calls (`getManufacturers`, `getSellers`, `getBuyers`) in `src/lib/services/`
+- [X] T020 [US1] Implement buyer list/query command handlers in `src-tauri/src/buyers/interface/command_handlers.rs`
+- [X] T021 [US1] Regenerate and consume bindings for new list/query commands in `src/lib/bindings.ts`
 
 **Checkpoint**: User Story 1 is independently functional and testable
 
@@ -66,14 +66,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add FULL-mode form validation/duplicate tests, including a timing assertion that duplicate warning appears within 500ms after input settles, in `src/__tests__/settings/library/EntityFormFullMode.test.ts`
-- [ ] T023 [P] [US2] Add backend create command tests for manufacturer/seller/buyer surfaces and verify canonical shared-party visibility semantics across buyer/seller list queries in `src-tauri/tests/library/create_entities_tests.rs`
+- [X] T022 [P] [US2] Add FULL-mode form validation/duplicate tests, including a timing assertion that duplicate warning appears within 500ms after input settles, in `src/__tests__/settings/library/EntityFormFullMode.test.ts`
+- [X] T023 [P] [US2] Add backend create command tests for manufacturer/seller/buyer surfaces and verify canonical shared-party visibility semantics across buyer/seller list queries in `src-tauri/tests/library/create_entities_tests.rs`
 
 ### Implementation for User Story 2
 
-- [ ] T024 [P] [US2] Extend shared entity form fields for FULL mode (Name, Website, Country, Notes) in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
+- [X] T024 [P] [US2] Extend shared entity form fields for FULL mode (Name, Website, Country, Notes) in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
 - [ ] T025 [P] [US2] Implement Add New trigger and drawer orchestration per tab in `src/lib/features/settings/components/library/LibrarySection.svelte`
-- [ ] T026 [US2] Implement create commands for missing entity surfaces (`create_buyer`, updated `create_manufacturer`/`create_seller`) in `src-tauri/src/buyers/interface/command_handlers.rs` and `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs`
+- [X] T026 [US2] Implement create commands for missing entity surfaces (`create_buyer`, updated `create_manufacturer`/`create_seller`) in `src-tauri/src/buyers/interface/command_handlers.rs` and `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs
 - [ ] T027 [US2] Implement immediate insertion/update of canonical shared party state so newly created buyer/seller appears in both Buyers and Sellers tabs without reload in `src/lib/features/settings/SettingsState.svelte.ts`
 - [ ] T028 [US2] Add create success/error toasts and messages in `messages/en.json` and `messages/it.json`
 

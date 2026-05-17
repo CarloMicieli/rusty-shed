@@ -4,10 +4,11 @@
   import { DrawerInput } from '$lib/components/drawer';
   import { commands, type Manufacturer, type Seller } from '$lib/bindings';
   import { quickAddFormSchema, type QuickAddFormValues } from '$lib/schemas/quick-add-form';
-  import type { QuickAddTarget } from './types';
+  import type { QuickAddMode, QuickAddTarget } from './types';
 
   interface Props {
     target: QuickAddTarget;
+    mode?: QuickAddMode;
     existingNames: string[];
     onSuccess: (entity: Manufacturer | Seller) => void;
     onCancel: () => void;
@@ -18,11 +19,13 @@
     name: string;
     websiteUrl: string;
     countryCode: string;
+    notes: string;
   }
 
-  let { target, existingNames, onSuccess, onCancel, onDirtyChange }: Props = $props();
+  let { target, mode = 'QUICK', existingNames, onSuccess, onCancel, onDirtyChange }: Props =
+    $props();
 
-  let values = $state<QuickAddFormState>({ name: '', websiteUrl: '', countryCode: '' });
+  let values = $state<QuickAddFormState>({ name: '', websiteUrl: '', countryCode: '', notes: '' });
   let isSaving = $state(false);
   let saveError = $state<string | null>(null);
   let fieldError = $state<string | null>(null);
@@ -46,7 +49,8 @@
   const isDirty = $derived(
     values.name.trim().length > 0 ||
       values.websiteUrl.trim().length > 0 ||
-      values.countryCode.trim().length > 0
+      values.countryCode.trim().length > 0 ||
+      values.notes.trim().length > 0
   );
 
   $effect(() => {
@@ -118,7 +122,7 @@
   }
 </script>
 
-<div class="space-y-4">
+<div class="space-y-4" data-form-mode={mode}>
   <div class="space-y-1">
     <label for="quick-add-name" class="text-xs tracking-wider text-muted-foreground uppercase">
       {m.quick_add_field_name()}
@@ -160,6 +164,21 @@
       oninput={(event) => (values.countryCode = (event.currentTarget as HTMLInputElement).value)}
     />
   </div>
+
+  {#if mode === 'FULL'}
+    <div class="space-y-1">
+      <label for="quick-add-notes" class="text-xs tracking-wider text-muted-foreground uppercase">
+        {m.settings_library_field_notes()}
+      </label>
+      <textarea
+        id="quick-add-notes"
+        class="min-h-20 w-full rounded-sm border border-border bg-background px-3 py-2 text-sm"
+        placeholder={m.settings_library_notes_placeholder()}
+        value={values.notes}
+        oninput={(event) => (values.notes = (event.currentTarget as HTMLTextAreaElement).value)}
+      ></textarea>
+    </div>
+  {/if}
 
   {#if isDuplicate}
     <p class="text-warning text-xs">
