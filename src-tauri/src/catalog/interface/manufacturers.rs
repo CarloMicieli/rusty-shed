@@ -3,10 +3,10 @@ use crate::catalog::domain::manufacturer::{
     Manufacturer as DomainManufacturer, ManufacturerId, ManufacturerStatus,
 };
 use crate::catalog::infrastructure::entities::ManufacturerRow;
-use crate::core::infrastructure::error::CommandError;
 use crate::core::domain::identifiers::Identifier;
-use garde::Validate;
+use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use url::Url;
@@ -135,12 +135,12 @@ pub async fn create_manufacturer_inner(
     .await;
 
     if let Err(err) = insert_result {
-        if let sqlx::Error::Database(db_err) = &err {
-            if db_err.is_unique_violation() {
-                return Err(CommandError::Conflict(
-                    "A manufacturer with this name already exists".to_string(),
-                ));
-            }
+        if let sqlx::Error::Database(db_err) = &err
+            && db_err.is_unique_violation()
+        {
+            return Err(CommandError::Conflict(
+                "A manufacturer with this name already exists".to_string(),
+            ));
         }
         return Err(CommandError::DatabaseError(err.to_string()));
     }
@@ -205,7 +205,10 @@ mod tests {
     async fn create_manufacturer_duplicate_name_returns_conflict(pool: SqlitePool) {
         let state = app_state(pool);
         let first = create_manufacturer_inner(&state, minimal_args("ACME")).await;
-        assert!(first.is_ok(), "Expected first insert to succeed, got: {first:?}");
+        assert!(
+            first.is_ok(),
+            "Expected first insert to succeed, got: {first:?}"
+        );
 
         let second = create_manufacturer_inner(&state, minimal_args("acme")).await;
         assert!(
@@ -231,7 +234,10 @@ mod tests {
 
         assert_eq!(result.name, "Roco");
         assert_eq!(result.country_code.as_deref(), Some("AT"));
-        assert_eq!(result.website_url.as_ref().map(Url::as_str), Some("https://www.roco.cc/"));
+        assert_eq!(
+            result.website_url.as_ref().map(Url::as_str),
+            Some("https://www.roco.cc/")
+        );
         assert_eq!(result.status, ManufacturerStatus::Active);
     }
 }
