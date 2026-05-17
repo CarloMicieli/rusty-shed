@@ -12,9 +12,15 @@
     onDirtyChange?: (dirty: boolean) => void;
   }
 
+  interface QuickAddFormState {
+    name: string;
+    websiteUrl: string;
+    countryCode: string;
+  }
+
   let { target, existingNames, onSuccess, onCancel, onDirtyChange }: Props = $props();
 
-  let values = $state<QuickAddFormValues>({ name: '', websiteUrl: '', countryCode: '' });
+  let values = $state<QuickAddFormState>({ name: '', websiteUrl: '', countryCode: '' });
   let isSaving = $state(false);
   let saveError = $state<string | null>(null);
   let fieldError = $state<string | null>(null);
@@ -36,7 +42,9 @@
       existingNames.some((entry) => entry.trim().toLowerCase() === normalizedName)
   );
   const isDirty = $derived(
-    values.name.trim().length > 0 || values.websiteUrl.trim().length > 0 || values.countryCode.trim().length > 0
+    values.name.trim().length > 0 ||
+      values.websiteUrl.trim().length > 0 ||
+      values.countryCode.trim().length > 0
   );
 
   $effect(() => {
@@ -162,7 +170,11 @@
   {/if}
 
   <div class="flex items-center justify-end gap-2 pt-2">
-    <button type="button" class="rounded-sm border border-border px-3 py-2 text-sm" onclick={handleCancel}>
+    <button
+      type="button"
+      class="rounded-sm border border-border px-3 py-2 text-sm"
+      onclick={handleCancel}
+    >
       {m.quick_add_cancel()}
     </button>
     <button

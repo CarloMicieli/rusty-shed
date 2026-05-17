@@ -71,6 +71,7 @@
     class="fixed inset-x-0 bottom-0 z-[110] flex h-[82vh] max-h-[82vh] w-full flex-col rounded-t-xl border border-border bg-card shadow-2xl transition-transform md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:w-full md:max-w-md md:rounded-none"
     style={`transform: translateY(${touchDeltaY}px); padding-bottom: ${keyboardInset}px;`}
     role="dialog"
+    tabindex="-1"
     aria-modal="true"
     aria-labelledby="quick-add-title"
     ontouchstart={handleTouchStart}

@@ -16,7 +16,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   acquisition_item_category_label: () => 'Category',
   acquisition_item_category_placeholder: () => 'Select category',
   acquisition_item_epoch_label: () => 'Epoch',
-  acquisition_item_price_label: () => 'Price'
+  acquisition_item_price_label: () => 'Price',
+  quick_add_drawer_title_manufacturer: () => 'Add Manufacturer'
 }));
 
 vi.mock('$lib/features/settings/RegionalManager.svelte', () => ({
@@ -89,7 +90,8 @@ describe('AcquisitionItemCard', () => {
         canRemove: true,
         onUpdate: vi.fn(),
         onDuplicate,
-        onRemove: vi.fn()
+        onRemove: vi.fn(),
+        onQuickAddManufacturer: vi.fn()
       }
     });
 
@@ -109,7 +111,8 @@ describe('AcquisitionItemCard', () => {
         canRemove: false,
         onUpdate: vi.fn(),
         onDuplicate: vi.fn(),
-        onRemove: vi.fn()
+        onRemove: vi.fn(),
+        onQuickAddManufacturer: vi.fn()
       }
     });
 
@@ -129,7 +132,8 @@ describe('AcquisitionItemCard', () => {
         canRemove: true,
         onUpdate,
         onDuplicate: vi.fn(),
-        onRemove: vi.fn()
+        onRemove: vi.fn(),
+        onQuickAddManufacturer: vi.fn()
       }
     });
 

@@ -255,7 +255,14 @@
   }
 </script>
 
-<DrawerShell {open} {onClose} size="xl" {hasChanges} dimmed={quickAddOpen} labelledby="drawer-title">
+<DrawerShell
+  {open}
+  {onClose}
+  size="xl"
+  {hasChanges}
+  dimmed={quickAddOpen}
+  labelledby="drawer-title"
+>
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="drawer-title"

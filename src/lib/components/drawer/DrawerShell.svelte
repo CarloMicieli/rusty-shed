@@ -117,7 +117,12 @@
     {/if}
 
     <!-- Scrollable body -->
-    <div class={cn('flex-1 overflow-y-auto p-4 transition-opacity', dimmed && 'pointer-events-none opacity-70')}>
+    <div
+      class={cn(
+        'flex-1 overflow-y-auto p-4 transition-opacity',
+        dimmed && 'pointer-events-none opacity-70'
+      )}
+    >
       {@render children()}
 
       {#if error}
