@@ -66,15 +66,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add FULL-mode form validation/duplicate tests in `src/__tests__/settings/library/EntityFormFullMode.test.ts`
-- [ ] T023 [P] [US2] Add backend create command tests for manufacturer/seller/buyer surfaces in `src-tauri/tests/library/create_entities_tests.rs`
+- [ ] T022 [P] [US2] Add FULL-mode form validation/duplicate tests, including a timing assertion that duplicate warning appears within 500ms after input settles, in `src/__tests__/settings/library/EntityFormFullMode.test.ts`
+- [ ] T023 [P] [US2] Add backend create command tests for manufacturer/seller/buyer surfaces and verify canonical shared-party visibility semantics across buyer/seller list queries in `src-tauri/tests/library/create_entities_tests.rs`
 
 ### Implementation for User Story 2
 
 - [ ] T024 [P] [US2] Extend shared entity form fields for FULL mode (Name, Website, Country, Notes) in `src/lib/features/quick-add/QuickAddEntityForm.svelte`
 - [ ] T025 [P] [US2] Implement Add New trigger and drawer orchestration per tab in `src/lib/features/settings/components/library/LibrarySection.svelte`
 - [ ] T026 [US2] Implement create commands for missing entity surfaces (`create_buyer`, updated `create_manufacturer`/`create_seller`) in `src-tauri/src/buyers/interface/command_handlers.rs` and `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs`
-- [ ] T027 [US2] Implement immediate local insertion into canonical tab data in `src/lib/features/settings/SettingsState.svelte.ts`
+- [ ] T027 [US2] Implement immediate insertion/update of canonical shared party state so newly created buyer/seller appears in both Buyers and Sellers tabs without reload in `src/lib/features/settings/SettingsState.svelte.ts`
 - [ ] T028 [US2] Add create success/error toasts and messages in `messages/en.json` and `messages/it.json`
 
 **Checkpoint**: User Story 2 is independently functional and testable
@@ -116,10 +116,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T037 [P] [US4] Implement delete confirmation modal flow in `src/lib/features/settings/components/library/DeleteEntityDialog.svelte`
+- [ ] T037 [P] [US4] Implement delete confirmation modal flow that displays entity name and affected linked-item count (or zero) in `src/lib/features/settings/components/library/DeleteEntityDialog.svelte`
 - [ ] T038 [US4] Implement backend delete commands with execution-time revalidation (`is_system_seeded=false && usage_count=0`) in `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs` and `src-tauri/src/buyers/interface/command_handlers.rs`
 - [ ] T039 [US4] Implement shared-party total usage lock logic for buyer/seller records in `src-tauri/src/sellers/application/`
 - [ ] T040 [US4] Surface backend rejection reasons to UI messages in `messages/en.json` and `messages/it.json`
+- [ ] T055 [P] [US4] Add interaction-budget test asserting unused user-created delete completes in <=3 clicks from list row action in `src/__tests__/settings/library/DeleteLocks.test.ts`
 
 **Checkpoint**: User Story 4 is independently functional and testable
 
@@ -175,6 +176,9 @@
 - [ ] T052 [P] Update architecture and feature docs for Settings Library behavior in `docs/FEATURE_IMPLEMENTATION.md` and `docs/FRONTEND_ARCHITECTURE.md`
 - [ ] T053 Add final telemetry/logging for critical entity commands in `src-tauri/src/*/interface/command_handlers.rs`
 - [ ] T054 Run quickstart verification scenarios from `specs/041-entity-management/quickstart.md`
+- [ ] T056 [P] Measure duplicate-warning latency under FULL form input and assert p95 <= 500ms in `src/__tests__/settings/library/EntityFormFullMode.perf.test.ts`
+- [ ] T057 [P] Benchmark UI-critical list queries for manufacturers/sellers/buyers and assert common-case <200ms in `src-tauri/tests/library/list_entities_perf_tests.rs`
+- [ ] T058 Record profiling evidence and mitigation notes for any missed thresholds in `specs/041-entity-management/quickstart.md`
 
 ---
 

@@ -146,7 +146,7 @@ On a narrow screen, the tabular layout shifts to a card-based view so entity row
 - **FR-007**: System-seeded entities (`is_system_seeded = true`) MUST NOT expose Edit-Name or Delete controls; their Name field MUST be read-only in any form view. Extended metadata fields (e.g., Notes) MAY remain editable.
 - **FR-008**: The Delete control MUST be visible only for user-created entities with zero linked records. When an entity has linked records, the control MUST be replaced by a "Locked" indicator showing the usage count. For seller/buyer records stored in the shared table, usage count MUST include all links to the shared party record across both buyer and seller contexts.
 - **FR-009**: Before executing a deletion the backend MUST re-validate that `is_system_seeded = false` AND `usage_count = 0`; if either condition fails the operation MUST be rejected and the UI MUST display the reason. For seller/buyer records stored in the shared table, this re-validation MUST use total usage across both buyer and seller contexts.
-- **FR-010**: A confirmation modal MUST be shown before any deletion, stating the entity name and confirming it has no linked items.
+- **FR-010**: A confirmation modal MUST be shown before any deletion, stating the entity name and the affected linked-item count (or explicit zero), and requiring explicit user confirmation.
 - **FR-011**: The Merge action MUST allow selecting exactly two user-created entities of the same type, choosing the canonical name to retain, and atomically re-linking all records from the removed entity to the surviving one before deleting the duplicate. For shared buyer/seller records, merge MUST operate on canonical party records and re-link references across both buyer and seller contexts in the same transaction.
 - **FR-012**: Every entity record MUST carry an `is_system_seeded` boolean flag set at the time of creation. User-created records always have `is_system_seeded = false`; system-provided seed records have `is_system_seeded = true`.
 - **FR-013**: The shared entity form component MUST accept a `mode` parameter (`QUICK` or `FULL`) that controls which fields are shown; `FULL` mode exposes all fields (used in Settings); `QUICK` mode shows only Name, Website, and Country (used in the Quick-Add drawer in feature 040).
@@ -168,7 +168,7 @@ On a narrow screen, the tabular layout shifts to a card-based view so entity row
 
 - **SC-001**: A user can update a manufacturer's name and the change is reflected across all linked collection items within a single database transaction (no stale references).
 - **SC-002**: The system presents a warning modal before any deletion that correctly states how many items will be affected (or confirms zero); no deletion occurs without explicit confirmation.
-- **SC-003**: A user-created entity with zero links can be deleted in under 3 clicks from the list view (Edit row → Delete button → Confirm modal).
+- **SC-003**: A user-created entity with zero links can be deleted in <=3 clicks from the list view (Edit row -> Delete button -> Confirm modal).
 - **SC-004**: A system-seeded entity cannot be deleted or have its name edited under any user-initiated action path.
 - **SC-005**: The duplicate-check warning appears within 500 milliseconds of the user finishing typing a name.
 - **SC-006**: The desktop table and mobile card layout render without horizontal overflow or clipped content on screens as narrow as 375 px.
