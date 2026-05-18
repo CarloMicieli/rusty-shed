@@ -89,6 +89,62 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
             None => Ok(None),
         }
     }
+
+    async fn find_is_system_seeded(
+        &mut self,
+        id: &ManufacturerId,
+    ) -> Result<Option<bool>, DomainError> {
+        let sql = r#"
+            SELECT is_system_seeded
+            FROM manufacturers
+            WHERE id = ?1
+            LIMIT 1
+        "#;
+
+        let seeded = sqlx::query_scalar::<_, i64>(sql)
+            .bind(id.as_ref())
+            .fetch_optional(&mut *self.executor)
+            .await?
+            .map(|value| value != 0);
+
+        Ok(seeded)
+    }
+
+    async fn relink_railway_models(
+        &mut self,
+        source_id: &ManufacturerId,
+        target_id: &ManufacturerId,
+    ) -> Result<i64, DomainError> {
+        let sql = r#"
+            UPDATE railway_models
+            SET manufacturer_id = ?2
+            WHERE manufacturer_id = ?1
+        "#;
+
+        let rows = sqlx::query(sql)
+            .bind(source_id.as_ref())
+            .bind(target_id.as_ref())
+            .execute(&mut *self.executor)
+            .await?
+            .rows_affected() as i64;
+
+        Ok(rows)
+    }
+
+    async fn delete_by_id(&mut self, id: &ManufacturerId) -> Result<u64, DomainError> {
+        let sql = r#"
+            DELETE FROM manufacturers
+            WHERE id = ?1
+        "#;
+
+        let rows = sqlx::query(sql)
+            .bind(id.as_ref())
+            .execute(&mut *self.executor)
+            .await?
+            .rows_affected();
+
+        Ok(rows)
+    }
 }
 
 impl ManufacturerUowExt for SqliteUnitOfWork {
@@ -105,6 +161,7 @@ impl ManufacturerUowExt for SqliteUnitOfWork {
 mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerStatus};
+    use crate::core::domain::identifiers::Identifier;
     use pretty_assertions::assert_eq;
     use url::Url;
 
@@ -213,5 +270,122 @@ mod tests {
             .expect("should run query without errors");
 
         assert_eq!(result.len(), 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_find_seeded_flag(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let id = ManufacturerId::new_from_parts(&["seeded"]);
+        sqlx::query(
+            r#"
+            INSERT INTO manufacturers (id, name, status, created_at, updated_at, version, is_system_seeded)
+            VALUES (?1, 'Seeded Manufacturer', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 1)
+            "#,
+        )
+        .bind(id.as_ref())
+        .execute(&mut *conn)
+        .await
+        .expect("manufacturer should insert");
+
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
+        let result = repository
+            .find_is_system_seeded(&id)
+            .await
+            .expect("seeded query should succeed");
+
+        assert_eq!(result, Some(true));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_relink_models_and_delete_manufacturer(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let source_id = ManufacturerId::new_from_parts(&["source"]);
+        let target_id = ManufacturerId::new_from_parts(&["target"]);
+        let railway_company_id = "trn:railway-company:fs";
+
+        sqlx::query(
+            r#"
+            INSERT INTO railway_companies (id, name, status, created_at, updated_at, version)
+            VALUES (?1, 'FS', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)
+            "#,
+        )
+        .bind(railway_company_id)
+        .execute(&mut *conn)
+        .await
+        .expect("railway company should insert");
+
+        sqlx::query(
+            r#"
+            INSERT INTO manufacturers (id, name, status, created_at, updated_at, version, is_system_seeded)
+            VALUES
+                (?1, 'Source Manufacturer', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 0),
+                (?2, 'Target Manufacturer', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 0)
+            "#,
+        )
+        .bind(source_id.as_ref())
+        .bind(target_id.as_ref())
+        .execute(&mut *conn)
+        .await
+        .expect("manufacturers should insert");
+
+        sqlx::query(
+            r#"
+            INSERT INTO railway_models (
+                id,
+                manufacturer_id,
+                product_code,
+                power_method,
+                scale,
+                epoch,
+                category,
+                created_at,
+                updated_at,
+                version
+            )
+            VALUES
+                ('trn:railway-model:source:one', ?1, 'SRC-001', 'ANALOG_DC', 'H0', 'V', 'LOCOMOTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
+                ('trn:railway-model:source:two', ?1, 'SRC-002', 'ANALOG_DC', 'H0', 'V', 'LOCOMOTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)
+            "#,
+        )
+        .bind(source_id.as_ref())
+        .execute(&mut *conn)
+        .await
+        .expect("railway models should insert");
+
+        sqlx::query(
+            r#"
+            INSERT INTO rolling_stocks (
+                id,
+                railway_model_id,
+                railway_company_id,
+                category,
+                locomotive_type,
+                series_code
+            )
+            VALUES
+                ('trn:rolling-stock:source:one', 'trn:railway-model:source:one', ?1, 'LOCOMOTIVE', 'ELECTRIC', 'E.001'),
+                ('trn:rolling-stock:source:two', 'trn:railway-model:source:two', ?1, 'LOCOMOTIVE', 'ELECTRIC', 'E.002')
+            "#,
+        )
+        .bind(railway_company_id)
+        .execute(&mut *conn)
+        .await
+        .expect("rolling stocks should insert");
+
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
+
+        let relinked = repository
+            .relink_railway_models(&source_id, &target_id)
+            .await
+            .expect("relink should succeed");
+        assert_eq!(relinked, 2);
+
+        let deleted = repository
+            .delete_by_id(&source_id)
+            .await
+            .expect("delete should succeed");
+        assert_eq!(deleted, 1);
     }
 }

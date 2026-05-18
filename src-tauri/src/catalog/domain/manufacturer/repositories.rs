@@ -31,6 +31,33 @@ pub trait ManufacturerRepository: Send + Sync {
         &mut self,
         id: &ManufacturerId,
     ) -> Result<Option<Manufacturer>, DomainError>;
+
+    /// Returns whether a manufacturer is protected/system-seeded.
+    ///
+    /// # Returns
+    /// - `Ok(Some(true))` when the manufacturer exists and is protected.
+    /// - `Ok(Some(false))` when the manufacturer exists and is editable.
+    /// - `Ok(None)` when no manufacturer is found for the given id.
+    /// - `Err(DomainError)` when persistence access fails.
+    async fn find_is_system_seeded(
+        &mut self,
+        id: &ManufacturerId,
+    ) -> Result<Option<bool>, DomainError>;
+
+    /// Relinks all railway models currently referencing `source_id` so they
+    /// reference `target_id` instead.
+    ///
+    /// Returns the number of affected rows.
+    async fn relink_railway_models(
+        &mut self,
+        source_id: &ManufacturerId,
+        target_id: &ManufacturerId,
+    ) -> Result<i64, DomainError>;
+
+    /// Deletes a manufacturer row by identifier.
+    ///
+    /// Returns the number of deleted rows.
+    async fn delete_by_id(&mut self, id: &ManufacturerId) -> Result<u64, DomainError>;
 }
 
 /// An extension trait that provides access to the `ManufacturerRepository`.

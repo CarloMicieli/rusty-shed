@@ -422,13 +422,13 @@ pub async fn merge_manufacturers_inner(
     state: &AppState,
     args: MergeManufacturerArgs,
 ) -> Result<ManufacturerMergeResult, CommandError> {
-    let mut tx = state.db_pool().begin().await.map_err(CommandError::from)?;
+    let mut uow = state.unit_of_work().await?;
 
-    let relinked_count = MergeManufacturers::execute(&mut tx, &args.source_id, &args.target_id)
+    let relinked_count = MergeManufacturers::execute(&mut uow, &args.source_id, &args.target_id)
         .await
         .map_err(CommandError::from)?;
 
-    tx.commit().await.map_err(CommandError::from)?;
+    uow.commit().await?;
 
     Ok(ManufacturerMergeResult {
         source_id: args.source_id.to_string(),
