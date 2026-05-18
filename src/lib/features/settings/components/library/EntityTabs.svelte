@@ -8,12 +8,14 @@
     activeTab: LibraryTab;
     onTabChange: (tab: LibraryTab) => void;
     onEdit: (row: LibraryEntityRow) => void;
+    onDelete: (row: LibraryEntityRow) => void;
     manufacturers: LibraryEntityRow[];
     sellers: LibraryEntityRow[];
     buyers: LibraryEntityRow[];
   }
 
-  let { activeTab, onTabChange, onEdit, manufacturers, sellers, buyers }: Props = $props();
+  let { activeTab, onTabChange, onEdit, onDelete, manufacturers, sellers, buyers }: Props =
+    $props();
 
   const visibleRows = $derived.by(() => {
     if (activeTab === 'manufacturers') return manufacturers;
@@ -56,6 +58,6 @@
   {#if visibleRows.length === 0}
     <p class="text-sm text-muted-foreground">{m.settings_library_empty_state()}</p>
   {:else}
-    <EntityTable rows={visibleRows} onEdit={onEdit} />
+    <EntityTable rows={visibleRows} onEdit={onEdit} onDelete={onDelete} />
   {/if}
 </div>

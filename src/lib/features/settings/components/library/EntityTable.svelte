@@ -7,9 +7,10 @@
   interface Props {
     rows: LibraryEntityRow[];
     onEdit: (row: LibraryEntityRow) => void;
+    onDelete: (row: LibraryEntityRow) => void;
   }
 
-  let { rows, onEdit }: Props = $props();
+  let { rows, onEdit, onDelete }: Props = $props();
 </script>
 
 <ul class="space-y-2">
@@ -24,7 +25,13 @@
           {/if}
         </div>
 
-        <EntityRowActions row={row} onEdit={onEdit} editDisabled={badge.kind === 'protected'} />
+        <EntityRowActions
+          row={row}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          editDisabled={badge.kind === 'protected'}
+          deleteDisabled={badge.kind === 'protected' || badge.kind === 'in-use'}
+        />
       </div>
 
       <div class="mt-2">

@@ -17,7 +17,8 @@ describe('EditEntityProtection', () => {
             isSystemSeeded: true
           }
         ],
-        onEdit
+        onEdit,
+        onDelete: vi.fn()
       }
     });
 
@@ -40,7 +41,8 @@ describe('EditEntityProtection', () => {
     render(EntityTable, {
       props: {
         rows: [row],
-        onEdit
+        onEdit,
+        onDelete: vi.fn()
       }
     });
 

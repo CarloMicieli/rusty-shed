@@ -111,16 +111,16 @@
 
 ### Tests for User Story 4
 
-- [ ] T035 [P] [US4] Add delete visibility/lock UI tests in `src/__tests__/settings/library/DeleteLocks.test.ts`
-- [ ] T036 [P] [US4] Add backend delete revalidation tests (protected + usage>0) in `src-tauri/tests/library/delete_entities_tests.rs`
+- [X] T035 [P] [US4] Add delete visibility/lock UI tests in `src/__tests__/settings/library/DeleteLocks.test.ts`
+- [X] T036 [P] [US4] Add backend delete revalidation tests (protected + usage>0) in `src-tauri/tests/library/delete_entities_tests.rs`
 
 ### Implementation for User Story 4
 
-- [ ] T037 [P] [US4] Implement delete confirmation modal flow that displays entity name and affected linked-item count (or zero) in `src/lib/features/settings/components/library/DeleteEntityDialog.svelte`
-- [ ] T038 [US4] Implement backend delete commands with execution-time revalidation (`is_system_seeded=false && usage_count=0`) in `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs` and `src-tauri/src/buyers/interface/command_handlers.rs`
-- [ ] T039 [US4] Implement shared-party total usage lock logic for buyer/seller records in `src-tauri/src/sellers/application/`
-- [ ] T040 [US4] Surface backend rejection reasons to UI messages in `messages/en.json` and `messages/it.json`
-- [ ] T055 [P] [US4] Add interaction-budget test asserting unused user-created delete completes in <=3 clicks from list row action in `src/__tests__/settings/library/DeleteLocks.test.ts`
+- [X] T037 [P] [US4] Implement delete confirmation modal flow that displays entity name and affected linked-item count (or zero) in `src/lib/features/settings/components/library/DeleteEntityDialog.svelte`
+- [X] T038 [US4] Implement backend delete commands with execution-time revalidation (`is_system_seeded=false && usage_count=0`) in `src-tauri/src/catalog/interface/manufacturers.rs` and `src-tauri/src/sellers/interface/command_handlers.rs` and `src-tauri/src/buyers/interface/command_handlers.rs`
+- [X] T039 [US4] Implement shared-party total usage lock logic for buyer/seller records in `src-tauri/src/sellers/application/`
+- [X] T040 [US4] Surface backend rejection reasons to UI messages in `messages/en.json` and `messages/it.json`
+- [X] T055 [P] [US4] Add interaction-budget test asserting unused user-created delete completes in <=3 clicks from list row action in `src/__tests__/settings/library/DeleteLocks.test.ts`
 
 **Checkpoint**: User Story 4 is independently functional and testable
 

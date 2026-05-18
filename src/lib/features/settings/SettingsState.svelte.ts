@@ -124,6 +124,15 @@ export class SettingsState {
     this.librarySellers = [row, ...this.librarySellers.filter((entry) => entry.id !== row.id)];
     this.libraryBuyers = [row, ...this.libraryBuyers.filter((entry) => entry.id !== row.id)];
   }
+
+  removeLibraryManufacturer(id: string): void {
+    this.libraryManufacturers = this.libraryManufacturers.filter((entry) => entry.id !== id);
+  }
+
+  removeCanonicalParty(id: string): void {
+    this.librarySellers = this.librarySellers.filter((entry) => entry.id !== id);
+    this.libraryBuyers = this.libraryBuyers.filter((entry) => entry.id !== id);
+  }
 }
 
 // Export singleton instance

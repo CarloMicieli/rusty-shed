@@ -1,5 +1,4 @@
 /// Shared usage-count helpers for entity-management flows.
-
 pub async fn manufacturer_usage_count(
     executor: &mut sqlx::SqliteConnection,
     manufacturer_id: &str,

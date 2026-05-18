@@ -2,6 +2,7 @@ use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::usage_queries::canonical_party_usage_count;
 use crate::sellers::application::create_seller::{CreateSeller, CreateSellerInput};
 use crate::sellers::application::delete_seller::DeleteSeller;
+use crate::sellers::application::delete_seller_with_lock::DeleteSellerWithLock;
 use crate::sellers::application::get_seller_by_id::GetSellerById;
 use crate::sellers::application::get_sellers::GetSellers;
 use crate::sellers::application::seller_view::SellerView;
@@ -51,7 +52,7 @@ async fn enrich_seller_view(state: &AppState, seller: &mut SellerView) -> Result
     .map_err(CommandError::from)?
     .unwrap_or(0);
 
-    let usage_count = canonical_party_usage_count(&mut *conn, seller.id.as_ref())
+    let usage_count = canonical_party_usage_count(&mut conn, seller.id.as_ref())
         .await
         .map_err(CommandError::from)?;
 
@@ -255,6 +256,13 @@ pub async fn update_seller(
 
 pub async fn delete_seller_inner(state: &AppState, id: SellerId) -> Result<(), CommandError> {
     info!("Deleting seller with ID: {}", id);
+
+    {
+        let mut conn = state.db_pool().acquire().await.map_err(CommandError::from)?;
+        DeleteSellerWithLock::ensure_deletable(&mut conn, &id)
+            .await
+            .map_err(CommandError::from)?;
+    }
 
     let mut unit_of_work = state.unit_of_work().await?;
 

@@ -57,7 +57,7 @@ async fn enrich_manufacturer(state: &AppState, manufacturer: &mut Manufacturer) 
     .map_err(CommandError::from)?
     .unwrap_or(0);
 
-    let usage_count = manufacturer_usage_count(&mut *conn, manufacturer.id.as_ref())
+    let usage_count = manufacturer_usage_count(&mut conn, manufacturer.id.as_ref())
         .await
         .map_err(CommandError::from)?;
 
@@ -326,6 +326,71 @@ pub async fn update_manufacturer(
     args: UpdateManufacturerArgs,
 ) -> Result<Manufacturer, CommandError> {
     update_manufacturer_inner(&state, args).await
+}
+
+pub async fn delete_manufacturer_inner(
+    state: &AppState,
+    id: ManufacturerId,
+) -> Result<(), CommandError> {
+    let mut tx = state.db_pool().begin().await.map_err(CommandError::from)?;
+
+    let seeded = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT is_system_seeded
+        FROM manufacturers
+        WHERE id = ?1
+        LIMIT 1
+        "#,
+    )
+    .bind(id.as_ref())
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(CommandError::from)?
+    .ok_or_else(|| CommandError::NotFound(format!("Manufacturer '{}' not found", id)))?;
+
+    if seeded != 0 {
+        return Err(CommandError::BusinessRule(
+            "Protected entity cannot be deleted".to_string(),
+        ));
+    }
+
+    let usage_count = manufacturer_usage_count(&mut tx, id.as_ref())
+        .await
+        .map_err(CommandError::from)?;
+
+    if usage_count > 0 {
+        return Err(CommandError::BusinessRule(format!(
+            "Entity is still in use ({usage_count})"
+        )));
+    }
+
+    let affected = sqlx::query(
+        r#"
+        DELETE FROM manufacturers
+        WHERE id = ?1
+        "#,
+    )
+    .bind(id.as_ref())
+    .execute(&mut *tx)
+    .await
+    .map_err(CommandError::from)?
+    .rows_affected();
+
+    if affected == 0 {
+        return Err(CommandError::NotFound(format!("Manufacturer '{}' not found", id)));
+    }
+
+    tx.commit().await.map_err(CommandError::from)?;
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_manufacturer(
+    state: tauri::State<'_, AppState>,
+    id: ManufacturerId,
+) -> Result<(), CommandError> {
+    delete_manufacturer_inner(&state, id).await
 }
 
 #[cfg(test)]

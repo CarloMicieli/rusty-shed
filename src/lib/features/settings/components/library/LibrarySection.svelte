@@ -13,12 +13,15 @@
     getSellers,
     type LibraryEntityRow
   } from '$lib/services/entityLibrary';
+  import DeleteEntityDialog from './DeleteEntityDialog.svelte';
   import EntitySearch from './EntitySearch.svelte';
   import EntityTabs from './EntityTabs.svelte';
 
   let quickFormIntent = $state<'create' | 'edit'>('create');
   let quickAddTarget = $state<QuickAddTarget | null>(null);
   let editingRow = $state<LibraryEntityRow | null>(null);
+  let pendingDeleteRow = $state<LibraryEntityRow | null>(null);
+  let deleting = $state(false);
 
   const query = $derived(settingsState.librarySearchQuery.trim().toLowerCase());
 
@@ -225,6 +228,65 @@
     });
   }
 
+  function openDeleteDialog(row: LibraryEntityRow): void {
+    pendingDeleteRow = row;
+  }
+
+  function closeDeleteDialog(): void {
+    if (deleting) {
+      return;
+    }
+    pendingDeleteRow = null;
+  }
+
+  function toDeleteErrorMessage(error: CommandError): string {
+    const source = getCommandErrorMessage(error);
+    const lower = source.toLowerCase();
+
+    if (lower.includes('protected')) {
+      return m.settings_library_delete_error_protected();
+    }
+
+    if (lower.includes('in use')) {
+      return m.settings_library_delete_error_in_use();
+    }
+
+    return m.settings_library_delete_error_generic({ message: source });
+  }
+
+  async function handleDeleteConfirm(): Promise<void> {
+    if (!pendingDeleteRow) {
+      return;
+    }
+
+    deleting = true;
+
+    const row = pendingDeleteRow;
+    const result =
+      settingsState.libraryActiveTab === 'manufacturers'
+        ? await commands.deleteManufacturer(row.id)
+        : settingsState.libraryActiveTab === 'buyers'
+          ? await commands.deleteBuyer(row.id)
+          : await commands.deleteSeller(row.id);
+
+    if (result.status === 'ok') {
+      if (settingsState.libraryActiveTab === 'manufacturers') {
+        settingsState.removeLibraryManufacturer(row.id);
+      } else {
+        settingsState.removeCanonicalParty(row.id);
+      }
+      toaster.success(m.settings_library_delete_success({ name: row.name }));
+      pendingDeleteRow = null;
+      deleting = false;
+      return;
+    }
+
+    toaster.signal(m.signal_toast_title(), {
+      description: toDeleteErrorMessage(result.error)
+    });
+    deleting = false;
+  }
+
   async function handleQuickSubmit(values: {
     name: string;
     websiteUrl: string;
@@ -312,12 +374,26 @@
       activeTab={settingsState.libraryActiveTab}
       onTabChange={(tab) => settingsState.setLibraryTab(tab)}
       onEdit={openQuickEdit}
+      onDelete={openDeleteDialog}
       manufacturers={filteredManufacturers}
       sellers={filteredSellers}
       buyers={filteredBuyers}
     />
   </div>
 </section>
+
+<DeleteEntityDialog
+  open={pendingDeleteRow !== null}
+  entityName={pendingDeleteRow?.name ?? ''}
+  linkedCount={pendingDeleteRow?.usageCount ?? 0}
+  {deleting}
+  onOpenChange={(next) => {
+    if (!next) {
+      closeDeleteDialog();
+    }
+  }}
+  onConfirm={handleDeleteConfirm}
+/>
 
 <QuickAddShell open={quickAddTarget !== null} title={quickAddTitle} onDismiss={closeQuickAdd}>
   {#if quickAddTarget}
