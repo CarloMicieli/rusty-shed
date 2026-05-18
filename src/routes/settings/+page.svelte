@@ -170,10 +170,61 @@
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="preferences" class="mt-0">
+          <TabsContent value="preferences" class="mt-0 space-y-6">
             {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerMethod}`}
               <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
             {/key}
+
+            <!-- Archive Export/Import Section -->
+            <ExportArchiveSection />
+
+            <!-- Cloud Backup Section -->
+            <div class="card rounded-sm border border-border bg-card shadow-xl">
+              <header class="flex items-center justify-between gap-4 border-b border-border p-6">
+                <div>
+                  <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
+                    {m.cloud_backup_title()}
+                  </p>
+                  <p class="mt-1 text-sm text-muted-foreground">{m.cloud_backup_subtitle()}</p>
+                </div>
+              </header>
+
+              <div class="space-y-4 p-6">
+                <GoogleConnectButton />
+
+                {#if isConnected}
+                  <div class="border-t border-border pt-4">
+                    <ConnectivityIndicator />
+                    <SyncButton />
+
+                    {#if lastSyncAt}
+                      <div class="text-sm text-muted-foreground">
+                        <p>
+                          {m.cloud_backup_last_sync({
+                            timestamp: new Date(lastSyncAt).toLocaleString(regionalManager.locale)
+                          })}
+                        </p>
+                      </div>
+                    {/if}
+
+                    {#if backupCount > 0}
+                      <div class="text-sm text-muted-foreground">
+                        {#if backupCount === 1}
+                          <p>{m.cloud_backup_backups_count_single({ count: backupCount })}</p>
+                        {:else}
+                          <p>{m.cloud_backup_backups_count_multiple({ count: backupCount })}</p>
+                        {/if}
+                      </div>
+                    {/if}
+
+                    <!-- Backup List Section -->
+                    <div class="border-t border-border pt-4">
+                      <BackupList onRestore={handleRestoreClick} />
+                    </div>
+                  </div>
+                {/if}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="data-management" class="mt-0">
@@ -181,56 +232,6 @@
           </TabsContent>
         </Tabs>
 
-        <!-- Archive Export/Import Section -->
-        <ExportArchiveSection />
-
-        <!-- Cloud Backup Section -->
-        <div class="card rounded-sm border border-border bg-card shadow-xl">
-          <header class="flex items-center justify-between gap-4 border-b border-border p-6">
-            <div>
-              <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
-                {m.cloud_backup_title()}
-              </p>
-              <p class="mt-1 text-sm text-muted-foreground">{m.cloud_backup_subtitle()}</p>
-            </div>
-          </header>
-
-          <div class="space-y-4 p-6">
-            <GoogleConnectButton />
-
-            {#if isConnected}
-              <div class="border-t border-border pt-4">
-                <ConnectivityIndicator />
-                <SyncButton />
-
-                {#if lastSyncAt}
-                  <div class="text-sm text-muted-foreground">
-                    <p>
-                      {m.cloud_backup_last_sync({
-                        timestamp: new Date(lastSyncAt).toLocaleString(regionalManager.locale)
-                      })}
-                    </p>
-                  </div>
-                {/if}
-
-                {#if backupCount > 0}
-                  <div class="text-sm text-muted-foreground">
-                    {#if backupCount === 1}
-                      <p>{m.cloud_backup_backups_count_single({ count: backupCount })}</p>
-                    {:else}
-                      <p>{m.cloud_backup_backups_count_multiple({ count: backupCount })}</p>
-                    {/if}
-                  </div>
-                {/if}
-
-                <!-- Backup List Section -->
-                <div class="border-t border-border pt-4">
-                  <BackupList onRestore={handleRestoreClick} />
-                </div>
-              </div>
-            {/if}
-          </div>
-        </div>
       </div>
     {/if}
   </div>

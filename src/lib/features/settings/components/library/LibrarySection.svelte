@@ -26,6 +26,8 @@
   let pendingMergeSourceRow = $state<LibraryEntityRow | null>(null);
   let pendingMergeTargetId = $state<string | null>(null);
   let merging = $state(false);
+  let currentPage = $state(1);
+  let itemsPerPage = $state(10);
 
   const query = $derived(settingsState.librarySearchQuery.trim().toLowerCase());
 
@@ -56,6 +58,27 @@
     }
     return settingsState.librarySellers;
   });
+
+  const visibleRows = $derived.by(() => {
+    if (settingsState.libraryActiveTab === 'manufacturers') {
+      return filteredManufacturers;
+    }
+
+    if (settingsState.libraryActiveTab === 'buyers') {
+      return filteredBuyers;
+    }
+
+    return filteredSellers;
+  });
+
+  const totalItems = $derived(visibleRows.length);
+  const totalPages = $derived(Math.ceil(totalItems / itemsPerPage));
+  const pageStart = $derived(totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1);
+  const pageEnd = $derived(totalItems === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalItems));
+
+  const paginatedRows = $derived.by(() =>
+    visibleRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  );
 
   const quickAddTitle = $derived.by(() => {
     if (quickFormIntent === 'edit') {
@@ -105,6 +128,18 @@
       ...settingsState.libraryBuyers.filter((row) => row.id !== editingId).map((row) => row.name)
     ];
     return [...new Set(merged)];
+  });
+
+  $effect(() => {
+    settingsState.libraryActiveTab;
+    settingsState.librarySearchQuery;
+    currentPage = 1;
+  });
+
+  $effect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      currentPage = totalPages;
+    }
   });
 
   function getCommandErrorMessage(error: CommandError): string {
@@ -457,9 +492,15 @@
       onEdit={openQuickEdit}
       onDelete={openDeleteDialog}
       onMerge={openMergeDialog}
-      manufacturers={filteredManufacturers}
-      sellers={filteredSellers}
-      buyers={filteredBuyers}
+      rows={paginatedRows}
+      totalItems={totalItems}
+      totalPages={totalPages}
+      pageStart={pageStart}
+      pageEnd={pageEnd}
+      currentPage={currentPage}
+      onPageChange={(page) => {
+        currentPage = page;
+      }}
     />
   </div>
 </section>
