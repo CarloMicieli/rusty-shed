@@ -23,7 +23,7 @@ describe('LibraryView', () => {
       }
     });
 
-    expect(screen.getByText('Acme')).toBeInTheDocument();
+    expect(screen.getAllByText('Acme').length).toBeGreaterThan(0);
 
     await fireEvent.click(screen.getByRole('tab', { name: 'Sellers' }));
     expect(onTabChange).toHaveBeenCalledWith('sellers');

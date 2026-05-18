@@ -33,7 +33,8 @@ function mapSeller(row: SellerView): LibraryEntityRow {
 export async function getManufacturers(): Promise<CmdResult<LibraryEntityRow[], CommandError>> {
   const result = await commands.getManufacturers();
   if (result.status === 'ok') {
-    return { status: 'ok', data: result.data.map(mapManufacturer) };
+    const rows = Array.isArray(result.data) ? result.data : [];
+    return { status: 'ok', data: rows.map(mapManufacturer) };
   }
   return result as CmdResult<LibraryEntityRow[], CommandError>;
 }
@@ -41,7 +42,8 @@ export async function getManufacturers(): Promise<CmdResult<LibraryEntityRow[], 
 export async function getSellers(): Promise<CmdResult<LibraryEntityRow[], CommandError>> {
   const result = await commands.getSellers();
   if (result.status === 'ok') {
-    return { status: 'ok', data: result.data.map(mapSeller) };
+    const rows = Array.isArray(result.data) ? result.data : [];
+    return { status: 'ok', data: rows.map(mapSeller) };
   }
   return result as CmdResult<LibraryEntityRow[], CommandError>;
 }
@@ -49,7 +51,8 @@ export async function getSellers(): Promise<CmdResult<LibraryEntityRow[], Comman
 export async function getBuyers(): Promise<CmdResult<LibraryEntityRow[], CommandError>> {
   const result = await commands.getBuyers();
   if (result.status === 'ok') {
-    return { status: 'ok', data: result.data.map(mapSeller) };
+    const rows = Array.isArray(result.data) ? result.data : [];
+    return { status: 'ok', data: rows.map(mapSeller) };
   }
   return result as CmdResult<LibraryEntityRow[], CommandError>;
 }

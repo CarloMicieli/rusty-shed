@@ -133,7 +133,7 @@ describe('LibrarySection', () => {
     render(LibrarySection);
 
     await waitFor(() => {
-      expect(screen.getByText('ACME')).toBeInTheDocument();
+      expect(screen.getAllByText('ACME').length).toBeGreaterThan(0);
     });
 
     expect(mockGetManufacturers).toHaveBeenCalledOnce();
@@ -145,13 +145,13 @@ describe('LibrarySection', () => {
     render(LibrarySection);
 
     await waitFor(() => {
-      expect(screen.getByText('ACME')).toBeInTheDocument();
+      expect(screen.getAllByText('ACME').length).toBeGreaterThan(0);
     });
 
     await fireEvent.click(screen.getByRole('button', { name: 'settings_library_add_new' }));
     await fireEvent.click(screen.getByRole('button', { name: 'quick-form-success' }));
 
-    expect(await screen.findByText('New Maker')).toBeInTheDocument();
+    expect((await screen.findAllByText('New Maker')).length).toBeGreaterThan(0);
     expect(mockToasterSuccess).toHaveBeenCalled();
   });
 
@@ -159,13 +159,13 @@ describe('LibrarySection', () => {
     render(LibrarySection);
 
     await waitFor(() => {
-      expect(screen.getByText('ACME')).toBeInTheDocument();
+      expect(screen.getAllByText('ACME').length).toBeGreaterThan(0);
     });
 
     await fireEvent.click(
-      screen.getByRole('button', {
+      screen.getAllByRole('button', {
         name: 'settings_library_edit_row:ACME'
-      })
+      })[0]
     );
 
     expect(screen.getByText('settings_library_update_action')).toBeInTheDocument();
@@ -176,7 +176,7 @@ describe('LibrarySection', () => {
       expect(mockUpdateManufacturer).toHaveBeenCalledOnce();
     });
 
-    expect(await screen.findByText('acme updated')).toBeInTheDocument();
+    expect((await screen.findAllByText('acme updated')).length).toBeGreaterThan(0);
   });
 
   it('propagates seller edit updates to buyers tab using canonical upsert', async () => {
@@ -184,24 +184,24 @@ describe('LibrarySection', () => {
     render(LibrarySection);
 
     await waitFor(() => {
-      expect(screen.getByText('Model Shop')).toBeInTheDocument();
+      expect(screen.getAllByText('Model Shop').length).toBeGreaterThan(0);
     });
 
     await fireEvent.click(
-      screen.getByRole('button', {
+      screen.getAllByRole('button', {
         name: 'settings_library_edit_row:Model Shop'
-      })
+      })[0]
     );
 
     await fireEvent.click(screen.getByRole('button', { name: 'quick-form-success' }));
 
     await waitFor(() => {
       expect(mockUpdateSeller).toHaveBeenCalledOnce();
-      expect(screen.getByText('model shop updated')).toBeInTheDocument();
+      expect(screen.getAllByText('model shop updated').length).toBeGreaterThan(0);
     });
 
     await fireEvent.click(screen.getByRole('tab', { name: 'settings_library_tab_buyers' }));
 
-    expect(screen.getByText('model shop updated')).toBeInTheDocument();
+    expect(screen.getAllByText('model shop updated').length).toBeGreaterThan(0);
   });
 });

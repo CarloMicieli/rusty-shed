@@ -172,7 +172,7 @@
 
 **Purpose**: Final hardening across all stories
 
-- [ ] T051 [P] Run full validation pipeline (`pnpm prepare`, `pnpm specta:generate`, `pnpm check`, `pnpm lint`, `pnpm test`, `pnpm rust:test`, `pnpm rust:clippy`) and address regressions
+- [X] T051 [P] Run full validation pipeline (`pnpm prepare`, `pnpm specta:generate`, `pnpm check`, `pnpm lint`, `pnpm test`, `pnpm rust:test`, `pnpm rust:clippy`) and address regressions
 - [ ] T052 [P] Update architecture and feature docs for Settings Library behavior in `docs/FEATURE_IMPLEMENTATION.md` and `docs/FRONTEND_ARCHITECTURE.md`
 - [ ] T053 Add final telemetry/logging for critical entity commands in `src-tauri/src/*/interface/command_handlers.rs`
 - [ ] T054 Run quickstart verification scenarios from `specs/041-entity-management/quickstart.md`
