@@ -437,8 +437,10 @@
 >
   <header class="mb-4 flex items-start justify-between gap-3">
     <div>
-      <h2 class="text-lg font-semibold">{m.settings_library_title()}</h2>
-      <p class="text-sm text-muted-foreground">{m.settings_library_subtitle()}</p>
+      <h2 class="text-sm font-semibold tracking-widest text-muted-foreground uppercase">
+        {m.settings_library_title()}
+      </h2>
+      <p class="mt-1 text-sm text-muted-foreground">{m.settings_library_subtitle()}</p>
     </div>
     <button
       type="button"
