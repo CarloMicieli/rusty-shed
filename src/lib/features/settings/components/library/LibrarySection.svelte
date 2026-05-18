@@ -432,10 +432,10 @@
 </script>
 
 <section
-  class="rounded-sm border border-border bg-card p-6"
+  class="card border border-border/60 bg-card/50 shadow-xl"
   aria-label={m.settings_library_title()}
 >
-  <header class="mb-4 flex items-start justify-between gap-3">
+  <header class="flex items-start justify-between gap-3 border-b border-border/60 p-6">
     <div>
       <p class="text-sm font-semibold tracking-widest text-muted-foreground uppercase">
         {m.settings_library_title()}
@@ -451,16 +451,16 @@
     </button>
   </header>
 
-  <EntitySearch
-    value={settingsState.librarySearchQuery}
-    onChange={(value) => settingsState.setLibrarySearchQuery(value)}
-  />
+  <div class="space-y-4 p-6">
+    <EntitySearch
+      value={settingsState.librarySearchQuery}
+      onChange={(value) => settingsState.setLibrarySearchQuery(value)}
+    />
 
-  {#if settingsState.libraryError}
-    <p class="mt-3 text-sm text-destructive">{settingsState.libraryError}</p>
-  {/if}
+    {#if settingsState.libraryError}
+      <p class="text-sm text-destructive">{settingsState.libraryError}</p>
+    {/if}
 
-  <div class="mt-4">
     <EntityTabs
       activeTab={settingsState.libraryActiveTab}
       onTabChange={(tab) => settingsState.setLibraryTab(tab)}
