@@ -27,8 +27,7 @@ vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
     Object.entries(actual).map(([k, v]) => [
       k,
       typeof v === 'function'
-        ? (params?: { name?: string }) =>
-            params?.name ? `${k}:${params.name}` : k
+        ? (params?: { name?: string }) => (params?.name ? `${k}:${params.name}` : k)
         : v
     ])
   );

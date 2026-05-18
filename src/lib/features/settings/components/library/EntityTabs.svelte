@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
   import type { LibraryTab } from '$lib/features/settings/library-types';
   import type { LibraryEntityRow } from '$lib/services/entityLibrary';
   import EntityTable from './EntityTable.svelte';
@@ -26,47 +27,46 @@
   });
 </script>
 
-<div class="space-y-4">
-  <div class="flex gap-2" role="tablist" aria-label={m.settings_library_title()}>
-    <button
-      type="button"
-      role="tab"
-      class="rounded-sm border px-3 py-1 text-sm"
-      aria-selected={activeTab === 'manufacturers'}
-      onclick={() => onTabChange('manufacturers')}
+<Tabs
+  value={activeTab}
+  onValueChange={(value) => onTabChange(value as LibraryTab)}
+  class="space-y-4"
+>
+  <TabsList
+    class="grid h-auto w-full grid-cols-3 rounded-sm border border-border bg-background/50 p-1"
+  >
+    <TabsTrigger
+      value="manufacturers"
+      class="rounded-sm text-xs text-muted-foreground transition-colors data-[state=active]:bg-card data-[state=active]:text-foreground"
     >
       {m.settings_library_tab_manufacturers()}
-    </button>
-    <button
-      type="button"
-      role="tab"
-      class="rounded-sm border px-3 py-1 text-sm"
-      aria-selected={activeTab === 'sellers'}
-      onclick={() => onTabChange('sellers')}
+    </TabsTrigger>
+    <TabsTrigger
+      value="sellers"
+      class="rounded-sm text-xs text-muted-foreground transition-colors data-[state=active]:bg-card data-[state=active]:text-foreground"
     >
       {m.settings_library_tab_sellers()}
-    </button>
-    <button
-      type="button"
-      role="tab"
-      class="rounded-sm border px-3 py-1 text-sm"
-      aria-selected={activeTab === 'buyers'}
-      onclick={() => onTabChange('buyers')}
+    </TabsTrigger>
+    <TabsTrigger
+      value="buyers"
+      class="rounded-sm text-xs text-muted-foreground transition-colors data-[state=active]:bg-card data-[state=active]:text-foreground"
     >
       {m.settings_library_tab_buyers()}
-    </button>
-  </div>
+    </TabsTrigger>
+  </TabsList>
 
   {#if visibleRows.length === 0}
     <p class="text-sm text-muted-foreground">{m.settings_library_empty_state()}</p>
   {:else}
-    <!-- Desktop: list table layout (hidden on mobile) -->
-    <div class="hidden md:block" data-layout="desktop">
-      <EntityTable rows={visibleRows} onEdit={onEdit} onDelete={onDelete} onMerge={onMerge} />
-    </div>
-    <!-- Mobile: stacked card layout (visible below md breakpoint) -->
-    <div class="block md:hidden" data-layout="mobile">
-      <EntityCards rows={visibleRows} onEdit={onEdit} onDelete={onDelete} onMerge={onMerge} />
-    </div>
+    <TabsContent value={activeTab} class="mt-0">
+      <!-- Desktop: compact table layout (hidden on mobile) -->
+      <div class="hidden md:block" data-layout="desktop">
+        <EntityTable rows={visibleRows} {onEdit} {onDelete} {onMerge} />
+      </div>
+      <!-- Mobile: stacked card layout (visible below md breakpoint) -->
+      <div class="block md:hidden" data-layout="mobile">
+        <EntityCards rows={visibleRows} {onEdit} {onDelete} {onMerge} />
+      </div>
+    </TabsContent>
   {/if}
-</div>
+</Tabs>

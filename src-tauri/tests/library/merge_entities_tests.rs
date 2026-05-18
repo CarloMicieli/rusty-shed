@@ -2,7 +2,10 @@
 fn merge_entities_success_scaffold() {
     let source = String::from("source");
     let target = String::from("target");
-    assert_ne!(source, target, "merge should use distinct source and target");
+    assert_ne!(
+        source, target,
+        "merge should use distinct source and target"
+    );
 }
 
 #[test]
@@ -14,5 +17,8 @@ fn merge_entities_rollback_scaffold() {
 #[test]
 fn merge_entities_protected_block_scaffold() {
     let protected_blocked = "protected_entities_cannot_merge".starts_with("protected");
-    assert!(protected_blocked, "protected entities should be blocked from merge");
+    assert!(
+        protected_blocked,
+        "protected entities should be blocked from merge"
+    );
 }

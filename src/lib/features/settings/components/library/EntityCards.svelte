@@ -2,6 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { deriveEntityStatusBadge } from '$lib/features/settings/types';
   import type { LibraryEntityRow } from '$lib/services/entityLibrary';
+  import EntityRowActions from './EntityRowActions.svelte';
 
   interface Props {
     rows: LibraryEntityRow[];
@@ -16,31 +17,31 @@
 <ul class="space-y-3" aria-label={m.settings_library_title()}>
   {#each rows as row (row.id)}
     {@const badge = deriveEntityStatusBadge(row.isSystemSeeded, row.usageCount)}
-    <li class="rounded-md border border-border bg-card p-4">
+    <li class="rounded-sm border border-border bg-card p-4">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0 flex-1">
           <p class="truncate font-semibold">{row.name}</p>
           {#if row.countryCode}
-            <p class="mt-0.5 text-xs text-muted-foreground">{row.countryCode}</p>
+            <p class="mt-0.5 font-mono text-xs text-muted-foreground">{row.countryCode}</p>
           {/if}
           <div class="mt-2">
             {#if badge.kind === 'protected'}
               <span
-                class="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs"
+                class="rounded-sm border border-border bg-background/50 px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase"
                 data-status-kind="protected"
               >
                 {m.settings_library_status_protected()}
               </span>
             {:else if badge.kind === 'in-use'}
               <span
-                class="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs"
+                class="rounded-sm border border-border bg-background/50 px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase"
                 data-status-kind="in-use"
               >
                 {m.settings_library_status_in_use({ count: badge.usageCount })}
               </span>
             {:else}
               <span
-                class="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs"
+                class="rounded-sm border border-border bg-background/50 px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase"
                 data-status-kind="unused"
               >
                 {m.settings_library_status_unused()}
@@ -48,36 +49,15 @@
             {/if}
           </div>
         </div>
-      </div>
-
-      <div class="mt-3 flex gap-2 border-t border-border pt-3">
-        <button
-          type="button"
-          class="flex-1 rounded-sm border border-border bg-background py-2 text-xs"
-          aria-label={m.settings_library_edit_row({ name: row.name })}
-          disabled={badge.kind === 'protected'}
-          onclick={() => onEdit(row)}
-        >
-          {m.settings_library_edit()}
-        </button>
-        <button
-          type="button"
-          class="flex-1 rounded-sm border border-border bg-background py-2 text-xs"
-          aria-label={m.settings_library_delete_row({ name: row.name })}
-          disabled={badge.kind === 'protected' || badge.kind === 'in-use'}
-          onclick={() => onDelete(row)}
-        >
-          {m.common_delete()}
-        </button>
-        <button
-          type="button"
-          class="flex-1 rounded-sm border border-border bg-background py-2 text-xs"
-          aria-label={m.settings_library_merge_row({ name: row.name })}
-          disabled={badge.kind === 'protected'}
-          onclick={() => onMerge(row)}
-        >
-          {m.settings_library_merge_action()}
-        </button>
+        <EntityRowActions
+          {row}
+          {onEdit}
+          {onDelete}
+          {onMerge}
+          editDisabled={badge.kind === 'protected'}
+          deleteDisabled={badge.kind === 'protected' || badge.kind === 'in-use'}
+          mergeDisabled={badge.kind === 'protected'}
+        />
       </div>
     </li>
   {/each}

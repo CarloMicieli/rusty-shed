@@ -101,12 +101,8 @@
     }
 
     const merged = [
-      ...settingsState.librarySellers
-        .filter((row) => row.id !== editingId)
-        .map((row) => row.name),
-      ...settingsState.libraryBuyers
-        .filter((row) => row.id !== editingId)
-        .map((row) => row.name)
+      ...settingsState.librarySellers.filter((row) => row.id !== editingId).map((row) => row.name),
+      ...settingsState.libraryBuyers.filter((row) => row.id !== editingId).map((row) => row.name)
     ];
     return [...new Set(merged)];
   });
@@ -137,7 +133,9 @@
       buyers: buyerRes.status === 'ok' ? buyerRes.data : []
     });
 
-    const firstError = [manufacturerRes, sellerRes, buyerRes].find((result) => result.status === 'error');
+    const firstError = [manufacturerRes, sellerRes, buyerRes].find(
+      (result) => result.status === 'error'
+    );
     if (firstError && firstError.status === 'error') {
       settingsState.libraryError = getCommandErrorMessage(firstError.error);
     }
@@ -425,7 +423,10 @@
   });
 </script>
 
-<section class="rounded-lg border border-border bg-card p-6" aria-label={m.settings_library_title()}>
+<section
+  class="rounded-sm border border-border bg-card p-6"
+  aria-label={m.settings_library_title()}
+>
   <header class="mb-4 flex items-start justify-between gap-3">
     <div>
       <h2 class="text-lg font-semibold">{m.settings_library_title()}</h2>
@@ -433,7 +434,7 @@
     </div>
     <button
       type="button"
-      class="rounded-sm border border-border bg-background px-3 py-1 text-sm"
+      class="rounded-sm border border-border bg-background/50 px-3 py-1 text-sm"
       onclick={openQuickAdd}
     >
       {m.settings_library_add_new()}

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
   import { Button, PageHeader } from '$lib/components';
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
   import GoogleConnectButton from '$lib/features/cloud-backup/components/GoogleConnectButton.svelte';
   import ConnectivityIndicator from '$lib/features/cloud-backup/components/ConnectivityIndicator.svelte';
@@ -39,6 +40,7 @@
   let showRestoreModal = $state(false);
   let selectedBackupId = $state<string | null>(null);
   let selectedBackupLabel = $state<string>('');
+  let activeTab = $state<'preferences' | 'data-management'>('preferences');
 
   onMount(async () => {
     await loadSettings();
@@ -130,7 +132,7 @@
 
   <div class="space-y-6">
     {#if loading}
-      <div class="rounded-lg border border-border bg-card p-8 shadow-xl">
+      <div class="rounded-sm border border-border bg-card p-8 shadow-xl">
         <div class="animate-pulse space-y-4">
           <div class="h-4 w-1/3 rounded bg-muted"></div>
           <div class="h-4 w-1/2 rounded bg-muted"></div>
@@ -142,7 +144,7 @@
         </div>
       </div>
     {:else if error}
-      <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-6">
+      <div class="rounded-sm border border-destructive/30 bg-destructive/10 p-6">
         <p class="font-semibold text-destructive">{error}</p>
         <Button variant="default" class="mt-4" onclick={loadSettings}>
           {m.errors_retry_page()}
@@ -150,18 +152,41 @@
       </div>
     {:else if settings}
       <div class="space-y-6">
-        {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerMethod}`}
-          <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
-        {/key}
+        <Tabs bind:value={activeTab} class="space-y-4">
+          <TabsList
+            class="grid h-auto w-full grid-cols-2 rounded-sm border border-border bg-card p-1"
+          >
+            <TabsTrigger
+              value="preferences"
+              class="rounded-sm text-xs text-muted-foreground transition-colors data-[state=active]:bg-background/50 data-[state=active]:text-foreground"
+            >
+              {m.settings_tab_preferences()}
+            </TabsTrigger>
+            <TabsTrigger
+              value="data-management"
+              class="rounded-sm text-xs text-muted-foreground transition-colors data-[state=active]:bg-background/50 data-[state=active]:text-foreground"
+            >
+              {m.settings_tab_data_management()}
+            </TabsTrigger>
+          </TabsList>
 
-        <LibrarySection />
+          <TabsContent value="preferences" class="mt-0">
+            {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerMethod}`}
+              <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
+            {/key}
+          </TabsContent>
+
+          <TabsContent value="data-management" class="mt-0">
+            <LibrarySection />
+          </TabsContent>
+        </Tabs>
 
         <!-- Archive Export/Import Section -->
         <ExportArchiveSection />
 
         <!-- Cloud Backup Section -->
-        <div class="card border border-border/60 bg-card/50 shadow-xl">
-          <header class="flex items-center justify-between gap-4 border-b border-border/60 p-6">
+        <div class="card rounded-sm border border-border bg-card shadow-xl">
+          <header class="flex items-center justify-between gap-4 border-b border-border p-6">
             <div>
               <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
                 {m.cloud_backup_title()}

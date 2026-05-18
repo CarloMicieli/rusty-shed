@@ -16,7 +16,9 @@ describe('LibraryView', () => {
         manufacturers: [
           { id: 'm1', name: 'Acme', countryCode: 'IT', usageCount: 0, isSystemSeeded: false }
         ],
-        sellers: [{ id: 's1', name: 'Shop', countryCode: 'US', usageCount: 0, isSystemSeeded: false }],
+        sellers: [
+          { id: 's1', name: 'Shop', countryCode: 'US', usageCount: 0, isSystemSeeded: false }
+        ],
         buyers: [
           { id: 'b1', name: 'Collector', countryCode: 'DE', usageCount: 0, isSystemSeeded: false }
         ]

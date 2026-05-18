@@ -14,7 +14,7 @@
     type="search"
     class="h-9 w-full rounded-sm border border-border bg-background px-3 text-sm"
     placeholder={m.settings_library_search_placeholder()}
-    value={value}
+    {value}
     oninput={(event) => onChange((event.currentTarget as HTMLInputElement).value)}
   />
 </div>

@@ -10,8 +10,20 @@ describe('MergeEntities', () => {
         sourceName: 'Source Seller',
         sourceId: 'source',
         options: [
-          { id: 'source', name: 'Source Seller', countryCode: null, usageCount: 0, isSystemSeeded: false },
-          { id: 'target', name: 'Target Seller', countryCode: null, usageCount: 0, isSystemSeeded: false }
+          {
+            id: 'source',
+            name: 'Source Seller',
+            countryCode: null,
+            usageCount: 0,
+            isSystemSeeded: false
+          },
+          {
+            id: 'target',
+            name: 'Target Seller',
+            countryCode: null,
+            usageCount: 0,
+            isSystemSeeded: false
+          }
         ],
         targetId: null,
         onTargetChange: vi.fn(),
@@ -31,8 +43,20 @@ describe('MergeEntities', () => {
         sourceName: 'Source Seller',
         sourceId: 'source',
         options: [
-          { id: 'source', name: 'Source Seller', countryCode: null, usageCount: 0, isSystemSeeded: false },
-          { id: 'target', name: 'Target Seller', countryCode: null, usageCount: 0, isSystemSeeded: false }
+          {
+            id: 'source',
+            name: 'Source Seller',
+            countryCode: null,
+            usageCount: 0,
+            isSystemSeeded: false
+          },
+          {
+            id: 'target',
+            name: 'Target Seller',
+            countryCode: null,
+            usageCount: 0,
+            isSystemSeeded: false
+          }
         ],
         targetId: null,
         onTargetChange: vi.fn(),
@@ -55,7 +79,13 @@ describe('MergeEntities', () => {
         sourceName: 'Source Seller',
         sourceId: 'source',
         options: [
-          { id: 'target', name: 'Target Seller', countryCode: null, usageCount: 0, isSystemSeeded: false }
+          {
+            id: 'target',
+            name: 'Target Seller',
+            countryCode: null,
+            usageCount: 0,
+            isSystemSeeded: false
+          }
         ],
         targetId: null,
         onTargetChange,

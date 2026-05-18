@@ -40,8 +40,15 @@ impl From<DomainManufacturer> for Manufacturer {
     }
 }
 
-async fn enrich_manufacturer(state: &AppState, manufacturer: &mut Manufacturer) -> Result<(), CommandError> {
-    let mut conn = state.db_pool().acquire().await.map_err(CommandError::from)?;
+async fn enrich_manufacturer(
+    state: &AppState,
+    manufacturer: &mut Manufacturer,
+) -> Result<(), CommandError> {
+    let mut conn = state
+        .db_pool()
+        .acquire()
+        .await
+        .map_err(CommandError::from)?;
 
     let seeded = sqlx::query_scalar::<_, i64>(
         r#"
@@ -377,7 +384,10 @@ pub async fn delete_manufacturer_inner(
     .rows_affected();
 
     if affected == 0 {
-        return Err(CommandError::NotFound(format!("Manufacturer '{}' not found", id)));
+        return Err(CommandError::NotFound(format!(
+            "Manufacturer '{}' not found",
+            id
+        )));
     }
 
     tx.commit().await.map_err(CommandError::from)?;

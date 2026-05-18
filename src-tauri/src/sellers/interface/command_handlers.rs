@@ -20,7 +20,11 @@ async fn load_seller_seeded_and_name(
     state: &AppState,
     id: &SellerId,
 ) -> Result<Option<(String, bool)>, CommandError> {
-    let mut conn = state.db_pool().acquire().await.map_err(CommandError::from)?;
+    let mut conn = state
+        .db_pool()
+        .acquire()
+        .await
+        .map_err(CommandError::from)?;
     let row = sqlx::query_as::<_, (String, i64)>(
         r#"
         SELECT name, is_system_seeded
@@ -38,7 +42,11 @@ async fn load_seller_seeded_and_name(
 }
 
 async fn enrich_seller_view(state: &AppState, seller: &mut SellerView) -> Result<(), CommandError> {
-    let mut conn = state.db_pool().acquire().await.map_err(CommandError::from)?;
+    let mut conn = state
+        .db_pool()
+        .acquire()
+        .await
+        .map_err(CommandError::from)?;
 
     let seeded = sqlx::query_scalar::<_, i64>(
         r#"
@@ -260,7 +268,11 @@ pub async fn delete_seller_inner(state: &AppState, id: SellerId) -> Result<(), C
     info!("Deleting seller with ID: {}", id);
 
     {
-        let mut conn = state.db_pool().acquire().await.map_err(CommandError::from)?;
+        let mut conn = state
+            .db_pool()
+            .acquire()
+            .await
+            .map_err(CommandError::from)?;
         DeleteSellerWithLock::ensure_deletable(&mut conn, &id)
             .await
             .map_err(CommandError::from)?;

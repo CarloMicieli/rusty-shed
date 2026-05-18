@@ -21,7 +21,7 @@
   }: Props = $props();
 </script>
 
-<AlertDialog.Root {open} onOpenChange={onOpenChange}>
+<AlertDialog.Root {open} {onOpenChange}>
   <AlertDialog.Content>
     <AlertDialog.Header>
       <AlertDialog.Title>{m.settings_library_delete_title()}</AlertDialog.Title>

@@ -30,7 +30,7 @@
   const canConfirm = $derived(targetId !== null && targetId.length > 0);
 </script>
 
-<AlertDialog.Root {open} onOpenChange={onOpenChange}>
+<AlertDialog.Root {open} {onOpenChange}>
   <AlertDialog.Content>
     <AlertDialog.Header>
       <AlertDialog.Title>{m.settings_library_merge_title()}</AlertDialog.Title>
