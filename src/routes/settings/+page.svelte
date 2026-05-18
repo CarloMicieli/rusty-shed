@@ -24,6 +24,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { setActiveLocale } from '$lib/stores/locale.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
+  import { cn } from '$lib/utils';
 
   let settings: SettingsDto | null = $state(null);
   let loading = $state(true);
@@ -41,6 +42,23 @@
   let selectedBackupId = $state<string | null>(null);
   let selectedBackupLabel = $state<string>('');
   let activeTab = $state<'preferences' | 'data-management'>('preferences');
+
+  const settingsTabBaseClass =
+    'rounded-sm border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-all duration-150 ease-out';
+  const settingsTabClasses = $derived.by(() => ({
+    preferences: cn(
+      settingsTabBaseClass,
+      activeTab === 'preferences'
+        ? 'border-border bg-card text-foreground shadow-xs'
+        : 'border-transparent bg-transparent text-muted-foreground hover:text-foreground'
+    ),
+    'data-management': cn(
+      settingsTabBaseClass,
+      activeTab === 'data-management'
+        ? 'border-border bg-card text-foreground shadow-xs'
+        : 'border-transparent bg-transparent text-muted-foreground hover:text-foreground'
+    )
+  }));
 
   onMount(async () => {
     await loadSettings();
@@ -154,18 +172,12 @@
       <div class="space-y-6">
         <Tabs bind:value={activeTab} class="space-y-4">
           <TabsList
-            class="grid h-auto w-full grid-cols-2 rounded-sm border border-border bg-card p-1"
+            class="grid h-auto w-full grid-cols-2 rounded-sm border border-border bg-background/50 p-1"
           >
-            <TabsTrigger
-              value="preferences"
-              class="rounded-sm text-xs text-muted-foreground transition-colors data-[state=active]:bg-background/50 data-[state=active]:text-foreground"
-            >
+            <TabsTrigger value="preferences" class={settingsTabClasses.preferences}>
               {m.settings_tab_preferences()}
             </TabsTrigger>
-            <TabsTrigger
-              value="data-management"
-              class="rounded-sm text-xs text-muted-foreground transition-colors data-[state=active]:bg-background/50 data-[state=active]:text-foreground"
-            >
+            <TabsTrigger value="data-management" class={settingsTabClasses['data-management']}>
               {m.settings_tab_data_management()}
             </TabsTrigger>
           </TabsList>
