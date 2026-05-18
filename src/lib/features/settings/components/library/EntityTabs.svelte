@@ -105,7 +105,7 @@
             </button>
 
             <div class="flex items-center gap-1">
-              {#each pageNumbers as page}
+              {#each pageNumbers as page (page)}
                 <button
                   type="button"
                   class={`inline-flex h-8 min-w-8 items-center justify-center rounded-sm border px-2 text-sm transition-all duration-150 ease-out ${

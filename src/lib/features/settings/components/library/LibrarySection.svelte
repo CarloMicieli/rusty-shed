@@ -28,6 +28,7 @@
   let merging = $state(false);
   let currentPage = $state(1);
   let itemsPerPage = $state(10);
+  let previousPaginationResetKey = $state('');
 
   const query = $derived(settingsState.librarySearchQuery.trim().toLowerCase());
 
@@ -118,9 +119,11 @@
   });
 
   $effect(() => {
-    settingsState.libraryActiveTab;
-    settingsState.librarySearchQuery;
-    currentPage = 1;
+    const paginationResetKey = `${settingsState.libraryActiveTab}:${settingsState.librarySearchQuery}`;
+    if (paginationResetKey !== previousPaginationResetKey) {
+      previousPaginationResetKey = paginationResetKey;
+      currentPage = 1;
+    }
   });
 
   $effect(() => {

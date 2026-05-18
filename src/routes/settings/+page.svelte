@@ -231,7 +231,6 @@
             <LibrarySection />
           </TabsContent>
         </Tabs>
-
       </div>
     {/if}
   </div>

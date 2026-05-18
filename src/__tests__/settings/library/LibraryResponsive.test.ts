@@ -9,6 +9,15 @@ const rows: LibraryEntityRow[] = [
   { id: 'row-2', name: 'Protected Co', countryCode: null, usageCount: 0, isSystemSeeded: true }
 ];
 
+const paginationProps = {
+  totalItems: rows.length,
+  totalPages: 1,
+  pageStart: 1,
+  pageEnd: rows.length,
+  currentPage: 1,
+  onPageChange: vi.fn()
+};
+
 describe('EntityCards – mobile card layout', () => {
   it('renders all rows as card items', () => {
     render(EntityCards, {
@@ -57,14 +66,14 @@ describe('EntityTabs – both layouts are rendered to DOM', () => {
         onEdit: vi.fn(),
         onDelete: vi.fn(),
         onMerge: vi.fn(),
-        manufacturers: [rows[0]],
-        sellers: [],
-        buyers: []
+        rows: [rows[0]],
+        ...paginationProps
       }
     });
 
     expect(document.querySelector('[data-layout="desktop"]')).toBeInTheDocument();
     expect(document.querySelector('[data-layout="mobile"]')).toBeInTheDocument();
+    expect(screen.getByLabelText(/table pagination/i)).toBeInTheDocument();
   });
 
   it('shows empty state when tab has no rows', () => {
@@ -75,9 +84,13 @@ describe('EntityTabs – both layouts are rendered to DOM', () => {
         onEdit: vi.fn(),
         onDelete: vi.fn(),
         onMerge: vi.fn(),
-        manufacturers: [],
-        sellers: [],
-        buyers: []
+        rows: [],
+        totalItems: 0,
+        totalPages: 0,
+        pageStart: 0,
+        pageEnd: 0,
+        currentPage: 1,
+        onPageChange: vi.fn()
       }
     });
 

@@ -13,15 +13,13 @@ describe('LibraryView', () => {
         onEdit: vi.fn(),
         onDelete: vi.fn(),
         onMerge: vi.fn(),
-        manufacturers: [
-          { id: 'm1', name: 'Acme', countryCode: 'IT', usageCount: 0, isSystemSeeded: false }
-        ],
-        sellers: [
-          { id: 's1', name: 'Shop', countryCode: 'US', usageCount: 0, isSystemSeeded: false }
-        ],
-        buyers: [
-          { id: 'b1', name: 'Collector', countryCode: 'DE', usageCount: 0, isSystemSeeded: false }
-        ]
+        rows: [{ id: 'm1', name: 'Acme', countryCode: 'IT', usageCount: 0, isSystemSeeded: false }],
+        totalItems: 1,
+        totalPages: 1,
+        pageStart: 1,
+        pageEnd: 1,
+        currentPage: 1,
+        onPageChange: vi.fn()
       }
     });
 
