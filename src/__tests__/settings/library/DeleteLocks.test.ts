@@ -24,7 +24,8 @@ describe('DeleteLocks', () => {
           }
         ],
         onEdit: vi.fn(),
-        onDelete: vi.fn()
+        onDelete: vi.fn(),
+        onMerge: vi.fn()
       }
     });
 
@@ -67,7 +68,8 @@ describe('DeleteLocks', () => {
         onEdit: vi.fn(),
         onDelete: () => {
           clicks += 1;
-        }
+        },
+        onMerge: vi.fn()
       }
     });
 

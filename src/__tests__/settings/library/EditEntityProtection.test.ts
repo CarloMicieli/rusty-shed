@@ -18,7 +18,8 @@ describe('EditEntityProtection', () => {
           }
         ],
         onEdit,
-        onDelete: vi.fn()
+        onDelete: vi.fn(),
+        onMerge: vi.fn()
       }
     });
 
@@ -42,7 +43,8 @@ describe('EditEntityProtection', () => {
       props: {
         rows: [row],
         onEdit,
-        onDelete: vi.fn()
+        onDelete: vi.fn(),
+        onMerge: vi.fn()
       }
     });
 

@@ -14,6 +14,7 @@
     type LibraryEntityRow
   } from '$lib/services/entityLibrary';
   import DeleteEntityDialog from './DeleteEntityDialog.svelte';
+  import MergeEntityDialog from './MergeEntityDialog.svelte';
   import EntitySearch from './EntitySearch.svelte';
   import EntityTabs from './EntityTabs.svelte';
 
@@ -22,6 +23,9 @@
   let editingRow = $state<LibraryEntityRow | null>(null);
   let pendingDeleteRow = $state<LibraryEntityRow | null>(null);
   let deleting = $state(false);
+  let pendingMergeSourceRow = $state<LibraryEntityRow | null>(null);
+  let pendingMergeTargetId = $state<string | null>(null);
+  let merging = $state(false);
 
   const query = $derived(settingsState.librarySearchQuery.trim().toLowerCase());
 
@@ -42,6 +46,16 @@
       `${row.name} ${row.countryCode ?? ''}`.toLowerCase().includes(query)
     )
   );
+
+  const mergeCandidates = $derived.by(() => {
+    if (settingsState.libraryActiveTab === 'manufacturers') {
+      return settingsState.libraryManufacturers;
+    }
+    if (settingsState.libraryActiveTab === 'buyers') {
+      return settingsState.libraryBuyers;
+    }
+    return settingsState.librarySellers;
+  });
 
   const quickAddTitle = $derived.by(() => {
     if (quickFormIntent === 'edit') {
@@ -254,6 +268,72 @@
     return m.settings_library_delete_error_generic({ message: source });
   }
 
+  function openMergeDialog(row: LibraryEntityRow): void {
+    pendingMergeSourceRow = row;
+    pendingMergeTargetId = null;
+  }
+
+  function closeMergeDialog(): void {
+    if (merging) {
+      return;
+    }
+    pendingMergeSourceRow = null;
+    pendingMergeTargetId = null;
+  }
+
+  function toMergeErrorMessage(error: CommandError): string {
+    const source = getCommandErrorMessage(error);
+    const lower = source.toLowerCase();
+
+    if (lower.includes('protected')) {
+      return m.settings_library_merge_error_protected();
+    }
+
+    return m.settings_library_merge_error_generic({ message: source });
+  }
+
+  async function handleMergeConfirm(): Promise<void> {
+    if (!pendingMergeSourceRow || !pendingMergeTargetId) {
+      return;
+    }
+
+    merging = true;
+
+    const source = pendingMergeSourceRow;
+    const targetId = pendingMergeTargetId;
+    const result =
+      settingsState.libraryActiveTab === 'manufacturers'
+        ? await commands.mergeManufacturers({ sourceId: source.id, targetId })
+        : settingsState.libraryActiveTab === 'buyers'
+          ? await commands.mergeBuyers({ sourceId: source.id, targetId })
+          : await commands.mergeSellers({ sourceId: source.id, targetId });
+
+    if (result.status === 'ok') {
+      if (settingsState.libraryActiveTab === 'manufacturers') {
+        settingsState.mergeLibraryManufacturer(source.id);
+      } else {
+        settingsState.mergeCanonicalParty(source.id);
+      }
+
+      toaster.success(
+        m.settings_library_merge_success({
+          source: source.name,
+          count: result.data.relinkedCount
+        })
+      );
+
+      closeMergeDialog();
+      merging = false;
+      await loadLibraryRows();
+      return;
+    }
+
+    toaster.signal(m.signal_toast_title(), {
+      description: toMergeErrorMessage(result.error)
+    });
+    merging = false;
+  }
+
   async function handleDeleteConfirm(): Promise<void> {
     if (!pendingDeleteRow) {
       return;
@@ -375,12 +455,31 @@
       onTabChange={(tab) => settingsState.setLibraryTab(tab)}
       onEdit={openQuickEdit}
       onDelete={openDeleteDialog}
+      onMerge={openMergeDialog}
       manufacturers={filteredManufacturers}
       sellers={filteredSellers}
       buyers={filteredBuyers}
     />
   </div>
 </section>
+
+<MergeEntityDialog
+  open={pendingMergeSourceRow !== null}
+  sourceName={pendingMergeSourceRow?.name ?? ''}
+  sourceId={pendingMergeSourceRow?.id ?? ''}
+  options={mergeCandidates}
+  targetId={pendingMergeTargetId}
+  {merging}
+  onTargetChange={(value) => {
+    pendingMergeTargetId = value;
+  }}
+  onOpenChange={(next) => {
+    if (!next) {
+      closeMergeDialog();
+    }
+  }}
+  onConfirm={handleMergeConfirm}
+/>
 
 <DeleteEntityDialog
   open={pendingDeleteRow !== null}

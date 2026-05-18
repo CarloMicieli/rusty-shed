@@ -12,6 +12,7 @@ describe('LibraryView', () => {
         onTabChange,
         onEdit: vi.fn(),
         onDelete: vi.fn(),
+        onMerge: vi.fn(),
         manufacturers: [
           { id: 'm1', name: 'Acme', countryCode: 'IT', usageCount: 0, isSystemSeeded: false }
         ],

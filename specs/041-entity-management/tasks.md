@@ -134,15 +134,15 @@
 
 ### Tests for User Story 5
 
-- [ ] T041 [P] [US5] Add merge modal selection/validation UI tests in `src/__tests__/settings/library/MergeEntities.test.ts`
-- [ ] T042 [P] [US5] Add backend merge transaction tests (success + rollback + protected block) in `src-tauri/tests/library/merge_entities_tests.rs`
+- [X] T041 [P] [US5] Add merge modal selection/validation UI tests in `src/__tests__/settings/library/MergeEntities.test.ts`
+- [X] T042 [P] [US5] Add backend merge transaction tests (success + rollback + protected block) in `src-tauri/tests/library/merge_entities_tests.rs`
 
 ### Implementation for User Story 5
 
-- [ ] T043 [P] [US5] Implement merge selection modal in `src/lib/features/settings/components/library/MergeEntityDialog.svelte`
-- [ ] T044 [US5] Implement manufacturer merge command and relink transaction in `src-tauri/src/catalog/application/`
-- [ ] T045 [US5] Implement canonical shared-party merge command relinking buyer and seller references in one transaction in `src-tauri/src/sellers/application/` and `src-tauri/src/buyers/application/`
-- [ ] T046 [US5] Wire merge actions into tab lists and refresh state in `src/lib/features/settings/SettingsState.svelte.ts`
+- [X] T043 [P] [US5] Implement merge selection modal in `src/lib/features/settings/components/library/MergeEntityDialog.svelte`
+- [X] T044 [US5] Implement manufacturer merge command and relink transaction in `src-tauri/src/catalog/application/`
+- [X] T045 [US5] Implement canonical shared-party merge command relinking buyer and seller references in one transaction in `src-tauri/src/sellers/application/` and `src-tauri/src/buyers/application/`
+- [X] T046 [US5] Wire merge actions into tab lists and refresh state in `src/lib/features/settings/SettingsState.svelte.ts`
 
 **Checkpoint**: User Story 5 is independently functional and testable
 

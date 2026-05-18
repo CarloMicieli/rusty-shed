@@ -1,4 +1,4 @@
-use crate::catalog::application::{GetManufacturerById, GetManufacturers};
+use crate::catalog::application::{GetManufacturerById, GetManufacturers, MergeManufacturers};
 use crate::catalog::domain::manufacturer::{
     Manufacturer as DomainManufacturer, ManufacturerId, ManufacturerStatus,
 };
@@ -391,6 +391,49 @@ pub async fn delete_manufacturer(
     id: ManufacturerId,
 ) -> Result<(), CommandError> {
     delete_manufacturer_inner(&state, id).await
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeManufacturerArgs {
+    pub source_id: ManufacturerId,
+    pub target_id: ManufacturerId,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ManufacturerMergeResult {
+    pub source_id: String,
+    pub target_id: String,
+    pub relinked_count: i64,
+}
+
+pub async fn merge_manufacturers_inner(
+    state: &AppState,
+    args: MergeManufacturerArgs,
+) -> Result<ManufacturerMergeResult, CommandError> {
+    let mut tx = state.db_pool().begin().await.map_err(CommandError::from)?;
+
+    let relinked_count = MergeManufacturers::execute(&mut tx, &args.source_id, &args.target_id)
+        .await
+        .map_err(CommandError::from)?;
+
+    tx.commit().await.map_err(CommandError::from)?;
+
+    Ok(ManufacturerMergeResult {
+        source_id: args.source_id.to_string(),
+        target_id: args.target_id.to_string(),
+        relinked_count,
+    })
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn merge_manufacturers(
+    state: tauri::State<'_, AppState>,
+    args: MergeManufacturerArgs,
+) -> Result<ManufacturerMergeResult, CommandError> {
+    merge_manufacturers_inner(&state, args).await
 }
 
 #[cfg(test)]

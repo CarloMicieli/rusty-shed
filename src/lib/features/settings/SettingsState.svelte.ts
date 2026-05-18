@@ -133,6 +133,15 @@ export class SettingsState {
     this.librarySellers = this.librarySellers.filter((entry) => entry.id !== id);
     this.libraryBuyers = this.libraryBuyers.filter((entry) => entry.id !== id);
   }
+
+  mergeLibraryManufacturer(sourceId: string): void {
+    this.libraryManufacturers = this.libraryManufacturers.filter((entry) => entry.id !== sourceId);
+  }
+
+  mergeCanonicalParty(sourceId: string): void {
+    this.librarySellers = this.librarySellers.filter((entry) => entry.id !== sourceId);
+    this.libraryBuyers = this.libraryBuyers.filter((entry) => entry.id !== sourceId);
+  }
 }
 
 // Export singleton instance

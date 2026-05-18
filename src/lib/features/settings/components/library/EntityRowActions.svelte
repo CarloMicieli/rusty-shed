@@ -6,11 +6,21 @@
     row: LibraryEntityRow;
     onEdit: (row: LibraryEntityRow) => void;
     onDelete: (row: LibraryEntityRow) => void;
+    onMerge: (row: LibraryEntityRow) => void;
     editDisabled?: boolean;
     deleteDisabled?: boolean;
+    mergeDisabled?: boolean;
   }
 
-  let { row, onEdit, onDelete, editDisabled = false, deleteDisabled = false }: Props = $props();
+  let {
+    row,
+    onEdit,
+    onDelete,
+    onMerge,
+    editDisabled = false,
+    deleteDisabled = false,
+    mergeDisabled = false
+  }: Props = $props();
 </script>
 
 <div class="flex items-center gap-2">
@@ -31,5 +41,14 @@
     onclick={() => onDelete(row)}
   >
     {m.common_delete()}
+  </button>
+  <button
+    type="button"
+    class="rounded-sm border border-border bg-background px-2 py-1 text-xs"
+    aria-label={m.settings_library_merge_row({ name: row.name })}
+    disabled={mergeDisabled}
+    onclick={() => onMerge(row)}
+  >
+    {m.settings_library_merge_action()}
   </button>
 </div>

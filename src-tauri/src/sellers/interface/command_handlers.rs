@@ -5,12 +5,14 @@ use crate::sellers::application::delete_seller::DeleteSeller;
 use crate::sellers::application::delete_seller_with_lock::DeleteSellerWithLock;
 use crate::sellers::application::get_seller_by_id::GetSellerById;
 use crate::sellers::application::get_sellers::GetSellers;
+use crate::sellers::application::merge_seller::MergeSeller;
 use crate::sellers::application::seller_view::SellerView;
 use crate::sellers::application::update_seller::{UpdateSellerInput, UpdateSellerUseCase};
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::interface::{CreateSellerPayload, Seller, UpdateSellerPayload};
 use crate::state::AppState;
 use garde::Validate;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use tracing::info;
 
@@ -296,6 +298,49 @@ pub async fn delete_seller(
     id: SellerId,
 ) -> Result<(), CommandError> {
     delete_seller_inner(&state, id).await
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeSellerArgs {
+    pub source_id: SellerId,
+    pub target_id: SellerId,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SellerMergeResult {
+    pub source_id: String,
+    pub target_id: String,
+    pub relinked_count: i64,
+}
+
+pub async fn merge_sellers_inner(
+    state: &AppState,
+    args: MergeSellerArgs,
+) -> Result<SellerMergeResult, CommandError> {
+    let mut tx = state.db_pool().begin().await.map_err(CommandError::from)?;
+
+    let relinked_count = MergeSeller::execute(&mut tx, &args.source_id, &args.target_id)
+        .await
+        .map_err(CommandError::from)?;
+
+    tx.commit().await.map_err(CommandError::from)?;
+
+    Ok(SellerMergeResult {
+        source_id: args.source_id.to_string(),
+        target_id: args.target_id.to_string(),
+        relinked_count,
+    })
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn merge_sellers(
+    state: tauri::State<'_, AppState>,
+    args: MergeSellerArgs,
+) -> Result<SellerMergeResult, CommandError> {
+    merge_sellers_inner(&state, args).await
 }
 
 #[cfg(test)]

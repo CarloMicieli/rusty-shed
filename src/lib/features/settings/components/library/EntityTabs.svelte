@@ -9,12 +9,13 @@
     onTabChange: (tab: LibraryTab) => void;
     onEdit: (row: LibraryEntityRow) => void;
     onDelete: (row: LibraryEntityRow) => void;
+    onMerge: (row: LibraryEntityRow) => void;
     manufacturers: LibraryEntityRow[];
     sellers: LibraryEntityRow[];
     buyers: LibraryEntityRow[];
   }
 
-  let { activeTab, onTabChange, onEdit, onDelete, manufacturers, sellers, buyers }: Props =
+  let { activeTab, onTabChange, onEdit, onDelete, onMerge, manufacturers, sellers, buyers }: Props =
     $props();
 
   const visibleRows = $derived.by(() => {
@@ -58,6 +59,6 @@
   {#if visibleRows.length === 0}
     <p class="text-sm text-muted-foreground">{m.settings_library_empty_state()}</p>
   {:else}
-    <EntityTable rows={visibleRows} onEdit={onEdit} onDelete={onDelete} />
+    <EntityTable rows={visibleRows} onEdit={onEdit} onDelete={onDelete} onMerge={onMerge} />
   {/if}
 </div>

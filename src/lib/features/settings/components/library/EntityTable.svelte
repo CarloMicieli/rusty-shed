@@ -8,9 +8,10 @@
     rows: LibraryEntityRow[];
     onEdit: (row: LibraryEntityRow) => void;
     onDelete: (row: LibraryEntityRow) => void;
+    onMerge: (row: LibraryEntityRow) => void;
   }
 
-  let { rows, onEdit, onDelete }: Props = $props();
+  let { rows, onEdit, onDelete, onMerge }: Props = $props();
 </script>
 
 <ul class="space-y-2">
@@ -29,8 +30,10 @@
           row={row}
           onEdit={onEdit}
           onDelete={onDelete}
+          onMerge={onMerge}
           editDisabled={badge.kind === 'protected'}
           deleteDisabled={badge.kind === 'protected' || badge.kind === 'in-use'}
+          mergeDisabled={badge.kind === 'protected'}
         />
       </div>
 

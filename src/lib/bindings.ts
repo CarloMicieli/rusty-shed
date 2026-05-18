@@ -24,6 +24,7 @@ export const commands = {
 	createManufacturer: (args: CreateManufacturerArgs) => typedError<Manufacturer, CommandError>(__TAURI_INVOKE("create_manufacturer", { args })),
 	updateManufacturer: (args: UpdateManufacturerArgs) => typedError<Manufacturer, CommandError>(__TAURI_INVOKE("update_manufacturer", { args })),
 	deleteManufacturer: (id: ManufacturerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_manufacturer", { id })),
+	mergeManufacturers: (args: MergeManufacturerArgs) => typedError<ManufacturerMergeResult, CommandError>(__TAURI_INVOKE("merge_manufacturers", { args })),
 	/**  Tauri command to retrieve a railway model by its identifier. */
 	getRailwayModelById: (railwayModelId: RailwayModelId, lang: Language) => typedError<{
 	/**  Unique identifier for the railway model. */
@@ -419,6 +420,7 @@ export const commands = {
 	 *  - `Err(CommandError)` when the use-case returns an error.
 	 */
 	deleteSeller: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_seller", { id })),
+	mergeSellers: (args: MergeSellerArgs) => typedError<SellerMergeResult, CommandError>(__TAURI_INVOKE("merge_sellers", { args })),
 	getBuyers: () => typedError<SellerView[], CommandError>(__TAURI_INVOKE("get_buyers")),
 	getBuyerById: (id: SellerId) => typedError<{
 	/**  Unique identifier for the seller. */
@@ -443,6 +445,7 @@ export const commands = {
 	createBuyer: (payload: CreateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("create_buyer", { payload })),
 	updateBuyer: (payload: UpdateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("update_buyer", { payload })),
 	deleteBuyer: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_buyer", { id })),
+	mergeBuyers: (args: MergeBuyerArgs) => typedError<BuyerMergeResult, CommandError>(__TAURI_INVOKE("merge_buyers", { args })),
 	/**
 	 *  Command handler to create a new track inventory.
 	 * 
@@ -1237,6 +1240,12 @@ export type BudgetMode =
 
 /**  Quarter enum for quarterly summaries exposed at the interface boundary. */
 export type BudgetQuarter = "Q1" | "Q2" | "Q3" | "Q4";
+
+export type BuyerMergeResult = {
+	sourceId: string,
+	targetId: string,
+	relinkedCount: number,
+};
 
 /**  Arguments for cancel_import_session command */
 export type CancelImportSessionArgs = {
@@ -2868,6 +2877,12 @@ export type Manufacturer = {
  */
 export type ManufacturerId = string;
 
+export type ManufacturerMergeResult = {
+	sourceId: string,
+	targetId: string,
+	relinkedCount: number,
+};
+
 /**
  *  Status of a manufacturer lifecycle.
  * 
@@ -2877,6 +2892,21 @@ export type ManufacturerStatus = "ACTIVE" | "MERGED" | "OUT_OF_BUSINESS";
 
 /**  Measurement system for dimensions */
 export type MeasureUnit = "Metric" | "Imperial";
+
+export type MergeBuyerArgs = {
+	sourceId: SellerId,
+	targetId: SellerId,
+};
+
+export type MergeManufacturerArgs = {
+	sourceId: ManufacturerId,
+	targetId: ManufacturerId,
+};
+
+export type MergeSellerArgs = {
+	sourceId: SellerId,
+	targetId: SellerId,
+};
 
 /**  The metadata information for the current resource */
 export type Metadata = {
@@ -4181,6 +4211,12 @@ export type Seller = {
 
 /**  Strongly-typed identifier for a seller. Format: `trn:seller:{slug}`. */
 export type SellerId = string;
+
+export type SellerMergeResult = {
+	sourceId: string,
+	targetId: string,
+	relinkedCount: number,
+};
 
 /**
  *  Represents the type/category of a seller.
