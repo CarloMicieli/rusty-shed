@@ -156,13 +156,13 @@
 
 ### Tests for User Story 6
 
-- [ ] T047 [P] [US6] Add responsive card rendering/action parity tests in `src/__tests__/settings/library/LibraryResponsive.test.ts`
+- [X] T047 [P] [US6] Add responsive card rendering/action parity tests in `src/__tests__/settings/library/LibraryResponsive.test.ts`
 
 ### Implementation for User Story 6
 
-- [ ] T048 [P] [US6] Implement mobile card layout variant in `src/lib/features/settings/components/library/EntityCards.svelte`
-- [ ] T049 [US6] Implement desktop/mobile layout switch logic in `src/lib/features/settings/components/library/EntityTabs.svelte`
-- [ ] T050 [US6] Ensure drawer/modal interactions remain accessible in mobile layout in `src/lib/features/settings/components/library/`
+- [X] T048 [P] [US6] Implement mobile card layout variant in `src/lib/features/settings/components/library/EntityCards.svelte`
+- [X] T049 [US6] Implement desktop/mobile layout switch logic in `src/lib/features/settings/components/library/EntityTabs.svelte`
+- [X] T050 [US6] Ensure drawer/modal interactions remain accessible in mobile layout in `src/lib/features/settings/components/library/`
 
 **Checkpoint**: User Story 6 is independently functional and testable
 

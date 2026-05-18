@@ -3,6 +3,7 @@
   import type { LibraryTab } from '$lib/features/settings/library-types';
   import type { LibraryEntityRow } from '$lib/services/entityLibrary';
   import EntityTable from './EntityTable.svelte';
+  import EntityCards from './EntityCards.svelte';
 
   interface Props {
     activeTab: LibraryTab;
@@ -59,6 +60,13 @@
   {#if visibleRows.length === 0}
     <p class="text-sm text-muted-foreground">{m.settings_library_empty_state()}</p>
   {:else}
-    <EntityTable rows={visibleRows} onEdit={onEdit} onDelete={onDelete} onMerge={onMerge} />
+    <!-- Desktop: list table layout (hidden on mobile) -->
+    <div class="hidden md:block" data-layout="desktop">
+      <EntityTable rows={visibleRows} onEdit={onEdit} onDelete={onDelete} onMerge={onMerge} />
+    </div>
+    <!-- Mobile: stacked card layout (visible below md breakpoint) -->
+    <div class="block md:hidden" data-layout="mobile">
+      <EntityCards rows={visibleRows} onEdit={onEdit} onDelete={onDelete} onMerge={onMerge} />
+    </div>
   {/if}
 </div>
