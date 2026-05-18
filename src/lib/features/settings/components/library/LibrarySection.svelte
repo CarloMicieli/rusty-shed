@@ -43,18 +43,9 @@
     )
   );
 
-  const filteredBuyers = $derived.by(() =>
-    settingsState.libraryBuyers.filter((row) =>
-      `${row.name} ${row.countryCode ?? ''}`.toLowerCase().includes(query)
-    )
-  );
-
   const mergeCandidates = $derived.by(() => {
     if (settingsState.libraryActiveTab === 'manufacturers') {
       return settingsState.libraryManufacturers;
-    }
-    if (settingsState.libraryActiveTab === 'buyers') {
-      return settingsState.libraryBuyers;
     }
     return settingsState.librarySellers;
   });
@@ -62,10 +53,6 @@
   const visibleRows = $derived.by(() => {
     if (settingsState.libraryActiveTab === 'manufacturers') {
       return filteredManufacturers;
-    }
-
-    if (settingsState.libraryActiveTab === 'buyers') {
-      return filteredBuyers;
     }
 
     return filteredSellers;
@@ -187,11 +174,6 @@
       return;
     }
 
-    if (settingsState.libraryActiveTab === 'buyers') {
-      quickAddTarget = 'buyer';
-      return;
-    }
-
     quickAddTarget = 'seller';
   }
 
@@ -207,11 +189,6 @@
 
     if (settingsState.libraryActiveTab === 'manufacturers') {
       quickAddTarget = 'manufacturer';
-      return;
-    }
-
-    if (settingsState.libraryActiveTab === 'buyers') {
-      quickAddTarget = 'buyer';
       return;
     }
 
@@ -337,9 +314,7 @@
     const result =
       settingsState.libraryActiveTab === 'manufacturers'
         ? await commands.mergeManufacturers({ sourceId: source.id, targetId })
-        : settingsState.libraryActiveTab === 'buyers'
-          ? await commands.mergeBuyers({ sourceId: source.id, targetId })
-          : await commands.mergeSellers({ sourceId: source.id, targetId });
+        : await commands.mergeSellers({ sourceId: source.id, targetId });
 
     if (result.status === 'ok') {
       if (settingsState.libraryActiveTab === 'manufacturers') {
@@ -378,9 +353,7 @@
     const result =
       settingsState.libraryActiveTab === 'manufacturers'
         ? await commands.deleteManufacturer(row.id)
-        : settingsState.libraryActiveTab === 'buyers'
-          ? await commands.deleteBuyer(row.id)
-          : await commands.deleteSeller(row.id);
+        : await commands.deleteSeller(row.id);
 
     if (result.status === 'ok') {
       if (settingsState.libraryActiveTab === 'manufacturers') {
@@ -441,10 +414,7 @@
       createdAt: null
     };
 
-    const result =
-      quickAddTarget === 'buyer'
-        ? await commands.updateBuyer(payload)
-        : await commands.updateSeller(payload);
+    const result = await commands.updateSeller(payload);
 
     if (result.status === 'ok') {
       return result.data;
@@ -493,11 +463,11 @@
       onDelete={openDeleteDialog}
       onMerge={openMergeDialog}
       rows={paginatedRows}
-      totalItems={totalItems}
-      totalPages={totalPages}
-      pageStart={pageStart}
-      pageEnd={pageEnd}
-      currentPage={currentPage}
+      {totalItems}
+      {totalPages}
+      {pageStart}
+      {pageEnd}
+      {currentPage}
       onPageChange={(page) => {
         currentPage = page;
       }}

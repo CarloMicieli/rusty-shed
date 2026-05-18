@@ -178,7 +178,7 @@ describe('LibrarySection', () => {
     expect((await screen.findAllByText('acme updated')).length).toBeGreaterThan(0);
   });
 
-  it('propagates seller edit updates to buyers tab using canonical upsert', async () => {
+  it('applies seller edit updates in sellers tab', async () => {
     settingsState.setLibraryTab('sellers');
     render(LibrarySection);
 
@@ -198,8 +198,6 @@ describe('LibrarySection', () => {
       expect(mockUpdateSeller).toHaveBeenCalledOnce();
       expect(screen.getAllByText('model shop updated').length).toBeGreaterThan(0);
     });
-
-    await fireEvent.click(screen.getByRole('tab', { name: 'settings_library_tab_buyers' }));
 
     expect(screen.getAllByText('model shop updated').length).toBeGreaterThan(0);
   });

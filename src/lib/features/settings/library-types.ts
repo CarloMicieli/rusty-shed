@@ -1,4 +1,4 @@
-export type LibraryTab = 'manufacturers' | 'sellers' | 'buyers';
+export type LibraryTab = 'manufacturers' | 'sellers';
 
 export interface LibraryUiState {
   activeTab: LibraryTab;
