@@ -44,6 +44,16 @@ pub trait ManufacturerRepository: Send + Sync {
         id: &ManufacturerId,
     ) -> Result<Option<bool>, DomainError>;
 
+    /// Returns the `(name, is_system_seeded)` pair for the given manufacturer,
+    /// or `None` when no matching row exists.
+    ///
+    /// Used to enforce the seeded-name-immutability business rule before
+    /// mutating a manufacturer without loading the full aggregate.
+    async fn find_seeded_and_name(
+        &mut self,
+        id: &ManufacturerId,
+    ) -> Result<Option<(String, bool)>, DomainError>;
+
     /// Relinks all railway models currently referencing `source_id` so they
     /// reference `target_id` instead.
     ///
@@ -58,6 +68,35 @@ pub trait ManufacturerRepository: Send + Sync {
     ///
     /// Returns the number of deleted rows.
     async fn delete_by_id(&mut self, id: &ManufacturerId) -> Result<u64, DomainError>;
+
+    /// Returns the number of railway models that reference this manufacturer.
+    ///
+    /// Used to populate the `usage_count` field in the view DTO and to guard
+    /// against deleting a manufacturer that is still in use.
+    async fn find_usage_count(&mut self, id: &ManufacturerId) -> Result<i64, DomainError>;
+
+    /// Inserts a new manufacturer row and returns the persisted aggregate.
+    ///
+    /// Returns `Err(DomainError::Conflict)` when a manufacturer with a
+    /// conflicting unique key already exists.
+    async fn insert(
+        &mut self,
+        id: &ManufacturerId,
+        name: String,
+        country_code: Option<String>,
+        website_url: Option<String>,
+    ) -> Result<Manufacturer, DomainError>;
+
+    /// Updates an existing manufacturer row and returns the updated aggregate.
+    ///
+    /// Returns `Err(DomainError::Conflict)` on a unique-key collision.
+    async fn update(
+        &mut self,
+        id: &ManufacturerId,
+        name: String,
+        country_code: Option<String>,
+        website_url: Option<String>,
+    ) -> Result<Manufacturer, DomainError>;
 }
 
 /// An extension trait that provides access to the `ManufacturerRepository`.

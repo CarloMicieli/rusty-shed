@@ -4,6 +4,7 @@ use crate::catalog::domain::manufacturer::{
 use crate::catalog::infrastructure::entities::ManufacturerRow;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::core::infrastructure::usage_queries::manufacturer_usage_count;
 use sqlx::SqliteConnection;
 
 /// An SQLite-specific implementation of the `ManufacturerRepository`.
@@ -110,6 +111,20 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
         Ok(seeded)
     }
 
+    async fn find_seeded_and_name(
+        &mut self,
+        id: &ManufacturerId,
+    ) -> Result<Option<(String, bool)>, DomainError> {
+        sqlx::query_as::<_, (String, i64)>(
+            r#"SELECT name, is_system_seeded FROM manufacturers WHERE id = ?1 LIMIT 1"#,
+        )
+        .bind(id.as_ref())
+        .fetch_optional(&mut *self.executor)
+        .await
+        .map(|opt| opt.map(|(name, seeded)| (name, seeded != 0)))
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))
+    }
+
     async fn relink_railway_models(
         &mut self,
         source_id: &ManufacturerId,
@@ -144,6 +159,102 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
             .rows_affected();
 
         Ok(rows)
+    }
+
+    async fn find_usage_count(&mut self, id: &ManufacturerId) -> Result<i64, DomainError> {
+        manufacturer_usage_count(&mut *self.executor, id.as_ref())
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))
+    }
+
+    async fn insert(
+        &mut self,
+        id: &ManufacturerId,
+        name: String,
+        country_code: Option<String>,
+        website_url: Option<String>,
+    ) -> Result<Manufacturer, DomainError> {
+        let insert_result = sqlx::query(
+            r#"INSERT INTO manufacturers (id, name, status, country_code, website_url)
+               VALUES (?1, ?2, 'ACTIVE', ?3, ?4)"#,
+        )
+        .bind(id.as_ref())
+        .bind(name)
+        .bind(country_code)
+        .bind(website_url)
+        .execute(&mut *self.executor)
+        .await;
+
+        if let Err(err) = insert_result {
+            if let sqlx::Error::Database(db_err) = &err
+                && db_err.is_unique_violation()
+            {
+                return Err(DomainError::Conflict(
+                    "A manufacturer with this name already exists".to_string(),
+                ));
+            }
+            return Err(DomainError::Infrastructure(err.to_string()));
+        }
+
+        let row = sqlx::query_as::<_, ManufacturerRow>(
+            r#"SELECT id, name, registered_company_name, status, country_code, website_url,
+                      created_at, updated_at, version
+               FROM manufacturers
+               WHERE id = ?1
+               LIMIT 1"#,
+        )
+        .bind(id.as_ref())
+        .fetch_one(&mut *self.executor)
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+
+        Manufacturer::try_from(row)
+    }
+
+    async fn update(
+        &mut self,
+        id: &ManufacturerId,
+        name: String,
+        country_code: Option<String>,
+        website_url: Option<String>,
+    ) -> Result<Manufacturer, DomainError> {
+        let update_result = sqlx::query(
+            r#"UPDATE manufacturers
+               SET name = ?2, country_code = ?3, website_url = ?4,
+                   updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?1"#,
+        )
+        .bind(id.as_ref())
+        .bind(name)
+        .bind(country_code)
+        .bind(website_url)
+        .execute(&mut *self.executor)
+        .await;
+
+        if let Err(err) = update_result {
+            if let sqlx::Error::Database(db_err) = &err
+                && db_err.is_unique_violation()
+            {
+                return Err(DomainError::Conflict(
+                    "A manufacturer with this name already exists".to_string(),
+                ));
+            }
+            return Err(DomainError::Infrastructure(err.to_string()));
+        }
+
+        let row = sqlx::query_as::<_, ManufacturerRow>(
+            r#"SELECT id, name, registered_company_name, status, country_code, website_url,
+                      created_at, updated_at, version
+               FROM manufacturers
+               WHERE id = ?1
+               LIMIT 1"#,
+        )
+        .bind(id.as_ref())
+        .fetch_one(&mut *self.executor)
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+
+        Manufacturer::try_from(row)
     }
 }
 

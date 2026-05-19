@@ -1,11 +1,11 @@
-use crate::catalog::application::{GetManufacturerById, GetManufacturers, MergeManufacturers};
+use crate::catalog::application::{
+    CreateManufacturer, CreateManufacturerInput, DeleteManufacturer, GetManufacturerById,
+    GetManufacturers, MergeManufacturers, UpdateManufacturer, UpdateManufacturerInput,
+};
 use crate::catalog::domain::manufacturer::{
     Manufacturer as DomainManufacturer, ManufacturerId, ManufacturerStatus,
 };
-use crate::catalog::infrastructure::entities::ManufacturerRow;
-use crate::core::domain::identifiers::Identifier;
 use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::usage_queries::manufacturer_usage_count;
 use crate::state::AppState;
 use garde::Validate;
 use serde::{Deserialize, Serialize};
@@ -41,54 +41,31 @@ impl From<DomainManufacturer> for Manufacturer {
     }
 }
 
-async fn enrich_manufacturer(
-    state: &AppState,
-    manufacturer: &mut Manufacturer,
-) -> Result<(), CommandError> {
-    let mut conn = state
-        .db_pool()
-        .acquire()
-        .await
-        .map_err(CommandError::from)?;
-
-    let seeded = sqlx::query_scalar::<_, i64>(
-        r#"
-        SELECT is_system_seeded
-        FROM manufacturers
-        WHERE id = ?1
-        LIMIT 1
-        "#,
-    )
-    .bind(manufacturer.id.as_ref())
-    .fetch_optional(&mut *conn)
-    .await
-    .map_err(CommandError::from)?
-    .unwrap_or(0);
-
-    let usage_count = manufacturer_usage_count(&mut conn, manufacturer.id.as_ref())
-        .await
-        .map_err(CommandError::from)?;
-
-    manufacturer.is_system_seeded = seeded != 0;
-    manufacturer.usage_count = usage_count;
-    Ok(())
-}
-
 /// Retrieve all manufacturers from the database.
 pub async fn get_manufacturers_inner(state: &AppState) -> Result<Vec<Manufacturer>, CommandError> {
     info!("Fetching all manufacturers from the database.");
     let mut uow = state.unit_of_work().await?;
-    let mut manufacturers: Vec<Manufacturer> = GetManufacturers::execute(&mut uow)
-        .await?
-        .into_iter()
-        .map(Manufacturer::from)
-        .collect();
-    uow.commit().await?;
+    let domain_manufacturers = GetManufacturers::execute(&mut uow).await?;
 
-    for manufacturer in &mut manufacturers {
-        enrich_manufacturer(state, manufacturer).await?;
+    let mut manufacturers = Vec::with_capacity(domain_manufacturers.len());
+    for m in domain_manufacturers {
+        let id = m.id.clone();
+        let mut dto = Manufacturer::from(m);
+        let mut repo = uow.manufacturers_repo();
+        dto.is_system_seeded = repo
+            .find_is_system_seeded(&id)
+            .await
+            .map_err(CommandError::from)?
+            .unwrap_or(false);
+        dto.usage_count = repo
+            .find_usage_count(&id)
+            .await
+            .map_err(CommandError::from)?;
+        drop(repo);
+        manufacturers.push(dto);
     }
 
+    uow.commit().await?;
     Ok(manufacturers)
 }
 
@@ -111,18 +88,28 @@ pub async fn get_manufacturer_by_id_inner(
         manufacturer_id
     );
     let mut uow = state.unit_of_work().await?;
-    let manufacturer = GetManufacturerById::execute(&mut uow, manufacturer_id).await?;
-    uow.commit().await?;
+    let domain = GetManufacturerById::execute(&mut uow, manufacturer_id).await?;
 
-    let mut manufacturer = manufacturer.map(Manufacturer::from);
-    if let Some(value) = manufacturer.as_mut() {
-        enrich_manufacturer(state, value).await?;
+    let mut dto = domain.map(Manufacturer::from);
+    if let Some(value) = dto.as_mut() {
+        let id = value.id.clone();
+        let mut repo = uow.manufacturers_repo();
+        value.is_system_seeded = repo
+            .find_is_system_seeded(&id)
+            .await
+            .map_err(CommandError::from)?
+            .unwrap_or(false);
+        value.usage_count = repo
+            .find_usage_count(&id)
+            .await
+            .map_err(CommandError::from)?;
+        drop(repo);
     }
 
-    Ok(manufacturer)
+    uow.commit().await?;
+    Ok(dto)
 }
 
-/// Tauri command to retrieve a manufacturer by its identifier.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_manufacturer_by_id(
@@ -130,6 +117,12 @@ pub async fn get_manufacturer_by_id(
     manufacturer_id: ManufacturerId,
 ) -> Result<Option<Manufacturer>, CommandError> {
     get_manufacturer_by_id_inner(&state, manufacturer_id).await
+}
+
+fn normalize_optional(value: Option<String>) -> Option<String> {
+    value
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty())
 }
 
 /// Input payload for creating a manufacturer.
@@ -142,17 +135,6 @@ pub struct CreateManufacturerArgs {
     pub website_url: Option<String>,
     #[garde(length(min = 2, max = 2))]
     pub country_code: Option<String>,
-}
-
-fn normalize_optional(value: Option<String>) -> Option<String> {
-    value.and_then(|raw| {
-        let trimmed = raw.trim();
-        if trimmed.is_empty() {
-            None
-        } else {
-            Some(trimmed.to_string())
-        }
-    })
 }
 
 pub async fn create_manufacturer_inner(
@@ -173,49 +155,18 @@ pub async fn create_manufacturer_inner(
 
     let country_code = normalize_optional(args.country_code).map(|value| value.to_uppercase());
 
-    let id = ManufacturerId::new_from_parts(&[name.as_str()]);
-    let mut tx = state.db_pool().begin().await?;
-
-    let insert_result = sqlx::query(
-        r#"
-        INSERT INTO manufacturers (id, name, status, country_code, website_url)
-        VALUES (?1, ?2, 'ACTIVE', ?3, ?4)
-        "#,
+    let mut uow = state.unit_of_work().await?;
+    let domain = CreateManufacturer::execute(
+        &mut uow,
+        CreateManufacturerInput {
+            name,
+            country_code,
+            website_url,
+        },
     )
-    .bind(id.as_ref())
-    .bind(&name)
-    .bind(&country_code)
-    .bind(&website_url)
-    .execute(&mut *tx)
-    .await;
-
-    if let Err(err) = insert_result {
-        if let sqlx::Error::Database(db_err) = &err
-            && db_err.is_unique_violation()
-        {
-            return Err(CommandError::Conflict(
-                "A manufacturer with this name already exists".to_string(),
-            ));
-        }
-        return Err(CommandError::DatabaseError(err.to_string()));
-    }
-
-    let row = sqlx::query_as::<_, ManufacturerRow>(
-        r#"
-        SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version
-        FROM manufacturers
-        WHERE id = ?1
-        LIMIT 1
-        "#,
-    )
-    .bind(id.as_ref())
-    .fetch_one(&mut *tx)
     .await
     .map_err(CommandError::from)?;
-
-    tx.commit().await.map_err(CommandError::from)?;
-
-    let domain = DomainManufacturer::try_from(row).map_err(CommandError::from)?;
+    uow.commit().await?;
     Ok(Manufacturer::from(domain))
 }
 
@@ -259,73 +210,33 @@ pub async fn update_manufacturer_inner(
 
     let country_code = normalize_optional(args.country_code).map(|value| value.to_uppercase());
 
-    let mut tx = state.db_pool().begin().await.map_err(CommandError::from)?;
-
-    let existing = sqlx::query_as::<_, (String, i64)>(
-        r#"
-        SELECT name, is_system_seeded
-        FROM manufacturers
-        WHERE id = ?1
-        LIMIT 1
-        "#,
+    let mut uow = state.unit_of_work().await?;
+    let domain = UpdateManufacturer::execute(
+        &mut uow,
+        UpdateManufacturerInput {
+            id: args.id,
+            name,
+            country_code,
+            website_url,
+        },
     )
-    .bind(args.id.as_ref())
-    .fetch_optional(&mut *tx)
     .await
     .map_err(CommandError::from)?;
 
-    let (current_name, is_seeded) = existing
-        .ok_or_else(|| CommandError::NotFound(format!("Manufacturer '{}' not found", args.id)))?;
-
-    if is_seeded != 0 && current_name.trim() != name {
-        return Err(CommandError::BusinessRule(
-            "System-seeded manufacturer names cannot be edited".to_string(),
-        ));
-    }
-
-    let update_result = sqlx::query(
-        r#"
-        UPDATE manufacturers
-        SET name = ?2, country_code = ?3, website_url = ?4, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?1
-        "#,
-    )
-    .bind(args.id.as_ref())
-    .bind(&name)
-    .bind(&country_code)
-    .bind(&website_url)
-    .execute(&mut *tx)
-    .await;
-
-    if let Err(err) = update_result {
-        if let sqlx::Error::Database(db_err) = &err
-            && db_err.is_unique_violation()
-        {
-            return Err(CommandError::Conflict(
-                "A manufacturer with this name already exists".to_string(),
-            ));
-        }
-        return Err(CommandError::DatabaseError(err.to_string()));
-    }
-
-    let row = sqlx::query_as::<_, ManufacturerRow>(
-        r#"
-        SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version
-        FROM manufacturers
-        WHERE id = ?1
-        LIMIT 1
-        "#,
-    )
-    .bind(args.id.as_ref())
-    .fetch_one(&mut *tx)
-    .await
-    .map_err(CommandError::from)?;
-
-    tx.commit().await.map_err(CommandError::from)?;
-
-    let domain = DomainManufacturer::try_from(row).map_err(CommandError::from)?;
+    let id = domain.id.clone();
     let mut result = Manufacturer::from(domain);
-    enrich_manufacturer(state, &mut result).await?;
+    let mut repo = uow.manufacturers_repo();
+    result.is_system_seeded = repo
+        .find_is_system_seeded(&id)
+        .await
+        .map_err(CommandError::from)?
+        .unwrap_or(false);
+    result.usage_count = repo
+        .find_usage_count(&id)
+        .await
+        .map_err(CommandError::from)?;
+    drop(repo);
+    uow.commit().await?;
     Ok(result)
 }
 
@@ -342,58 +253,11 @@ pub async fn delete_manufacturer_inner(
     state: &AppState,
     id: ManufacturerId,
 ) -> Result<(), CommandError> {
-    let mut tx = state.db_pool().begin().await.map_err(CommandError::from)?;
-
-    let seeded = sqlx::query_scalar::<_, i64>(
-        r#"
-        SELECT is_system_seeded
-        FROM manufacturers
-        WHERE id = ?1
-        LIMIT 1
-        "#,
-    )
-    .bind(id.as_ref())
-    .fetch_optional(&mut *tx)
-    .await
-    .map_err(CommandError::from)?
-    .ok_or_else(|| CommandError::NotFound(format!("Manufacturer '{}' not found", id)))?;
-
-    if seeded != 0 {
-        return Err(CommandError::BusinessRule(
-            "Protected entity cannot be deleted".to_string(),
-        ));
-    }
-
-    let usage_count = manufacturer_usage_count(&mut tx, id.as_ref())
+    let mut uow = state.unit_of_work().await?;
+    DeleteManufacturer::execute(&mut uow, &id)
         .await
         .map_err(CommandError::from)?;
-
-    if usage_count > 0 {
-        return Err(CommandError::BusinessRule(format!(
-            "Entity is still in use ({usage_count})"
-        )));
-    }
-
-    let affected = sqlx::query(
-        r#"
-        DELETE FROM manufacturers
-        WHERE id = ?1
-        "#,
-    )
-    .bind(id.as_ref())
-    .execute(&mut *tx)
-    .await
-    .map_err(CommandError::from)?
-    .rows_affected();
-
-    if affected == 0 {
-        return Err(CommandError::NotFound(format!(
-            "Manufacturer '{}' not found",
-            id
-        )));
-    }
-
-    tx.commit().await.map_err(CommandError::from)?;
+    uow.commit().await?;
     Ok(())
 }
 
