@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use tracing::info;
 use url::Url;
 
+/// Manufacturer DTO exposed by Tauri command handlers.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Manufacturer {
@@ -131,6 +132,7 @@ pub async fn get_manufacturer_by_id(
     get_manufacturer_by_id_inner(&state, manufacturer_id).await
 }
 
+/// Input payload for creating a manufacturer.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
@@ -226,6 +228,7 @@ pub async fn create_manufacturer(
     create_manufacturer_inner(&state, args).await
 }
 
+/// Input payload for updating a manufacturer.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]

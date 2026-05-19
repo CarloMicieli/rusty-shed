@@ -1,4 +1,5 @@
 /// Shared usage-count helpers for entity-management flows.
+/// Counts how many railway models currently reference a given manufacturer.
 pub async fn manufacturer_usage_count(
     executor: &mut sqlx::SqliteConnection,
     manufacturer_id: &str,
@@ -15,6 +16,7 @@ pub async fn manufacturer_usage_count(
     .await
 }
 
+/// Counts total canonical party references as seller and buyer in purchase records.
 pub async fn canonical_party_usage_count(
     executor: &mut sqlx::SqliteConnection,
     party_id: &str,

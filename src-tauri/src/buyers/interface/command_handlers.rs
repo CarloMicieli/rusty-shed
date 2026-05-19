@@ -7,6 +7,7 @@ use crate::sellers::interface::{CreateSellerPayload, Seller, UpdateSellerPayload
 use crate::state::AppState;
 use serde::{Deserialize, Serialize};
 
+/// Tauri command that lists all buyers.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_buyers(
@@ -15,6 +16,7 @@ pub async fn get_buyers(
     sellers_command_handlers::get_sellers(state).await
 }
 
+/// Tauri command that returns one buyer by identifier.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_buyer_by_id(
@@ -24,6 +26,7 @@ pub async fn get_buyer_by_id(
     sellers_command_handlers::get_seller_by_id(state, id).await
 }
 
+/// Tauri command that creates a buyer.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_buyer(
@@ -42,6 +45,7 @@ pub async fn update_buyer(
     sellers_command_handlers::update_seller(state, payload).await
 }
 
+/// Tauri command that deletes a buyer by identifier.
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_buyer(
@@ -51,6 +55,7 @@ pub async fn delete_buyer(
     sellers_command_handlers::delete_seller(state, id).await
 }
 
+/// Input payload for buyer-merge operations.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MergeBuyerArgs {
@@ -58,6 +63,7 @@ pub struct MergeBuyerArgs {
     pub target_id: SellerId,
 }
 
+/// Result payload returned after a successful buyer merge.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct BuyerMergeResult {
@@ -66,6 +72,7 @@ pub struct BuyerMergeResult {
     pub relinked_count: i64,
 }
 
+/// Executes the buyer merge transaction and returns a summary payload.
 pub async fn merge_buyers_inner(
     state: &AppState,
     args: MergeBuyerArgs,

@@ -2,9 +2,12 @@ use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::usage_queries::canonical_party_usage_count;
 use crate::sellers::domain::seller_id::SellerId;
 
+/// Guard use case that validates whether a seller can be safely deleted.
 pub struct DeleteSellerWithLock;
 
 impl DeleteSellerWithLock {
+    /// Ensures that the seller exists, is not protected, and is not referenced by other
+    /// entities.
     pub async fn ensure_deletable(
         executor: &mut sqlx::SqliteConnection,
         id: &SellerId,

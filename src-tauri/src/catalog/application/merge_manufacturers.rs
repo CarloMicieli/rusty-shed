@@ -1,9 +1,11 @@
 use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerUowExt};
 use crate::core::domain::domain_error::DomainError;
 
+/// Use case that merges two manufacturers by relinking models and removing the source.
 pub struct MergeManufacturers;
 
 impl MergeManufacturers {
+    /// Merges `source_id` into `target_id` and returns the number of relinked models.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         source_id: &ManufacturerId,

@@ -1,9 +1,13 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::sellers::domain::seller_id::SellerId;
 
+/// Use case that merges one seller into another canonical seller entity.
 pub struct MergeSeller;
 
 impl MergeSeller {
+    /// Relinks references from `source_id` to `target_id`, then deletes the source seller.
+    ///
+    /// Returns the number of relinked references across seller and buyer usage fields.
     pub async fn execute(
         tx: &mut sqlx::SqliteConnection,
         source_id: &SellerId,
