@@ -109,7 +109,9 @@ describe('Acquisition quick-add triggers', () => {
             email: null,
             phone: null,
             websiteUrl: null,
-            address: null
+            address: null,
+            isSystemSeeded: false,
+            usageCount: 0
           }
         ],
         onQuickAddSeller: vi.fn()

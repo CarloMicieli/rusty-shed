@@ -31,6 +31,23 @@ pub trait SellersRepository: Send + Sync {
     /// corresponding database operations. The method takes a mutable reference
     /// so that `pull_events()` can clear the aggregate's pending events.
     async fn save(&mut self, seller: &mut Seller) -> Result<(), DomainError>;
+
+    /// Returns the `(name, is_system_seeded)` pair for the given seller, or
+    /// `None` when no matching row exists.
+    ///
+    /// Used to enforce business rules (e.g. seeded-name immutability) before
+    /// mutating a seller without loading the full aggregate.
+    async fn find_seeded_and_name(
+        &mut self,
+        id: &SellerId,
+    ) -> Result<Option<(String, bool)>, DomainError>;
+
+    /// Returns the total number of purchase records that reference this party
+    /// as either a seller or buyer.
+    ///
+    /// Used to populate the `usage_count` field in `SellerView` and to guard
+    /// against deleting a seller that is still referenced.
+    async fn find_usage_count(&mut self, id: &SellerId) -> Result<i64, DomainError>;
 }
 
 /// An extension trait that provides access to the `SellersRepository`.

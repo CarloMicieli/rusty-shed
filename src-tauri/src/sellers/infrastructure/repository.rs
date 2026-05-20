@@ -1,5 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::core::infrastructure::usage_queries::canonical_party_usage_count;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
@@ -171,6 +172,21 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
         }
 
         Ok(())
+    }
+
+    async fn find_seeded_and_name(
+        &mut self,
+        id: &SellerId,
+    ) -> Result<Option<(String, bool)>, DomainError> {
+        database::find_seller_seeded_and_name(&mut *self.executor, &id.0)
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))
+    }
+
+    async fn find_usage_count(&mut self, id: &SellerId) -> Result<i64, DomainError> {
+        canonical_party_usage_count(&mut *self.executor, id.as_ref())
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))
     }
 }
 

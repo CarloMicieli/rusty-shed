@@ -184,7 +184,9 @@
         email: created.email,
         phone: created.phone,
         websiteUrl: created.websiteUrl,
-        address: created.address
+        address: created.address,
+        isSystemSeeded: false,
+        usageCount: 0
       };
       sellers = [...sellers, nextSeller];
       $form.sellerId = created.id;

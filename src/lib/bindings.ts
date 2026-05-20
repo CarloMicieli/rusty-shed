@@ -18,8 +18,13 @@ export const commands = {
 	countryCode: string | null,
 	status: ManufacturerStatus,
 	websiteUrl: string | null,
+	isSystemSeeded: boolean,
+	usageCount: number,
 } | null, CommandError>(__TAURI_INVOKE("get_manufacturer_by_id", { manufacturerId })),
 	createManufacturer: (args: CreateManufacturerArgs) => typedError<Manufacturer, CommandError>(__TAURI_INVOKE("create_manufacturer", { args })),
+	updateManufacturer: (args: UpdateManufacturerArgs) => typedError<Manufacturer, CommandError>(__TAURI_INVOKE("update_manufacturer", { args })),
+	deleteManufacturer: (id: ManufacturerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_manufacturer", { id })),
+	mergeManufacturers: (args: MergeManufacturerArgs) => typedError<ManufacturerMergeResult, CommandError>(__TAURI_INVOKE("merge_manufacturers", { args })),
 	/**  Tauri command to retrieve a railway model by its identifier. */
 	getRailwayModelById: (railwayModelId: RailwayModelId, lang: Language) => typedError<{
 	/**  Unique identifier for the railway model. */
@@ -359,6 +364,10 @@ export const commands = {
 	websiteUrl: string | null,
 	/**  Address of the seller. */
 	address: Address | null,
+	/**  Whether this row is system-seeded and protected. */
+	isSystemSeeded: boolean,
+	/**  Total usage count across buyer and seller references. */
+	usageCount: number,
 } | null, CommandError>(__TAURI_INVOKE("get_seller_by_id", { id })),
 	/**
 	 *  Command handler to create a new seller.
@@ -411,6 +420,32 @@ export const commands = {
 	 *  - `Err(CommandError)` when the use-case returns an error.
 	 */
 	deleteSeller: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_seller", { id })),
+	mergeSellers: (args: MergeSellerArgs) => typedError<SellerMergeResult, CommandError>(__TAURI_INVOKE("merge_sellers", { args })),
+	getBuyers: () => typedError<SellerView[], CommandError>(__TAURI_INVOKE("get_buyers")),
+	getBuyerById: (id: SellerId) => typedError<{
+	/**  Unique identifier for the seller. */
+	id: SellerId,
+	/**  Name of the seller. */
+	name: string,
+	/**  Type of the seller. */
+	sellerType: SellerType,
+	/**  Contact email of the seller. */
+	email: string | null,
+	/**  Contact phone number of the seller. */
+	phone: string | null,
+	/**  Website URL of the seller. */
+	websiteUrl: string | null,
+	/**  Address of the seller. */
+	address: Address | null,
+	/**  Whether this row is system-seeded and protected. */
+	isSystemSeeded: boolean,
+	/**  Total usage count across buyer and seller references. */
+	usageCount: number,
+} | null, CommandError>(__TAURI_INVOKE("get_buyer_by_id", { id })),
+	createBuyer: (payload: CreateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("create_buyer", { payload })),
+	updateBuyer: (payload: UpdateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("update_buyer", { payload })),
+	deleteBuyer: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_buyer", { id })),
+	mergeBuyers: (args: MergeBuyerArgs) => typedError<BuyerMergeResult, CommandError>(__TAURI_INVOKE("merge_buyers", { args })),
 	/**
 	 *  Command handler to create a new track inventory.
 	 * 
@@ -1205,6 +1240,12 @@ export type BudgetMode =
 
 /**  Quarter enum for quarterly summaries exposed at the interface boundary. */
 export type BudgetQuarter = "Q1" | "Q2" | "Q3" | "Q4";
+
+export type BuyerMergeResult = {
+	sourceId: string,
+	targetId: string,
+	relinkedCount: number,
+};
 
 /**  Arguments for cancel_import_session command */
 export type CancelImportSessionArgs = {
@@ -2818,6 +2859,8 @@ export type Manufacturer = {
 	countryCode: string | null,
 	status: ManufacturerStatus,
 	websiteUrl: string | null,
+	isSystemSeeded: boolean,
+	usageCount: number,
 };
 
 /**
@@ -2834,6 +2877,12 @@ export type Manufacturer = {
  */
 export type ManufacturerId = string;
 
+export type ManufacturerMergeResult = {
+	sourceId: string,
+	targetId: string,
+	relinkedCount: number,
+};
+
 /**
  *  Status of a manufacturer lifecycle.
  * 
@@ -2843,6 +2892,21 @@ export type ManufacturerStatus = "ACTIVE" | "MERGED" | "OUT_OF_BUSINESS";
 
 /**  Measurement system for dimensions */
 export type MeasureUnit = "Metric" | "Imperial";
+
+export type MergeBuyerArgs = {
+	sourceId: SellerId,
+	targetId: SellerId,
+};
+
+export type MergeManufacturerArgs = {
+	sourceId: ManufacturerId,
+	targetId: ManufacturerId,
+};
+
+export type MergeSellerArgs = {
+	sourceId: SellerId,
+	targetId: SellerId,
+};
 
 /**  The metadata information for the current resource */
 export type Metadata = {
@@ -4148,6 +4212,12 @@ export type Seller = {
 /**  Strongly-typed identifier for a seller. Format: `trn:seller:{slug}`. */
 export type SellerId = string;
 
+export type SellerMergeResult = {
+	sourceId: string,
+	targetId: string,
+	relinkedCount: number,
+};
+
 /**
  *  Represents the type/category of a seller.
  * 
@@ -4189,6 +4259,10 @@ export type SellerView = {
 	websiteUrl: string | null,
 	/**  Address of the seller. */
 	address: Address | null,
+	/**  Whether this row is system-seeded and protected. */
+	isSystemSeeded: boolean,
+	/**  Total usage count across buyer and seller references. */
+	usageCount: number,
 };
 
 /**
@@ -4570,6 +4644,13 @@ export type UpdateCollectionItemArgs = {
 	collectionItemId: string,
 	/**  The concrete field update payload. */
 	update: CollectionItemUpdateArgs,
+};
+
+export type UpdateManufacturerArgs = {
+	id: ManufacturerId,
+	name: string,
+	websiteUrl: string | null,
+	countryCode: string | null,
 };
 
 /**

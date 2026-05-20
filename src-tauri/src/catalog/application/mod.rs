@@ -1,5 +1,7 @@
 mod add_railway_model;
 mod add_rolling_stock_to_model;
+mod create_manufacturer;
+mod delete_manufacturer;
 mod delete_rolling_stock;
 mod get_coupler_types;
 mod get_manufacturer_by_id;
@@ -8,9 +10,11 @@ mod get_railway_companies;
 mod get_railway_company_by_id;
 mod get_railway_model_by_id;
 mod get_railway_model_translations;
+mod merge_manufacturers;
 mod save_railway_model;
 mod search_railway_models;
 mod set_rolling_stock_coupler;
+mod update_manufacturer;
 mod update_railway_model_classification;
 mod update_railway_model_delivery_date;
 mod update_railway_model_text;
@@ -34,6 +38,8 @@ pub use add_railway_model::{
 pub use add_rolling_stock_to_model::{
     AddRollingStockToModel, AddRollingStockToModelInput, parse_add_rolling_stock_args,
 };
+pub use create_manufacturer::{CreateManufacturer, CreateManufacturerInput};
+pub use delete_manufacturer::DeleteManufacturer;
 pub use delete_rolling_stock::{DeleteRollingStock, DeleteRollingStockInput};
 pub use get_coupler_types::{GetCouplerTypes, GetCouplerTypesInput};
 pub use get_manufacturer_by_id::GetManufacturerById;
@@ -43,10 +49,12 @@ pub use get_railway_company_by_id::GetRailwayCompanyById;
 pub use get_railway_model_by_id::GetRailwayModelById;
 pub use get_railway_model_by_id::GetRailwayModelViewById;
 pub use get_railway_model_translations::GetRailwayModelTranslations;
+pub use merge_manufacturers::MergeManufacturers;
 pub use save_railway_model::SaveRailwayModel;
 pub use save_railway_model::{SaveRailwayModelInput, SimplifiedRollingStockInput};
 pub use search_railway_models::{SearchRailwayModels, SearchRailwayModelsInput};
 pub use set_rolling_stock_coupler::{SetRollingStockCoupler, SetRollingStockCouplerInput};
+pub use update_manufacturer::{UpdateManufacturer, UpdateManufacturerInput};
 pub use update_railway_model_classification::UpdateRailwayModelClassification;
 pub use update_railway_model_classification::UpdateRailwayModelClassificationInput;
 pub use update_railway_model_delivery_date::UpdateRailwayModelDeliveryDate;

@@ -44,6 +44,8 @@ mod tests {
             phone: None,
             website_url: None,
             address: None,
+            is_system_seeded: false,
+            usage_count: 0,
         };
 
         let mut mock = MockSellersRepository::new();

@@ -4,13 +4,18 @@
   import { DrawerInput } from '$lib/components/drawer';
   import { commands, type Manufacturer, type Seller } from '$lib/bindings';
   import { quickAddFormSchema, type QuickAddFormValues } from '$lib/schemas/quick-add-form';
-  import type { QuickAddTarget } from './types';
+  import type { QuickAddMode, QuickAddTarget } from './types';
 
   interface Props {
     target: QuickAddTarget;
+    mode?: QuickAddMode;
     existingNames: string[];
+    initialValues?: Partial<QuickAddFormState>;
+    submitLabel?: string;
+    onSubmit?: (values: QuickAddFormState) => Promise<Manufacturer | Seller>;
     onSuccess: (entity: Manufacturer | Seller) => void;
     onCancel: () => void;
+    onError?: (message: string) => void;
     onDirtyChange?: (dirty: boolean) => void;
   }
 
@@ -18,11 +23,26 @@
     name: string;
     websiteUrl: string;
     countryCode: string;
+    notes: string;
   }
 
-  let { target, existingNames, onSuccess, onCancel, onDirtyChange }: Props = $props();
+  let {
+    target,
+    mode = 'QUICK',
+    existingNames,
+    initialValues = {},
+    submitLabel,
+    onSubmit,
+    onSuccess,
+    onCancel,
+    onError,
+    onDirtyChange
+  }: Props = $props();
 
-  let values = $state<QuickAddFormState>({ name: '', websiteUrl: '', countryCode: '' });
+  let name = $derived(initialValues.name ?? '');
+  let websiteUrl = $derived(initialValues.websiteUrl ?? '');
+  let countryCode = $derived(initialValues.countryCode ?? '');
+  let notes = $derived(initialValues.notes ?? '');
   let isSaving = $state(false);
   let saveError = $state<string | null>(null);
   let fieldError = $state<string | null>(null);
@@ -38,31 +58,32 @@
     }
   });
 
-  const normalizedName = $derived(values.name.trim().toLowerCase());
+  const normalizedName = $derived(name.trim().toLowerCase());
   const isDuplicate = $derived(
     normalizedName.length > 0 &&
       existingNames.some((entry) => entry.trim().toLowerCase() === normalizedName)
   );
   const isDirty = $derived(
-    values.name.trim().length > 0 ||
-      values.websiteUrl.trim().length > 0 ||
-      values.countryCode.trim().length > 0
+    name.trim().length > 0 ||
+      websiteUrl.trim().length > 0 ||
+      countryCode.trim().length > 0 ||
+      notes.trim().length > 0
   );
 
   $effect(() => {
     onDirtyChange?.(isDirty);
   });
 
-  const canSave = $derived(values.name.trim().length > 0 && !isDuplicate && !isSaving);
+  const canSave = $derived(name.trim().length > 0 && !isDuplicate && !isSaving);
 
   async function handleSave() {
     fieldError = null;
     saveError = null;
 
     const payload: QuickAddFormValues = {
-      name: values.name,
-      websiteUrl: values.websiteUrl,
-      countryCode: values.countryCode
+      name,
+      websiteUrl,
+      countryCode
     };
 
     const validation = quickAddFormSchema.safeParse(payload);
@@ -73,11 +94,36 @@
 
     isSaving = true;
     try {
+      if (onSubmit) {
+        const entity = await onSubmit({ name, websiteUrl, countryCode, notes });
+        onSuccess(entity);
+        return;
+      }
+
       if (target === 'manufacturer') {
         const result = await commands.createManufacturer({
-          name: values.name.trim(),
-          websiteUrl: values.websiteUrl.trim() || null,
-          countryCode: values.countryCode.trim().toUpperCase() || null
+          name: name.trim(),
+          websiteUrl: websiteUrl.trim() || null,
+          countryCode: countryCode.trim().toUpperCase() || null
+        });
+
+        if (result.status === 'ok') {
+          onSuccess(result.data);
+          return;
+        }
+      } else if (target === 'seller') {
+        const result = await commands.createSeller({
+          name: name.trim(),
+          sellerType: 'SHOP',
+          email: null,
+          phone: null,
+          websiteUrl: websiteUrl.trim() || null,
+          streetAddress: null,
+          extendedAddress: null,
+          city: null,
+          stateRegion: null,
+          postalCode: null,
+          countryCode: countryCode.trim().toUpperCase() || null
         });
 
         if (result.status === 'ok') {
@@ -85,18 +131,18 @@
           return;
         }
       } else {
-        const result = await commands.createSeller({
-          name: values.name.trim(),
+        const result = await commands.createBuyer({
+          name: name.trim(),
           sellerType: 'SHOP',
           email: null,
           phone: null,
-          websiteUrl: values.websiteUrl.trim() || null,
+          websiteUrl: websiteUrl.trim() || null,
           streetAddress: null,
           extendedAddress: null,
           city: null,
           stateRegion: null,
           postalCode: null,
-          countryCode: values.countryCode.trim().toUpperCase() || null
+          countryCode: countryCode.trim().toUpperCase() || null
         });
 
         if (result.status === 'ok') {
@@ -106,8 +152,10 @@
       }
 
       saveError = m.quick_add_save_failed();
+      onError?.(saveError);
     } catch {
       saveError = m.quick_add_save_failed();
+      onError?.(saveError);
     } finally {
       isSaving = false;
     }
@@ -118,7 +166,7 @@
   }
 </script>
 
-<div class="space-y-4">
+<div class="space-y-4" data-form-mode={mode}>
   <div class="space-y-1">
     <label for="quick-add-name" class="text-xs tracking-wider text-muted-foreground uppercase">
       {m.quick_add_field_name()}
@@ -127,8 +175,8 @@
       id="quick-add-name"
       type="text"
       placeholder={m.quick_add_name_placeholder()}
-      value={values.name}
-      oninput={(event) => (values.name = (event.currentTarget as HTMLInputElement).value)}
+      value={name}
+      oninput={(event) => (name = (event.currentTarget as HTMLInputElement).value)}
       aria-invalid={fieldError ? 'true' : undefined}
     />
   </div>
@@ -141,8 +189,8 @@
       id="quick-add-website"
       type="text"
       placeholder={m.quick_add_website_placeholder()}
-      value={values.websiteUrl}
-      oninput={(event) => (values.websiteUrl = (event.currentTarget as HTMLInputElement).value)}
+      value={websiteUrl}
+      oninput={(event) => (websiteUrl = (event.currentTarget as HTMLInputElement).value)}
     />
   </div>
 
@@ -156,10 +204,25 @@
       maxLength={2}
       placeholder={m.quick_add_country_placeholder()}
       class="uppercase"
-      value={values.countryCode}
-      oninput={(event) => (values.countryCode = (event.currentTarget as HTMLInputElement).value)}
+      value={countryCode}
+      oninput={(event) => (countryCode = (event.currentTarget as HTMLInputElement).value)}
     />
   </div>
+
+  {#if mode === 'FULL'}
+    <div class="space-y-1">
+      <label for="quick-add-notes" class="text-xs tracking-wider text-muted-foreground uppercase">
+        {m.settings_library_field_notes()}
+      </label>
+      <textarea
+        id="quick-add-notes"
+        class="min-h-20 w-full rounded-sm border border-border bg-background px-3 py-2 text-sm"
+        placeholder={m.settings_library_notes_placeholder()}
+        value={notes}
+        oninput={(event) => (notes = (event.currentTarget as HTMLTextAreaElement).value)}
+      ></textarea>
+    </div>
+  {/if}
 
   {#if isDuplicate}
     <p class="text-warning text-xs">
@@ -190,7 +253,7 @@
       onclick={handleSave}
       disabled={!canSave}
     >
-      {isSaving ? m.settings_saving_button() : m.quick_add_save()}
+      {isSaving ? m.settings_saving_button() : (submitLabel ?? m.quick_add_save())}
     </Button>
   </div>
 </div>

@@ -1,14 +1,17 @@
 use crate::core::infrastructure::error::CommandError;
 use crate::sellers::application::create_seller::{CreateSeller, CreateSellerInput};
 use crate::sellers::application::delete_seller::DeleteSeller;
+use crate::sellers::application::delete_seller_with_lock::DeleteSellerWithLock;
 use crate::sellers::application::get_seller_by_id::GetSellerById;
 use crate::sellers::application::get_sellers::GetSellers;
+use crate::sellers::application::merge_seller::MergeSeller;
 use crate::sellers::application::seller_view::SellerView;
 use crate::sellers::application::update_seller::{UpdateSellerInput, UpdateSellerUseCase};
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::interface::{CreateSellerPayload, Seller, UpdateSellerPayload};
 use crate::state::AppState;
 use garde::Validate;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use tracing::info;
 
@@ -17,7 +20,24 @@ pub async fn get_sellers_inner(state: &AppState) -> Result<Vec<SellerView>, Comm
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let sellers = GetSellers::execute(&mut unit_of_work).await?;
+    let mut sellers = GetSellers::execute(&mut unit_of_work).await?;
+
+    for seller in &mut sellers {
+        let mut repo = unit_of_work.sellers_repository();
+        let (_, is_seeded) = repo
+            .find_seeded_and_name(&seller.id)
+            .await
+            .map_err(CommandError::from)?
+            .unwrap_or_default();
+        let usage_count = repo
+            .find_usage_count(&seller.id)
+            .await
+            .map_err(CommandError::from)?;
+        drop(repo);
+        seller.is_system_seeded = is_seeded;
+        seller.usage_count = usage_count;
+    }
+
     unit_of_work.commit().await?;
 
     Ok(sellers)
@@ -55,6 +75,23 @@ pub async fn get_seller_by_id_inner(
     let result = GetSellerById::execute(&mut unit_of_work, &id)
         .await
         .map_err(CommandError::from)?;
+
+    let mut result = result;
+    if let Some(seller) = result.as_mut() {
+        let mut repo = unit_of_work.sellers_repository();
+        let (_, is_seeded) = repo
+            .find_seeded_and_name(&seller.id)
+            .await
+            .map_err(CommandError::from)?
+            .unwrap_or_default();
+        let usage_count = repo
+            .find_usage_count(&seller.id)
+            .await
+            .map_err(CommandError::from)?;
+        drop(repo);
+        seller.is_system_seeded = is_seeded;
+        seller.usage_count = usage_count;
+    }
 
     unit_of_work.commit().await?;
 
@@ -148,7 +185,25 @@ pub async fn update_seller_inner(
 
     payload.validate().map_err(CommandError::from)?;
 
+    let seller_id = SellerId::try_from(payload.id.as_str())
+        .map_err(|error| CommandError::validation_field("id", error.to_string()))?;
+
     let mut unit_of_work = state.unit_of_work().await?;
+
+    let (current_name, is_system_seeded) = {
+        let mut repo = unit_of_work.sellers_repository();
+        repo.find_seeded_and_name(&seller_id)
+            .await
+            .map_err(CommandError::from)?
+            .ok_or_else(|| CommandError::NotFound(format!("Seller '{}' not found", seller_id)))?
+    };
+
+    if is_system_seeded && current_name.trim() != payload.name.trim() {
+        return Err(CommandError::BusinessRule(
+            "System-seeded seller names cannot be edited".to_string(),
+        ));
+    }
+
     let input = UpdateSellerInput::try_from(payload)?;
     let result = UpdateSellerUseCase::execute(&mut unit_of_work, input)
         .await
@@ -186,6 +241,17 @@ pub async fn update_seller(
 pub async fn delete_seller_inner(state: &AppState, id: SellerId) -> Result<(), CommandError> {
     info!("Deleting seller with ID: {}", id);
 
+    {
+        let mut conn = state
+            .db_pool()
+            .acquire()
+            .await
+            .map_err(CommandError::from)?;
+        DeleteSellerWithLock::ensure_deletable(&mut conn, &id)
+            .await
+            .map_err(CommandError::from)?;
+    }
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let _ = DeleteSeller::execute(&mut unit_of_work, &id)
@@ -220,10 +286,54 @@ pub async fn delete_seller(
     delete_seller_inner(&state, id).await
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeSellerArgs {
+    pub source_id: SellerId,
+    pub target_id: SellerId,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SellerMergeResult {
+    pub source_id: String,
+    pub target_id: String,
+    pub relinked_count: i64,
+}
+
+pub async fn merge_sellers_inner(
+    state: &AppState,
+    args: MergeSellerArgs,
+) -> Result<SellerMergeResult, CommandError> {
+    let mut tx = state.db_pool().begin().await.map_err(CommandError::from)?;
+
+    let relinked_count = MergeSeller::execute(&mut tx, &args.source_id, &args.target_id)
+        .await
+        .map_err(CommandError::from)?;
+
+    tx.commit().await.map_err(CommandError::from)?;
+
+    Ok(SellerMergeResult {
+        source_id: args.source_id.to_string(),
+        target_id: args.target_id.to_string(),
+        relinked_count,
+    })
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn merge_sellers(
+    state: tauri::State<'_, AppState>,
+    args: MergeSellerArgs,
+) -> Result<SellerMergeResult, CommandError> {
+    merge_sellers_inner(&state, args).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::sellers::domain::seller_type::SellerType;
+    use chrono::Utc;
     use sqlx::SqlitePool;
 
     fn app_state(pool: SqlitePool) -> AppState {
@@ -285,6 +395,53 @@ mod tests {
         assert!(
             !matches!(result, Err(CommandError::ValidationError(_))),
             "Did not expect ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_seller_blocks_name_change_for_system_seeded(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let seller_id = "trn:seller:seeded-shop";
+        let now = Utc::now().to_rfc3339();
+
+        sqlx::query(
+            r#"
+            INSERT INTO sellers (id, name, type, created_at, updated_at, version, is_system_seeded)
+            VALUES (?1, ?2, 'SHOP', ?3, ?4, 1, 1)
+            "#,
+        )
+        .bind(seller_id)
+        .bind("Seeded Shop")
+        .bind(&now)
+        .bind(&now)
+        .execute(&pool)
+        .await
+        .expect("seed seller should insert");
+
+        let result = update_seller_inner(
+            &state,
+            UpdateSellerPayload {
+                id: seller_id.to_string(),
+                name: "Renamed Shop".to_string(),
+                seller_type: SellerType::Shop,
+                email: None,
+                phone: None,
+                website_url: None,
+                street_address: None,
+                extended_address: None,
+                city: None,
+                state_region: None,
+                postal_code: None,
+                country_code: None,
+                created_at: None,
+            },
+        )
+        .await;
+
+        assert!(
+            matches!(result, Err(CommandError::BusinessRule(_))),
+            "Expected BusinessRule, got: {:?}",
             result
         );
     }

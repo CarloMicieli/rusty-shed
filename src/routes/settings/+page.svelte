@@ -2,12 +2,14 @@
   import { onMount } from 'svelte';
   import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
   import { Button, PageHeader } from '$lib/components';
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
   import GoogleConnectButton from '$lib/features/cloud-backup/components/GoogleConnectButton.svelte';
   import ConnectivityIndicator from '$lib/features/cloud-backup/components/ConnectivityIndicator.svelte';
   import SyncButton from '$lib/features/cloud-backup/components/SyncButton.svelte';
   import BackupList from '$lib/features/cloud-backup/components/BackupList.svelte';
   import RestoreConfirmModal from '$lib/features/cloud-backup/components/RestoreConfirmModal.svelte';
+  import LibrarySection from '$lib/features/settings/components/library/LibrarySection.svelte';
   import { getCloudBackupController } from '$lib/features/cloud-backup';
   import ExportArchiveSection from '$lib/features/export/components/ExportArchiveSection.svelte';
   import {
@@ -22,6 +24,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { setActiveLocale } from '$lib/stores/locale.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
+  import { cn } from '$lib/utils';
 
   let settings: SettingsDto | null = $state(null);
   let loading = $state(true);
@@ -38,6 +41,24 @@
   let showRestoreModal = $state(false);
   let selectedBackupId = $state<string | null>(null);
   let selectedBackupLabel = $state<string>('');
+  let activeTab = $state<'preferences' | 'data-management'>('preferences');
+
+  const settingsTabBaseClass =
+    'rounded-sm border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-all duration-150 ease-out';
+  const settingsTabClasses = $derived.by(() => ({
+    preferences: cn(
+      settingsTabBaseClass,
+      activeTab === 'preferences'
+        ? 'border-border bg-card text-foreground shadow-xs'
+        : 'border-transparent bg-transparent text-muted-foreground hover:text-foreground'
+    ),
+    'data-management': cn(
+      settingsTabBaseClass,
+      activeTab === 'data-management'
+        ? 'border-border bg-card text-foreground shadow-xs'
+        : 'border-transparent bg-transparent text-muted-foreground hover:text-foreground'
+    )
+  }));
 
   onMount(async () => {
     await loadSettings();
@@ -129,7 +150,7 @@
 
   <div class="space-y-6">
     {#if loading}
-      <div class="rounded-lg border border-border bg-card p-8 shadow-xl">
+      <div class="rounded-sm border border-border bg-card p-8 shadow-xl">
         <div class="animate-pulse space-y-4">
           <div class="h-4 w-1/3 rounded bg-muted"></div>
           <div class="h-4 w-1/2 rounded bg-muted"></div>
@@ -141,7 +162,7 @@
         </div>
       </div>
     {:else if error}
-      <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-6">
+      <div class="rounded-sm border border-destructive/30 bg-destructive/10 p-6">
         <p class="font-semibold text-destructive">{error}</p>
         <Button variant="default" class="mt-4" onclick={loadSettings}>
           {m.errors_retry_page()}
@@ -149,60 +170,79 @@
       </div>
     {:else if settings}
       <div class="space-y-6">
-        {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerMethod}`}
-          <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
-        {/key}
+        <Tabs bind:value={activeTab} class="space-y-4">
+          <TabsList
+            class="grid h-auto w-full grid-cols-2 rounded-sm border border-border bg-background/50 p-1"
+          >
+            <TabsTrigger value="preferences" class={settingsTabClasses.preferences}>
+              {m.settings_tab_preferences()}
+            </TabsTrigger>
+            <TabsTrigger value="data-management" class={settingsTabClasses['data-management']}>
+              {m.settings_tab_data_management()}
+            </TabsTrigger>
+          </TabsList>
 
-        <!-- Archive Export/Import Section -->
-        <ExportArchiveSection />
+          <TabsContent value="preferences" class="mt-0 space-y-6">
+            {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerMethod}`}
+              <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
+            {/key}
 
-        <!-- Cloud Backup Section -->
-        <div class="card border border-border/60 bg-card/50 shadow-xl">
-          <header class="flex items-center justify-between gap-4 border-b border-border/60 p-6">
-            <div>
-              <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
-                {m.cloud_backup_title()}
-              </p>
-              <p class="mt-1 text-sm text-muted-foreground">{m.cloud_backup_subtitle()}</p>
-            </div>
-          </header>
+            <!-- Archive Export/Import Section -->
+            <ExportArchiveSection />
 
-          <div class="space-y-4 p-6">
-            <GoogleConnectButton />
-
-            {#if isConnected}
-              <div class="border-t border-border pt-4">
-                <ConnectivityIndicator />
-                <SyncButton />
-
-                {#if lastSyncAt}
-                  <div class="text-sm text-muted-foreground">
-                    <p>
-                      {m.cloud_backup_last_sync({
-                        timestamp: new Date(lastSyncAt).toLocaleString(regionalManager.locale)
-                      })}
-                    </p>
-                  </div>
-                {/if}
-
-                {#if backupCount > 0}
-                  <div class="text-sm text-muted-foreground">
-                    {#if backupCount === 1}
-                      <p>{m.cloud_backup_backups_count_single({ count: backupCount })}</p>
-                    {:else}
-                      <p>{m.cloud_backup_backups_count_multiple({ count: backupCount })}</p>
-                    {/if}
-                  </div>
-                {/if}
-
-                <!-- Backup List Section -->
-                <div class="border-t border-border pt-4">
-                  <BackupList onRestore={handleRestoreClick} />
+            <!-- Cloud Backup Section -->
+            <div class="card rounded-sm border border-border bg-card shadow-xl">
+              <header class="flex items-center justify-between gap-4 border-b border-border p-6">
+                <div>
+                  <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
+                    {m.cloud_backup_title()}
+                  </p>
+                  <p class="mt-1 text-sm text-muted-foreground">{m.cloud_backup_subtitle()}</p>
                 </div>
+              </header>
+
+              <div class="space-y-4 p-6">
+                <GoogleConnectButton />
+
+                {#if isConnected}
+                  <div class="border-t border-border pt-4">
+                    <ConnectivityIndicator />
+                    <SyncButton />
+
+                    {#if lastSyncAt}
+                      <div class="text-sm text-muted-foreground">
+                        <p>
+                          {m.cloud_backup_last_sync({
+                            timestamp: new Date(lastSyncAt).toLocaleString(regionalManager.locale)
+                          })}
+                        </p>
+                      </div>
+                    {/if}
+
+                    {#if backupCount > 0}
+                      <div class="text-sm text-muted-foreground">
+                        {#if backupCount === 1}
+                          <p>{m.cloud_backup_backups_count_single({ count: backupCount })}</p>
+                        {:else}
+                          <p>{m.cloud_backup_backups_count_multiple({ count: backupCount })}</p>
+                        {/if}
+                      </div>
+                    {/if}
+
+                    <!-- Backup List Section -->
+                    <div class="border-t border-border pt-4">
+                      <BackupList onRestore={handleRestoreClick} />
+                    </div>
+                  </div>
+                {/if}
               </div>
-            {/if}
-          </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="data-management" class="mt-0">
+            <LibrarySection />
+          </TabsContent>
+        </Tabs>
       </div>
     {/if}
   </div>

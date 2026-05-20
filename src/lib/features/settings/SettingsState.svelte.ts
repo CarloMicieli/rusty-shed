@@ -6,7 +6,9 @@
 
 import { safeInvoke } from '$lib/services';
 import type { UpdateSettingsInput, UserSettings_Serialize } from '$lib/bindings';
+import type { LibraryTab } from './library-types';
 import { log } from '$lib/tauri-logger';
+import type { LibraryEntityRow } from '$lib/services/entityLibrary';
 
 export class SettingsState {
   settings = $state<UserSettings_Serialize>({
@@ -21,6 +23,14 @@ export class SettingsState {
 
   loading = $state(false);
   error = $state<string | null>(null);
+
+  libraryActiveTab = $state<LibraryTab>('manufacturers');
+  librarySearchQuery = $state('');
+  libraryLoading = $state(false);
+  libraryError = $state<string | null>(null);
+  libraryManufacturers = $state<LibraryEntityRow[]>([]);
+  librarySellers = $state<LibraryEntityRow[]>([]);
+  libraryBuyers = $state<LibraryEntityRow[]>([]);
 
   /**
    * Load settings from backend
@@ -83,6 +93,54 @@ export class SettingsState {
       log.error(`Failed to initialize settings: ${result.error.message}`);
       throw new Error(result.error.message);
     }
+  }
+
+  setLibraryTab(tab: LibraryTab): void {
+    this.libraryActiveTab = tab;
+  }
+
+  setLibrarySearchQuery(query: string): void {
+    this.librarySearchQuery = query;
+  }
+
+  setLibraryRows(payload: {
+    manufacturers: LibraryEntityRow[];
+    sellers: LibraryEntityRow[];
+    buyers: LibraryEntityRow[];
+  }): void {
+    this.libraryManufacturers = payload.manufacturers;
+    this.librarySellers = payload.sellers;
+    this.libraryBuyers = payload.buyers;
+  }
+
+  upsertLibraryManufacturer(row: LibraryEntityRow): void {
+    this.libraryManufacturers = [
+      row,
+      ...this.libraryManufacturers.filter((entry) => entry.id !== row.id)
+    ];
+  }
+
+  upsertCanonicalParty(row: LibraryEntityRow): void {
+    this.librarySellers = [row, ...this.librarySellers.filter((entry) => entry.id !== row.id)];
+    this.libraryBuyers = [row, ...this.libraryBuyers.filter((entry) => entry.id !== row.id)];
+  }
+
+  removeLibraryManufacturer(id: string): void {
+    this.libraryManufacturers = this.libraryManufacturers.filter((entry) => entry.id !== id);
+  }
+
+  removeCanonicalParty(id: string): void {
+    this.librarySellers = this.librarySellers.filter((entry) => entry.id !== id);
+    this.libraryBuyers = this.libraryBuyers.filter((entry) => entry.id !== id);
+  }
+
+  mergeLibraryManufacturer(sourceId: string): void {
+    this.libraryManufacturers = this.libraryManufacturers.filter((entry) => entry.id !== sourceId);
+  }
+
+  mergeCanonicalParty(sourceId: string): void {
+    this.librarySellers = this.librarySellers.filter((entry) => entry.id !== sourceId);
+    this.libraryBuyers = this.libraryBuyers.filter((entry) => entry.id !== sourceId);
   }
 }
 
