@@ -16,6 +16,7 @@ pub struct UpdateSettingsInput {
     pub favourite_scale: Option<String>,
     pub power_method: Option<PowerMethod>,
     pub theme: Option<AppTheme>,
+    pub has_completed_onboarding: Option<bool>,
 }
 
 /// Update user settings (partial update supported)
@@ -46,6 +47,9 @@ pub fn update_settings(
     }
     if let Some(theme) = input.theme {
         current.theme = theme;
+    }
+    if let Some(has_completed_onboarding) = input.has_completed_onboarding {
+        current.has_completed_onboarding = has_completed_onboarding;
     }
 
     // Validate merged settings

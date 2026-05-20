@@ -38,8 +38,14 @@
   import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
   import LogMaintenanceDrawer from '$lib/features/maintenance/components/LogMaintenanceDrawer.svelte';
   import { financeState } from '$lib/state/finance.svelte';
+  import WelcomeWizard from '$lib/features/onboarding/WelcomeWizard.svelte';
+  import {
+    bootstrapNeedsOnboarding,
+    completeOnboardingStatus
+  } from '$lib/features/onboarding/onboarding-state.svelte';
 
   let loading = $state(true);
+  let needsOnboarding = $state(false);
   let error = $state<string | null>(null);
   let showAcquisitionDrawer = $state(false);
   let showWishlistDrawer = $state(false);
@@ -151,11 +157,15 @@
   });
 
   onMount(async () => {
-    // 0. Initialize settings on first run (detects OS language)
+    // 0. Initialize settings and derive onboarding status
     try {
       await settingsState.initialize();
+      needsOnboarding = bootstrapNeedsOnboarding(settingsState.settings);
     } catch (err) {
       log.warn(`Failed to initialize settings, using defaults: ${String(err)}`);
+      error = err instanceof Error ? err.message : String(err);
+      loading = false;
+      return;
     }
 
     // 0a. Detect OS locale for regional formatting
@@ -177,6 +187,11 @@
     }
 
     try {
+      if (needsOnboarding) {
+        loading = false;
+        return;
+      }
+
       // 3. Fetch app version (non-critical, but good to have early)
       const versionResult = await safeInvoke<string>('get_app_version');
       if (versionResult.ok) {
@@ -239,6 +254,43 @@
       <p class="text-sm text-muted-foreground">{m.app_loading_message()}</p>
     </div>
   </div>
+{:else if needsOnboarding}
+  <WelcomeWizard
+    onComplete={async () => {
+      needsOnboarding = false;
+      loading = true;
+      try {
+        await completeOnboardingStatus(settingsState);
+
+        const versionResult = await safeInvoke<string>('get_app_version');
+        if (versionResult.ok) {
+          appState.setVersion(versionResult.data);
+        }
+
+        const initResult = await safeInvoke<void>('init_database');
+        if (!initResult.ok) {
+          const message =
+            initResult.error?.message ??
+            String(initResult.error ?? 'Database initialization failed');
+          throw new Error(message);
+        }
+
+        const initialFinanceYear = getInitialFinanceYear();
+        await Promise.all([
+          collectionStore.fetch(),
+          wishlistState.fetchWishlists(),
+          financeState.ensureLoaded()
+        ]);
+
+        await budgetState.load();
+        await budgetState.loadMonthlyRecords(initialFinanceYear);
+      } catch (err) {
+        error = err instanceof Error ? err.message : String(err);
+      } finally {
+        loading = false;
+      }
+    }}
+  />
 {:else}
   <Tooltip.Provider>
     <div

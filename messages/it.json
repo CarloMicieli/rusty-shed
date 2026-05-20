@@ -1545,5 +1545,19 @@
   "quick_add_entity_seller": "venditore",
   "quick_add_entity_buyer": "acquirente",
   "quick_add_dirty_discard_confirm": "Annullare le modifiche rapide?",
-  "quick_add_footer_hint": "Le nuove entita vengono aggiunte subito e selezionate automaticamente."
+  "quick_add_footer_hint": "Le nuove entita vengono aggiunte subito e selezionate automaticamente.",
+  "onboarding_title": "Benvenuto in Rusty Shed",
+  "onboarding_step_1_title": "Regione e Aspetto",
+  "onboarding_step_2_title": "Nucleo del Collezionista",
+  "onboarding_step_3_title": "Archivio e Sincronizzazione",
+  "onboarding_step_1_hint": "Imposta lingua e tema visivo prima di entrare nel pannello principale.",
+  "onboarding_step_2_hint": "Scegli i parametri di modellismo predefiniti per i flussi inventario.",
+  "onboarding_step_3_hint": "Importa un archivio esistente o continua con uno spazio di lavoro vuoto.",
+  "onboarding_import_local": "Importa archivio locale (.json/.db)",
+  "onboarding_import_drive": "Ripristina da Google Drive",
+  "onboarding_import_local_failed": "Importazione locale non riuscita. Riprova.",
+  "onboarding_import_drive_failed": "Ripristino Google Drive non riuscito. Riprova.",
+  "onboarding_continue": "Continua",
+  "onboarding_back": "Indietro",
+  "onboarding_skip_start_fresh": "Salta e Inizia da Zero"
 }

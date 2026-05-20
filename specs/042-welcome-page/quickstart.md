@@ -57,3 +57,16 @@ If Rust commands or transport types are changed, regenerate bindings:
 ```bash
 pnpm specta:generate
 ```
+
+## Implementation Notes
+
+- Canonical onboarding status key is `has_completed_onboarding`; legacy `firstRun` is migration-only input.
+- Keep Step 1 focused on language and theme, and Step 2 focused on scale, measure unit, and power method.
+- Restrict local archive import formats to `.json` and `.db`.
+- Keep all onboarding copy in Paraglide keys for both English and Italian message catalogs.
+
+## Implemented Command Flow Validation
+
+- Local archive path uses `onboarding_import_local` with `{ filePath, formatHint }`.
+- Google Drive path resolves OAuth code with `onboarding_get_google_drive_oauth_code`, then lists backups via `onboarding_list_google_drive_backups`, and restores via `onboarding_import_google_drive`.
+- Onboarding completion writes `has_completed_onboarding` through settings update input `hasCompletedOnboarding`.

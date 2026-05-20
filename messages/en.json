@@ -1545,5 +1545,19 @@
   "quick_add_entity_seller": "seller",
   "quick_add_entity_buyer": "buyer",
   "quick_add_dirty_discard_confirm": "Discard quick-add changes?",
-  "quick_add_footer_hint": "New entities are added instantly and selected automatically."
+  "quick_add_footer_hint": "New entities are added instantly and selected automatically.",
+  "onboarding_title": "Welcome to Rusty Shed",
+  "onboarding_step_1_title": "Regional and Appearance",
+  "onboarding_step_2_title": "Collector Core",
+  "onboarding_step_3_title": "Archive and Sync",
+  "onboarding_step_1_hint": "Set your language and visual theme before entering the main shell.",
+  "onboarding_step_2_hint": "Choose default modeling parameters for your inventory workflows.",
+  "onboarding_step_3_hint": "Import an existing archive or continue with a fresh workspace.",
+  "onboarding_import_local": "Import local archive (.json/.db)",
+  "onboarding_import_drive": "Restore from Google Drive",
+  "onboarding_import_local_failed": "Local import failed. Please try again.",
+  "onboarding_import_drive_failed": "Google Drive restore failed. Please try again.",
+  "onboarding_continue": "Continue",
+  "onboarding_back": "Back",
+  "onboarding_skip_start_fresh": "Skip and Start Fresh"
 }

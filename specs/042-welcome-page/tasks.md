@@ -11,10 +11,10 @@
 
 **Purpose**: Prepare onboarding module structure and documentation scaffolding.
 
-- [ ] T001 Create onboarding feature directories in src/lib/features/onboarding/steps and src/lib/services/import/
-- [ ] T002 Create onboarding state scaffold in src/lib/features/onboarding/onboarding-state.svelte.ts
-- [ ] T003 [P] Add onboarding message key placeholders in messages/en.json and messages/it.json
-- [ ] T004 [P] Add onboarding implementation notes section in specs/042-welcome-page/quickstart.md
+- [X] T001 Create onboarding feature directories in src/lib/features/onboarding/steps and src/lib/services/import/
+- [X] T002 Create onboarding state scaffold in src/lib/features/onboarding/onboarding-state.svelte.ts
+- [X] T003 [P] Add onboarding message key placeholders in messages/en.json and messages/it.json
+- [X] T004 [P] Add onboarding implementation notes section in specs/042-welcome-page/quickstart.md
 
 ---
 
@@ -24,12 +24,12 @@
 
 **CRITICAL**: Complete this phase before implementing story-specific behavior.
 
-- [ ] T005 Implement guarded startup state branching in src/routes/+layout.svelte
-- [ ] T006 Add onboarding completion derivation from settings has_completed_onboarding in src/routes/+layout.svelte
-- [ ] T007 Implement shared onboarding flow state and validation helpers in src/lib/features/onboarding/onboarding-state.svelte.ts
-- [ ] T008 Create wizard frame component with step progress shell in src/lib/features/onboarding/WelcomeWizard.svelte
-- [ ] T009 [P] Add settings persistence wrapper for onboarding payloads in src/lib/services/settings.ts
-- [ ] T010 [P] Add onboarding completion handler for has_completed_onboarding in src/lib/features/settings/SettingsState.svelte.ts
+- [X] T005 Implement guarded startup state branching in src/routes/+layout.svelte
+- [X] T006 Add onboarding completion derivation from settings has_completed_onboarding in src/routes/+layout.svelte
+- [X] T007 Implement shared onboarding flow state and validation helpers in src/lib/features/onboarding/onboarding-state.svelte.ts
+- [X] T008 Create wizard frame component with step progress shell in src/lib/features/onboarding/WelcomeWizard.svelte
+- [X] T009 [P] Add settings persistence wrapper for onboarding payloads in src/lib/services/settings.ts
+- [X] T010 [P] Add onboarding completion handler for has_completed_onboarding in src/lib/features/settings/SettingsState.svelte.ts
 
 **Checkpoint**: Root app can choose onboarding shell vs main shell without rendering the dashboard first.
 
@@ -43,15 +43,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Add unit test for onboarding route guard defaulting to wizard when has_completed_onboarding=false in src/__tests__/routes/layout.test.ts
-- [ ] T012 [P] [US1] Add integration test for Skip and Start Fresh setting has_completed_onboarding=true and mounting main shell in src/__tests__/features/onboarding/onboarding-gate.test.ts
+- [X] T011 [P] [US1] Add unit test for onboarding route guard defaulting to wizard when has_completed_onboarding=false in src/__tests__/routes/layout.test.ts
+- [X] T012 [P] [US1] Add integration test for Skip and Start Fresh setting has_completed_onboarding=true and mounting main shell in src/__tests__/features/onboarding/onboarding-gate.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Mount WelcomeWizard from guarded branch in src/routes/+layout.svelte
-- [ ] T014 [US1] Wire onComplete callback to clear onboarding branch in src/routes/+layout.svelte
-- [ ] T015 [US1] Implement onboarding status bootstrap from settings initialize result in src/lib/features/onboarding/onboarding-state.svelte.ts
-- [ ] T016 [US1] Add fallback error view state for failed onboarding status read in src/routes/+layout.svelte
+- [X] T013 [US1] Mount WelcomeWizard from guarded branch in src/routes/+layout.svelte
+- [X] T014 [US1] Wire onComplete callback to clear onboarding branch in src/routes/+layout.svelte
+- [X] T015 [US1] Implement onboarding status bootstrap from settings initialize result in src/lib/features/onboarding/onboarding-state.svelte.ts
+- [X] T016 [US1] Add fallback error view state for failed onboarding status read in src/routes/+layout.svelte
 
 **Checkpoint**: First-run detection and interception are functional and independently demonstrable.
 
@@ -65,15 +65,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] Add component test for Step 1 language/theme interactions in src/__tests__/features/onboarding/WelcomeWizard.test.ts
+- [X] T017 [P] [US2] Add component test for Step 1 language/theme interactions in src/__tests__/features/onboarding/WelcomeWizard.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Implement Basics step UI (language + theme cards) in src/lib/features/onboarding/steps/BasicsStep.svelte
-- [ ] T019 [US2] Bind Step 1 controls to onboarding state with runes in src/lib/features/onboarding/onboarding-state.svelte.ts
-- [ ] T020 [US2] Add Enter-key advance behavior for Step 1 in src/lib/features/onboarding/WelcomeWizard.svelte
-- [ ] T021 [US2] Persist Step 1 preferences through update_settings path in src/lib/services/settings.ts
-- [ ] T022 [P] [US2] Add localized Step 1 labels and helper text in messages/en.json and messages/it.json
+- [X] T018 [US2] Implement Basics step UI (language + theme cards) in src/lib/features/onboarding/steps/BasicsStep.svelte
+- [X] T019 [US2] Bind Step 1 controls to onboarding state with runes in src/lib/features/onboarding/onboarding-state.svelte.ts
+- [X] T020 [US2] Add Enter-key advance behavior for Step 1 in src/lib/features/onboarding/WelcomeWizard.svelte
+- [X] T021 [US2] Persist Step 1 preferences through update_settings path in src/lib/services/settings.ts
+- [X] T022 [P] [US2] Add localized Step 1 labels and helper text in messages/en.json and messages/it.json
 
 **Checkpoint**: Step 1 captures and persists regional and appearance preferences.
 
@@ -87,15 +87,15 @@
 
 ### Tests for User Story 3
 
-- [ ] T023 [P] [US3] Add component test for Step 2 keyboard selection flow in src/__tests__/features/onboarding/WelcomeWizard.test.ts
+- [X] T023 [P] [US3] Add component test for Step 2 keyboard selection flow in src/__tests__/features/onboarding/WelcomeWizard.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Implement Modeling step UI (scale grid, unit selector, power method group) in src/lib/features/onboarding/steps/ModelingStep.svelte
-- [ ] T025 [US3] Add arrow-key navigation support for scale and power selections in src/lib/features/onboarding/steps/ModelingStep.svelte
-- [ ] T026 [US3] Add Step 2 validation and continue guard in src/lib/features/onboarding/onboarding-state.svelte.ts
-- [ ] T027 [US3] Persist Step 2 preferences through update_settings path in src/lib/services/settings.ts
-- [ ] T028 [P] [US3] Add localized Step 2 labels, ratios, and hints in messages/en.json and messages/it.json
+- [X] T024 [US3] Implement Modeling step UI (scale grid, unit selector, power method group) in src/lib/features/onboarding/steps/ModelingStep.svelte
+- [X] T025 [US3] Add arrow-key navigation support for scale and power selections in src/lib/features/onboarding/steps/ModelingStep.svelte
+- [X] T026 [US3] Add Step 2 validation and continue guard in src/lib/features/onboarding/onboarding-state.svelte.ts
+- [X] T027 [US3] Persist Step 2 preferences through update_settings path in src/lib/services/settings.ts
+- [X] T028 [P] [US3] Add localized Step 2 labels, ratios, and hints in messages/en.json and messages/it.json
 
 **Checkpoint**: Step 2 reliably captures collector configuration and persists it.
 
@@ -109,19 +109,19 @@
 
 ### Tests for User Story 4
 
-- [ ] T029 [P] [US4] Add integration test for Step 3 busy-lock behavior during import in src/__tests__/features/onboarding/WelcomeWizard.test.ts
-- [ ] T030 [P] [US4] Add integration test for inline Google Drive failure banner without wizard reset in src/__tests__/features/onboarding/WelcomeWizard.test.ts
+- [X] T029 [P] [US4] Add integration test for Step 3 busy-lock behavior during import in src/__tests__/features/onboarding/WelcomeWizard.test.ts
+- [X] T030 [P] [US4] Add integration test for inline Google Drive failure banner without wizard reset in src/__tests__/features/onboarding/WelcomeWizard.test.ts
 
 ### Implementation for User Story 4
 
-- [ ] T031 [US4] Implement Import step action bays and busy lock UI in src/lib/features/onboarding/steps/ImportStep.svelte
-- [ ] T032 [US4] Implement local archive picker integration for .json/.db using dialog plugin in src/lib/services/import/localImport.ts
-- [ ] T033 [US4] Implement Google Drive OAuth launch and callback token handling in src/lib/services/import/googleDriveImport.ts
-- [ ] T034 [US4] Implement Google Drive backup listing filtered to supported backup extensions in src/lib/services/import/googleDriveImport.ts
-- [ ] T035 [US4] Implement inline Step 3 failure banner for auth/download/restore failures in src/lib/features/onboarding/steps/ImportStep.svelte
-- [ ] T036 [US4] Wire Import step actions and disabled/back lock behavior in src/lib/features/onboarding/WelcomeWizard.svelte
-- [ ] T037 [US4] Complete onboarding by setting has_completed_onboarding=true after successful save in src/lib/features/onboarding/onboarding-state.svelte.ts
-- [ ] T038 [P] [US4] Add localized Step 3 action copy and error messages in messages/en.json and messages/it.json
+- [X] T031 [US4] Implement Import step action bays and busy lock UI in src/lib/features/onboarding/steps/ImportStep.svelte
+- [X] T032 [US4] Implement local archive picker integration for .json/.db using dialog plugin in src/lib/services/import/localImport.ts
+- [X] T033 [US4] Implement Google Drive OAuth launch and callback token handling in src/lib/services/import/googleDriveImport.ts
+- [X] T034 [US4] Implement Google Drive backup listing filtered to supported backup extensions in src/lib/services/import/googleDriveImport.ts
+- [X] T035 [US4] Implement inline Step 3 failure banner for auth/download/restore failures in src/lib/features/onboarding/steps/ImportStep.svelte
+- [X] T036 [US4] Wire Import step actions and disabled/back lock behavior in src/lib/features/onboarding/WelcomeWizard.svelte
+- [X] T037 [US4] Complete onboarding by setting has_completed_onboarding=true after successful save in src/lib/features/onboarding/onboarding-state.svelte.ts
+- [X] T038 [P] [US4] Add localized Step 3 action copy and error messages in messages/en.json and messages/it.json
 
 **Checkpoint**: Step 3 supports import/restore/skip paths and always allows safe entry into app shell.
 
@@ -131,12 +131,12 @@
 
 **Purpose**: Final consistency, performance verification, and workflow validation.
 
-- [ ] T039 [P] Verify startup gating performance (<100ms initialization surface mount) in src/__tests__/routes/layout.test.ts
-- [ ] T040 Verify dashboard remains unmounted until onboarding status resolves in src/__tests__/routes/layout.test.ts
-- [ ] T041 Apply transform-based step transition mechanics (transition-transform duration-150 ease-out) in src/lib/features/onboarding/WelcomeWizard.svelte
-- [ ] T042 Validate transition smoothness and no stutter under normal interaction in src/__tests__/features/onboarding/WelcomeWizard.test.ts
-- [ ] T043 [P] Align onboarding contract notes with implemented commands in specs/042-welcome-page/contracts/onboarding.openapi.yaml
-- [ ] T044 Validate quickstart steps against final implementation in specs/042-welcome-page/quickstart.md
+- [X] T039 [P] Verify startup gating performance (<100ms initialization surface mount) in src/__tests__/routes/layout.test.ts
+- [X] T040 Verify dashboard remains unmounted until onboarding status resolves in src/__tests__/routes/layout.test.ts
+- [X] T041 Apply transform-based step transition mechanics (transition-transform duration-150 ease-out) in src/lib/features/onboarding/WelcomeWizard.svelte
+- [X] T042 Validate transition smoothness and no stutter under normal interaction in src/__tests__/features/onboarding/WelcomeWizard.test.ts
+- [X] T043 [P] Align onboarding contract notes with implemented commands in specs/042-welcome-page/contracts/onboarding.openapi.yaml
+- [X] T044 Validate quickstart steps against final implementation in specs/042-welcome-page/quickstart.md
 
 ---
 

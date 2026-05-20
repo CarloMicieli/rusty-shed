@@ -80,6 +80,52 @@ paths:
         '401':
           description: OAuth/authentication required or expired
 
+  /onboarding/import/google-drive/oauth-code:
+    post:
+      summary: Resolve OAuth code from external callback/deeplink flow
+      operationId: getGoogleDriveOAuthCode
+      responses:
+        '200':
+          description: OAuth code available
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [oauthCode]
+                properties:
+                  oauthCode:
+                    type: string
+
+  /onboarding/import/google-drive/backups:
+    post:
+      summary: List available Google Drive backup files
+      operationId: listGoogleDriveBackups
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [oauthCode]
+              properties:
+                oauthCode:
+                  type: string
+      responses:
+        '200':
+          description: Backup file list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [id, name]
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+
   /onboarding/complete:
     post:
       summary: Mark onboarding complete and enter app shell

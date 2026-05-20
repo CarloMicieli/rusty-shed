@@ -16,9 +16,12 @@ export interface SettingsDto {
   measureUnit: MeasureUnit;
   favouriteScale: Scale;
   powerMethod: PowerMethod;
+  has_completed_onboarding: boolean;
 }
 
-export type UpdateSettingsPayload = Partial<SettingsDto>;
+export type UpdateSettingsPayload = Partial<SettingsDto> & {
+  hasCompletedOnboarding?: boolean;
+};
 
 export async function fetchSettings(): Promise<SafeResult<SettingsDto>> {
   return safeInvoke<SettingsDto>('get_settings');
@@ -28,4 +31,22 @@ export async function saveSettings(
   payload: UpdateSettingsPayload
 ): Promise<SafeResult<SettingsDto>> {
   return safeInvoke<SettingsDto>('update_settings', { input: payload });
+}
+
+export interface OnboardingSettingsPayload {
+  language: Language;
+  theme: ThemeValue;
+  measureUnit: MeasureUnit;
+  favouriteScale: Scale;
+  powerMethod: PowerMethod;
+}
+
+export async function saveOnboardingSettings(
+  payload: OnboardingSettingsPayload
+): Promise<SafeResult<SettingsDto>> {
+  return saveSettings(payload);
+}
+
+export async function markOnboardingCompleted(): Promise<SafeResult<SettingsDto>> {
+  return saveSettings({ hasCompletedOnboarding: true });
 }
