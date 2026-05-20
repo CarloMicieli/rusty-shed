@@ -12,7 +12,9 @@ pub fn initialize_settings(app: &AppHandle) -> Result<UserSettings, String> {
 
     // If onboarding is not complete, opportunistically bootstrap OS language once
     // while preserving the onboarding-required status.
-    if !settings.has_completed_onboarding && settings.language == crate::core::domain::Language::English {
+    if !settings.has_completed_onboarding
+        && settings.language == crate::core::domain::Language::English
+    {
         let os_language = detect_os_language();
         settings.language = os_language;
 
