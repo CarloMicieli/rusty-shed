@@ -98,7 +98,7 @@
     </header>
 
     <div class="mb-8 flex items-center gap-3">
-      {#each [1, 2, 3] as step}
+      {#each [1, 2, 3] as step (step)}
         <div
           class={[
             'h-2 flex-1 rounded-full transition-all duration-150',

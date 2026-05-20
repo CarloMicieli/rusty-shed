@@ -60,7 +60,7 @@
   <div class="space-y-2" onkeydown={handleScaleKey} tabindex="0" role="radiogroup">
     <span class="text-sm font-medium">{m.settings_scale_label()}</span>
     <div class="grid grid-cols-3 gap-2">
-      {#each scales as scale}
+      {#each scales as scale (scale)}
         <button
           type="button"
           class={[
@@ -110,7 +110,7 @@
   <div class="space-y-2" onkeydown={handlePowerKey} tabindex="0" role="radiogroup">
     <span class="text-sm font-medium">{m.settings_power_label()}</span>
     <div class="grid grid-cols-3 gap-2">
-      {#each powerMethods as method}
+      {#each powerMethods as method (method)}
         <button
           type="button"
           class={[
