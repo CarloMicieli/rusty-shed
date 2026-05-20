@@ -22,7 +22,7 @@ Tracks whether onboarding must be shown.
 
 | Field | Type | Required | Validation | Notes |
 | --- | --- | --- | --- | --- |
-| `firstRun` | `boolean` | Yes | Boolean only | `true` means onboarding required |
+| `has_completed_onboarding` | `boolean` | Yes | Boolean only | `true` means onboarding is complete |
 | `completedAt` | `string \| null` | No | ISO-8601 datetime if present | Optional audit metadata (future-compatible) |
 
 Relationships:
@@ -58,18 +58,18 @@ Svelte state for wizard rendering and interaction locks.
 
 ## State Transitions
 
-1. `StartupChecking` -> `NeedsOnboarding` when `firstRun=true`.
-2. `StartupChecking` -> `AppReady` when `firstRun=false`.
+1. `StartupChecking` -> `NeedsOnboarding` when `has_completed_onboarding=false` or `null`.
+2. `StartupChecking` -> `AppReady` when `has_completed_onboarding=true`.
 3. `NeedsOnboarding` + valid Step 1/2 selections -> `Step3Ready`.
 4. `Step3Ready` + import action -> `ImportInProgress`.
-5. `ImportInProgress` + success -> `Completing` (persist settings + set `firstRun=false`).
-6. `Step3Ready` + skip -> `Completing` (persist settings + set `firstRun=false`).
+5. `ImportInProgress` + success -> `Completing` (persist settings + set `has_completed_onboarding=true`).
+6. `Step3Ready` + skip -> `Completing` (persist settings + set `has_completed_onboarding=true`).
 7. `Completing` -> `AppReady`.
 8. Any async failure -> `NeedsOnboarding` with actionable error and `isBusy=false`.
 
 ## Validation Rules Summary
 
 - Onboarding cannot complete unless required Step 1 and Step 2 fields are valid.
-- `firstRun` flag flips to `false` only after settings persistence succeeds.
+- `has_completed_onboarding` flips to `true` only after settings persistence succeeds.
 - During `isBusy=true`, back/continue/import buttons are disabled.
 - Import operations must be idempotent or guarded against duplicate trigger from UI.

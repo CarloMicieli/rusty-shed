@@ -5,18 +5,18 @@
 
 ## Summary
 
-Implement a guarded app shell that checks onboarding completion at startup and routes first-run users into a 3-step Welcome Wizard (Basics, Modeling, Archive/Sync) before rendering the main dashboard shell. Persist selected settings through existing settings commands, provide import/restore actions in Step 3, and ensure users can always skip import and start fresh.
+Implement a guarded app shell that checks `has_completed_onboarding` at startup and routes users into a 3-step Welcome Wizard (Basics, Modeling, Archive/Sync) before rendering the main dashboard shell when onboarding is incomplete. Persist selected settings through existing settings commands, provide import/restore actions in Step 3, and ensure users can always skip import and start fresh.
 
 ## Technical Context
 
 **Language/Version**: TypeScript (strict) + Svelte 5 (Runes), Rust 2024 for Tauri backend  
 **Primary Dependencies**: SvelteKit, shadcn-svelte/bits-ui, Tailwind CSS v4, Tauri 2 plugins (`dialog`, settings/invoke layer), Paraglide i18n  
 **Storage**: Existing user settings persistence via backend commands (`initialize_settings`, `get_settings`, `update_settings`), app database for imported collection data  
-**Testing**: Vitest + Testing Library for frontend routes/components, Rust tests for import and command boundaries  
+**Testing**: Vitest + Testing Library for frontend routes/components, integration checks for onboarding completion flow, Rust tests for import and command boundaries  
 **Target Platform**: Desktop app via Tauri 2 (Linux/macOS/Windows)  
 **Project Type**: Monorepo-style single app (Svelte frontend + Rust backend)  
-**Performance Goals**: First-run gate decision before dashboard render; keep onboarding transition responsive with sub-200ms command reads on common path  
-**Constraints**: No hardcoded user strings (Paraglide only), Svelte 5 Runes only, no new dependencies without approval, keyboard-accessible step navigation, disable navigation during import actions  
+**Performance Goals**: Initialization screen renders in <100ms from webview-ready; onboarding gate resolves before dashboard render; step transitions target smooth 60fps interaction  
+**Constraints**: No hardcoded user strings (Paraglide only), Svelte 5 Runes only, no new dependencies without approval, keyboard-accessible step navigation, disable navigation during import actions, canonical onboarding key is `has_completed_onboarding`  
 **Scale/Scope**: One root layout gate, one onboarding flow component family, settings persistence updates, import entry points and completion flag handling
 
 ## Constitution Check

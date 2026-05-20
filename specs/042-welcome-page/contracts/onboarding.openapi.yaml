@@ -102,13 +102,10 @@ components:
   schemas:
     OnboardingStatusResponse:
       type: object
-      required: [firstRun]
+      required: [has_completed_onboarding]
       properties:
-        firstRun:
+        has_completed_onboarding:
           type: boolean
-        hasCompletedOnboarding:
-          type: boolean
-          description: Convenience mirror of !firstRun for frontend readability.
 
     OnboardingPreferencesRequest:
       type: object
@@ -145,7 +142,7 @@ components:
           type: string
         formatHint:
           type: string
-          enum: [json, csv, zip, db]
+          enum: [json, db]
 
     GoogleDriveImportRequest:
       type: object
@@ -171,9 +168,9 @@ components:
 
     CompleteOnboardingRequest:
       type: object
-      required: [setFirstRunFalse]
+      required: [setHasCompletedOnboardingTrue]
       properties:
-        setFirstRunFalse:
+        setHasCompletedOnboardingTrue:
           type: boolean
           const: true
 

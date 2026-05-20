@@ -8,13 +8,14 @@
   - Dedicated `/welcome` route redirect: rejected because route transition can still render shell briefly and increases navigation edge cases.
   - Modal on top of dashboard: rejected because heavyweight dashboard initialization should not run before first-run decision.
 
-## Decision 2: Use existing `firstRun` settings field as source of truth
+## Decision 2: Use `has_completed_onboarding` as canonical source of truth
 
-- Decision: Treat existing `settingsState.settings.firstRun` as canonical first-run flag, and map completion by setting it to `false`.
-- Rationale: Existing settings model and backend commands already include `firstRun`; avoids transport/schema drift and extra migration risk.
+- Decision: Use `has_completed_onboarding` as the canonical onboarding status key and set it to `true` only after onboarding completion succeeds.
+- Rationale: The key has explicit semantic intent and avoids ambiguity of execution count style flags.
 - Alternatives considered:
-  - Introduce new `has_completed_onboarding` key: rejected for now because it duplicates existing semantics and increases compatibility overhead.
-  - Frontend localStorage-only flag: rejected because this app already uses backend settings persistence and typed commands.
+  - Keep `firstRun` as canonical: rejected because it is semantically ambiguous for interrupted onboarding sessions.
+  - Frontend localStorage-only flag: rejected because this app uses backend settings persistence and typed commands.
+  - Compatibility note: if legacy `firstRun` is present, map it once during initialization to `has_completed_onboarding` and then persist only the canonical key.
 
 ## Decision 3: Persist Step 1 and Step 2 data via existing update settings command
 
@@ -34,15 +35,17 @@
 
 ## Decision 5: Local import uses Tauri dialog plugin and backend parsing command
 
-- Decision: Use `@tauri-apps/plugin-dialog` for file selection and pass path to backend import command for parsing and persistence.
+- Decision: Use `@tauri-apps/plugin-dialog` for file selection and pass path to backend import command for parsing and persistence. Supported formats are `.json` and `.db` only.
 - Rationale: Native picker and backend parsing avoid large file handling inside webview and align with Tauri security/performance practices.
-- Alternatives considered:
+-- Alternatives considered:
   - Web `input type=file` with client parsing: rejected for memory/performance limitations and weaker desktop-native UX.
-  - Frontend CSV/JSON parsing: rejected because data integrity logic belongs in Rust domain/application layers.
+  - Frontend parsing: rejected because data integrity logic belongs in Rust domain/application layers.
+  - CSV format: rejected because it poorly maps to relational collection structures.
+  - ZIP archives: rejected to avoid extra decompression complexity during onboarding.
 
 ## Decision 6: Keyboard-first navigation and deterministic completion state
 
-- Decision: `Enter` advances primary CTA on Steps 1-2; arrow keys control scale/power selection groups; completion always sets `firstRun=false` after successful settings save.
+- Decision: `Enter` advances primary CTA on Steps 1-2; arrow keys control scale/power selection groups; completion always sets `has_completed_onboarding=true` after successful settings save.
 - Rationale: Meets accessibility and deterministic completion expectations.
 - Alternatives considered:
   - Mouse-only controls: rejected for accessibility and desktop usability.
