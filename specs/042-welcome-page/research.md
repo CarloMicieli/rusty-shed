@@ -12,6 +12,7 @@
 
 - Decision: Use `has_completed_onboarding` as the canonical onboarding status key and set it to `true` only after onboarding completion succeeds.
 - Rationale: The key has explicit semantic intent and avoids ambiguity of execution count style flags.
+- Runtime rule: after migration, application reads and writes MUST use only `has_completed_onboarding`; `firstRun` is migration-input only and must not drive runtime branching.
 - Alternatives considered:
   - Keep `firstRun` as canonical: rejected because it is semantically ambiguous for interrupted onboarding sessions.
   - Frontend localStorage-only flag: rejected because this app uses backend settings persistence and typed commands.
