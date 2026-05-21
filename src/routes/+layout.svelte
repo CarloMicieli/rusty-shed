@@ -214,9 +214,11 @@
         financeState.ensureLoaded()
       ]);
 
-      // Load budget config first; monthly records bail out while budget service is loading.
+      // Load budget config first. Monthly records require an existing budget configuration.
       await budgetState.load();
-      await budgetState.loadMonthlyRecords(initialFinanceYear);
+      if (budgetState.hasConfig) {
+        await budgetState.loadMonthlyRecords(initialFinanceYear);
+      }
     } catch (err) {
       log.error(`Startup failed: ${String(err)}`);
       // Capture the error to show in the UI
@@ -283,7 +285,9 @@
         ]);
 
         await budgetState.load();
-        await budgetState.loadMonthlyRecords(initialFinanceYear);
+        if (budgetState.hasConfig) {
+          await budgetState.loadMonthlyRecords(initialFinanceYear);
+        }
       } catch (err) {
         error = err instanceof Error ? err.message : String(err);
       } finally {
