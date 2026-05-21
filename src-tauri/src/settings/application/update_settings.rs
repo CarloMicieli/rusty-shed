@@ -205,9 +205,11 @@ mod tests {
 
     #[test]
     fn test_update_settings_with_io_no_input_preserves_existing_values() {
-        let mut existing = UserSettings::default();
-        existing.currency = "CHF".to_string();
-        existing.language = Language::Italian;
+        let existing = UserSettings {
+            currency: "CHF".to_string(),
+            language: Language::Italian,
+            ..UserSettings::default()
+        };
 
         let updated = update_settings_with_io(
             UpdateSettingsInput::default(),
