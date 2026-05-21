@@ -1,0 +1,228 @@
+openapi: 3.1.0
+info:
+  title: Welcome Wizard Onboarding Contract
+  version: 0.1.0
+  description: |
+    Logical contract for first-run onboarding workflow.
+    In implementation, these map to Tauri invoke command handlers rather than HTTP endpoints.
+servers:
+  - url: tauri://local
+paths:
+  /onboarding/status:
+    get:
+      summary: Get onboarding completion status
+      operationId: getOnboardingStatus
+      responses:
+        '200':
+          description: Current onboarding status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingStatusResponse'
+
+  /onboarding/preferences:
+    put:
+      summary: Save onboarding preferences from Steps 1 and 2
+      operationId: saveOnboardingPreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingPreferencesRequest'
+      responses:
+        '200':
+          description: Preferences persisted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingPreferencesResponse'
+        '400':
+          description: Invalid payload
+
+  /onboarding/import/local:
+    post:
+      summary: Import user data from a local archive
+      operationId: importOnboardingLocalArchive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalImportRequest'
+      responses:
+        '202':
+          description: Import accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportActionResponse'
+        '400':
+          description: Validation or file-type error
+
+  /onboarding/import/google-drive:
+    post:
+      summary: Restore user data from Google Drive
+      operationId: importOnboardingGoogleDrive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleDriveImportRequest'
+      responses:
+        '202':
+          description: Restore accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportActionResponse'
+        '401':
+          description: OAuth/authentication required or expired
+
+  /onboarding/import/google-drive/oauth-code:
+    post:
+      summary: Resolve OAuth code from external callback/deeplink flow
+      operationId: getGoogleDriveOAuthCode
+      responses:
+        '200':
+          description: OAuth code available
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [oauthCode]
+                properties:
+                  oauthCode:
+                    type: string
+
+  /onboarding/import/google-drive/backups:
+    post:
+      summary: List available Google Drive backup files
+      operationId: listGoogleDriveBackups
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [oauthCode]
+              properties:
+                oauthCode:
+                  type: string
+      responses:
+        '200':
+          description: Backup file list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [id, name]
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+
+  /onboarding/complete:
+    post:
+      summary: Mark onboarding complete and enter app shell
+      operationId: completeOnboarding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteOnboardingRequest'
+      responses:
+        '200':
+          description: Onboarding completion persisted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteOnboardingResponse'
+
+components:
+  schemas:
+    OnboardingStatusResponse:
+      type: object
+      required: [has_completed_onboarding]
+      properties:
+        has_completed_onboarding:
+          type: boolean
+
+    OnboardingPreferencesRequest:
+      type: object
+      required: [language, theme, measureUnit, favouriteScale, powerMethod]
+      properties:
+        language:
+          type: string
+          enum: [en, it]
+        theme:
+          type: string
+          description: Theme token value supported by backend/frontend theme system.
+        measureUnit:
+          type: string
+          enum: [Metric, Imperial]
+        favouriteScale:
+          type: string
+          enum: [H0, H0m, H0e, N, TT, Z, G, '1', '0', '00']
+        powerMethod:
+          type: string
+          enum: [DC, DCC, AC]
+
+    OnboardingPreferencesResponse:
+      type: object
+      required: [saved]
+      properties:
+        saved:
+          type: boolean
+
+    LocalImportRequest:
+      type: object
+      required: [filePath]
+      properties:
+        filePath:
+          type: string
+        formatHint:
+          type: string
+          enum: [json, db]
+
+    GoogleDriveImportRequest:
+      type: object
+      required: [oauthCode]
+      properties:
+        oauthCode:
+          type: string
+        backupFileId:
+          type: string
+
+    ImportActionResponse:
+      type: object
+      required: [accepted, sourceType]
+      properties:
+        accepted:
+          type: boolean
+        sourceType:
+          type: string
+          enum: [local_archive, google_drive]
+        importSummary:
+          type: object
+          additionalProperties: true
+
+    CompleteOnboardingRequest:
+      type: object
+      required: [setHasCompletedOnboardingTrue]
+      properties:
+        setHasCompletedOnboardingTrue:
+          type: boolean
+          const: true
+
+    CompleteOnboardingResponse:
+      type: object
+      required: [completed]
+      properties:
+        completed:
+          type: boolean

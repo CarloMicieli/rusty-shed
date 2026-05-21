@@ -49,7 +49,16 @@ vi.mock('$lib/toaster', () => ({
 vi.mock('$lib/features/settings/SettingsState.svelte', () => ({
   settingsState: {
     initialize: vi.fn().mockResolvedValue(undefined),
-    settings: null
+    markOnboardingCompleted: vi.fn().mockResolvedValue(undefined),
+    settings: {
+      currency: 'EUR',
+      language: 'en',
+      theme: 'steampunk-dark',
+      measureUnit: 'Metric',
+      favouriteScale: '',
+      powerMethod: 'DC',
+      has_completed_onboarding: true
+    }
   }
 }));
 
@@ -202,7 +211,7 @@ function createChildrenSnippet() {
 }
 
 describe('routes/+layout.svelte', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     cleanup(); // Force unmount from previous test before clearing mocks
     vi.clearAllMocks();
     // Remove any leftover #app-loading nodes
@@ -213,6 +222,10 @@ describe('routes/+layout.svelte', () => {
     mockFinanceState.ensureLoaded = vi.fn().mockResolvedValue(undefined);
     mockFinanceState.startListening = vi.fn().mockResolvedValue(undefined);
     mockFinanceState.stopListening = vi.fn();
+
+    const { settingsState } = await import('$lib/features/settings/SettingsState.svelte');
+    settingsState.initialize = vi.fn().mockResolvedValue(undefined);
+    settingsState.settings.has_completed_onboarding = true;
   });
 
   // A deferred promise that never resolves within the test lifetime, used to
@@ -292,5 +305,44 @@ describe('routes/+layout.svelte', () => {
     mockSuccessfulStartup();
     render(Layout, { children: createChildrenSnippet() });
     await waitFor(() => expect(settingsState.initialize).toHaveBeenCalled(), { timeout: 2000 });
+  });
+
+  it('mounts initialization surface within 100ms in test environment', () => {
+    mockSafeInvoke.mockImplementation(pendingPromise);
+    const start = performance.now();
+    const { container } = render(Layout, { children: createChildrenSnippet() });
+    const elapsed = performance.now() - start;
+
+    expect(container.querySelector('.animate-spin')).not.toBeNull();
+    expect(elapsed).toBeLessThan(100);
+  });
+
+  it('keeps dashboard shell unmounted while onboarding status is unresolved', async () => {
+    const { settingsState } = await import('$lib/features/settings/SettingsState.svelte');
+    settingsState.initialize = vi.fn(
+      () => new Promise<void>((resolve) => setTimeout(() => resolve(), 60_000))
+    );
+
+    mockSafeInvoke.mockImplementation(pendingPromise);
+    render(Layout, { children: createChildrenSnippet() });
+
+    expect(screen.queryByLabelText('notifications_label')).not.toBeInTheDocument();
+    expect(screen.getByText('app_loading_message')).toBeInTheDocument();
+  });
+
+  it('defaults to onboarding wizard when has_completed_onboarding is false', async () => {
+    const { settingsState } = await import('$lib/features/settings/SettingsState.svelte');
+    settingsState.settings.has_completed_onboarding = false;
+
+    mockSuccessfulStartup();
+    render(Layout, { children: createChildrenSnippet() });
+
+    await waitFor(() => expect(screen.getByText('onboarding_title')).toBeInTheDocument(), {
+      timeout: 2000
+    });
+
+    expect(mockSafeInvoke).not.toHaveBeenCalledWith('init_database');
+
+    settingsState.settings.has_completed_onboarding = true;
   });
 });

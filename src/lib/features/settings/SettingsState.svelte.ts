@@ -18,7 +18,7 @@ export class SettingsState {
     measureUnit: 'Metric',
     favouriteScale: '',
     powerMethod: 'DC',
-    firstRun: true
+    has_completed_onboarding: false
   });
 
   loading = $state(false);
@@ -93,6 +93,10 @@ export class SettingsState {
       log.error(`Failed to initialize settings: ${result.error.message}`);
       throw new Error(result.error.message);
     }
+  }
+
+  async markOnboardingCompleted(): Promise<void> {
+    await this.update({ hasCompletedOnboarding: true });
   }
 
   setLibraryTab(tab: LibraryTab): void {

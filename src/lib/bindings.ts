@@ -10,7 +10,6 @@ export const commands = {
 	showMainWindow: () => typedError<null, CommandError>(__TAURI_INVOKE("show_main_window")),
 	/**  Tauri command to retrieve all manufacturers. */
 	getManufacturers: () => typedError<Manufacturer[], CommandError>(__TAURI_INVOKE("get_manufacturers")),
-	/**  Tauri command to retrieve a manufacturer by its identifier. */
 	getManufacturerById: (manufacturerId: ManufacturerId) => typedError<{
 	id: ManufacturerId,
 	name: string,
@@ -421,7 +420,9 @@ export const commands = {
 	 */
 	deleteSeller: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_seller", { id })),
 	mergeSellers: (args: MergeSellerArgs) => typedError<SellerMergeResult, CommandError>(__TAURI_INVOKE("merge_sellers", { args })),
+	/**  Tauri command that lists all buyers. */
 	getBuyers: () => typedError<SellerView[], CommandError>(__TAURI_INVOKE("get_buyers")),
+	/**  Tauri command that returns one buyer by identifier. */
 	getBuyerById: (id: SellerId) => typedError<{
 	/**  Unique identifier for the seller. */
 	id: SellerId,
@@ -442,8 +443,10 @@ export const commands = {
 	/**  Total usage count across buyer and seller references. */
 	usageCount: number,
 } | null, CommandError>(__TAURI_INVOKE("get_buyer_by_id", { id })),
+	/**  Tauri command that creates a buyer. */
 	createBuyer: (payload: CreateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("create_buyer", { payload })),
 	updateBuyer: (payload: UpdateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("update_buyer", { payload })),
+	/**  Tauri command that deletes a buyer by identifier. */
 	deleteBuyer: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_buyer", { id })),
 	mergeBuyers: (args: MergeBuyerArgs) => typedError<BuyerMergeResult, CommandError>(__TAURI_INVOKE("merge_buyers", { args })),
 	/**
@@ -1241,6 +1244,7 @@ export type BudgetMode =
 /**  Quarter enum for quarterly summaries exposed at the interface boundary. */
 export type BudgetQuarter = "Q1" | "Q2" | "Q3" | "Q4";
 
+/**  Result payload returned after a successful buyer merge. */
 export type BuyerMergeResult = {
 	sourceId: string,
 	targetId: string,
@@ -1809,6 +1813,7 @@ export type CreateFormationCategoryArgs = {
 	name: string,
 };
 
+/**  Input payload for creating a manufacturer. */
 export type CreateManufacturerArgs = {
 	name: string,
 	websiteUrl: string | null,
@@ -2852,6 +2857,7 @@ export type MaintenanceType =
 /**  Any maintenance task not covered by the standard categories. */
 "OTHER";
 
+/**  Manufacturer DTO exposed by Tauri command handlers. */
 export type Manufacturer = {
 	id: ManufacturerId,
 	name: string,
@@ -2893,6 +2899,7 @@ export type ManufacturerStatus = "ACTIVE" | "MERGED" | "OUT_OF_BUSINESS";
 /**  Measurement system for dimensions */
 export type MeasureUnit = "Metric" | "Imperial";
 
+/**  Input payload for buyer-merge operations. */
 export type MergeBuyerArgs = {
 	sourceId: SellerId,
 	targetId: SellerId,
@@ -4646,6 +4653,7 @@ export type UpdateCollectionItemArgs = {
 	update: CollectionItemUpdateArgs,
 };
 
+/**  Input payload for updating a manufacturer. */
 export type UpdateManufacturerArgs = {
 	id: ManufacturerId,
 	name: string,
@@ -4834,6 +4842,7 @@ export type UpdateSettingsInput = {
 	favouriteScale?: string | null,
 	powerMethod?: PowerMethod | null,
 	theme?: AppTheme | null,
+	hasCompletedOnboarding?: boolean | null,
 };
 
 /**  Arguments for `update_train_formation`. */
@@ -4941,8 +4950,8 @@ export type UserSettings_Deserialize = {
 	measureUnit?: MeasureUnit,
 	/**  User's preferred model railway scale (e.g., "HO", "N", "OO") */
 	favouriteScale?: string,
-	/**  Flag indicating if this is the user's first app launch */
-	firstRun?: boolean,
+	/**  Flag indicating onboarding completion status */
+	has_completed_onboarding?: boolean,
 } & {
 	/**  Preferred power method for model railways */
 	powerMethod?: PowerMethod,
@@ -4965,8 +4974,8 @@ export type UserSettings_Serialize = {
 	favouriteScale: string,
 	/**  Preferred power method for model railways */
 	powerMethod: PowerMethod,
-	/**  Flag indicating if this is the user's first app launch */
-	firstRun: boolean,
+	/**  Flag indicating onboarding completion status */
+	has_completed_onboarding: boolean,
 };
 
 /**

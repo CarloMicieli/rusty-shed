@@ -45,8 +45,9 @@ pub struct UserSettings {
     #[serde(alias = "powerSystem")]
     pub power_method: PowerMethod,
 
-    /// Flag indicating if this is the user's first app launch
-    pub first_run: bool,
+    /// Flag indicating onboarding completion status
+    #[serde(rename = "has_completed_onboarding")]
+    pub has_completed_onboarding: bool,
 }
 
 impl Default for UserSettings {
@@ -58,7 +59,7 @@ impl Default for UserSettings {
             measure_unit: MeasureUnit::Metric,
             favourite_scale: String::new(),
             power_method: PowerMethod::DC,
-            first_run: true,
+            has_completed_onboarding: false,
         }
     }
 }
@@ -118,7 +119,7 @@ mod tests {
         assert_eq!(settings.measure_unit, MeasureUnit::Metric);
         assert_eq!(settings.favourite_scale, "");
         assert_eq!(settings.power_method, PowerMethod::DC);
-        assert!(settings.first_run);
+        assert!(!settings.has_completed_onboarding);
     }
 
     #[test]

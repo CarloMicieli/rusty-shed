@@ -10,11 +10,13 @@ pub fn initialize_settings(app: &AppHandle) -> Result<UserSettings, String> {
     // Load existing settings (or get defaults if none exist)
     let mut settings = repository.load(app)?;
 
-    // If this is the first run, detect OS language and set first_run=false
-    if settings.first_run {
+    // If onboarding is not complete, opportunistically bootstrap OS language once
+    // while preserving the onboarding-required status.
+    if !settings.has_completed_onboarding
+        && settings.language == crate::core::domain::Language::English
+    {
         let os_language = detect_os_language();
         settings.language = os_language;
-        settings.first_run = false;
 
         // Save initialized settings
         repository.save(app, &settings)?;
@@ -31,13 +33,12 @@ mod tests {
     fn test_initialize_settings_logic() {
         // This tests the core logic - actual Tauri integration requires integration tests
         let mut settings = UserSettings::default();
-        assert!(settings.first_run);
+        assert!(!settings.has_completed_onboarding);
 
-        // Simulate first run initialization
+        // Simulate startup initialization
         settings.language = detect_os_language();
-        settings.first_run = false;
 
-        assert!(!settings.first_run);
+        assert!(!settings.has_completed_onboarding);
         // Language depends on OS, but should be either English or Italian
     }
 }
