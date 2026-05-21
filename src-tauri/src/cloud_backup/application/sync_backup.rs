@@ -154,11 +154,28 @@ pub async fn sync_backup(
         return Err(CloudBackupError::OfflineError);
     }
 
+    sync_backup_core(
+        db_pool,
+        db_path,
+        drive_client,
+        |operation_id, percent, stage| emit_progress(app, operation_id, percent, stage),
+    )
+    .await
+}
+
+async fn sync_backup_core<F>(
+    db_pool: &SqlitePool,
+    db_path: &Path,
+    drive_client: Arc<dyn DriveClient + Send + Sync>,
+    mut emit_progress_fn: F,
+) -> Result<BackupListItem>
+where
+    F: FnMut(&str, f32, &SyncStage),
+{
     let operation_id = Uuid::new_v4().to_string();
 
     // Stage 1: Compress database
-    emit_progress(app, &operation_id, 0.0, &SyncStage::Compressing);
-
+    emit_progress_fn(&operation_id, 0.0, &SyncStage::Compressing);
     // Read database file
     let db_data = tokio::fs::read(db_path).await.map_err(|e| {
         CloudBackupError::CompressionError(format!("Failed to read database: {}", e))
@@ -174,8 +191,7 @@ pub async fn sync_backup(
     let compressed_data = compress_database(&db_data)?;
 
     // Stage 2: Upload file (stage-and-commit)
-    emit_progress(app, &operation_id, 50.0, &SyncStage::Uploading);
-
+    emit_progress_fn(&operation_id, 50.0, &SyncStage::Uploading);
     // Get or create backup folder
     let folder_id = drive_client.get_or_create_backup_folder().await?;
 
@@ -247,14 +263,12 @@ pub async fn sync_backup(
         .await?;
 
     // Stage 3: Finalize (enforce version limit)
-    emit_progress(app, &operation_id, 75.0, &SyncStage::Finalizing);
-
+    emit_progress_fn(&operation_id, 75.0, &SyncStage::Finalizing);
     // Enforce version limit
     enforce_version_limit(drive_client, &folder_id, MAX_BACKUPS).await?;
 
     // Final progress
-    emit_progress(app, &operation_id, 100.0, &SyncStage::Finalizing);
-
+    emit_progress_fn(&operation_id, 100.0, &SyncStage::Finalizing);
     Ok(BackupListItem {
         id: uploaded.id,
         label: label.display(),
@@ -342,6 +356,15 @@ async fn enforce_version_limit(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cloud_backup::infrastructure::{DriveFile, UploadedFile, mock::MockDriveClient};
+    use serial_test::serial;
+    use std::sync::{Arc, Mutex};
+
+    fn create_temp_db_file(contents: &[u8]) -> tempfile::NamedTempFile {
+        let mut file = tempfile::NamedTempFile::new().expect("temp file should be created");
+        std::io::Write::write_all(&mut file, contents).expect("temp file should be writable");
+        file
+    }
 
     #[test]
     fn test_format_bytes() {
@@ -374,5 +397,145 @@ mod tests {
             "SHA-256 hex output must be 64 characters"
         );
         assert!(checksum.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    #[serial]
+    async fn test_sync_backup_core_initial_backup_flow(pool: SqlitePool) {
+        let temp_db = create_temp_db_file(b"sqlite-data");
+        let mut mock_client = MockDriveClient::new();
+
+        mock_client
+            .expect_get_or_create_backup_folder()
+            .times(1)
+            .returning(|| Ok("folder-1".to_string()));
+        mock_client
+            .expect_list_files()
+            .times(2)
+            .returning(|_| Ok(vec![]));
+        mock_client
+            .expect_upload_file()
+            .times(1)
+            .returning(|_, file_name, file_data, _| {
+                assert!(file_name.ends_with(".tmp"));
+                assert!(!file_data.is_empty());
+                Ok(UploadedFile {
+                    id: "file-1".to_string(),
+                    name: file_name.to_string(),
+                    size: file_data.len() as u64,
+                })
+            });
+        mock_client
+            .expect_rename_file()
+            .times(1)
+            .returning(|_, new_name| {
+                assert!(!new_name.ends_with(".tmp"));
+                Ok(())
+            });
+        mock_client.expect_delete_file().times(0);
+        mock_client.expect_download_file().times(0);
+
+        let progress: Arc<Mutex<Vec<f32>>> = Arc::new(Mutex::new(Vec::new()));
+        let sink = progress.clone();
+
+        let result = sync_backup_core(
+            &pool,
+            temp_db.path(),
+            Arc::new(mock_client),
+            move |_, percent, _| sink.lock().expect("progress lock").push(percent),
+        )
+        .await
+        .expect("sync backup core should succeed");
+
+        assert_eq!(result.id, "file-1");
+        assert_eq!(result.label, "Initial Backup");
+        assert_eq!(
+            progress.lock().expect("progress lock").clone(),
+            vec![0.0, 50.0, 75.0, 100.0]
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    #[serial]
+    async fn test_sync_backup_core_manual_label_when_existing_files(pool: SqlitePool) {
+        let temp_db = create_temp_db_file(b"sqlite-data");
+        let mut mock_client = MockDriveClient::new();
+
+        mock_client
+            .expect_get_or_create_backup_folder()
+            .times(1)
+            .returning(|| Ok("folder-1".to_string()));
+        mock_client.expect_list_files().times(2).returning(|_| {
+            Ok(vec![DriveFile {
+                id: "old-1".to_string(),
+                name: "backup-old.db.gz".to_string(),
+                size: 128,
+                modified_time: None,
+                app_properties: None,
+            }])
+        });
+        mock_client
+            .expect_upload_file()
+            .times(1)
+            .returning(|_, _, file_data, _| {
+                Ok(UploadedFile {
+                    id: "file-manual".to_string(),
+                    name: "temp-name.tmp".to_string(),
+                    size: file_data.len() as u64,
+                })
+            });
+        mock_client
+            .expect_rename_file()
+            .times(1)
+            .returning(|_, _| Ok(()));
+        mock_client.expect_delete_file().times(0);
+        mock_client.expect_download_file().times(0);
+
+        let result = sync_backup_core(&pool, temp_db.path(), Arc::new(mock_client), |_, _, _| {})
+            .await
+            .expect("sync backup core should succeed");
+
+        assert_eq!(result.id, "file-manual");
+        assert_ne!(result.label, "Initial Backup");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    #[serial]
+    async fn test_sync_backup_core_fails_when_upload_id_is_empty(pool: SqlitePool) {
+        let temp_db = create_temp_db_file(b"sqlite-data");
+        let mut mock_client = MockDriveClient::new();
+
+        mock_client
+            .expect_get_or_create_backup_folder()
+            .times(1)
+            .returning(|| Ok("folder-1".to_string()));
+        mock_client
+            .expect_list_files()
+            .times(1)
+            .returning(|_| Ok(vec![]));
+        mock_client
+            .expect_upload_file()
+            .times(1)
+            .returning(|_, _, _, _| {
+                Ok(UploadedFile {
+                    id: String::new(),
+                    name: "temp-name.tmp".to_string(),
+                    size: 64,
+                })
+            });
+        mock_client.expect_rename_file().times(0);
+        mock_client.expect_delete_file().times(0);
+        mock_client.expect_download_file().times(0);
+
+        let error = sync_backup_core(&pool, temp_db.path(), Arc::new(mock_client), |_, _, _| {})
+            .await
+            .expect_err("empty upload ID should fail verification");
+
+        match error {
+            CloudBackupError::DriveError(msg) => {
+                assert!(msg.contains("Upload verification failed"))
+            }
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
     }
 }

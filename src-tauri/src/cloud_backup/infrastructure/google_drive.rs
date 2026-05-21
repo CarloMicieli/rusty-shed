@@ -21,61 +21,59 @@ use serde_json::json;
 /// - 429 → Rate limited
 /// - 5xx → Service unavailable
 fn extract_drive_error(status: u16, error_text: &str) -> CloudBackupError {
-    // Try to parse as JSON first
-    if let Ok(error_json) = serde_json::from_str::<serde_json::Value>(error_text)
-        && let Some(error_obj) = error_json.get("error")
-    {
-        let error_code = error_obj.get("code").and_then(|c| c.as_u64()).unwrap_or(0);
-
-        let error_msg = error_obj
-            .get("message")
-            .and_then(|m| m.as_str())
-            .unwrap_or("Unknown error");
-
-        // Handle specific error codes
-        match error_code {
-            403 => {
-                // Check for specific 403 reasons
-                if error_msg.contains("quotaExceeded") || error_msg.contains("storageQuotaExceeded")
-                {
-                    return CloudBackupError::DriveError(
-                            "Your Google Drive storage quota is full. Please free up space and try again.".to_string()
-                        );
-                } else if error_msg.contains("Forbidden") || error_msg.contains("permission") {
-                    return CloudBackupError::DriveError(
-                        "Permission denied. Please reconnect your Google account.".to_string(),
-                    );
-                } else {
-                    return CloudBackupError::DriveError(format!(
-                        "Access forbidden: {}",
-                        error_msg
-                    ));
-                }
-            }
-            401 => {
-                return CloudBackupError::TokenExpired;
-            }
-            404 => {
-                return CloudBackupError::DriveError("File or folder not found.".to_string());
-            }
-            429 => {
-                return CloudBackupError::DriveError(
-                    "Rate limit exceeded. Please wait a moment and try again.".to_string(),
-                );
-            }
-            500..=599 => {
-                return CloudBackupError::DriveError(
-                    "Google Drive service is temporarily unavailable. Please try again later."
-                        .to_string(),
-                );
-            }
-            _ => {
-                return CloudBackupError::DriveError(format!("API Error: {}", error_msg));
-            }
-        }
+    if let Some((error_code, error_msg)) = parse_drive_api_error(error_text) {
+        return map_drive_api_error(error_code, &error_msg);
     }
 
-    // Handle HTTP status codes directly
+    map_http_status_error(status, error_text)
+}
+
+fn parse_drive_api_error(error_text: &str) -> Option<(u16, String)> {
+    let error_json = serde_json::from_str::<serde_json::Value>(error_text).ok()?;
+    let error_obj = error_json.get("error")?;
+    let error_code = error_obj
+        .get("code")
+        .and_then(|c| c.as_u64())
+        .map(|v| v as u16)
+        .unwrap_or_default();
+    let error_msg = error_obj
+        .get("message")
+        .and_then(|m| m.as_str())
+        .unwrap_or("Unknown error")
+        .to_string();
+
+    Some((error_code, error_msg))
+}
+
+fn map_drive_api_error(error_code: u16, error_msg: &str) -> CloudBackupError {
+    match error_code {
+        403 => {
+            if error_msg.contains("quotaExceeded") || error_msg.contains("storageQuotaExceeded") {
+                CloudBackupError::DriveError(
+                    "Your Google Drive storage quota is full. Please free up space and try again."
+                        .to_string(),
+                )
+            } else if error_msg.contains("Forbidden") || error_msg.contains("permission") {
+                CloudBackupError::DriveError(
+                    "Permission denied. Please reconnect your Google account.".to_string(),
+                )
+            } else {
+                CloudBackupError::DriveError(format!("Access forbidden: {}", error_msg))
+            }
+        }
+        401 => CloudBackupError::TokenExpired,
+        404 => CloudBackupError::DriveError("File or folder not found.".to_string()),
+        429 => CloudBackupError::DriveError(
+            "Rate limit exceeded. Please wait a moment and try again.".to_string(),
+        ),
+        500..=599 => CloudBackupError::DriveError(
+            "Google Drive service is temporarily unavailable. Please try again later.".to_string(),
+        ),
+        _ => CloudBackupError::DriveError(format!("API Error: {}", error_msg)),
+    }
+}
+
+fn map_http_status_error(status: u16, error_text: &str) -> CloudBackupError {
     match status {
         401 | 403 => CloudBackupError::TokenExpired,
         404 => CloudBackupError::DriveError("Resource not found.".to_string()),
@@ -699,5 +697,91 @@ mod tests {
     fn test_google_drive_client_creation() {
         let client = GoogleDriveClient::new("test_client_id".to_string(), "test_token".to_string());
         assert_eq!(client.access_token, "test_token");
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_quota_exceeded() {
+        let error = extract_drive_error(
+            403,
+            r#"{"error":{"code":403,"message":"storageQuotaExceeded"}}"#,
+        );
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("storage quota")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_permission_denied() {
+        let error = extract_drive_error(
+            403,
+            r#"{"error":{"code":403,"message":"Forbidden: permission denied"}}"#,
+        );
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("Permission denied")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_token_expired_from_json() {
+        let error = extract_drive_error(401, r#"{"error":{"code":401,"message":"Expired"}}"#);
+        assert!(matches!(error, CloudBackupError::TokenExpired));
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_not_found_from_json() {
+        let error = extract_drive_error(404, r#"{"error":{"code":404,"message":"Not Found"}}"#);
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("File or folder not found")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_rate_limit_from_json() {
+        let error = extract_drive_error(429, r#"{"error":{"code":429,"message":"Too many"}}"#);
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("Rate limit exceeded")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_server_error_from_json() {
+        let error = extract_drive_error(500, r#"{"error":{"code":500,"message":"Oops"}}"#);
+
+        match error {
+            CloudBackupError::DriveError(msg) => {
+                assert!(msg.contains("temporarily unavailable"))
+            }
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_falls_back_to_http_status_mapping() {
+        let error = extract_drive_error(404, "not-json");
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("Resource not found")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_falls_back_to_generic_http_error() {
+        let error = extract_drive_error(418, "teapot");
+
+        match error {
+            CloudBackupError::DriveError(msg) => {
+                assert!(msg.contains("Drive API error (418): teapot"))
+            }
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
     }
 }
