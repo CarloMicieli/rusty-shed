@@ -93,18 +93,15 @@
   onkeydown={handleWizardKeydown}
 >
   <Card
-    class="variant-steampunk-riveted relative w-full max-w-3xl overflow-hidden border border-border bg-card px-5 pt-20 pb-6 shadow-[0_25px_50px_-12px_hsl(var(--foreground)/0.45)] sm:px-8 sm:pt-24 sm:pb-8"
+    class="variant-steampunk-riveted relative w-full max-w-3xl overflow-hidden border border-border bg-card px-5 pt-12 pb-6 shadow-[0_25px_50px_-12px_hsl(var(--foreground)/0.45)] sm:px-8 sm:pt-14 sm:pb-8"
   >
     <div
       class="pointer-events-none absolute top-0 right-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-75"
       aria-hidden="true"
     ></div>
 
-    <div
-      class="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 sm:-top-20"
-      aria-hidden="true"
-    >
-      <div class="w-36 drop-shadow-[0_18px_30px_hsl(var(--foreground)/0.35)] sm:w-44">
+    <div class="pointer-events-none absolute top-2 right-3 z-10 sm:top-3 sm:right-4" aria-hidden="true">
+      <div class="w-20 opacity-95 drop-shadow-[0_10px_18px_hsl(var(--foreground)/0.35)] sm:w-24">
         <img src="/logo.png" alt="" class="h-auto w-full object-contain" />
       </div>
     </div>
