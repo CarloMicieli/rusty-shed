@@ -14,7 +14,6 @@
   import ModelingStep from './steps/ModelingStep.svelte';
   import ImportStep from './steps/ImportStep.svelte';
   import { runLocalArchiveImport } from '$lib/services/import/localImport';
-  import { runGoogleDriveImport } from '$lib/services/import/googleDriveImport';
 
   let { onComplete }: { onComplete: () => void } = $props();
 
@@ -64,17 +63,7 @@
     onComplete();
   }
 
-  async function handleGoogleDriveImport() {
-    flow.isBusy = true;
-    flow.errorMessage = null;
-    const result = await runGoogleDriveImport();
-    flow.isBusy = false;
-
-    if (!result.ok) {
-      flow.errorMessage = result.error ?? m.onboarding_import_drive_failed();
-      return;
-    }
-
+  async function handleCloudRestoreCompleted() {
     onComplete();
   }
 
@@ -148,7 +137,7 @@
           isBusy={flow.isBusy}
           errorMessage={flow.errorMessage}
           onLocalImport={handleLocalImport}
-          onGoogleDriveImport={handleGoogleDriveImport}
+          onCloudRestoreCompleted={handleCloudRestoreCompleted}
           onSkipAndStartFresh={handleSkipAndStartFresh}
         />
       {/if}

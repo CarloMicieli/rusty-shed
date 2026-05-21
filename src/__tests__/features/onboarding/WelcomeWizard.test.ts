@@ -19,9 +19,30 @@ vi.mock('$lib/services/import/localImport', () => ({
   runLocalArchiveImport: mockRunLocalArchiveImport
 }));
 
-const mockRunGoogleDriveImport = vi.hoisted(() => vi.fn());
-vi.mock('$lib/services/import/googleDriveImport', () => ({
-  runGoogleDriveImport: mockRunGoogleDriveImport
+const mockCloudBackupController = vi.hoisted(() => ({
+  backups: [] as Array<{
+    id: string;
+    label: string;
+    createdAt: string;
+    sizeBytes: number;
+    sizeFormatted: string;
+    recordCount: number;
+    isInitial: boolean;
+  }>,
+  isConnected: false,
+  isOnline: true,
+  refreshConnectionStatus: vi.fn().mockResolvedValue(undefined),
+  connectGoogle: vi.fn().mockResolvedValue(undefined),
+  loadBackups: vi.fn().mockResolvedValue(undefined),
+  restoreBackup: vi.fn().mockResolvedValue(undefined)
+}));
+
+vi.mock('$lib/features/cloud-backup', () => ({
+  getCloudBackupController: () => mockCloudBackupController
+}));
+
+vi.mock('$lib/features/cloud-backup/components/RestoreConfirmModal.svelte', () => ({
+  default: function RestoreConfirmModalStub() {}
 }));
 
 describe('WelcomeWizard', () => {
@@ -29,7 +50,12 @@ describe('WelcomeWizard', () => {
     vi.clearAllMocks();
     mockSaveOnboardingSettings.mockResolvedValue({ ok: true, data: {} });
     mockRunLocalArchiveImport.mockResolvedValue({ ok: true });
-    mockRunGoogleDriveImport.mockResolvedValue({ ok: true });
+    mockCloudBackupController.backups = [];
+    mockCloudBackupController.isConnected = false;
+    mockCloudBackupController.isOnline = true;
+    mockCloudBackupController.refreshConnectionStatus.mockResolvedValue(undefined);
+    mockCloudBackupController.connectGoogle.mockResolvedValue(undefined);
+    mockCloudBackupController.loadBackups.mockResolvedValue(undefined);
   });
 
   it('supports Step 1 language and theme interactions', async () => {
@@ -79,8 +105,19 @@ describe('WelcomeWizard', () => {
     await waitFor(() => expect(mockRunLocalArchiveImport).toHaveBeenCalled(), { timeout: 2000 });
   });
 
-  it('shows inline error banner when Google Drive restore fails', async () => {
-    mockRunGoogleDriveImport.mockResolvedValue({ ok: false, error: 'OAuth failed' });
+  it('opens the cloud backup picker when restore from Google Drive is selected', async () => {
+    mockCloudBackupController.backups = [
+      {
+        id: 'backup-1',
+        label: 'Latest Backup',
+        createdAt: '2026-05-21T10:00:00Z',
+        sizeBytes: 1024,
+        sizeFormatted: '1 KB',
+        recordCount: 10,
+        isInitial: false
+      }
+    ];
+    mockCloudBackupController.isConnected = true;
 
     render(WelcomeWizard, { onComplete: vi.fn() });
     await fireEvent.click(screen.getByText('onboarding_continue'));
@@ -88,9 +125,12 @@ describe('WelcomeWizard', () => {
 
     await fireEvent.click(screen.getByText('onboarding_import_drive'));
 
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('OAuth failed'), {
-      timeout: 2000
-    });
+    await waitFor(
+      () => expect(screen.getByText('cloud_backup_backups_title')).toBeInTheDocument(),
+      {
+        timeout: 2000
+      }
+    );
   });
 
   it('applies transition classes to the step panel container', () => {
