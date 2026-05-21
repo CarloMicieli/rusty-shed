@@ -20,6 +20,79 @@ use uuid::Uuid;
 
 const DEFAULT_COLLECTION_ID: &str = "trn:collection:1";
 
+#[derive(Debug, Default)]
+struct NewIdSets {
+    manufacturer_ids: HashSet<String>,
+    model_ids: HashSet<String>,
+    item_ids: HashSet<String>,
+    seller_ids: HashSet<String>,
+    track_product_ids: HashSet<String>,
+    track_inventory_ids: HashSet<String>,
+    formation_category_ids: HashSet<String>,
+    train_formation_ids: HashSet<String>,
+    prototype_ids: HashSet<String>,
+    wishlist_ids: HashSet<String>,
+    decoder_ids: HashSet<String>,
+    digital_roster_ids: HashSet<String>,
+}
+
+fn build_new_id_sets(duplicates: &AllDuplicates) -> NewIdSets {
+    NewIdSets {
+        manufacturer_ids: duplicates
+            .manufacturer_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+        model_ids: duplicates
+            .railway_model_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+        item_ids: duplicates
+            .collection_item_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+        seller_ids: duplicates.seller_dupes.new_ids.iter().cloned().collect(),
+        track_product_ids: duplicates
+            .track_product_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+        track_inventory_ids: duplicates
+            .track_inventory_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+        formation_category_ids: duplicates
+            .formation_category_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+        train_formation_ids: duplicates
+            .train_formation_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+        prototype_ids: duplicates.prototype_dupes.new_ids.iter().cloned().collect(),
+        wishlist_ids: duplicates.wishlist_dupes.new_ids.iter().cloned().collect(),
+        decoder_ids: duplicates.decoder_dupes.new_ids.iter().cloned().collect(),
+        digital_roster_ids: duplicates
+            .digital_roster_dupes
+            .new_ids
+            .iter()
+            .cloned()
+            .collect(),
+    }
+}
+
 fn format_decimal_for_text(value: f64) -> String {
     if value.fract() == 0.0 {
         format!("{value:.0}")
@@ -138,61 +211,8 @@ impl ImportRepository for SqliteImportRepository {
         archive_path: &Path,
         media_dir: &Path,
     ) -> Result<PersistResult, DataManagementError> {
-        // Build HashSets for fast duplicate filtering
-        let new_manufacturer_ids: HashSet<&str> = duplicates
-            .manufacturer_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_model_ids: HashSet<&str> = duplicates
-            .railway_model_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_item_ids: HashSet<&str> = duplicates
-            .collection_item_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_seller_ids: HashSet<&str> = duplicates
-            .seller_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_track_product_ids: HashSet<&str> = duplicates
-            .track_product_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_track_inventory_ids: HashSet<&str> = duplicates
-            .track_inventory_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_formation_category_ids: HashSet<&str> = duplicates
-            .formation_category_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_train_formation_ids: HashSet<&str> = duplicates
-            .train_formation_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-        let new_prototype_ids: HashSet<&str> = duplicates
-            .prototype_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
+        // Build HashSets for fast duplicate filtering.
+        let new_ids = build_new_id_sets(duplicates);
 
         let mut added = RecordCounts::default();
         let mut skipped = RecordCounts::default();
@@ -216,7 +236,7 @@ impl ImportRepository for SqliteImportRepository {
         for m in data
             .manufacturers
             .iter()
-            .filter(|m| new_manufacturer_ids.contains(m.id.as_str()))
+            .filter(|m| new_ids.manufacturer_ids.contains(&m.id))
         {
             let status = schema_manufacturer_status_to_db(m.status.as_deref())?;
             sqlx::query(
@@ -269,7 +289,7 @@ impl ImportRepository for SqliteImportRepository {
         for model in data
             .railway_models
             .iter()
-            .filter(|m| new_model_ids.contains(m.id.as_str()))
+            .filter(|m| new_ids.model_ids.contains(&m.id))
         {
             let power_method = schema_power_method_to_db(&model.power_method)?;
             let category = schema_category_to_db(&model.category)?;
@@ -415,7 +435,7 @@ impl ImportRepository for SqliteImportRepository {
             let dup_model_ids: Vec<&str> = data
                 .railway_models
                 .iter()
-                .filter(|m| !new_model_ids.contains(m.id.as_str()))
+                .filter(|m| !new_ids.model_ids.contains(&m.id))
                 .map(|m| m.id.as_str())
                 .collect();
 
@@ -510,7 +530,7 @@ impl ImportRepository for SqliteImportRepository {
         for seller in data
             .sellers
             .iter()
-            .filter(|s| new_seller_ids.contains(s.id.as_str()))
+            .filter(|s| new_ids.seller_ids.contains(&s.id))
         {
             let seller_type = schema_seller_type_to_db(&seller.seller_type)?;
             sqlx::query(
@@ -536,7 +556,7 @@ impl ImportRepository for SqliteImportRepository {
         for item in data
             .collection_items
             .iter()
-            .filter(|i| new_item_ids.contains(i.id.as_str()))
+            .filter(|i| new_ids.item_ids.contains(&i.id))
         {
             let purchase_condition =
                 schema_purchase_condition_to_db(item.purchase_condition.as_deref())?;
@@ -674,7 +694,7 @@ impl ImportRepository for SqliteImportRepository {
         for product in data
             .track_products
             .iter()
-            .filter(|p| new_track_product_ids.contains(p.track_id.as_str()))
+            .filter(|p| new_ids.track_product_ids.contains(&p.track_id))
         {
             let product_db_id = Uuid::new_v4().to_string();
             sqlx::query(
@@ -706,7 +726,7 @@ impl ImportRepository for SqliteImportRepository {
         for inventory in data
             .track_inventories
             .iter()
-            .filter(|inv| new_track_inventory_ids.contains(inv.id.as_str()))
+            .filter(|inv| new_ids.track_inventory_ids.contains(&inv.id))
         {
             sqlx::query(
                 "INSERT OR IGNORE INTO track_inventories \
@@ -876,7 +896,7 @@ impl ImportRepository for SqliteImportRepository {
         for cat in data
             .formation_categories
             .iter()
-            .filter(|c| new_formation_category_ids.contains(c.id.as_str()))
+            .filter(|c| new_ids.formation_category_ids.contains(&c.id))
         {
             sqlx::query(
                 "INSERT OR IGNORE INTO formation_categories \
@@ -899,7 +919,7 @@ impl ImportRepository for SqliteImportRepository {
         for proto in data
             .prototypes
             .iter()
-            .filter(|p| new_prototype_ids.contains(p.id.as_str()))
+            .filter(|p| new_ids.prototype_ids.contains(&p.id))
         {
             sqlx::query(
                 "INSERT OR IGNORE INTO prototypes \
@@ -940,7 +960,7 @@ impl ImportRepository for SqliteImportRepository {
         for formation in data
             .train_formations
             .iter()
-            .filter(|f| new_train_formation_ids.contains(f.id.as_str()))
+            .filter(|f| new_ids.train_formation_ids.contains(&f.id))
         {
             sqlx::query(
                 "INSERT OR IGNORE INTO train_formations \
@@ -982,17 +1002,10 @@ impl ImportRepository for SqliteImportRepository {
         skipped.train_formations = duplicates.train_formation_dupes.duplicate_count() as u32;
 
         // 12. Insert new wishlists + items
-        let new_wishlist_ids: HashSet<&str> = duplicates
-            .wishlist_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-
         for wishlist in data
             .wishlists
             .iter()
-            .filter(|w| new_wishlist_ids.contains(w.id.as_str()))
+            .filter(|w| new_ids.wishlist_ids.contains(&w.id))
         {
             // Always import with is_default = 0 to avoid overriding the user's existing default
             sqlx::query(
@@ -1038,17 +1051,10 @@ impl ImportRepository for SqliteImportRepository {
         skipped.wishlists = duplicates.wishlist_dupes.duplicate_count() as u32;
 
         // 13. Insert new decoders
-        let new_decoder_ids: HashSet<&str> = duplicates
-            .decoder_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-
         for decoder in data
             .decoders
             .iter()
-            .filter(|d| new_decoder_ids.contains(d.id.as_str()))
+            .filter(|d| new_ids.decoder_ids.contains(&d.id))
         {
             sqlx::query(
                 "INSERT OR IGNORE INTO decoders \
@@ -1070,17 +1076,10 @@ impl ImportRepository for SqliteImportRepository {
         skipped.decoders = duplicates.decoder_dupes.duplicate_count() as u32;
 
         // 14. Insert new digital roster entries
-        let new_roster_ids: HashSet<&str> = duplicates
-            .digital_roster_dupes
-            .new_ids
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
-
         for item in data
             .digital_rolling_stocks
             .iter()
-            .filter(|i| new_roster_ids.contains(i.id.as_str()))
+            .filter(|i| new_ids.digital_roster_ids.contains(&i.id))
         {
             // owned_rolling_stock_id is a DB-internal FK; skip entries whose reference
             // doesn't exist in the target database (same pattern as maintenance card import).
@@ -1227,5 +1226,146 @@ impl ImportRepository for SqliteImportRepository {
             images_imported,
             images_failed,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data_management::infrastructure::DuplicateCheckResult;
+    use sqlx::SqlitePool;
+
+    fn empty_duplicates() -> AllDuplicates {
+        AllDuplicates {
+            manufacturer_dupes: DuplicateCheckResult::default(),
+            railway_model_dupes: DuplicateCheckResult::default(),
+            collection_item_dupes: DuplicateCheckResult::default(),
+            seller_dupes: DuplicateCheckResult::default(),
+            track_product_dupes: DuplicateCheckResult::default(),
+            track_inventory_dupes: DuplicateCheckResult::default(),
+            formation_category_dupes: DuplicateCheckResult::default(),
+            train_formation_dupes: DuplicateCheckResult::default(),
+            prototype_dupes: DuplicateCheckResult::default(),
+            wishlist_dupes: DuplicateCheckResult::default(),
+            decoder_dupes: DuplicateCheckResult::default(),
+            digital_roster_dupes: DuplicateCheckResult::default(),
+        }
+    }
+
+    fn app_repo(pool: SqlitePool) -> SqliteImportRepository {
+        SqliteImportRepository::new(pool)
+    }
+
+    #[test]
+    fn format_decimal_for_text_strips_trailing_zeroes() {
+        assert_eq!(format_decimal_for_text(12.0), "12");
+        assert_eq!(format_decimal_for_text(12.50), "12.5");
+        assert_eq!(format_decimal_for_text(12.125), "12.125");
+    }
+
+    #[test]
+    fn synthesize_rolling_stock_id_includes_optional_road_number() {
+        let with_road = synthesize_rolling_stock_id("m1", "rc1", "s1", Some("r1"), 3);
+        let without_road = synthesize_rolling_stock_id("m1", "rc1", "s1", None, 3);
+
+        assert_eq!(with_road, "rs::m1::rc1::s1::r1::3");
+        assert_eq!(without_road, "rs::m1::rc1::s1::::3");
+    }
+
+    #[test]
+    fn build_new_id_sets_maps_every_duplicate_bucket() {
+        let mut duplicates = empty_duplicates();
+        duplicates.manufacturer_dupes.new_ids = vec!["m1".to_string()];
+        duplicates.railway_model_dupes.new_ids = vec!["rm1".to_string()];
+        duplicates.collection_item_dupes.new_ids = vec!["ci1".to_string()];
+        duplicates.seller_dupes.new_ids = vec!["s1".to_string()];
+        duplicates.track_product_dupes.new_ids = vec!["tp1".to_string()];
+        duplicates.track_inventory_dupes.new_ids = vec!["ti1".to_string()];
+        duplicates.formation_category_dupes.new_ids = vec!["fc1".to_string()];
+        duplicates.train_formation_dupes.new_ids = vec!["tf1".to_string()];
+        duplicates.prototype_dupes.new_ids = vec!["p1".to_string()];
+        duplicates.wishlist_dupes.new_ids = vec!["w1".to_string()];
+        duplicates.decoder_dupes.new_ids = vec!["d1".to_string()];
+        duplicates.digital_roster_dupes.new_ids = vec!["dr1".to_string()];
+
+        let sets = build_new_id_sets(&duplicates);
+
+        assert!(sets.manufacturer_ids.contains("m1"));
+        assert!(sets.model_ids.contains("rm1"));
+        assert!(sets.item_ids.contains("ci1"));
+        assert!(sets.seller_ids.contains("s1"));
+        assert!(sets.track_product_ids.contains("tp1"));
+        assert!(sets.track_inventory_ids.contains("ti1"));
+        assert!(sets.formation_category_ids.contains("fc1"));
+        assert!(sets.train_formation_ids.contains("tf1"));
+        assert!(sets.prototype_ids.contains("p1"));
+        assert!(sets.wishlist_ids.contains("w1"));
+        assert!(sets.decoder_ids.contains("d1"));
+        assert!(sets.digital_roster_ids.contains("dr1"));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn persist_empty_payload_creates_default_collection(pool: SqlitePool) {
+        let repo = app_repo(pool.clone());
+        let data = DataContainerDto::default();
+        let duplicates = empty_duplicates();
+
+        let media_dir = tempfile::tempdir().expect("temp dir should be created");
+
+        let result = repo
+            .persist(
+                &data,
+                &duplicates,
+                Path::new("unused.zip"),
+                media_dir.path(),
+            )
+            .await
+            .expect("persist should succeed for an empty payload");
+
+        assert_eq!(result.images_imported, 0);
+        assert!(result.images_failed.is_empty());
+        assert_eq!(result.added.railway_models, 0);
+        assert_eq!(result.added.collection_items, 0);
+        assert_eq!(result.skipped.railway_models, 0);
+
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM collections WHERE id = ?")
+            .bind(DEFAULT_COLLECTION_ID)
+            .fetch_one(&pool)
+            .await
+            .expect("collections should be queryable");
+
+        assert_eq!(count, 1);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn persist_skips_digital_roster_without_owned_stock(pool: SqlitePool) {
+        let repo = app_repo(pool);
+        let mut data = DataContainerDto::default();
+        data.digital_rolling_stocks.push(
+            crate::data_management::domain::DigitalRollingStockRecord {
+                id: "trn:digital-rolling-stock:1".to_string(),
+                owned_rolling_stock_id: "trn:owned-rolling-stock:missing".to_string(),
+                dcc_address: 3,
+                decoder_id: None,
+            },
+        );
+
+        let mut duplicates = empty_duplicates();
+        duplicates.digital_roster_dupes.new_ids = vec!["trn:digital-rolling-stock:1".to_string()];
+
+        let media_dir = tempfile::tempdir().expect("temp dir should be created");
+
+        let result = repo
+            .persist(
+                &data,
+                &duplicates,
+                Path::new("unused.zip"),
+                media_dir.path(),
+            )
+            .await
+            .expect("persist should succeed and skip dangling digital roster rows");
+
+        assert_eq!(result.added.digital_rolling_stocks, 0);
+        assert_eq!(result.skipped.digital_rolling_stocks, 1);
     }
 }

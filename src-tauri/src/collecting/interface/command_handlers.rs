@@ -258,39 +258,14 @@ pub async fn update_collection_item_inner(
 
     args.validate().map_err(CommandError::from)?;
 
-    let collection_item_id = CollectionItemId::try_from(args.collection_item_id)
-        .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))?;
+    let collection_item_id = parse_collection_item_id(args.collection_item_id)?;
 
     let update = match args.update {
         CollectionItemUpdateArgs::Seller { seller_id } => {
-            let parsed_seller = match seller_id {
-                Some(raw) => Some(
-                    SellerId::try_from(raw.as_str())
-                        .map_err(|_| CommandError::validation_field("seller_id", "invalid"))?,
-                ),
-                None => None,
-            };
-            CollectionItemUpdate::Seller(parsed_seller)
+            CollectionItemUpdate::Seller(parse_optional_seller_id(seller_id)?)
         }
         CollectionItemUpdateArgs::Price { amount, currency } => {
-            let price = match (amount, currency) {
-                (Some(raw_amount), Some(raw_currency)) => {
-                    if raw_amount < 0 {
-                        return Err(CommandError::validation_field("amount", "must_be_positive"));
-                    }
-                    let parsed_currency = Currency::from_code(&raw_currency)
-                        .map_err(|_| CommandError::validation_field("currency", "invalid"))?;
-                    Some(MonetaryAmount::new(raw_amount, parsed_currency))
-                }
-                (None, None) => None,
-                _ => {
-                    return Err(CommandError::validation_field(
-                        "price",
-                        "amount_and_currency_must_be_both_present_or_null",
-                    ));
-                }
-            };
-            CollectionItemUpdate::Price(price)
+            CollectionItemUpdate::Price(parse_optional_price(amount, currency)?)
         }
         CollectionItemUpdateArgs::PurchaseDate { purchase_date } => {
             CollectionItemUpdate::PurchaseDate(purchase_date)
@@ -300,34 +275,15 @@ pub async fn update_collection_item_inner(
         }
         CollectionItemUpdateArgs::Notes { notes } => CollectionItemUpdate::Notes(notes),
         CollectionItemUpdateArgs::PurchaseCondition { purchase_condition } => {
-            let parsed = match purchase_condition {
-                Some(value) => Some(value.parse::<PurchaseCondition>().map_err(|_| {
-                    CommandError::validation_field("purchase_condition", "invalid")
-                })?),
-                None => None,
-            };
-            CollectionItemUpdate::PurchaseCondition(parsed)
+            CollectionItemUpdate::PurchaseCondition(parse_optional_purchase_condition(
+                purchase_condition,
+            )?)
         }
         CollectionItemUpdateArgs::ModelCondition { model_condition } => {
-            let parsed =
-                match model_condition {
-                    Some(value) => Some(value.parse::<ModelCondition>().map_err(|_| {
-                        CommandError::validation_field("model_condition", "invalid")
-                    })?),
-                    None => None,
-                };
-            CollectionItemUpdate::ModelCondition(parsed)
+            CollectionItemUpdate::ModelCondition(parse_optional_model_condition(model_condition)?)
         }
         CollectionItemUpdateArgs::BoxCondition { box_condition } => {
-            let parsed = match box_condition {
-                Some(value) => Some(
-                    value
-                        .parse::<BoxCondition>()
-                        .map_err(|_| CommandError::validation_field("box_condition", "invalid"))?,
-                ),
-                None => None,
-            };
-            CollectionItemUpdate::BoxCondition(parsed)
+            CollectionItemUpdate::BoxCondition(parse_optional_box_condition(box_condition)?)
         }
     };
 
@@ -420,44 +376,11 @@ pub async fn add_railway_model_to_collection_inner(
 
     let railway_model_id = SaveRailwayModel::execute(&mut unit_of_work, save_input).await?;
 
-    // Convert price
-    let currency = Currency::from_code(&args.price_currency)
-        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
-    let price = MonetaryAmount::new(args.price_amount, currency);
-
-    // Seller id
-    let seller_id: Option<SellerId> = match args.seller_id {
-        Some(s) => Some(
-            SellerId::try_from(s.as_str())
-                .map_err(|_| CommandError::validation_field("seller_id", "invalid"))?,
-        ),
-        None => None,
-    };
-
-    // Parse enums
-    let purchase_condition = match args.purchase_condition {
-        Some(s) => Some(
-            s.parse::<PurchaseCondition>()
-                .map_err(|_| CommandError::validation_field("purchase_condition", "invalid"))?,
-        ),
-        None => None,
-    };
-
-    let model_condition = match args.model_condition {
-        Some(s) => Some(
-            s.parse::<ModelCondition>()
-                .map_err(|_| CommandError::validation_field("model_condition", "invalid"))?,
-        ),
-        None => None,
-    };
-
-    let box_condition = match args.box_condition {
-        Some(s) => Some(
-            s.parse::<BoxCondition>()
-                .map_err(|_| CommandError::validation_field("box_condition", "invalid"))?,
-        ),
-        None => None,
-    };
+    let price = parse_price(&args.price_currency, args.price_amount)?;
+    let seller_id = parse_optional_seller_id(args.seller_id.clone())?;
+    let purchase_condition = parse_optional_purchase_condition(args.purchase_condition.clone())?;
+    let model_condition = parse_optional_model_condition(args.model_condition.clone())?;
+    let box_condition = parse_optional_box_condition(args.box_condition.clone())?;
 
     let add_input = DomainAddCollectionItemInput {
         railway_model_id: railway_model_id.clone(), // Clone required: railway_model_id used in execute above and needed here
@@ -512,6 +435,81 @@ pub async fn add_railway_model_to_collection_inner(
     unit_of_work.commit().await?;
 
     Ok(())
+}
+
+fn parse_collection_item_id(raw: String) -> Result<CollectionItemId, CommandError> {
+    CollectionItemId::try_from(raw)
+        .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))
+}
+
+fn parse_optional_seller_id(raw: Option<String>) -> Result<Option<SellerId>, CommandError> {
+    match raw {
+        Some(value) => SellerId::try_from(value.as_str())
+            .map(Some)
+            .map_err(|_| CommandError::validation_field("seller_id", "invalid")),
+        None => Ok(None),
+    }
+}
+
+fn parse_price(price_currency: &str, price_amount: i64) -> Result<MonetaryAmount, CommandError> {
+    let currency = Currency::from_code(price_currency)
+        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+    Ok(MonetaryAmount::new(price_amount, currency))
+}
+
+fn parse_optional_price(
+    amount: Option<i64>,
+    currency: Option<String>,
+) -> Result<Option<MonetaryAmount>, CommandError> {
+    match (amount, currency) {
+        (Some(raw_amount), Some(raw_currency)) => {
+            if raw_amount < 0 {
+                return Err(CommandError::validation_field("amount", "must_be_positive"));
+            }
+            let parsed_currency = Currency::from_code(&raw_currency)
+                .map_err(|_| CommandError::validation_field("currency", "invalid"))?;
+            Ok(Some(MonetaryAmount::new(raw_amount, parsed_currency)))
+        }
+        (None, None) => Ok(None),
+        _ => Err(CommandError::validation_field(
+            "price",
+            "amount_and_currency_must_be_both_present_or_null",
+        )),
+    }
+}
+
+fn parse_optional_purchase_condition(
+    raw: Option<String>,
+) -> Result<Option<PurchaseCondition>, CommandError> {
+    match raw {
+        Some(value) => value
+            .parse::<PurchaseCondition>()
+            .map(Some)
+            .map_err(|_| CommandError::validation_field("purchase_condition", "invalid")),
+        None => Ok(None),
+    }
+}
+
+fn parse_optional_model_condition(
+    raw: Option<String>,
+) -> Result<Option<ModelCondition>, CommandError> {
+    match raw {
+        Some(value) => value
+            .parse::<ModelCondition>()
+            .map(Some)
+            .map_err(|_| CommandError::validation_field("model_condition", "invalid")),
+        None => Ok(None),
+    }
+}
+
+fn parse_optional_box_condition(raw: Option<String>) -> Result<Option<BoxCondition>, CommandError> {
+    match raw {
+        Some(value) => value
+            .parse::<BoxCondition>()
+            .map(Some)
+            .map_err(|_| CommandError::validation_field("box_condition", "invalid")),
+        None => Ok(None),
+    }
 }
 
 /// Simplified flow: save (merge) the railway model and add it to the default collection.
@@ -672,6 +670,7 @@ pub async fn record_acquisition(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::interface::{SimplifiedRailwayModelArgs, SimplifiedRollingStockArgs};
     use chrono::NaiveDate;
     use sqlx::SqlitePool;
 
@@ -747,6 +746,81 @@ mod tests {
         );
     }
 
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn update_collection_item_price_amount_without_currency_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730"
+                .to_string(),
+            update: CollectionItemUpdateArgs::Price {
+                amount: Some(1000),
+                currency: None,
+            },
+        };
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn update_collection_item_price_currency_without_amount_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730"
+                .to_string(),
+            update: CollectionItemUpdateArgs::Price {
+                amount: None,
+                currency: Some("EUR".to_string()),
+            },
+        };
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn update_collection_item_notes_persists(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730"
+                .to_string(),
+            update: CollectionItemUpdateArgs::Notes {
+                notes: Some("Updated notes from test".to_string()),
+            },
+        };
+
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(result.is_ok(), "Expected success, got: {:?}", result);
+
+        let notes: Option<String> =
+            sqlx::query_scalar("SELECT notes FROM collection_items WHERE id = ?1")
+                .bind("trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730")
+                .fetch_one(&pool)
+                .await
+                .expect("notes should be queryable");
+
+        assert_eq!(notes.as_deref(), Some("Updated notes from test"));
+    }
+
     // ── add_collection_item_inner ────────────────────────────────────────
 
     #[sqlx::test(migrations = "./migrations")]
@@ -793,5 +867,117 @@ mod tests {
             "Expected ValidationError, got: {:?}",
             result
         );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures(
+            "../../../fixtures/test_collection.sql",
+            "../../../fixtures/test_seller.sql"
+        )
+    )]
+    async fn add_railway_model_to_collection_happy_path_inserts_item(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let args = AddRailwayModelToCollectionArgs {
+            railway_model: SimplifiedRailwayModelArgs {
+                manufacturer_id: "trn:manufacturer:acme".to_string(),
+                product_code: "NEW-100".to_string(),
+                description: "New model from handler test".to_string(),
+                category: "LOCOMOTIVES".to_string(),
+                scale: "H0".to_string(),
+                epoch: "IV".to_string(),
+                power_method: "DC".to_string(),
+                rolling_stocks: vec![SimplifiedRollingStockArgs {
+                    railway_company_id: "trn:railway-company:fs".to_string(),
+                    series_code: "E.999".to_string(),
+                    road_number: Some("E.999.001".to_string()),
+                    subcategory: Some("ELECTRIC_LOCOMOTIVE".to_string()),
+                    category: "LOCOMOTIVE".to_string(),
+                }],
+            },
+            price_amount: 25000,
+            price_currency: "EUR".to_string(),
+            seller_id: Some("trn:seller:model-train-shop".to_string()),
+            added_date: NaiveDate::from_ymd_opt(2025, 2, 1).expect("valid date"),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 2, 1).expect("valid date"),
+            purchase_condition: Some("NEW".to_string()),
+            model_condition: Some("MINT".to_string()),
+            box_condition: Some("ORIGINAL_MINT".to_string()),
+            notes: Some("Created from add_railway_model_to_collection_inner test".to_string()),
+            purchase_type: None,
+            deposit_amount: None,
+            deposit_currency: None,
+            preorder_total_amount: None,
+            preorder_total_currency: None,
+            expected_date: None,
+        };
+
+        let result = add_railway_model_to_collection_inner(&state, args).await;
+        assert!(result.is_ok(), "Expected success, got: {:?}", result);
+
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(1) FROM collection_items WHERE added_date = ?1")
+                .bind("2025-02-01")
+                .fetch_one(&pool)
+                .await
+                .expect("collection_items should be queryable");
+
+        assert!(count >= 1, "expected at least one inserted collection item");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures(
+            "../../../fixtures/test_collection.sql",
+            "../../../fixtures/test_seller.sql"
+        )
+    )]
+    async fn add_railway_model_to_collection_preorder_updates_purchase_type(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let args = AddRailwayModelToCollectionArgs {
+            railway_model: SimplifiedRailwayModelArgs {
+                manufacturer_id: "trn:manufacturer:acme".to_string(),
+                product_code: "NEW-101".to_string(),
+                description: "Preorder model from handler test".to_string(),
+                category: "LOCOMOTIVES".to_string(),
+                scale: "H0".to_string(),
+                epoch: "IV".to_string(),
+                power_method: "DC".to_string(),
+                rolling_stocks: vec![SimplifiedRollingStockArgs {
+                    railway_company_id: "trn:railway-company:fs".to_string(),
+                    series_code: "E.998".to_string(),
+                    road_number: Some("E.998.001".to_string()),
+                    subcategory: Some("ELECTRIC_LOCOMOTIVE".to_string()),
+                    category: "LOCOMOTIVE".to_string(),
+                }],
+            },
+            price_amount: 1000,
+            price_currency: "EUR".to_string(),
+            seller_id: Some("trn:seller:model-train-shop".to_string()),
+            added_date: NaiveDate::from_ymd_opt(2025, 3, 1).expect("valid date"),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 3, 1).expect("valid date"),
+            purchase_condition: Some("NEW".to_string()),
+            model_condition: Some("MINT".to_string()),
+            box_condition: Some("ORIGINAL_MINT".to_string()),
+            notes: Some("Preorder test".to_string()),
+            purchase_type: Some("PREORDER".to_string()),
+            deposit_amount: Some(200),
+            deposit_currency: Some("EUR".to_string()),
+            preorder_total_amount: Some(1000),
+            preorder_total_currency: Some("EUR".to_string()),
+            expected_date: Some(NaiveDate::from_ymd_opt(2026, 1, 1).expect("valid date")),
+        };
+
+        let result = add_railway_model_to_collection_inner(&state, args).await;
+        assert!(result.is_ok(), "Expected success, got: {:?}", result);
+
+        let purchase_type: Option<String> = sqlx::query_scalar(
+            "SELECT purchase_type FROM purchase_infos ORDER BY ROWID DESC LIMIT 1",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("purchase_infos should be queryable");
+
+        assert_eq!(purchase_type.as_deref(), Some("PREORDER"));
     }
 }
