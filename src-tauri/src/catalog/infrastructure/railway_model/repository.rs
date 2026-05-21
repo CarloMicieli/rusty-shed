@@ -907,6 +907,97 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         self.update_rolling_stock_from_patch(rolling_stock_id, changed)
             .await
     }
+
+    fn map_rolling_stock_row_to_view(cr: RollingStockRow) -> RollingStockView {
+        let railway = RollingStockRailway {
+            railway_company_id: cr.railway_company_id.clone(),
+            display: cr.railway_company_name.clone(),
+            country_code: cr.railway_company_country_code.clone(),
+        };
+
+        let length_over_buffer = reconstruct_length_over_buffers(&cr);
+        let technical_specifications = reconstruct_technical_specifications(&cr);
+
+        match cr.category {
+            RollingStockCategory::Locomotive => RollingStockView::Locomotive {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                depot: cr.depot,
+                locomotive_type: cr.locomotive_type.unwrap_or_default(),
+                dcc_interface: cr.dcc_interface,
+                control: cr.control,
+                is_dummy: cr.is_dummy,
+            },
+            RollingStockCategory::FreightCar => RollingStockView::FreightCar {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                freight_car_type: cr.freight_car_type,
+            },
+            RollingStockCategory::PassengerCar => RollingStockView::PassengerCar {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                passenger_car_type: cr.passenger_car_type,
+                service_level: cr.service_level,
+            },
+            RollingStockCategory::ElectricMultipleUnit => RollingStockView::ElectricMultipleUnit {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                depot: cr.depot,
+                electric_multiple_unit_type: cr.electric_multiple_unit_type.unwrap_or_default(),
+                dcc_interface: cr.dcc_interface,
+                control: cr.control,
+                is_dummy: cr.is_dummy,
+            },
+            RollingStockCategory::Railcar => RollingStockView::Railcar {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                depot: cr.depot,
+                railcar_type: cr.railcar_type.unwrap_or_default(),
+                dcc_interface: cr.dcc_interface,
+                control: cr.control,
+                is_dummy: cr.is_dummy,
+            },
+        }
+    }
 }
 
 #[async_trait::async_trait]
@@ -970,104 +1061,10 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         if let Some(row) = row_opt {
             // fetch rolling stocks
             let child_rows = self.select_rolling_stocks_by_id(id).await?;
-
-            let mut rolling_stock_views = Vec::with_capacity(child_rows.len());
-            for cr in child_rows {
-                let railway = RollingStockRailway {
-                    railway_company_id: cr.railway_company_id.clone(),
-                    display: cr.railway_company_name.clone(),
-                    country_code: cr.railway_company_country_code.clone(),
-                };
-
-                let length_over_buffer = reconstruct_length_over_buffers(&cr);
-                let technical_specifications = reconstruct_technical_specifications(&cr);
-
-                let view = match cr.category {
-                    RollingStockCategory::Locomotive => RollingStockView::Locomotive {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        series: cr.series,
-                        depot: cr.depot,
-                        locomotive_type: cr.locomotive_type.unwrap_or_default(),
-                        dcc_interface: cr.dcc_interface,
-                        control: cr.control,
-                        is_dummy: cr.is_dummy,
-                    },
-                    RollingStockCategory::FreightCar => RollingStockView::FreightCar {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        freight_car_type: cr.freight_car_type,
-                    },
-                    RollingStockCategory::PassengerCar => RollingStockView::PassengerCar {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        series: cr.series,
-                        passenger_car_type: cr.passenger_car_type,
-                        service_level: cr.service_level,
-                    },
-                    RollingStockCategory::ElectricMultipleUnit => {
-                        RollingStockView::ElectricMultipleUnit {
-                            id: cr.id,
-                            railway,
-                            prototype_id: cr.prototype_id,
-                            livery: cr.livery,
-                            length_over_buffer,
-                            technical_specifications,
-                            friendly_name: cr.friendly_name,
-                            series_code: cr.series_code,
-                            road_number: cr.road_number,
-                            series: cr.series,
-                            depot: cr.depot,
-                            electric_multiple_unit_type: cr
-                                .electric_multiple_unit_type
-                                .unwrap_or_default(),
-                            dcc_interface: cr.dcc_interface,
-                            control: cr.control,
-                            is_dummy: cr.is_dummy,
-                        }
-                    }
-                    RollingStockCategory::Railcar => RollingStockView::Railcar {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        series: cr.series,
-                        depot: cr.depot,
-                        railcar_type: cr.railcar_type.unwrap_or_default(),
-                        dcc_interface: cr.dcc_interface,
-                        control: cr.control,
-                        is_dummy: cr.is_dummy,
-                    },
-                };
-
-                rolling_stock_views.push(view);
-            }
+            let rolling_stock_views = child_rows
+                .into_iter()
+                .map(Self::map_rolling_stock_row_to_view)
+                .collect::<Vec<_>>();
 
             let manufacturer = crate::catalog::domain::railway_model::RailwayModelManufacturer {
                 manufacturer_id: row.manufacturer_id,
@@ -1847,6 +1844,44 @@ mod tests {
 
         let is_dummy: i64 = row.get("is_dummy");
         assert_eq!(is_dummy, 1, "is_dummy should be persisted as 1 (true)");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_view_by_id_maps_existing_model_and_rolling_stock(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        let id = RailwayModelId::try_from("trn:railway-model:acme:60100")
+            .expect("valid fixture railway model id");
+
+        let view = repo
+            .find_view_by_id(&id, Language::English)
+            .await
+            .expect("query should succeed")
+            .expect("fixture model should exist");
+
+        assert_eq!(view.id, id);
+        assert_eq!(view.manufacturer.display, "ACME");
+        assert_eq!(view.product_code.to_string(), "60100");
+        assert_eq!(view.description_lang, Language::English);
+        assert!(!view.rolling_stock.is_empty());
+
+        let first = &view.rolling_stock[0];
+        match first {
+            RollingStockView::Locomotive {
+                railway,
+                series_code,
+                locomotive_type,
+                ..
+            } => {
+                assert_eq!(railway.display, "FS");
+                assert!(!series_code.is_empty());
+                assert_eq!(*locomotive_type, LocomotiveType::ElectricLocomotive);
+            }
+            other => panic!("expected locomotive view in fixture, got: {other:?}"),
+        }
     }
 
     #[sqlx::test(

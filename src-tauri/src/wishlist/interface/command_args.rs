@@ -744,6 +744,20 @@ mod tests {
     use crate::wishlist::interface::CreateWishlistArgs;
     use pretty_assertions::assert_eq;
 
+    fn valid_purchase_args() -> PurchaseWishlistArgs {
+        PurchaseWishlistArgs {
+            wishlist_id: "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9".to_string(),
+            wishlist_item_id: "trn:wishlist-item:2af7578c-8857-4894-8c93-0be4b579ff25".to_string(),
+            price_amount: 12990,
+            price_currency: "EUR".to_string(),
+            purchase_date: chrono::NaiveDate::from_ymd_opt(2025, 1, 15).expect("valid date"),
+            seller_id: Some("trn:seller:model-train-shop".to_string()),
+            purchase_condition: Some("NEW".to_string()),
+            model_condition: Some("MINT".to_string()),
+            box_condition: Some("ORIGINAL_MINT".to_string()),
+        }
+    }
+
     #[test]
     fn it_should_create_wishlist_try_from_sets_defaults() {
         let input = CreateWishlistArgs {
@@ -771,5 +785,102 @@ mod tests {
 
         assert_eq!(cmd.name, "List2");
         assert!(cmd.is_default);
+    }
+
+    #[test]
+    fn purchase_wishlist_item_try_from_table_valid_inputs() {
+        let mut base = valid_purchase_args();
+        base.seller_id = None;
+        base.purchase_condition = None;
+        base.model_condition = None;
+        base.box_condition = None;
+
+        let mut with_optional_fields = valid_purchase_args();
+        with_optional_fields.price_currency = "USD".to_string();
+
+        let cases = vec![base, with_optional_fields];
+
+        for input in cases {
+            let result = crate::wishlist::application::purchase_wishlist_item::PurchaseWishlistItemCommand::try_from(input);
+            assert!(result.is_ok(), "expected valid conversion");
+        }
+    }
+
+    #[test]
+    fn purchase_wishlist_item_try_from_table_invalid_inputs() {
+        let cases: Vec<(&str, PurchaseWishlistArgs, &str)> = vec![
+            (
+                "invalid wishlist id",
+                PurchaseWishlistArgs {
+                    wishlist_id: "bad-wishlist-id".to_string(),
+                    ..valid_purchase_args()
+                },
+                "wishlist",
+            ),
+            (
+                "invalid wishlist item id",
+                PurchaseWishlistArgs {
+                    wishlist_item_id: "bad-item-id".to_string(),
+                    ..valid_purchase_args()
+                },
+                "wishlist-item",
+            ),
+            (
+                "invalid currency",
+                PurchaseWishlistArgs {
+                    price_currency: "ZZZ".to_string(),
+                    ..valid_purchase_args()
+                },
+                "currency",
+            ),
+            (
+                "invalid seller id",
+                PurchaseWishlistArgs {
+                    seller_id: Some("bad-seller".to_string()),
+                    ..valid_purchase_args()
+                },
+                "seller",
+            ),
+            (
+                "unknown purchase condition",
+                PurchaseWishlistArgs {
+                    purchase_condition: Some("NOT_A_CONDITION".to_string()),
+                    ..valid_purchase_args()
+                },
+                "purchase_condition",
+            ),
+            (
+                "unknown model condition",
+                PurchaseWishlistArgs {
+                    model_condition: Some("NOT_A_CONDITION".to_string()),
+                    ..valid_purchase_args()
+                },
+                "model_condition",
+            ),
+            (
+                "unknown box condition",
+                PurchaseWishlistArgs {
+                    box_condition: Some("NOT_A_CONDITION".to_string()),
+                    ..valid_purchase_args()
+                },
+                "box_condition",
+            ),
+        ];
+
+        for (label, input, expected_hint) in cases {
+            let result = crate::wishlist::application::purchase_wishlist_item::PurchaseWishlistItemCommand::try_from(input);
+            let err = result.expect_err(label);
+
+            let DomainError::Validation(message) = err else {
+                panic!("{label}: expected validation error");
+            };
+
+            assert!(
+                message
+                    .to_lowercase()
+                    .contains(&expected_hint.to_lowercase()),
+                "{label}: expected message to contain '{expected_hint}', got '{message}'"
+            );
+        }
     }
 }
