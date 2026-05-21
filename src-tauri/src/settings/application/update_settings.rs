@@ -26,9 +26,41 @@ pub fn update_settings(
 ) -> Result<UserSettings, String> {
     let repository = StoreSettingsRepository::new();
 
-    // Load current settings
-    let mut current = repository.load(app)?;
+    update_settings_with_io(
+        input,
+        || repository.load(app),
+        |settings| repository.save(app, settings),
+    )
+}
 
+fn update_settings_with_io<Load, Save>(
+    input: UpdateSettingsInput,
+    load: Load,
+    save: Save,
+) -> Result<UserSettings, String>
+where
+    Load: FnOnce() -> Result<UserSettings, String>,
+    Save: FnOnce(&UserSettings) -> Result<(), String>,
+{
+    let current = load()?;
+    let updated = apply_settings_update(current, input)?;
+    save(&updated)?;
+    Ok(updated)
+}
+
+fn apply_settings_update(
+    mut current: UserSettings,
+    input: UpdateSettingsInput,
+) -> Result<UserSettings, String> {
+    apply_optional_updates(&mut current, input)?;
+    current.validate()?;
+    Ok(current)
+}
+
+fn apply_optional_updates(
+    current: &mut UserSettings,
+    input: UpdateSettingsInput,
+) -> Result<(), String> {
     // Apply updates (only update provided fields)
     if let Some(currency) = input.currency {
         current.set_currency(currency)?;
@@ -52,23 +84,139 @@ pub fn update_settings(
         current.has_completed_onboarding = has_completed_onboarding;
     }
 
-    // Validate merged settings
-    current.validate()?;
-
-    // Save updated settings
-    repository.save(app, &current)?;
-
-    Ok(current)
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::railway_model::PowerMethod;
+    use crate::core::domain::Language;
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_update_settings_input_default() {
         let input = UpdateSettingsInput::default();
         assert!(input.currency.is_none());
         assert!(input.language.is_none());
+    }
+
+    #[test]
+    fn test_apply_settings_update_updates_multiple_fields() {
+        let current = UserSettings::default();
+        let input = UpdateSettingsInput {
+            currency: Some("USD".to_string()),
+            language: Some(Language::Italian),
+            measure_unit: Some(MeasureUnit::Imperial),
+            favourite_scale: Some("N".to_string()),
+            power_method: Some(PowerMethod::AC),
+            theme: Some(AppTheme::System),
+            has_completed_onboarding: Some(true),
+        };
+
+        let updated = apply_settings_update(current, input).expect("update should succeed");
+        assert_eq!(updated.currency, "USD");
+        assert_eq!(updated.language, Language::Italian);
+        assert_eq!(updated.measure_unit, MeasureUnit::Imperial);
+        assert_eq!(updated.favourite_scale, "N");
+        assert_eq!(updated.power_method, PowerMethod::AC);
+        assert_eq!(updated.theme, AppTheme::System);
+        assert!(updated.has_completed_onboarding);
+    }
+
+    #[test]
+    fn test_apply_settings_update_rejects_invalid_currency_before_save() {
+        let current = UserSettings::default();
+        let input = UpdateSettingsInput {
+            currency: Some(String::new()),
+            ..UpdateSettingsInput::default()
+        };
+
+        let error = apply_settings_update(current, input).expect_err("invalid currency expected");
+        assert!(error.contains("Currency must not be empty"));
+    }
+
+    #[test]
+    fn test_apply_settings_update_rejects_invalid_favourite_scale() {
+        let current = UserSettings::default();
+        let input = UpdateSettingsInput {
+            favourite_scale: Some("x".repeat(21)),
+            ..UpdateSettingsInput::default()
+        };
+
+        let error = apply_settings_update(current, input).expect_err("invalid scale expected");
+        assert!(error.contains("Favourite scale must be at most 20 characters"));
+    }
+
+    #[test]
+    fn test_update_settings_with_io_propagates_load_failure() {
+        let error = update_settings_with_io(
+            UpdateSettingsInput::default(),
+            || Err("load failed".to_string()),
+            |_| Ok(()),
+        )
+        .expect_err("load failure expected");
+
+        assert_eq!(error, "load failed");
+    }
+
+    #[test]
+    fn test_update_settings_with_io_propagates_save_failure() {
+        let error = update_settings_with_io(
+            UpdateSettingsInput {
+                currency: Some("USD".to_string()),
+                ..UpdateSettingsInput::default()
+            },
+            || Ok(UserSettings::default()),
+            |_| Err("save failed".to_string()),
+        )
+        .expect_err("save failure expected");
+
+        assert_eq!(error, "save failed");
+    }
+
+    #[test]
+    fn test_update_settings_with_io_saves_updated_state() {
+        let saved = Arc::new(Mutex::new(None::<UserSettings>));
+        let saved_ref = saved.clone();
+
+        let updated = update_settings_with_io(
+            UpdateSettingsInput {
+                currency: Some("USD".to_string()),
+                ..UpdateSettingsInput::default()
+            },
+            || Ok(UserSettings::default()),
+            move |settings| {
+                *saved_ref.lock().expect("saved lock") = Some(settings.clone());
+                Ok(())
+            },
+        )
+        .expect("update should succeed");
+
+        assert_eq!(updated.currency, "USD");
+        let saved_currency = saved
+            .lock()
+            .expect("saved lock")
+            .as_ref()
+            .map(|s| s.currency.clone())
+            .unwrap_or_default();
+        assert_eq!(saved_currency, "USD");
+    }
+
+    #[test]
+    fn test_update_settings_with_io_no_input_preserves_existing_values() {
+        let mut existing = UserSettings::default();
+        existing.currency = "CHF".to_string();
+        existing.language = Language::Italian;
+
+        let updated = update_settings_with_io(
+            UpdateSettingsInput::default(),
+            || Ok(existing.clone()),
+            |_| Ok(()),
+        )
+        .expect("update should succeed");
+
+        assert_eq!(updated.currency, "CHF");
+        assert_eq!(updated.language, Language::Italian);
     }
 }

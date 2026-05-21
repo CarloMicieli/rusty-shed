@@ -15,8 +15,8 @@ use crate::collecting::domain::{
 };
 use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
 use crate::collecting::interface::command_args::{
-    AddRailwayModelToCollectionArgs, ReceivePreorderArgs, RecordAcquisitionArgs,
-    SellCollectionItemArgs,
+    AcquisitionItemArgs, AddRailwayModelToCollectionArgs, ReceivePreorderArgs,
+    RecordAcquisitionArgs, SellCollectionItemArgs,
 };
 use crate::collecting::interface::{
     AddCollectionItemArgs, CollectionItemUpdateArgs, RemoveCollectionItemArgs,
@@ -579,59 +579,9 @@ pub async fn record_acquisition_inner(
 
     args.validate().map_err(CommandError::from)?;
 
-    let purchase_date = NaiveDate::parse_from_str(&args.purchase_date, "%Y-%m-%d")
-        .map_err(|_| CommandError::validation_field("purchase_date", "invalid date format"))?;
-    let today = chrono::Local::now().date_naive();
-    if purchase_date > today {
-        return Err(CommandError::validation_field(
-            "purchase_date",
-            "purchase date cannot be in the future",
-        ));
-    }
-
-    let seller_id: Option<SellerId> = match args.seller_id {
-        Some(s) => Some(
-            SellerId::try_from(s.as_str())
-                .map_err(|_| CommandError::validation_field("seller_id", "invalid"))?,
-        ),
-        None => None,
-    };
-
-    let items = args
-        .items
-        .into_iter()
-        .map(|item| {
-            let manufacturer_id = ManufacturerId::try_from(item.manufacturer_id.as_str())
-                .map_err(|_| CommandError::validation_field("manufacturer_id", "invalid"))?;
-
-            let category = item
-                .category
-                .parse::<Category>()
-                .map_err(|_| CommandError::validation_field("category", "invalid"))?;
-
-            let scale = Scale::try_from(item.scale.as_str())
-                .map_err(|_| CommandError::validation_field("scale", "invalid"))?;
-
-            let power_method = item
-                .power_method
-                .parse::<PowerMethod>()
-                .map_err(|_| CommandError::validation_field("power_method", "invalid"))?;
-
-            let currency = Currency::from_code(&item.price_currency)
-                .map_err(|_| CommandError::validation_field("price_currency", "invalid"))?;
-
-            Ok(AcquisitionItemInput {
-                manufacturer_id,
-                product_code: item.product_code,
-                description: item.description,
-                category,
-                scale,
-                epoch: Epoch(item.epoch),
-                power_method,
-                price: MonetaryAmount::new(item.price_amount, currency),
-            })
-        })
-        .collect::<Result<Vec<_>, CommandError>>()?;
+    let purchase_date = parse_purchase_date(&args.purchase_date)?;
+    let seller_id = parse_optional_acquisition_seller_id(args.seller_id)?;
+    let items = parse_acquisition_items(args.items)?;
 
     let input = RecordAcquisitionInput {
         seller_id,
@@ -655,6 +605,69 @@ pub async fn record_acquisition_inner(
     unit_of_work.commit().await?;
 
     Ok(ids)
+}
+
+fn parse_purchase_date(raw: &str) -> Result<NaiveDate, CommandError> {
+    let purchase_date = NaiveDate::parse_from_str(raw, "%Y-%m-%d")
+        .map_err(|_| CommandError::validation_field("purchase_date", "invalid date format"))?;
+    let today = chrono::Local::now().date_naive();
+    if purchase_date > today {
+        return Err(CommandError::validation_field(
+            "purchase_date",
+            "purchase date cannot be in the future",
+        ));
+    }
+
+    Ok(purchase_date)
+}
+
+fn parse_optional_acquisition_seller_id(
+    raw: Option<String>,
+) -> Result<Option<SellerId>, CommandError> {
+    match raw {
+        Some(value) => SellerId::try_from(value.as_str())
+            .map(Some)
+            .map_err(|_| CommandError::validation_field("seller_id", "invalid")),
+        None => Ok(None),
+    }
+}
+
+fn parse_acquisition_items(
+    items: Vec<AcquisitionItemArgs>,
+) -> Result<Vec<AcquisitionItemInput>, CommandError> {
+    items.into_iter().map(parse_acquisition_item).collect()
+}
+
+fn parse_acquisition_item(item: AcquisitionItemArgs) -> Result<AcquisitionItemInput, CommandError> {
+    let manufacturer_id = ManufacturerId::try_from(item.manufacturer_id.as_str())
+        .map_err(|_| CommandError::validation_field("manufacturer_id", "invalid"))?;
+
+    let category = item
+        .category
+        .parse::<Category>()
+        .map_err(|_| CommandError::validation_field("category", "invalid"))?;
+
+    let scale = Scale::try_from(item.scale.as_str())
+        .map_err(|_| CommandError::validation_field("scale", "invalid"))?;
+
+    let power_method = item
+        .power_method
+        .parse::<PowerMethod>()
+        .map_err(|_| CommandError::validation_field("power_method", "invalid"))?;
+
+    let currency = Currency::from_code(&item.price_currency)
+        .map_err(|_| CommandError::validation_field("price_currency", "invalid"))?;
+
+    Ok(AcquisitionItemInput {
+        manufacturer_id,
+        product_code: item.product_code,
+        description: item.description,
+        category,
+        scale,
+        epoch: Epoch(item.epoch),
+        power_method,
+        price: MonetaryAmount::new(item.price_amount, currency),
+    })
 }
 
 /// Tauri command to record a batch acquisition: upsert catalog entries and add collection items.
@@ -979,5 +992,96 @@ mod tests {
         .expect("purchase_infos should be queryable");
 
         assert_eq!(purchase_type.as_deref(), Some("PREORDER"));
+    }
+
+    // ── record_acquisition_inner ───────────────────────────────────────
+
+    fn valid_record_acquisition_args() -> RecordAcquisitionArgs {
+        RecordAcquisitionArgs {
+            seller_id: None,
+            purchase_date: "2025-06-01".to_string(),
+            items: vec![AcquisitionItemArgs {
+                manufacturer_id: "trn:manufacturer:acme".to_string(),
+                product_code: "60100".to_string(),
+                description: "Steam locomotive".to_string(),
+                category: "LOCOMOTIVES".to_string(),
+                scale: "H0".to_string(),
+                epoch: "IV".to_string(),
+                power_method: "DC".to_string(),
+                price_amount: 5000,
+                price_currency: "EUR".to_string(),
+            }],
+        }
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn record_acquisition_invalid_date_format_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let mut args = valid_record_acquisition_args();
+        args.purchase_date = "06-01-2025".to_string();
+
+        let result = record_acquisition_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn record_acquisition_future_date_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let mut args = valid_record_acquisition_args();
+        args.purchase_date = "2099-12-31".to_string();
+
+        let result = record_acquisition_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn record_acquisition_invalid_seller_id_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let mut args = valid_record_acquisition_args();
+        args.seller_id = Some("not-a-trn".to_string());
+
+        let result = record_acquisition_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn record_acquisition_invalid_category_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let mut args = valid_record_acquisition_args();
+        args.items[0].category = "NOT_A_CATEGORY".to_string();
+
+        let result = record_acquisition_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_railway_model.sql")
+    )]
+    async fn record_acquisition_happy_path_returns_created_ids(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = valid_record_acquisition_args();
+
+        let result = record_acquisition_inner(&state, args)
+            .await
+            .expect("record acquisition should succeed");
+
+        assert_eq!(result.len(), 1);
     }
 }
