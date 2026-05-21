@@ -20,6 +20,13 @@
 
   let config = $state<OnboardingConfig>({ ...onboardingDefaultConfig });
   let flow = $state(createOnboardingFlowState());
+  let stepMetaLine = $derived(
+    flow.currentStep === 1
+      ? m.onboarding_step_1_meta()
+      : flow.currentStep === 2
+        ? m.onboarding_step_2_meta()
+        : m.onboarding_step_3_meta()
+  );
 
   async function handleContinue() {
     if (flow.isBusy) return;
@@ -100,7 +107,10 @@
       aria-hidden="true"
     ></div>
 
-    <div class="pointer-events-none absolute top-2 right-3 z-10 sm:top-3 sm:right-4" aria-hidden="true">
+    <div
+      class="pointer-events-none absolute top-2 right-3 z-10 sm:top-3 sm:right-4"
+      aria-hidden="true"
+    >
       <div class="w-20 opacity-95 drop-shadow-[0_10px_18px_hsl(var(--foreground)/0.35)] sm:w-24">
         <img src="/logo.png" alt="" class="h-auto w-full object-contain" />
       </div>
@@ -111,7 +121,7 @@
         {m.onboarding_title()}
       </h1>
       <p class="font-mono text-[11px] tracking-[0.22em] text-muted-foreground uppercase">
-        SYS.INIT // REGIONAL_CALIBRATION
+        {stepMetaLine}
       </p>
     </header>
 

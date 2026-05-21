@@ -1552,6 +1552,9 @@
   "onboarding_step_1_title": "Regione e Aspetto",
   "onboarding_step_2_title": "Nucleo del Collezionista",
   "onboarding_step_3_title": "Archivio e Sincronizzazione",
+  "onboarding_step_1_meta": "SYS.INIT // REGIONAL_CALIBRATION",
+  "onboarding_step_2_meta": "SYS.INIT // COLLECTOR_CORE",
+  "onboarding_step_3_meta": "SYS.INIT // DATA_MIGRATION",
   "onboarding_step_1_hint": "Imposta lingua e tema visivo prima di entrare nel pannello principale.",
   "onboarding_theme_light_caption": "Profilo turno diurno",
   "onboarding_theme_dark_caption": "Profilo turno notturno",
@@ -1559,9 +1562,14 @@
   "onboarding_step_3_hint": "Importa un archivio esistente o continua con uno spazio di lavoro vuoto.",
   "onboarding_import_local": "Importa archivio locale (.json/.db)",
   "onboarding_import_drive": "Ripristina da Google Drive",
+  "onboarding_import_local_caption": "Monta l'archivio da memoria locale e valida il formato del pacchetto.",
+  "onboarding_import_drive_caption": "Ricollega il canale cloud di backup e sincronizza l'ultima istantanea.",
+  "onboarding_import_local_status": "[LOAD]",
+  "onboarding_import_drive_status": "[SYNC]",
   "onboarding_import_local_failed": "Importazione locale non riuscita. Riprova.",
   "onboarding_import_drive_failed": "Ripristino Google Drive non riuscito. Riprova.",
   "onboarding_continue": "Continua",
   "onboarding_back": "Indietro",
-  "onboarding_skip_start_fresh": "Salta e Inizia da Zero"
+  "onboarding_skip_start_fresh": "Salta e Inizia da Zero",
+  "onboarding_skip_start_fresh_helper": "Salta la migrazione per ora e inizializza un pannello di comando pulito."
 }

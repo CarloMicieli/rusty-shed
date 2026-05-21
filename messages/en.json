@@ -1552,6 +1552,9 @@
   "onboarding_step_1_title": "Regional and Appearance",
   "onboarding_step_2_title": "Collector Core",
   "onboarding_step_3_title": "Archive and Sync",
+  "onboarding_step_1_meta": "SYS.INIT // REGIONAL_CALIBRATION",
+  "onboarding_step_2_meta": "SYS.INIT // COLLECTOR_CORE",
+  "onboarding_step_3_meta": "SYS.INIT // DATA_MIGRATION",
   "onboarding_step_1_hint": "Set your language and visual theme before entering the main shell.",
   "onboarding_theme_light_caption": "Day-shift profile",
   "onboarding_theme_dark_caption": "Night-shift profile",
@@ -1559,9 +1562,14 @@
   "onboarding_step_3_hint": "Import an existing archive or continue with a fresh workspace.",
   "onboarding_import_local": "Import local archive (.json/.db)",
   "onboarding_import_drive": "Restore from Google Drive",
+  "onboarding_import_local_caption": "Mount archive from local storage and validate package format.",
+  "onboarding_import_drive_caption": "Reconnect cloud backup channel and synchronize latest snapshot.",
+  "onboarding_import_local_status": "[LOAD]",
+  "onboarding_import_drive_status": "[SYNC]",
   "onboarding_import_local_failed": "Local import failed. Please try again.",
   "onboarding_import_drive_failed": "Google Drive restore failed. Please try again.",
   "onboarding_continue": "Continue",
   "onboarding_back": "Back",
-  "onboarding_skip_start_fresh": "Skip and Start Fresh"
+  "onboarding_skip_start_fresh": "Skip and Start Fresh",
+  "onboarding_skip_start_fresh_helper": "Bypass migration for now and initialize a clean command deck."
 }
