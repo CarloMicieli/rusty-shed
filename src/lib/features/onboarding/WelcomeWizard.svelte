@@ -86,23 +86,46 @@
 </script>
 
 <div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-background p-6"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-background p-4 sm:p-6"
   role="dialog"
   aria-modal="true"
   tabindex="0"
   onkeydown={handleWizardKeydown}
 >
-  <Card class="w-full max-w-3xl border border-border bg-card p-8 shadow-xl">
-    <header class="mb-6">
-      <h1 class="text-2xl font-bold tracking-tight">{m.onboarding_title()}</h1>
+  <Card
+    class="variant-steampunk-riveted relative w-full max-w-3xl overflow-hidden border border-border bg-card px-5 pt-20 pb-6 shadow-[0_25px_50px_-12px_hsl(var(--foreground)/0.45)] sm:px-8 sm:pt-24 sm:pb-8"
+  >
+    <div
+      class="pointer-events-none absolute top-0 right-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-75"
+      aria-hidden="true"
+    ></div>
+
+    <div
+      class="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 sm:-top-20"
+      aria-hidden="true"
+    >
+      <div class="w-36 drop-shadow-[0_18px_30px_hsl(var(--foreground)/0.35)] sm:w-44">
+        <img src="/logo.png" alt="" class="h-auto w-full object-contain" />
+      </div>
+    </div>
+
+    <header class="mb-6 border-b border-border/50 pb-4">
+      <h1 class="font-bebas text-3xl tracking-widest text-foreground sm:text-4xl">
+        {m.onboarding_title()}
+      </h1>
+      <p class="font-mono text-[11px] tracking-[0.22em] text-muted-foreground uppercase">
+        SYS.INIT // REGIONAL_CALIBRATION
+      </p>
     </header>
 
-    <div class="mb-8 flex items-center gap-3">
+    <div class="mb-8 flex items-center gap-2 sm:gap-3">
       {#each [1, 2, 3] as step (step)}
         <div
           class={[
-            'h-2 flex-1 rounded-full transition-all duration-150',
-            flow.currentStep >= step ? 'bg-primary' : 'bg-muted'
+            'h-2 flex-1 rounded-full border transition-all duration-150',
+            flow.currentStep >= step
+              ? 'border-primary bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.16)]'
+              : 'border-border bg-background'
           ]}
         ></div>
       {/each}

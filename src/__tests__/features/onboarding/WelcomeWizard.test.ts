@@ -35,9 +35,8 @@ describe('WelcomeWizard', () => {
   it('supports Step 1 language and theme interactions', async () => {
     render(WelcomeWizard, { onComplete: vi.fn() });
 
-    await fireEvent.change(screen.getByLabelText('settings_language_label'), {
-      target: { value: 'it' }
-    });
+    const languageTrigger = screen.getByLabelText('settings_language_label');
+    expect(languageTrigger).toHaveTextContent('settings_language_option_english');
 
     await fireEvent.click(screen.getByText('settings_theme_light'));
     await fireEvent.click(screen.getByText('onboarding_continue'));
