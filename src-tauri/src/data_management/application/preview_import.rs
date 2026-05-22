@@ -235,13 +235,81 @@ pub enum PreviewImportError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data_management::application::ports::{
+        AllDuplicates, ImportRepository, PersistResult,
+    };
+    use crate::data_management::domain::DataManagementError;
     use crate::data_management::domain::{
         CollectionItemRecord, DataContainerDto, LocalizedTextRecord, ManifestDto,
         RailwayModelRecord,
     };
+    use crate::data_management::infrastructure::DuplicateCheckResult;
     use std::io::Write;
+    use std::path::Path;
     use tempfile::{Builder, NamedTempFile};
     use zip::write::SimpleFileOptions;
+
+    struct FakeImportRepository {
+        duplicates: AllDuplicates,
+        fail_duplicates: bool,
+    }
+
+    #[async_trait::async_trait]
+    impl ImportRepository for FakeImportRepository {
+        async fn check_duplicates(
+            &self,
+            _data: &DataContainerDto,
+        ) -> Result<AllDuplicates, DataManagementError> {
+            if self.fail_duplicates {
+                return Err(DataManagementError::DatabaseError(
+                    "forced duplicate check failure".to_string(),
+                ));
+            }
+
+            Ok(AllDuplicates {
+                manufacturer_dupes: self.duplicates.manufacturer_dupes.clone(),
+                railway_model_dupes: self.duplicates.railway_model_dupes.clone(),
+                collection_item_dupes: self.duplicates.collection_item_dupes.clone(),
+                seller_dupes: self.duplicates.seller_dupes.clone(),
+                track_product_dupes: self.duplicates.track_product_dupes.clone(),
+                track_inventory_dupes: self.duplicates.track_inventory_dupes.clone(),
+                formation_category_dupes: self.duplicates.formation_category_dupes.clone(),
+                train_formation_dupes: self.duplicates.train_formation_dupes.clone(),
+                prototype_dupes: self.duplicates.prototype_dupes.clone(),
+                wishlist_dupes: self.duplicates.wishlist_dupes.clone(),
+                decoder_dupes: self.duplicates.decoder_dupes.clone(),
+                digital_roster_dupes: self.duplicates.digital_roster_dupes.clone(),
+            })
+        }
+
+        async fn persist(
+            &self,
+            _data: &DataContainerDto,
+            _duplicates: &AllDuplicates,
+            _archive_path: &Path,
+            _media_dir: &Path,
+        ) -> Result<PersistResult, DataManagementError> {
+            unreachable!("persist is not used by PreviewImportUseCase")
+        }
+    }
+
+    fn empty_duplicates() -> AllDuplicates {
+        let empty = DuplicateCheckResult::default();
+        AllDuplicates {
+            manufacturer_dupes: empty.clone(),
+            railway_model_dupes: empty.clone(),
+            collection_item_dupes: empty.clone(),
+            seller_dupes: empty.clone(),
+            track_product_dupes: empty.clone(),
+            track_inventory_dupes: empty.clone(),
+            formation_category_dupes: empty.clone(),
+            train_formation_dupes: empty.clone(),
+            prototype_dupes: empty.clone(),
+            wishlist_dupes: empty.clone(),
+            decoder_dupes: empty.clone(),
+            digital_roster_dupes: empty,
+        }
+    }
 
     fn make_manifest(
         railway_model_images: Vec<Option<&str>>,
@@ -404,5 +472,67 @@ mod tests {
             PreviewImportError::Archive(msg) => assert!(msg.contains("Failed to list archive")),
             other => panic!("expected Archive error, got: {other:?}"),
         }
+    }
+
+    #[tokio::test]
+    async fn test_execute_returns_validation_errors_without_repository_call() {
+        let repo = Arc::new(FakeImportRepository {
+            duplicates: empty_duplicates(),
+            fail_duplicates: true,
+        });
+        let use_case = PreviewImportUseCase::new(repo).expect("use case should initialize");
+
+        // Not a valid manifest schema payload, so execute must return early with errors.
+        let preview = use_case
+            .execute(serde_json::json!({"invalid": true}), None)
+            .await
+            .expect("validation failure should still return ImportPreview");
+
+        assert!(!preview.errors.is_empty());
+        assert!(!preview.can_import());
+    }
+
+    #[tokio::test]
+    async fn test_execute_with_valid_manifest_returns_counts() {
+        let repo = Arc::new(FakeImportRepository {
+            duplicates: empty_duplicates(),
+            fail_duplicates: false,
+        });
+        let use_case = PreviewImportUseCase::new(repo).expect("use case should initialize");
+
+        let mut manifest_json: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/test_import_manifest.json"))
+                .expect("fixture manifest should parse");
+
+        // Fixture uses legacy category payload shape; normalize to current schema.
+        if let Some(models) = manifest_json
+            .pointer_mut("/data/railwayModels")
+            .and_then(|v| v.as_array_mut())
+        {
+            for model in models {
+                if let Some(category_kind) = model
+                    .get("category")
+                    .and_then(|v| v.get("type"))
+                    .and_then(|v| v.as_str())
+                {
+                    model["category"] = serde_json::Value::String(category_kind.to_string());
+                }
+            }
+        }
+
+        let preview = use_case
+            .execute(manifest_json, None)
+            .await
+            .expect("execute should succeed");
+
+        assert!(preview.errors.is_empty());
+        assert!(preview.warnings.is_empty());
+        assert!(preview.can_import());
+        assert_eq!(preview.total_records.railway_models, 2);
+        assert_eq!(preview.total_records.collection_items, 2);
+        assert_eq!(preview.duplicate_records.railway_models, 0);
+        assert_eq!(preview.duplicate_records.collection_items, 0);
+        assert_eq!(preview.new_records.railway_models, 0);
+        assert_eq!(preview.new_records.collection_items, 0);
     }
 }

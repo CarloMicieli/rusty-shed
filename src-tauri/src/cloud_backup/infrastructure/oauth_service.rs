@@ -64,13 +64,29 @@ impl OAuthService {
         pkce_verifier: PkceCodeVerifier,
         redirect_uri: &str,
     ) -> Result<GoogleConnection> {
-        // Exchange authorization code for access token using manual HTTP request
-        // oauth2 v5 has breaking API changes, so we'll implement token exchange manually
-        let token_url = GOOGLE_TOKEN_URL;
-        let http_client = reqwest::Client::new();
+        let token_data = self
+            .exchange_authorization_code(&auth_code, &pkce_verifier, redirect_uri)
+            .await?;
+        let tokens = Self::parse_token_payload(&token_data)?;
 
+        // Fetch user email
+        let email = self.fetch_user_email(tokens.access_token_str()).await?;
+
+        // Store tokens securely
+        self.storage.store_tokens(&email, &tokens).await?;
+
+        Ok(GoogleConnection::new(email))
+    }
+
+    async fn exchange_authorization_code(
+        &self,
+        auth_code: &str,
+        pkce_verifier: &PkceCodeVerifier,
+        redirect_uri: &str,
+    ) -> Result<serde_json::Value> {
+        let http_client = reqwest::Client::new();
         let params = [
-            ("code", auth_code.as_str()),
+            ("code", auth_code),
             ("client_id", self.client_id.as_str()),
             ("code_verifier", pkce_verifier.secret()),
             ("grant_type", "authorization_code"),
@@ -78,7 +94,7 @@ impl OAuthService {
         ];
 
         let response = http_client
-            .post(token_url)
+            .post(GOOGLE_TOKEN_URL)
             .form(&params)
             .send()
             .await
@@ -92,37 +108,27 @@ impl OAuthService {
             )));
         }
 
-        let token_data: serde_json::Value = response
+        response
             .json()
             .await
-            .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))?;
+            .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))
+    }
 
-        // Extract token fields
+    fn parse_token_payload(token_data: &serde_json::Value) -> Result<OAuthTokens> {
         let access_token = token_data["access_token"]
             .as_str()
             .ok_or_else(|| CloudBackupError::TokenExchangeFailed("No access token".to_string()))?
             .to_string();
-
         let refresh_token = token_data["refresh_token"].as_str().map(|s| s.to_string());
-
         let expires_in = token_data["expires_in"].as_i64().unwrap_or(3600);
         let expires_at = chrono::Utc::now().timestamp() + expires_in;
 
-        // Create OAuth tokens
-        let tokens = OAuthTokens::new(
-            access_token.clone(),
+        Ok(OAuthTokens::new(
+            access_token,
             refresh_token,
             expires_at,
             "Bearer".to_string(),
-        );
-
-        // Fetch user email
-        let email = self.fetch_user_email(&access_token).await?;
-
-        // Store tokens securely
-        self.storage.store_tokens(&email, &tokens).await?;
-
-        Ok(GoogleConnection::new(email))
+        ))
     }
 
     /// Refresh expired access token

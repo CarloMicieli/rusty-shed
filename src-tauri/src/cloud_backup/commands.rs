@@ -162,27 +162,11 @@ pub async fn cloud_backup_sync_now_inner(
     app: &tauri::AppHandle,
     state: &AppState,
 ) -> std::result::Result<BackupListItem, CommandError> {
-    // Check if online
-    if !crate::cloud_backup::infrastructure::is_online().await {
-        return Err(CommandError::from(CloudBackupError::OfflineError));
-    }
+    ensure_online_for_sync(crate::cloud_backup::infrastructure::is_online().await)?;
 
-    let user_email = state
-        .connected_email()
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
-
-    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
-    let tokens = storage
-        .retrieve_tokens(&user_email)
-        .await
-        .map_err(CommandError::from)?
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
-
-    // Create Google Drive client wrapped in Arc<dyn DriveClient>
-    let client: Arc<dyn DriveClient + Send + Sync> = Arc::new(GoogleDriveClient::new(
-        GOOGLE_CLIENT_ID.to_string(),
-        tokens.access_token_str().to_string(),
-    ));
+    let user_email = resolve_connected_user_email(state.connected_email())?;
+    let access_token = load_connected_access_token(&user_email).await?;
+    let client = build_google_drive_client(access_token);
 
     let db_pool = state.db_pool();
     let db_path = state.db_path();
@@ -194,7 +178,50 @@ pub async fn cloud_backup_sync_now_inner(
     let result =
         application::sync_backup(app, &db_pool, db_path, client, &state.import_session_store).await;
 
-    match &result {
+    finalize_sync_state(state, &result);
+
+    result.map_err(CommandError::from)
+}
+
+fn ensure_online_for_sync(is_online: bool) -> std::result::Result<(), CommandError> {
+    if !is_online {
+        return Err(CommandError::from(CloudBackupError::OfflineError));
+    }
+
+    Ok(())
+}
+
+fn resolve_connected_user_email(
+    connected_email: Option<String>,
+) -> std::result::Result<String, CommandError> {
+    connected_email.ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))
+}
+
+async fn load_connected_access_token(
+    user_email: &str,
+) -> std::result::Result<String, CommandError> {
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
+    let tokens = storage
+        .retrieve_tokens(user_email)
+        .await
+        .map_err(CommandError::from)?
+        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
+
+    Ok(tokens.access_token_str().to_string())
+}
+
+fn build_google_drive_client(access_token: String) -> Arc<dyn DriveClient + Send + Sync> {
+    Arc::new(GoogleDriveClient::new(
+        GOOGLE_CLIENT_ID.to_string(),
+        access_token,
+    ))
+}
+
+fn finalize_sync_state(
+    state: &AppState,
+    result: &std::result::Result<BackupListItem, CloudBackupError>,
+) {
+    match result {
         Ok(item) => {
             state.set_sync_state(None, false, 100.0, "Backup complete");
             state.set_last_sync_at(Some(item.created_at.clone()));
@@ -203,8 +230,6 @@ pub async fn cloud_backup_sync_now_inner(
             state.set_sync_state(None, false, 0.0, "Backup failed");
         }
     }
-
-    result.map_err(CommandError::from)
 }
 
 /// Sync (backup) to Google Drive
@@ -295,7 +320,34 @@ fn ensure_online_for_restore(is_online: bool) -> std::result::Result<(), Command
 fn resolve_restore_user_email(
     connected_email: Option<String>,
 ) -> std::result::Result<String, CommandError> {
-    connected_email.ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))
+    resolve_connected_user_email(connected_email)
+}
+
+async fn resolve_restore_access_token(
+    oauth_service: &OAuthService,
+    user_email: &str,
+) -> std::result::Result<String, CommandError> {
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
+
+    let tokens = storage
+        .retrieve_tokens(user_email)
+        .await
+        .map_err(CommandError::from)?
+        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
+
+    if tokens.is_expired() {
+        let refreshed = oauth_service
+            .refresh_token(user_email)
+            .await
+            .map_err(CommandError::from)?;
+        storage
+            .store_tokens(user_email, &refreshed)
+            .await
+            .map_err(CommandError::from)?;
+        return Ok(refreshed.access_token_str().to_string());
+    }
+
+    Ok(tokens.access_token_str().to_string())
 }
 
 /// Inner implementation for `cloud_backup_restore`
@@ -313,32 +365,8 @@ pub async fn cloud_backup_restore_inner(
 
     let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
-
-    // Retrieve tokens, refreshing if expired, then build the Drive client
-    let tokens = storage
-        .retrieve_tokens(&user_email)
-        .await
-        .map_err(CommandError::from)?
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
-
-    let access_token = if tokens.is_expired() {
-        let refreshed = oauth_service
-            .refresh_token(&user_email)
-            .await
-            .map_err(CommandError::from)?;
-        storage
-            .store_tokens(&user_email, &refreshed)
-            .await
-            .map_err(CommandError::from)?;
-        refreshed.access_token_str().to_string()
-    } else {
-        tokens.access_token_str().to_string()
-    };
-
-    let drive_client: Arc<dyn DriveClient + Send + Sync> = Arc::new(GoogleDriveClient::new(
-        GOOGLE_CLIENT_ID.to_string(),
-        access_token,
-    ));
+    let access_token = resolve_restore_access_token(&oauth_service, &user_email).await?;
+    let drive_client = build_google_drive_client(access_token);
 
     // Close the pool before replacing the database file to prevent corruption.
     // The frontend will reload the app via the restore-complete event.
