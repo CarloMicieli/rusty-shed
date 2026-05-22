@@ -1,7 +1,7 @@
 use crate::data_management::application::ports::{AllDuplicates, ImportRepository, PersistResult};
 use crate::data_management::domain::{
-    DataContainerDto, DataManagementError, ImageFailure, MaintenanceCardRecord, RecordCounts,
-    RailwayModelRecord,
+    DataContainerDto, DataManagementError, ImageFailure, MaintenanceCardRecord, RailwayModelRecord,
+    RecordCounts,
 };
 use crate::data_management::infrastructure::ArchiveExtractor;
 use crate::data_management::infrastructure::DuplicateChecker;
@@ -553,9 +553,10 @@ impl SqliteImportRepository {
             .iter()
             .map(|f| format!("images/{f}"))
             .collect();
-        let extracted = ArchiveExtractor::extract_files_batch_async(archive_path_owned, entry_paths)
-            .await
-            .map_err(|e| DataManagementError::IoError(e.to_string()))?;
+        let extracted =
+            ArchiveExtractor::extract_files_batch_async(archive_path_owned, entry_paths)
+                .await
+                .map_err(|e| DataManagementError::IoError(e.to_string()))?;
 
         let mut images_imported: u32 = 0;
         let mut images_failed: Vec<ImageFailure> = vec![];
@@ -567,7 +568,8 @@ impl SqliteImportRepository {
                     let dest = media_dir.join(image_filename);
                     if let Err(e) = tokio::fs::write(&dest, &bytes).await {
                         warn!("Failed to write image '{}': {}", image_filename, e);
-                        images_failed.push(ImageFailure::new(image_filename.clone(), e.to_string()));
+                        images_failed
+                            .push(ImageFailure::new(image_filename.clone(), e.to_string()));
                     } else {
                         images_imported += 1;
                     }
@@ -1266,25 +1268,21 @@ mod tests {
     }
 
     async fn seed_minimal_catalog(pool: &SqlitePool) {
-        sqlx::query(
-            "INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)",
-        )
-        .bind("trn:manufacturer:test")
-        .bind("Test Manufacturer")
-        .bind("ACTIVE")
-        .execute(pool)
-        .await
-        .expect("manufacturer seed should succeed");
+        sqlx::query("INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)")
+            .bind("trn:manufacturer:test")
+            .bind("Test Manufacturer")
+            .bind("ACTIVE")
+            .execute(pool)
+            .await
+            .expect("manufacturer seed should succeed");
 
-        sqlx::query(
-            "INSERT INTO railway_companies (id, name, status) VALUES (?, ?, ?)",
-        )
-        .bind("trn:railway-company:test")
-        .bind("Test Railway")
-        .bind("ACTIVE")
-        .execute(pool)
-        .await
-        .expect("railway company seed should succeed");
+        sqlx::query("INSERT INTO railway_companies (id, name, status) VALUES (?, ?, ?)")
+            .bind("trn:railway-company:test")
+            .bind("Test Railway")
+            .bind("ACTIVE")
+            .execute(pool)
+            .await
+            .expect("railway company seed should succeed");
 
         sqlx::query(
             "INSERT INTO railway_models \
@@ -1444,11 +1442,12 @@ mod tests {
 
         assert_eq!(result.added.owned_rolling_stocks, 0);
 
-        let count: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
-            .bind("ors-missing-item")
-            .fetch_one(&pool)
-            .await
-            .expect("owned_rolling_stocks should be queryable");
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
+                .bind("ors-missing-item")
+                .fetch_one(&pool)
+                .await
+                .expect("owned_rolling_stocks should be queryable");
 
         assert_eq!(count, 0);
     }
@@ -1499,11 +1498,12 @@ mod tests {
 
         assert_eq!(result.added.maintenance_cards, 1);
 
-        let ors_count: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
-            .bind("ors-generated-for-card")
-            .fetch_one(&pool)
-            .await
-            .expect("owned_rolling_stocks should be queryable");
+        let ors_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
+                .bind("ors-generated-for-card")
+                .fetch_one(&pool)
+                .await
+                .expect("owned_rolling_stocks should be queryable");
         assert_eq!(ors_count, 1);
 
         let card_count: i64 =
