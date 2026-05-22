@@ -1,6 +1,7 @@
 use crate::data_management::application::ports::{AllDuplicates, ImportRepository, PersistResult};
 use crate::data_management::domain::{
-    DataContainerDto, DataManagementError, ImageFailure, RecordCounts,
+    DataContainerDto, DataManagementError, ImageFailure, MaintenanceCardRecord, RecordCounts,
+    RailwayModelRecord,
 };
 use crate::data_management::infrastructure::ArchiveExtractor;
 use crate::data_management::infrastructure::DuplicateChecker;
@@ -12,7 +13,7 @@ use crate::data_management::infrastructure::schema_mapper::{
 };
 use crate::search::infrastructure::sqlite_global_search_repository::rebuild_search_index;
 use async_trait::async_trait;
-use sqlx::SqlitePool;
+use sqlx::{Sqlite, SqlitePool, Transaction};
 use std::collections::HashSet;
 use std::path::Path;
 use tracing::warn;
@@ -147,6 +148,130 @@ pub struct SqliteImportRepository {
 impl SqliteImportRepository {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
+    }
+
+    async fn exists_by_id(
+        tx: &mut Transaction<'_, Sqlite>,
+        query: &str,
+        id: &str,
+    ) -> Result<bool, DataManagementError> {
+        sqlx::query_scalar(query)
+            .bind(id)
+            .fetch_one(&mut **tx)
+            .await
+            .map(|count: i64| count > 0)
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))
+    }
+
+    async fn insert_rolling_stocks_for_model(
+        tx: &mut Transaction<'_, Sqlite>,
+        model: &RailwayModelRecord,
+        rolling_stock_category: &str,
+    ) -> Result<(), DataManagementError> {
+        for (index, rs) in model.rolling_stocks.iter().enumerate() {
+            let rs_id = rs.id.clone().unwrap_or_else(|| {
+                synthesize_rolling_stock_id(
+                    &model.id,
+                    &rs.railway_company_id,
+                    &rs.series_code,
+                    rs.road_number.as_deref(),
+                    index,
+                )
+            });
+
+            sqlx::query(
+                "INSERT OR IGNORE INTO rolling_stocks \
+                 (id, railway_model_id, category, railway_company_id, series_code, \
+                  series, road_number, friendly_name, depot, livery, \
+                  electric_multiple_unit_type, freight_car_type, locomotive_type, \
+                  passenger_car_type, railcar_type, service_level, length_inches, \
+                  length_millimeters, technical_minimum_radius_mm, technical_coupling_socket, \
+                  technical_coupling_close_couplers, technical_coupling_digital_shunting, \
+                  technical_flywheel_fitted, technical_body_shell, technical_chassis, \
+                  technical_interior_lights, technical_lights, technical_sprung_buffers, \
+                  dcc_interface, control, is_dummy) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&rs_id)
+            .bind(&model.id)
+            .bind(rolling_stock_category)
+            .bind(&rs.railway_company_id)
+            .bind(&rs.series_code)
+            .bind(&rs.series)
+            .bind(&rs.road_number)
+            .bind(&rs.friendly_name)
+            .bind(&rs.depot)
+            .bind(&rs.livery)
+            .bind(&rs.electric_multiple_unit_type)
+            .bind(&rs.freight_car_type)
+            .bind(&rs.locomotive_type)
+            .bind(&rs.passenger_car_type)
+            .bind(&rs.railcar_type)
+            .bind(&rs.service_level)
+            .bind(rs.length_inches.map(format_decimal_for_text))
+            .bind(rs.length_millimeters.map(format_decimal_for_text))
+            .bind(rs.technical_minimum_radius_mm.map(format_decimal_for_text))
+            .bind(&rs.technical_coupling_socket)
+            .bind(&rs.technical_coupling_close_couplers)
+            .bind(&rs.technical_coupling_digital_shunting)
+            .bind(&rs.technical_flywheel_fitted)
+            .bind(&rs.technical_body_shell)
+            .bind(&rs.technical_chassis)
+            .bind(&rs.technical_interior_lights)
+            .bind(&rs.technical_lights)
+            .bind(&rs.technical_sprung_buffers)
+            .bind(&rs.dcc_interface)
+            .bind(&rs.control)
+            .bind(rs.is_dummy.unwrap_or(false) as i64)
+            .execute(&mut **tx)
+            .await
+            .map_err(|e| map_db_error(e, "rolling stock"))?;
+        }
+
+        Ok(())
+    }
+
+    async fn resolve_maintenance_ors_id(
+        tx: &mut Transaction<'_, Sqlite>,
+        card: &MaintenanceCardRecord,
+    ) -> Result<String, DataManagementError> {
+        match &card.owned_rolling_stock_id {
+            Some(existing_id) => {
+                let ors_exists = Self::exists_by_id(
+                    tx,
+                    "SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?",
+                    existing_id,
+                )
+                .await?;
+
+                if ors_exists {
+                    return Ok(existing_id.clone());
+                }
+
+                sqlx::query(
+                    "INSERT OR IGNORE INTO owned_rolling_stocks (id, collection_item_id) VALUES (?, ?)",
+                )
+                .bind(existing_id)
+                .bind(&card.collection_item_id)
+                .execute(&mut **tx)
+                .await
+                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+                Ok(existing_id.clone())
+            }
+            None => {
+                let new_id = Uuid::new_v4().to_string();
+                sqlx::query(
+                    "INSERT INTO owned_rolling_stocks (id, collection_item_id) VALUES (?, ?)",
+                )
+                .bind(&new_id)
+                .bind(&card.collection_item_id)
+                .execute(&mut **tx)
+                .await
+                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                Ok(new_id)
+            }
+        }
     }
 }
 
@@ -348,64 +473,7 @@ impl ImportRepository for SqliteImportRepository {
             }
 
             let rolling_stock_category = model_category_to_rolling_stock_category(category);
-            for (index, rs) in model.rolling_stocks.iter().enumerate() {
-                let rs_id = rs.id.clone().unwrap_or_else(|| {
-                    synthesize_rolling_stock_id(
-                        &model.id,
-                        &rs.railway_company_id,
-                        &rs.series_code,
-                        rs.road_number.as_deref(),
-                        index,
-                    )
-                });
-                sqlx::query(
-                    "INSERT OR IGNORE INTO rolling_stocks \
-                     (id, railway_model_id, category, railway_company_id, series_code, \
-                      series, road_number, friendly_name, depot, livery, \
-                      electric_multiple_unit_type, freight_car_type, locomotive_type, \
-                      passenger_car_type, railcar_type, service_level, length_inches, \
-                      length_millimeters, technical_minimum_radius_mm, technical_coupling_socket, \
-                      technical_coupling_close_couplers, technical_coupling_digital_shunting, \
-                      technical_flywheel_fitted, technical_body_shell, technical_chassis, \
-                      technical_interior_lights, technical_lights, technical_sprung_buffers, \
-                      dcc_interface, control, is_dummy) \
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                )
-                .bind(&rs_id)
-                .bind(&model.id)
-                .bind(rolling_stock_category)
-                .bind(&rs.railway_company_id)
-                .bind(&rs.series_code)
-                .bind(&rs.series)
-                .bind(&rs.road_number)
-                .bind(&rs.friendly_name)
-                .bind(&rs.depot)
-                .bind(&rs.livery)
-                .bind(&rs.electric_multiple_unit_type)
-                .bind(&rs.freight_car_type)
-                .bind(&rs.locomotive_type)
-                .bind(&rs.passenger_car_type)
-                .bind(&rs.railcar_type)
-                .bind(&rs.service_level)
-                .bind(rs.length_inches.map(format_decimal_for_text))
-                .bind(rs.length_millimeters.map(format_decimal_for_text))
-                .bind(rs.technical_minimum_radius_mm.map(format_decimal_for_text))
-                .bind(&rs.technical_coupling_socket)
-                .bind(&rs.technical_coupling_close_couplers)
-                .bind(&rs.technical_coupling_digital_shunting)
-                .bind(&rs.technical_flywheel_fitted)
-                .bind(&rs.technical_body_shell)
-                .bind(&rs.technical_chassis)
-                .bind(&rs.technical_interior_lights)
-                .bind(&rs.technical_lights)
-                .bind(&rs.technical_sprung_buffers)
-                .bind(&rs.dcc_interface)
-                .bind(&rs.control)
-                .bind(rs.is_dummy.unwrap_or(false) as i64)
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| map_db_error(e, "rolling stock"))?;
-            }
+            Self::insert_rolling_stocks_for_model(&mut tx, model, rolling_stock_category).await?;
         }
 
         added.railway_models = duplicates.railway_model_dupes.new_count() as u32;
@@ -464,64 +532,8 @@ impl ImportRepository for SqliteImportRepository {
                 {
                     let category = schema_category_to_db(&model.category)?;
                     let rolling_stock_category = model_category_to_rolling_stock_category(category);
-                    for (index, rs) in model.rolling_stocks.iter().enumerate() {
-                        let rs_id = rs.id.clone().unwrap_or_else(|| {
-                            synthesize_rolling_stock_id(
-                                &model.id,
-                                &rs.railway_company_id,
-                                &rs.series_code,
-                                rs.road_number.as_deref(),
-                                index,
-                            )
-                        });
-                        sqlx::query(
-                            "INSERT OR IGNORE INTO rolling_stocks \
-                             (id, railway_model_id, category, railway_company_id, series_code, \
-                              series, road_number, friendly_name, depot, livery, \
-                              electric_multiple_unit_type, freight_car_type, locomotive_type, \
-                              passenger_car_type, railcar_type, service_level, length_inches, \
-                              length_millimeters, technical_minimum_radius_mm, technical_coupling_socket, \
-                              technical_coupling_close_couplers, technical_coupling_digital_shunting, \
-                              technical_flywheel_fitted, technical_body_shell, technical_chassis, \
-                              technical_interior_lights, technical_lights, technical_sprung_buffers, \
-                              dcc_interface, control, is_dummy) \
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        )
-                        .bind(&rs_id)
-                        .bind(&model.id)
-                        .bind(rolling_stock_category)
-                        .bind(&rs.railway_company_id)
-                        .bind(&rs.series_code)
-                        .bind(&rs.series)
-                        .bind(&rs.road_number)
-                        .bind(&rs.friendly_name)
-                        .bind(&rs.depot)
-                        .bind(&rs.livery)
-                        .bind(&rs.electric_multiple_unit_type)
-                        .bind(&rs.freight_car_type)
-                        .bind(&rs.locomotive_type)
-                        .bind(&rs.passenger_car_type)
-                        .bind(&rs.railcar_type)
-                        .bind(&rs.service_level)
-                        .bind(rs.length_inches.map(format_decimal_for_text))
-                        .bind(rs.length_millimeters.map(format_decimal_for_text))
-                        .bind(rs.technical_minimum_radius_mm.map(format_decimal_for_text))
-                        .bind(&rs.technical_coupling_socket)
-                        .bind(&rs.technical_coupling_close_couplers)
-                        .bind(&rs.technical_coupling_digital_shunting)
-                        .bind(&rs.technical_flywheel_fitted)
-                        .bind(&rs.technical_body_shell)
-                        .bind(&rs.technical_chassis)
-                        .bind(&rs.technical_interior_lights)
-                        .bind(&rs.technical_lights)
-                        .bind(&rs.technical_sprung_buffers)
-                        .bind(&rs.dcc_interface)
-                        .bind(&rs.control)
-                        .bind(rs.is_dummy.unwrap_or(false) as i64)
-                        .execute(&mut *tx)
-                        .await
-                        .map_err(|e| map_db_error(e, "rolling stock"))?;
-                    }
+                    Self::insert_rolling_stocks_for_model(&mut tx, model, rolling_stock_category)
+                        .await?;
                 }
             }
         }
@@ -632,13 +644,12 @@ impl ImportRepository for SqliteImportRepository {
         // Uses INSERT OR IGNORE to be idempotent on re-import.
         let mut added_ors = 0u32;
         for ors in &data.owned_rolling_stocks {
-            let item_exists: bool =
-                sqlx::query_scalar("SELECT COUNT(1) FROM collection_items WHERE id = ?")
-                    .bind(&ors.collection_item_id)
-                    .fetch_one(&mut *tx)
-                    .await
-                    .map(|count: i64| count > 0)
-                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            let item_exists = Self::exists_by_id(
+                &mut tx,
+                "SELECT COUNT(1) FROM collection_items WHERE id = ?",
+                &ors.collection_item_id,
+            )
+            .await?;
 
             if !item_exists {
                 warn!(
@@ -652,13 +663,12 @@ impl ImportRepository for SqliteImportRepository {
             // inserting.  INSERT OR IGNORE does NOT suppress FK violations in SQLite (only
             // PK/UNIQUE/NOT NULL), so a dangling reference would produce error 787.
             if let Some(ref rs_id) = ors.rolling_stock_id {
-                let rs_exists: bool =
-                    sqlx::query_scalar("SELECT COUNT(1) FROM rolling_stocks WHERE id = ?")
-                        .bind(rs_id)
-                        .fetch_one(&mut *tx)
-                        .await
-                        .map(|count: i64| count > 0)
-                        .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                let rs_exists = Self::exists_by_id(
+                    &mut tx,
+                    "SELECT COUNT(1) FROM rolling_stocks WHERE id = ?",
+                    rs_id,
+                )
+                .await?;
 
                 if !rs_exists {
                     warn!(
@@ -781,26 +791,24 @@ impl ImportRepository for SqliteImportRepository {
 
         // 8. Import maintenance cards via owned_rolling_stocks bridge
         for card in &data.maintenance_cards {
-            let card_exists: bool =
-                sqlx::query_scalar("SELECT COUNT(1) FROM maintenance_cards WHERE id = ?")
-                    .bind(&card.id)
-                    .fetch_one(&mut *tx)
-                    .await
-                    .map(|count: i64| count > 0)
-                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            let card_exists = Self::exists_by_id(
+                &mut tx,
+                "SELECT COUNT(1) FROM maintenance_cards WHERE id = ?",
+                &card.id,
+            )
+            .await?;
 
             if card_exists {
                 skipped.maintenance_cards += 1;
                 continue;
             }
 
-            let item_exists: bool =
-                sqlx::query_scalar("SELECT COUNT(1) FROM collection_items WHERE id = ?")
-                    .bind(&card.collection_item_id)
-                    .fetch_one(&mut *tx)
-                    .await
-                    .map(|count: i64| count > 0)
-                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            let item_exists = Self::exists_by_id(
+                &mut tx,
+                "SELECT COUNT(1) FROM collection_items WHERE id = ?",
+                &card.collection_item_id,
+            )
+            .await?;
 
             if !item_exists {
                 warn!(
@@ -811,54 +819,7 @@ impl ImportRepository for SqliteImportRepository {
                 continue;
             }
 
-            // Resolve the owned_rolling_stock id for this maintenance card.
-            // New-format archives carry the original `owned_rolling_stock_id`; when that row
-            // was already inserted by step 5.5 we reuse it directly.  For old-format archives
-            // (field absent) or when the ORS row is missing, fall back to creating a minimal
-            // owned_rolling_stocks row so the maintenance card FK is satisfied.
-            let ors_id = match &card.owned_rolling_stock_id {
-                Some(existing_id) => {
-                    let ors_exists: bool = sqlx::query_scalar(
-                        "SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?",
-                    )
-                    .bind(existing_id)
-                    .fetch_one(&mut *tx)
-                    .await
-                    .map(|count: i64| count > 0)
-                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
-
-                    if ors_exists {
-                        // Step 5.5 already inserted the full row — nothing more to do.
-                        existing_id.clone()
-                    } else {
-                        // ORS not present (e.g. maintenance-only export without collection items).
-                        // Insert a minimal bridge row to satisfy the FK.
-                        sqlx::query(
-                            "INSERT OR IGNORE INTO owned_rolling_stocks \
-                             (id, collection_item_id) VALUES (?, ?)",
-                        )
-                        .bind(existing_id)
-                        .bind(&card.collection_item_id)
-                        .execute(&mut *tx)
-                        .await
-                        .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
-                        existing_id.clone()
-                    }
-                }
-                None => {
-                    // Old-format archive: generate a fresh id and create a minimal ORS row.
-                    let new_id = Uuid::new_v4().to_string();
-                    sqlx::query(
-                        "INSERT INTO owned_rolling_stocks (id, collection_item_id) VALUES (?, ?)",
-                    )
-                    .bind(&new_id)
-                    .bind(&card.collection_item_id)
-                    .execute(&mut *tx)
-                    .await
-                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
-                    new_id
-                }
-            };
+            let ors_id = Self::resolve_maintenance_ors_id(&mut tx, card).await?;
 
             sqlx::query(
                 "INSERT INTO maintenance_cards \
@@ -1083,13 +1044,12 @@ impl ImportRepository for SqliteImportRepository {
         {
             // owned_rolling_stock_id is a DB-internal FK; skip entries whose reference
             // doesn't exist in the target database (same pattern as maintenance card import).
-            let ors_exists: bool =
-                sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
-                    .bind(&item.owned_rolling_stock_id)
-                    .fetch_one(&mut *tx)
-                    .await
-                    .map(|count: i64| count > 0)
-                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            let ors_exists = Self::exists_by_id(
+                &mut tx,
+                "SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?",
+                &item.owned_rolling_stock_id,
+            )
+            .await?;
 
             if !ors_exists {
                 warn!(
@@ -1232,6 +1192,10 @@ impl ImportRepository for SqliteImportRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data_management::domain::{
+        CollectionItemRecord, LocalizedTextRecord, MaintenanceCardRecord, MoneyRecord,
+        PurchaseRecord, RailwayCompanyRecord, RailwayModelRecord,
+    };
     use crate::data_management::infrastructure::DuplicateCheckResult;
     use sqlx::SqlitePool;
 
@@ -1254,6 +1218,44 @@ mod tests {
 
     fn app_repo(pool: SqlitePool) -> SqliteImportRepository {
         SqliteImportRepository::new(pool)
+    }
+
+    async fn seed_minimal_catalog(pool: &SqlitePool) {
+        sqlx::query(
+            "INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)",
+        )
+        .bind("trn:manufacturer:test")
+        .bind("Test Manufacturer")
+        .bind("ACTIVE")
+        .execute(pool)
+        .await
+        .expect("manufacturer seed should succeed");
+
+        sqlx::query(
+            "INSERT INTO railway_companies (id, name, status) VALUES (?, ?, ?)",
+        )
+        .bind("trn:railway-company:test")
+        .bind("Test Railway")
+        .bind("ACTIVE")
+        .execute(pool)
+        .await
+        .expect("railway company seed should succeed");
+
+        sqlx::query(
+            "INSERT INTO railway_models \
+             (id, manufacturer_id, product_code, power_method, scale, epoch, category) \
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("trn:railway-model:test:001")
+        .bind("trn:manufacturer:test")
+        .bind("T-001")
+        .bind("DC")
+        .bind("H0")
+        .bind("VI")
+        .bind("LOCOMOTIVES")
+        .execute(pool)
+        .await
+        .expect("railway model seed should succeed");
     }
 
     #[test]
@@ -1367,5 +1369,209 @@ mod tests {
 
         assert_eq!(result.added.digital_rolling_stocks, 0);
         assert_eq!(result.skipped.digital_rolling_stocks, 1);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn persist_skips_owned_rolling_stock_when_collection_item_missing(pool: SqlitePool) {
+        let repo = app_repo(pool.clone());
+        let mut data = DataContainerDto::default();
+        data.owned_rolling_stocks
+            .push(crate::data_management::domain::OwnedRollingStockRecord {
+                id: "ors-missing-item".to_string(),
+                collection_item_id: "trn:collection-item:missing".to_string(),
+                rolling_stock_id: None,
+                notes: None,
+                dcc_address: None,
+                installed_decoder_id: None,
+                current_coupler_id: None,
+            });
+
+        let media_dir = tempfile::tempdir().expect("temp dir should be created");
+        let result = repo
+            .persist(
+                &data,
+                &empty_duplicates(),
+                Path::new("unused.zip"),
+                media_dir.path(),
+            )
+            .await
+            .expect("persist should succeed and skip dangling owned rolling stock");
+
+        assert_eq!(result.added.owned_rolling_stocks, 0);
+
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
+            .bind("ors-missing-item")
+            .fetch_one(&pool)
+            .await
+            .expect("owned_rolling_stocks should be queryable");
+
+        assert_eq!(count, 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn persist_creates_minimal_ors_for_maintenance_card_when_missing(pool: SqlitePool) {
+        seed_minimal_catalog(&pool).await;
+        sqlx::query("INSERT INTO collections (id, name) VALUES (?, ?)")
+            .bind(DEFAULT_COLLECTION_ID)
+            .bind("My Collection")
+            .execute(&pool)
+            .await
+            .expect("collection seed should succeed");
+
+        sqlx::query(
+            "INSERT INTO collection_items \
+             (id, collection_id, railway_model_id, added_date) VALUES (?, ?, ?, ?)",
+        )
+        .bind("trn:collection-item:test:001")
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind("trn:railway-model:test:001")
+        .bind("2025-01-10")
+        .execute(&pool)
+        .await
+        .expect("collection item seed should succeed");
+
+        let repo = app_repo(pool.clone());
+        let mut data = DataContainerDto::default();
+        data.maintenance_cards.push(MaintenanceCardRecord {
+            id: "trn:maintenance-card:test:001".to_string(),
+            collection_item_id: "trn:collection-item:test:001".to_string(),
+            owned_rolling_stock_id: Some("ors-generated-for-card".to_string()),
+            last_maintenance_date: Some("2025-01-11".to_string()),
+            next_maintenance_date: None,
+            events: vec![],
+        });
+
+        let media_dir = tempfile::tempdir().expect("temp dir should be created");
+        let result = repo
+            .persist(
+                &data,
+                &empty_duplicates(),
+                Path::new("unused.zip"),
+                media_dir.path(),
+            )
+            .await
+            .expect("persist should create minimal ORS and maintenance card");
+
+        assert_eq!(result.added.maintenance_cards, 1);
+
+        let ors_count: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
+            .bind("ors-generated-for-card")
+            .fetch_one(&pool)
+            .await
+            .expect("owned_rolling_stocks should be queryable");
+        assert_eq!(ors_count, 1);
+
+        let card_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(1) FROM maintenance_cards WHERE id = ?")
+                .bind("trn:maintenance-card:test:001")
+                .fetch_one(&pool)
+                .await
+                .expect("maintenance_cards should be queryable");
+        assert_eq!(card_count, 1);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn persist_recomputes_collection_summary_from_imported_rows(pool: SqlitePool) {
+        let repo = app_repo(pool.clone());
+        let mut data = DataContainerDto::default();
+
+        data.manufacturers
+            .push(crate::data_management::domain::ManufacturerRecord {
+                id: "trn:manufacturer:sum".to_string(),
+                name: "Summary Manufacturer".to_string(),
+                registered_company_name: None,
+                country_code: None,
+                status: Some("ACTIVE".to_string()),
+                website_url: None,
+                street_address: None,
+                extended_address: None,
+                city: None,
+                state_region: None,
+                postal_code: None,
+            });
+
+        data.railway_companies.push(RailwayCompanyRecord {
+            id: "trn:railway-company:sum".to_string(),
+            name: "Summary Railway".to_string(),
+            country_code: None,
+            status: Some("ACTIVE".to_string()),
+            operating_since: None,
+            operating_until: None,
+        });
+
+        data.railway_models.push(RailwayModelRecord {
+            id: "trn:railway-model:sum:001".to_string(),
+            manufacturer_id: "trn:manufacturer:sum".to_string(),
+            product_code: "SUM-001".to_string(),
+            description: LocalizedTextRecord {
+                en: Some("Summary model".to_string()),
+                it: None,
+            },
+            scale: "H0".to_string(),
+            epoch: "VI".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            power_method: "DC".to_string(),
+            details: None,
+            delivery_date: None,
+            availability_status: None,
+            image: None,
+            rolling_stocks: vec![],
+        });
+
+        data.collection_items.push(CollectionItemRecord {
+            id: "trn:collection-item:sum:001".to_string(),
+            railway_model_id: "trn:railway-model:sum:001".to_string(),
+            added_date: "2025-02-10".to_string(),
+            removed_date: None,
+            purchase_condition: Some("NEW".to_string()),
+            model_condition: Some("MINT".to_string()),
+            box_condition: Some("ORIGINAL_MINT".to_string()),
+            notes: None,
+            image: None,
+            purchase: Some(PurchaseRecord {
+                r#type: "PURCHASED".to_string(),
+                purchase_date: Some("2025-02-10".to_string()),
+                price: Some(MoneyRecord {
+                    amount: 1234,
+                    currency: "EUR".to_string(),
+                }),
+                seller_id: None,
+                sale_date: None,
+                sale_price: None,
+                deposit_amount: None,
+                expected_delivery: None,
+            }),
+        });
+
+        let mut duplicates = empty_duplicates();
+        duplicates.manufacturer_dupes.new_ids = vec!["trn:manufacturer:sum".to_string()];
+        duplicates.railway_model_dupes.new_ids = vec!["trn:railway-model:sum:001".to_string()];
+        duplicates.collection_item_dupes.new_ids = vec!["trn:collection-item:sum:001".to_string()];
+
+        let media_dir = tempfile::tempdir().expect("temp dir should be created");
+        repo.persist(
+            &data,
+            &duplicates,
+            Path::new("unused.zip"),
+            media_dir.path(),
+        )
+        .await
+        .expect("persist should succeed for summary recompute scenario");
+
+        let locomotives_count: i64 =
+            sqlx::query_scalar("SELECT locomotives_count FROM collections WHERE id = ?")
+                .bind(DEFAULT_COLLECTION_ID)
+                .fetch_one(&pool)
+                .await
+                .expect("collections summary should be queryable");
+        assert_eq!(locomotives_count, 1);
+
+        let total_value_amount: i64 =
+            sqlx::query_scalar("SELECT total_value_amount FROM collections WHERE id = ?")
+                .bind(DEFAULT_COLLECTION_ID)
+                .fetch_one(&pool)
+                .await
+                .expect("collections total value should be queryable");
+        assert_eq!(total_value_amount, 1234);
     }
 }
