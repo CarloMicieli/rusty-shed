@@ -160,9 +160,14 @@ mod tests {
         let storage = Arc::new(TestStorage::new(None));
         let oauth_service = OAuthService::new("test-client".to_string(), storage.clone());
 
-        let err = list_backups(ListBackupsArgs {}, &oauth_service, storage.as_ref(), "user@test")
-            .await
-            .expect_err("missing tokens should fail");
+        let err = list_backups(
+            ListBackupsArgs {},
+            &oauth_service,
+            storage.as_ref(),
+            "user@test",
+        )
+        .await
+        .expect_err("missing tokens should fail");
 
         assert!(matches!(err, CloudBackupError::NotConnected));
     }
@@ -179,9 +184,14 @@ mod tests {
         let storage = Arc::new(TestStorage::new(Some(expired_tokens)));
         let oauth_service = OAuthService::new("test-client".to_string(), storage.clone());
 
-        let err = list_backups(ListBackupsArgs {}, &oauth_service, storage.as_ref(), "user@test")
-            .await
-            .expect_err("expired token without refresh token should fail");
+        let err = list_backups(
+            ListBackupsArgs {},
+            &oauth_service,
+            storage.as_ref(),
+            "user@test",
+        )
+        .await
+        .expect_err("expired token without refresh token should fail");
 
         assert!(matches!(err, CloudBackupError::TokenExpired));
     }
