@@ -273,6 +273,314 @@ impl SqliteImportRepository {
             }
         }
     }
+
+    async fn ensure_default_collection(
+        tx: &mut Transaction<'_, Sqlite>,
+    ) -> Result<(), DataManagementError> {
+        sqlx::query("INSERT OR IGNORE INTO collections (id, name) VALUES (?, ?)")
+            .bind(DEFAULT_COLLECTION_ID)
+            .bind("My Collection")
+            .execute(&mut **tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn persist_collection_items(
+        tx: &mut Transaction<'_, Sqlite>,
+        data: &DataContainerDto,
+        new_ids: &NewIdSets,
+        pending_images: &mut Vec<String>,
+    ) -> Result<(), DataManagementError> {
+        for item in data
+            .collection_items
+            .iter()
+            .filter(|i| new_ids.item_ids.contains(&i.id))
+        {
+            let purchase_condition =
+                schema_purchase_condition_to_db(item.purchase_condition.as_deref())?;
+            let model_condition = schema_model_condition_to_db(item.model_condition.as_deref())?;
+            let box_condition = schema_box_condition_to_db(item.box_condition.as_deref())?;
+
+            sqlx::query(
+                "INSERT OR IGNORE INTO collection_items \
+                 (id, collection_id, railway_model_id, added_date, removed_date, \
+                  purchase_condition, model_condition, box_condition, notes) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&item.id)
+            .bind(DEFAULT_COLLECTION_ID)
+            .bind(&item.railway_model_id)
+            .bind(&item.added_date)
+            .bind(&item.removed_date)
+            .bind(purchase_condition)
+            .bind(model_condition)
+            .bind(box_condition)
+            .bind(&item.notes)
+            .execute(&mut **tx)
+            .await
+            .map_err(|e| map_db_error(e, "collection item"))?;
+
+            if let Some(ref image_filename) = item.image {
+                pending_images.push(image_filename.clone());
+            }
+
+            if let Some(ref purchase) = item.purchase {
+                let purchase_date = purchase
+                    .purchase_date
+                    .as_deref()
+                    .unwrap_or(item.added_date.as_str());
+                let purchase_id = Uuid::new_v4().to_string();
+                let purchase_type = schema_purchase_type_to_db(&purchase.r#type)?;
+
+                sqlx::query(
+                    "INSERT OR IGNORE INTO purchase_infos \
+                     (id, collection_item_id, purchase_type, purchase_date, seller_id, \
+                      purchased_price_amount, purchased_price_currency, \
+                      sale_date, sale_price_amount, sale_price_currency, \
+                      deposit_amount, deposit_currency, expected_date) \
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                )
+                .bind(&purchase_id)
+                .bind(&item.id)
+                .bind(purchase_type)
+                .bind(purchase_date)
+                .bind(&purchase.seller_id)
+                .bind(purchase.price.as_ref().map(|p| p.amount as i64))
+                .bind(purchase.price.as_ref().map(|p| p.currency.as_str()))
+                .bind(&purchase.sale_date)
+                .bind(purchase.sale_price.as_ref().map(|p| p.amount as i64))
+                .bind(purchase.sale_price.as_ref().map(|p| p.currency.as_str()))
+                .bind(purchase.deposit_amount.as_ref().map(|p| p.amount as i64))
+                .bind(
+                    purchase
+                        .deposit_amount
+                        .as_ref()
+                        .map(|p| p.currency.as_str()),
+                )
+                .bind(&purchase.expected_delivery)
+                .execute(&mut **tx)
+                .await
+                .map_err(|e| map_db_error(e, "purchase record"))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn persist_owned_rolling_stocks(
+        tx: &mut Transaction<'_, Sqlite>,
+        data: &DataContainerDto,
+    ) -> Result<u32, DataManagementError> {
+        let mut added_ors = 0u32;
+
+        for ors in &data.owned_rolling_stocks {
+            let item_exists = Self::exists_by_id(
+                tx,
+                "SELECT COUNT(1) FROM collection_items WHERE id = ?",
+                &ors.collection_item_id,
+            )
+            .await?;
+
+            if !item_exists {
+                warn!(
+                    "Skipping owned_rolling_stock '{}': collection item '{}' not found",
+                    ors.id, ors.collection_item_id
+                );
+                continue;
+            }
+
+            if let Some(ref rs_id) = ors.rolling_stock_id {
+                let rs_exists = Self::exists_by_id(
+                    tx,
+                    "SELECT COUNT(1) FROM rolling_stocks WHERE id = ?",
+                    rs_id,
+                )
+                .await?;
+
+                if !rs_exists {
+                    warn!(
+                        "Skipping owned_rolling_stock '{}': rolling stock '{}' not found",
+                        ors.id, rs_id
+                    );
+                    continue;
+                }
+            }
+
+            sqlx::query(
+                "INSERT OR IGNORE INTO owned_rolling_stocks \
+                 (id, collection_item_id, rolling_stock_id, notes, dcc_address, \
+                  installed_decoder_id, current_coupler_id) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&ors.id)
+            .bind(&ors.collection_item_id)
+            .bind(&ors.rolling_stock_id)
+            .bind(&ors.notes)
+            .bind(ors.dcc_address)
+            .bind(&ors.installed_decoder_id)
+            .bind(&ors.current_coupler_id)
+            .execute(&mut **tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            added_ors += 1;
+        }
+
+        Ok(added_ors)
+    }
+
+    async fn persist_digital_roster(
+        tx: &mut Transaction<'_, Sqlite>,
+        data: &DataContainerDto,
+        new_ids: &NewIdSets,
+    ) -> Result<(u32, u32), DataManagementError> {
+        let mut added = 0u32;
+        let mut skipped_missing_owned_stock = 0u32;
+
+        for item in data
+            .digital_rolling_stocks
+            .iter()
+            .filter(|i| new_ids.digital_roster_ids.contains(&i.id))
+        {
+            let ors_exists = Self::exists_by_id(
+                tx,
+                "SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?",
+                &item.owned_rolling_stock_id,
+            )
+            .await?;
+
+            if !ors_exists {
+                warn!(
+                    "Skipping digital roster entry '{}': owned rolling stock '{}' not found",
+                    item.id, item.owned_rolling_stock_id
+                );
+                skipped_missing_owned_stock += 1;
+                continue;
+            }
+
+            sqlx::query(
+                "INSERT OR IGNORE INTO digital_rolling_stocks \
+                 (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
+                 VALUES (?, ?, ?, ?)",
+            )
+            .bind(&item.id)
+            .bind(&item.owned_rolling_stock_id)
+            .bind(item.dcc_address)
+            .bind(&item.decoder_id)
+            .execute(&mut **tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            added += 1;
+        }
+
+        Ok((added, skipped_missing_owned_stock))
+    }
+
+    async fn refresh_collection_summary(
+        tx: &mut Transaction<'_, Sqlite>,
+    ) -> Result<(), DataManagementError> {
+        sqlx::query(
+            r#"UPDATE collections SET
+                locomotives_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'LOCOMOTIVES'
+                ),
+                passenger_cars_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'PASSENGER_CARS'
+                ),
+                freight_cars_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'FREIGHT_CARS'
+                ),
+                railcars_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'RAILCARS'
+                ),
+                train_sets_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'TRAIN_SETS'
+                ),
+                starter_sets_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'STARTER_SETS'
+                ),
+                electric_multiple_units_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'ELECTRIC_MULTIPLE_UNITS'
+                ),
+                total_value_amount = (
+                    SELECT COALESCE(SUM(pi.purchased_price_amount), 0)
+                    FROM collection_items ci
+                    JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL
+                )
+            WHERE id = ?"#,
+        )
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .execute(&mut **tx)
+        .await
+        .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn import_pending_images(
+        archive_path: &Path,
+        media_dir: &Path,
+        pending_images: &[String],
+    ) -> Result<(u32, Vec<ImageFailure>), DataManagementError> {
+        let archive_path_owned = archive_path.to_path_buf();
+        let entry_paths: Vec<String> = pending_images
+            .iter()
+            .map(|f| format!("images/{f}"))
+            .collect();
+        let extracted = ArchiveExtractor::extract_files_batch_async(archive_path_owned, entry_paths)
+            .await
+            .map_err(|e| DataManagementError::IoError(e.to_string()))?;
+
+        let mut images_imported: u32 = 0;
+        let mut images_failed: Vec<ImageFailure> = vec![];
+
+        for (image_filename, extract_result) in pending_images.iter().zip(extracted) {
+            let (_, bytes_result) = extract_result;
+            match bytes_result {
+                Ok(bytes) => {
+                    let dest = media_dir.join(image_filename);
+                    if let Err(e) = tokio::fs::write(&dest, &bytes).await {
+                        warn!("Failed to write image '{}': {}", image_filename, e);
+                        images_failed.push(ImageFailure::new(image_filename.clone(), e.to_string()));
+                    } else {
+                        images_imported += 1;
+                    }
+                }
+                Err(e) => {
+                    warn!("Image '{}' not found in archive: {}", image_filename, e);
+                    images_failed.push(ImageFailure::new(image_filename.clone(), e.to_string()));
+                }
+            }
+        }
+
+        Ok((images_imported, images_failed))
+    }
 }
 
 #[async_trait]
@@ -349,13 +657,7 @@ impl ImportRepository for SqliteImportRepository {
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
-        // Ensure the default collection exists
-        sqlx::query("INSERT OR IGNORE INTO collections (id, name) VALUES (?, ?)")
-            .bind(DEFAULT_COLLECTION_ID)
-            .bind("My Collection")
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+        Self::ensure_default_collection(&mut tx).await?;
 
         // 1. Insert new manufacturers
         for m in data
@@ -564,141 +866,12 @@ impl ImportRepository for SqliteImportRepository {
         added.sellers = duplicates.seller_dupes.new_count() as u32;
         skipped.sellers = duplicates.seller_dupes.duplicate_count() as u32;
 
-        // 5. Insert new collection items + purchase infos
-        for item in data
-            .collection_items
-            .iter()
-            .filter(|i| new_ids.item_ids.contains(&i.id))
-        {
-            let purchase_condition =
-                schema_purchase_condition_to_db(item.purchase_condition.as_deref())?;
-            let model_condition = schema_model_condition_to_db(item.model_condition.as_deref())?;
-            let box_condition = schema_box_condition_to_db(item.box_condition.as_deref())?;
-            sqlx::query(
-                "INSERT OR IGNORE INTO collection_items \
-                 (id, collection_id, railway_model_id, added_date, removed_date, \
-                  purchase_condition, model_condition, box_condition, notes) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            )
-            .bind(&item.id)
-            .bind(DEFAULT_COLLECTION_ID)
-            .bind(&item.railway_model_id)
-            .bind(&item.added_date)
-            .bind(&item.removed_date)
-            .bind(purchase_condition)
-            .bind(model_condition)
-            .bind(box_condition)
-            .bind(&item.notes)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| map_db_error(e, "collection item"))?;
-
-            // Collect image filename for post-commit copy (never inside the transaction)
-            if let Some(ref image_filename) = item.image {
-                pending_images.push(image_filename.clone());
-            }
-
-            if let Some(ref purchase) = item.purchase {
-                let purchase_date = purchase
-                    .purchase_date
-                    .as_deref()
-                    .unwrap_or(item.added_date.as_str());
-                let purchase_id = Uuid::new_v4().to_string();
-                let purchase_type = schema_purchase_type_to_db(&purchase.r#type)?;
-                sqlx::query(
-                    "INSERT OR IGNORE INTO purchase_infos \
-                     (id, collection_item_id, purchase_type, purchase_date, seller_id, \
-                      purchased_price_amount, purchased_price_currency, \
-                      sale_date, sale_price_amount, sale_price_currency, \
-                      deposit_amount, deposit_currency, expected_date) \
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                )
-                .bind(&purchase_id)
-                .bind(&item.id)
-                .bind(purchase_type)
-                .bind(purchase_date)
-                .bind(&purchase.seller_id)
-                .bind(purchase.price.as_ref().map(|p| p.amount as i64))
-                .bind(purchase.price.as_ref().map(|p| p.currency.as_str()))
-                .bind(&purchase.sale_date)
-                .bind(purchase.sale_price.as_ref().map(|p| p.amount as i64))
-                .bind(purchase.sale_price.as_ref().map(|p| p.currency.as_str()))
-                .bind(purchase.deposit_amount.as_ref().map(|p| p.amount as i64))
-                .bind(
-                    purchase
-                        .deposit_amount
-                        .as_ref()
-                        .map(|p| p.currency.as_str()),
-                )
-                .bind(&purchase.expected_delivery)
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| map_db_error(e, "purchase record"))?;
-            }
-        }
+        Self::persist_collection_items(&mut tx, data, &new_ids, &mut pending_images).await?;
 
         added.collection_items = duplicates.collection_item_dupes.new_count() as u32;
         skipped.collection_items = duplicates.collection_item_dupes.duplicate_count() as u32;
 
-        // 5.5 Insert owned_rolling_stocks — bridge rows linking collection_items to rolling_stocks.
-        // Uses INSERT OR IGNORE to be idempotent on re-import.
-        let mut added_ors = 0u32;
-        for ors in &data.owned_rolling_stocks {
-            let item_exists = Self::exists_by_id(
-                &mut tx,
-                "SELECT COUNT(1) FROM collection_items WHERE id = ?",
-                &ors.collection_item_id,
-            )
-            .await?;
-
-            if !item_exists {
-                warn!(
-                    "Skipping owned_rolling_stock '{}': collection item '{}' not found",
-                    ors.id, ors.collection_item_id
-                );
-                continue;
-            }
-
-            // Defence-in-depth: if rolling_stock_id is present, verify it exists before
-            // inserting.  INSERT OR IGNORE does NOT suppress FK violations in SQLite (only
-            // PK/UNIQUE/NOT NULL), so a dangling reference would produce error 787.
-            if let Some(ref rs_id) = ors.rolling_stock_id {
-                let rs_exists = Self::exists_by_id(
-                    &mut tx,
-                    "SELECT COUNT(1) FROM rolling_stocks WHERE id = ?",
-                    rs_id,
-                )
-                .await?;
-
-                if !rs_exists {
-                    warn!(
-                        "Skipping owned_rolling_stock '{}': rolling stock '{}' not found",
-                        ors.id, rs_id
-                    );
-                    continue;
-                }
-            }
-
-            sqlx::query(
-                "INSERT OR IGNORE INTO owned_rolling_stocks \
-                 (id, collection_item_id, rolling_stock_id, notes, dcc_address, \
-                  installed_decoder_id, current_coupler_id) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?)",
-            )
-            .bind(&ors.id)
-            .bind(&ors.collection_item_id)
-            .bind(&ors.rolling_stock_id)
-            .bind(&ors.notes)
-            .bind(ors.dcc_address)
-            .bind(&ors.installed_decoder_id)
-            .bind(&ors.current_coupler_id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
-
-            added_ors += 1;
-        }
-        added.owned_rolling_stocks = added_ors;
+        added.owned_rolling_stocks = Self::persist_owned_rolling_stocks(&mut tx, data).await?;
 
         // 6. Insert new track products
         for product in data
@@ -1036,149 +1209,21 @@ impl ImportRepository for SqliteImportRepository {
         added.decoders = duplicates.decoder_dupes.new_count() as u32;
         skipped.decoders = duplicates.decoder_dupes.duplicate_count() as u32;
 
-        // 14. Insert new digital roster entries
-        for item in data
-            .digital_rolling_stocks
-            .iter()
-            .filter(|i| new_ids.digital_roster_ids.contains(&i.id))
-        {
-            // owned_rolling_stock_id is a DB-internal FK; skip entries whose reference
-            // doesn't exist in the target database (same pattern as maintenance card import).
-            let ors_exists = Self::exists_by_id(
-                &mut tx,
-                "SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?",
-                &item.owned_rolling_stock_id,
-            )
-            .await?;
+        let (added_digital_roster, skipped_missing_owned_stock) =
+            Self::persist_digital_roster(&mut tx, data, &new_ids).await?;
+        added.digital_rolling_stocks = added_digital_roster;
+        skipped.digital_rolling_stocks =
+            skipped_missing_owned_stock + duplicates.digital_roster_dupes.duplicate_count() as u32;
 
-            if !ors_exists {
-                warn!(
-                    "Skipping digital roster entry '{}': owned rolling stock '{}' not found",
-                    item.id, item.owned_rolling_stock_id
-                );
-                skipped.digital_rolling_stocks += 1;
-                continue;
-            }
-
-            sqlx::query(
-                "INSERT OR IGNORE INTO digital_rolling_stocks \
-                 (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
-                 VALUES (?, ?, ?, ?)",
-            )
-            .bind(&item.id)
-            .bind(&item.owned_rolling_stock_id)
-            .bind(item.dcc_address)
-            .bind(&item.decoder_id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
-
-            added.digital_rolling_stocks += 1;
-        }
-
-        // Skipped count already accumulated above; also add deduplication skips
-        skipped.digital_rolling_stocks += duplicates.digital_roster_dupes.duplicate_count() as u32;
-
-        // Recalculate the collection summary from live data.
-        // The import writes directly to collection_items / purchase_infos without going
-        // through the domain's save() path, so the denormalized counts and total_value
-        // in the collections row must be refreshed here.
-        sqlx::query(
-            r#"UPDATE collections SET
-                locomotives_count = (
-                    SELECT COUNT(*) FROM collection_items ci
-                    JOIN railway_models rm ON rm.id = ci.railway_model_id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'LOCOMOTIVES'
-                ),
-                passenger_cars_count = (
-                    SELECT COUNT(*) FROM collection_items ci
-                    JOIN railway_models rm ON rm.id = ci.railway_model_id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'PASSENGER_CARS'
-                ),
-                freight_cars_count = (
-                    SELECT COUNT(*) FROM collection_items ci
-                    JOIN railway_models rm ON rm.id = ci.railway_model_id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'FREIGHT_CARS'
-                ),
-                railcars_count = (
-                    SELECT COUNT(*) FROM collection_items ci
-                    JOIN railway_models rm ON rm.id = ci.railway_model_id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'RAILCARS'
-                ),
-                train_sets_count = (
-                    SELECT COUNT(*) FROM collection_items ci
-                    JOIN railway_models rm ON rm.id = ci.railway_model_id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'TRAIN_SETS'
-                ),
-                starter_sets_count = (
-                    SELECT COUNT(*) FROM collection_items ci
-                    JOIN railway_models rm ON rm.id = ci.railway_model_id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'STARTER_SETS'
-                ),
-                electric_multiple_units_count = (
-                    SELECT COUNT(*) FROM collection_items ci
-                    JOIN railway_models rm ON rm.id = ci.railway_model_id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'ELECTRIC_MULTIPLE_UNITS'
-                ),
-                total_value_amount = (
-                    SELECT COALESCE(SUM(pi.purchased_price_amount), 0)
-                    FROM collection_items ci
-                    JOIN purchase_infos pi ON pi.collection_item_id = ci.id
-                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL
-                )
-            WHERE id = ?"#,
-        )
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .bind(DEFAULT_COLLECTION_ID)
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+        Self::refresh_collection_summary(&mut tx).await?;
 
         // Commit the transaction — all DB work done before any file I/O
         tx.commit()
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
-        // Extract all images from the archive in a single blocking task, then write them
-        // asynchronously. This keeps the tokio runtime unblocked during file I/O.
-        let archive_path_owned = archive_path.to_path_buf();
-        let entry_paths: Vec<String> = pending_images
-            .iter()
-            .map(|f| format!("images/{}", f))
-            .collect();
-        let extracted =
-            ArchiveExtractor::extract_files_batch_async(archive_path_owned, entry_paths)
-                .await
-                .map_err(|e| DataManagementError::IoError(e.to_string()))?;
-
-        let mut images_imported: u32 = 0;
-        let mut images_failed: Vec<ImageFailure> = vec![];
-        for (image_filename, extract_result) in pending_images.iter().zip(extracted) {
-            let (_, bytes_result) = extract_result;
-            match bytes_result {
-                Ok(bytes) => {
-                    let dest = media_dir.join(image_filename);
-                    if let Err(e) = tokio::fs::write(&dest, &bytes).await {
-                        warn!("Failed to write image '{}': {}", image_filename, e);
-                        images_failed
-                            .push(ImageFailure::new(image_filename.clone(), e.to_string()));
-                    } else {
-                        images_imported += 1;
-                    }
-                }
-                Err(e) => {
-                    warn!("Image '{}' not found in archive: {}", image_filename, e);
-                    images_failed.push(ImageFailure::new(image_filename.clone(), e.to_string()));
-                }
-            }
-        }
+        let (images_imported, images_failed) =
+            Self::import_pending_images(archive_path, media_dir, &pending_images).await?;
 
         Ok(PersistResult {
             added,
