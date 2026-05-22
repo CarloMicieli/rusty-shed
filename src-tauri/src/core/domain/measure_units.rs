@@ -216,5 +216,22 @@ mod tests {
             let converted = from_mu.to(to_mu).convert(value);
             assert_eq!(expected, converted);
         }
+
+        #[rstest]
+        #[case("mm", MeasureUnit::Millimeters)]
+        #[case("imperial", MeasureUnit::Inches)]
+        #[case("meter", MeasureUnit::Meters)]
+        #[case("mi", MeasureUnit::Miles)]
+        #[case("kilometres", MeasureUnit::Kilometers)]
+        fn from_str_supports_aliases(#[case] input: &str, #[case] expected: MeasureUnit) {
+            let parsed = MeasureUnit::from_str(input).expect("alias should parse");
+            assert_eq!(parsed, expected);
+        }
+
+        #[test]
+        fn from_str_rejects_unknown_values() {
+            let err = MeasureUnit::from_str("yards").expect_err("unknown value should fail");
+            assert_eq!(err, "unsupported measure unit 'YARDS'");
+        }
     }
 }

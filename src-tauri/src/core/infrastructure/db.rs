@@ -122,6 +122,7 @@ pub async fn fk_violations(pool: &SqlitePool) -> Result<Vec<String>, anyhow::Err
 
 #[cfg(test)]
 mod tests {
+    use super::Database;
     use pretty_assertions::assert_eq;
 
     #[sqlx::test]
@@ -156,5 +157,29 @@ mod tests {
         if let Some(sqlite_err) = err.as_database_error() {
             assert_eq!(sqlite_err.message(), "FOREIGN KEY constraint failed");
         }
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_run_initial_seed_populates_reference_tables(pool: sqlx::SqlitePool) {
+        Database::run_initial_seed(&pool)
+            .await
+            .expect("initial seed should succeed");
+
+        let manufacturers: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM manufacturers")
+            .fetch_one(&pool)
+            .await
+            .expect("manufacturers count should be queryable");
+        let railway_companies: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM railway_companies")
+            .fetch_one(&pool)
+            .await
+            .expect("railway_companies count should be queryable");
+        let sellers: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM sellers")
+            .fetch_one(&pool)
+            .await
+            .expect("sellers count should be queryable");
+
+        assert!(manufacturers > 0, "manufacturers should be seeded");
+        assert!(railway_companies > 0, "railway companies should be seeded");
+        assert!(sellers > 0, "sellers should be seeded");
     }
 }
