@@ -271,14 +271,7 @@ pub async fn cloud_backup_get_sync_status(
     cloud_backup_get_sync_status_inner(&state).await
 }
 
-/// Inner implementation for `cloud_backup_restore`
-pub async fn cloud_backup_restore_inner(
-    app: tauri::AppHandle,
-    state: &AppState,
-    args: RestoreBackupArgs,
-    db_path: std::path::PathBuf,
-) -> std::result::Result<(), CommandError> {
-    // Validate confirmation
+fn validate_restore_confirmation(args: &RestoreBackupArgs) -> std::result::Result<(), CommandError> {
     if args.confirmation != "RESTORE" {
         return Err(CommandError::validation_field(
             "confirmation",
@@ -286,14 +279,36 @@ pub async fn cloud_backup_restore_inner(
         ));
     }
 
-    // Check if online
-    if !crate::cloud_backup::infrastructure::is_online().await {
+    Ok(())
+}
+
+fn ensure_online_for_restore(is_online: bool) -> std::result::Result<(), CommandError> {
+    if !is_online {
         return Err(CommandError::from(CloudBackupError::OfflineError));
     }
 
-    let user_email = state
-        .connected_email()
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
+    Ok(())
+}
+
+fn resolve_restore_user_email(
+    connected_email: Option<String>,
+) -> std::result::Result<String, CommandError> {
+    connected_email
+        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))
+}
+
+/// Inner implementation for `cloud_backup_restore`
+pub async fn cloud_backup_restore_inner(
+    app: tauri::AppHandle,
+    state: &AppState,
+    args: RestoreBackupArgs,
+    db_path: std::path::PathBuf,
+) -> std::result::Result<(), CommandError> {
+    validate_restore_confirmation(&args)?;
+
+    ensure_online_for_restore(crate::cloud_backup::infrastructure::is_online().await)?;
+
+    let user_email = resolve_restore_user_email(state.connected_email())?;
 
     let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
@@ -354,6 +369,13 @@ pub async fn cloud_backup_restore(
 mod tests {
     use super::*;
 
+    fn restore_args_with_confirmation(confirmation: &str) -> RestoreBackupArgs {
+        RestoreBackupArgs {
+            backup_id: "backup-1".to_string(),
+            confirmation: confirmation.to_string(),
+        }
+    }
+
     #[test]
     fn test_command_signatures() {
         assert_eq!(STORAGE_SERVICE, "com.rusty-shed.oauth.google");
@@ -378,6 +400,35 @@ mod tests {
         match cmd_err {
             CommandError::ValidationError(_) => {}
             _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    fn restore_validation_rejects_wrong_confirmation() {
+        let args = restore_args_with_confirmation("WRONG");
+        let result = validate_restore_confirmation(&args);
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[test]
+    fn restore_validation_rejects_offline_mode() {
+        let result = ensure_online_for_restore(false);
+        match result {
+            Err(CommandError::BusinessRule(msg)) => {
+                assert!(msg.contains("OFFLINE_ERROR"), "unexpected message: {msg}");
+            }
+            other => panic!("Expected offline business-rule error, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn restore_validation_rejects_when_not_connected() {
+        let result = resolve_restore_user_email(None);
+        match result {
+            Err(CommandError::BusinessRule(msg)) => {
+                assert!(msg.contains("NOT_CONNECTED"), "unexpected message: {msg}");
+            }
+            other => panic!("Expected not-connected business-rule error, got: {other:?}"),
         }
     }
 }
