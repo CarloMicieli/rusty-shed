@@ -342,3 +342,53 @@ pub async fn is_import_in_progress(
         .any(|session| session.state == ImportState::Importing)
         .await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data_management::domain::{ArchiveFormat, ImportSession};
+    use sqlx::SqlitePool;
+    use std::path::PathBuf;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    #[sqlx::test]
+    async fn get_import_preview_missing_session_returns_unknown(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = GetImportPreviewArgs {
+            session_id: "missing-session".to_string(),
+        };
+
+        let result = get_import_preview_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::Unknown { .. })));
+    }
+
+    #[sqlx::test]
+    async fn execute_import_missing_session_returns_unknown(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = ExecuteImportArgs {
+            session_id: "missing-session".to_string(),
+        };
+
+        let result = execute_import_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::Unknown { .. })));
+    }
+
+    #[sqlx::test]
+    async fn get_import_preview_session_with_missing_archive_returns_unknown(pool: SqlitePool) {
+        let state = app_state(pool);
+        let session = ImportSession::new(
+            PathBuf::from("/tmp/non-existent-import-archive.zip"),
+            ArchiveFormat::Zip,
+        );
+        let session_id = session.id.clone();
+        state.import_session_store.insert(session).await;
+
+        let args = GetImportPreviewArgs { session_id };
+        let result = get_import_preview_inner(&state, args).await;
+
+        assert!(matches!(result, Err(CommandError::Unknown { .. })));
+    }
+}

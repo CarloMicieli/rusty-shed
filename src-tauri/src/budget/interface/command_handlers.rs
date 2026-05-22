@@ -534,3 +534,76 @@ pub async fn get_quarterly_summaries(
     };
     get_quarterly_summaries_inner(&state, year, currency_code).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::budget::domain::BudgetMode;
+    use crate::core::domain::Currency;
+    use sqlx::SqlitePool;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    async fn seed_budget_config(state: &AppState) {
+        let currency = Currency::from_code("EUR").expect("valid currency");
+        let args = SetBudgetConfigArgs {
+            mode: BudgetMode::Yearly,
+            base_amount: 120_000,
+            currency: None,
+        };
+
+        let _ = set_budget_config_inner(state, args, currency)
+            .await
+            .expect("budget config should be created");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_monthly_budget_records_inner_returns_empty_for_year_without_data(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let year = Year::try_from(2025).expect("valid year");
+        seed_budget_config(&state).await;
+
+        let records = get_monthly_budget_records_inner(
+            &state,
+            GetMonthlyBudgetRecordsArgs { year: Some(year) },
+        )
+        .await
+        .expect("query should succeed");
+
+        assert_eq!(records.len(), 12);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_budget_bootstrap_inner_returns_empty_monthly_records_without_data(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let year = Year::try_from(2025).expect("valid year");
+        seed_budget_config(&state).await;
+
+        let bootstrap =
+            get_budget_bootstrap_inner(&state, GetBudgetBootstrapArgs { year: Some(year) }, "EUR")
+                .await
+                .expect("query should succeed");
+
+        assert!(bootstrap.config.is_some());
+        assert!(matches!(bootstrap.monthly_records, Some(records) if records.len() == 12));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_quarterly_summaries_inner_returns_empty_for_year_without_data(pool: SqlitePool) {
+        let state = app_state(pool);
+        let year = Year::try_from(2025).expect("valid year");
+        seed_budget_config(&state).await;
+
+        let summaries = get_quarterly_summaries_inner(&state, year, "EUR".to_string())
+            .await
+            .expect("query should succeed");
+
+        assert!(summaries.is_empty());
+    }
+}

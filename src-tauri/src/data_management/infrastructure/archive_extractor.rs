@@ -348,6 +348,45 @@ impl Default for ArchiveExtractor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use flate2::Compression;
+    use flate2::write::GzEncoder;
+    use std::fs;
+    use std::io::Write;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    use tar::{Builder, Header};
+
+    fn create_targz(entries: &[(&str, &[u8])]) -> std::path::PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock should be after epoch")
+            .as_nanos();
+        let archive_path = std::env::temp_dir().join(format!("rusty-shed-{nanos}.tar.gz"));
+
+        if archive_path.exists() {
+            let _ = fs::remove_file(&archive_path);
+        }
+
+        let file = std::fs::File::create(&archive_path).expect("create archive file");
+        let encoder = GzEncoder::new(file, Compression::default());
+        let mut builder = Builder::new(encoder);
+
+        for (path, content) in entries {
+            let mut header = Header::new_gnu();
+            header.set_mode(0o644);
+            header.set_size(content.len() as u64);
+            header.set_cksum();
+            builder
+                .append_data(&mut header, *path, &mut std::io::Cursor::new(*content))
+                .expect("append tar entry");
+        }
+
+        builder.finish().expect("finish tar builder");
+        let mut encoder = builder.into_inner().expect("extract encoder");
+        encoder.flush().expect("flush encoder");
+        encoder.finish().expect("finish gzip encoder");
+
+        archive_path
+    }
 
     #[test]
     fn test_is_valid_image_extension_png() {
@@ -462,5 +501,73 @@ mod tests {
         assert!(!ArchiveExtractor::is_safe_archive_path(
             "/absolute/path.txt"
         ));
+    }
+
+    #[test]
+    fn test_extract_manifest_from_targz_success() {
+        let archive_path = create_targz(&[
+            ("manifest.json", br#"{"version":1}"#),
+            ("images/model.png", b"PNG"),
+        ]);
+
+        let manifest = ArchiveExtractor::extract_manifest(&archive_path).expect("extract manifest");
+        assert_eq!(manifest, br#"{"version":1}"#);
+    }
+
+    #[test]
+    fn test_extract_manifest_from_targz_not_found() {
+        let archive_path = create_targz(&[("images/model.png", b"PNG")]);
+
+        let err = ArchiveExtractor::extract_manifest(&archive_path)
+            .expect_err("missing manifest should fail");
+        assert!(matches!(err, ArchiveError::NotFound(_)));
+    }
+
+    #[test]
+    fn test_list_files_from_targz_success() {
+        let archive_path = create_targz(&[
+            ("manifest.json", b"{}"),
+            ("images/model.png", b"PNG"),
+            ("images/sub/model.jpg", b"JPG"),
+        ]);
+
+        let mut files = ArchiveExtractor::list_files(&archive_path).expect("list files");
+        files.sort();
+
+        assert_eq!(
+            files,
+            vec![
+                "images/model.png".to_string(),
+                "images/sub/model.jpg".to_string(),
+                "manifest.json".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_extract_file_from_targz_success() {
+        let archive_path = create_targz(&[("images/model.png", b"PNGDATA")]);
+
+        let content = ArchiveExtractor::extract_file(&archive_path, "images/model.png")
+            .expect("extract target file");
+        assert_eq!(content, b"PNGDATA");
+    }
+
+    #[test]
+    fn test_extract_file_from_targz_not_found() {
+        let archive_path = create_targz(&[("images/model.png", b"PNGDATA")]);
+
+        let err = ArchiveExtractor::extract_file(&archive_path, "images/absent.png")
+            .expect_err("missing file should fail");
+        assert!(matches!(err, ArchiveError::NotFound(_)));
+    }
+
+    #[test]
+    fn test_extract_file_from_targz_rejects_unsafe_requested_path() {
+        let archive_path = create_targz(&[("images/model.png", b"PNGDATA")]);
+
+        let err = ArchiveExtractor::extract_file(&archive_path, "../evil.txt")
+            .expect_err("unsafe requested path should fail");
+        assert!(matches!(err, ArchiveError::InvalidFormat(_)));
     }
 }

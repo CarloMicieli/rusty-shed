@@ -56,3 +56,105 @@ impl From<DatabaseBackupError> for CommandError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::infrastructure::error::CommandError;
+
+    #[test]
+    fn invalid_path_maps_to_destination_path_validation_error() {
+        let msg = "missing folder".to_string();
+        let err: CommandError = DatabaseBackupError::InvalidPath(msg.clone()).into();
+
+        match err {
+            CommandError::ValidationError(fields) => {
+                let errors = fields
+                    .get("destination_path")
+                    .expect("destination_path field should exist");
+                assert_eq!(errors.len(), 1);
+                assert_eq!(errors[0].message.as_deref(), Some(msg.as_str()));
+            }
+            other => panic!("expected ValidationError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn invalid_database_maps_to_source_path_validation_error() {
+        let msg = "not sqlite".to_string();
+        let err: CommandError = DatabaseBackupError::InvalidDatabase(msg.clone()).into();
+
+        match err {
+            CommandError::ValidationError(fields) => {
+                let errors = fields
+                    .get("source_path")
+                    .expect("source_path field should exist");
+                assert_eq!(errors.len(), 1);
+                assert_eq!(errors[0].message.as_deref(), Some(msg.as_str()));
+            }
+            other => panic!("expected ValidationError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn incompatible_schema_maps_to_source_path_validation_error() {
+        let msg = "schema mismatch".to_string();
+        let err: CommandError = DatabaseBackupError::IncompatibleSchema(msg.clone()).into();
+
+        match err {
+            CommandError::ValidationError(fields) => {
+                let errors = fields
+                    .get("source_path")
+                    .expect("source_path field should exist");
+                assert_eq!(errors.len(), 1);
+                assert_eq!(errors[0].message.as_deref(), Some(msg.as_str()));
+            }
+            other => panic!("expected ValidationError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn confirmation_failed_maps_to_confirmation_validation_error() {
+        let msg = "must type CONFIRM".to_string();
+        let err: CommandError = DatabaseBackupError::ConfirmationFailed(msg.clone()).into();
+
+        match err {
+            CommandError::ValidationError(fields) => {
+                let errors = fields
+                    .get("confirmation")
+                    .expect("confirmation field should exist");
+                assert_eq!(errors.len(), 1);
+                assert_eq!(errors[0].message.as_deref(), Some(msg.as_str()));
+            }
+            other => panic!("expected ValidationError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn permission_denied_maps_to_permission_denied() {
+        let msg = "access denied".to_string();
+        let err: CommandError = DatabaseBackupError::PermissionDenied(msg.clone()).into();
+
+        match err {
+            CommandError::PermissionDenied(actual) => assert_eq!(actual, msg),
+            other => panic!("expected PermissionDenied, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn fallback_variants_map_to_unknown() {
+        let variants = vec![
+            DatabaseBackupError::DatabaseError("db failure".to_string()),
+            DatabaseBackupError::FileSystemError("io failure".to_string()),
+            DatabaseBackupError::OperationInProgress,
+        ];
+
+        for variant in variants {
+            let err: CommandError = variant.into();
+            match err {
+                CommandError::Unknown { message, .. } => assert!(!message.is_empty()),
+                other => panic!("expected Unknown, got {other:?}"),
+            }
+        }
+    }
+}

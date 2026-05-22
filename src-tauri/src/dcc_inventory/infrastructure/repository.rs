@@ -175,6 +175,8 @@ impl DccInventoryUowExt for SqliteUnitOfWork {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::collecting::domain::OwnedRollingStockId;
+    use crate::dcc_inventory::domain::DecoderId;
     use crate::dcc_inventory::domain::DigitalRollingStockId;
     use sqlx::SqlitePool;
 
@@ -250,5 +252,106 @@ mod tests {
         let d = &decoders[0];
         assert!(!d.id.to_string().is_empty());
         assert!(!d.manufacturer_id.to_string().is_empty());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_dcc_inventory.sql")
+    )]
+    async fn it_should_save_created_event(pool: SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
+
+        let id = DigitalRollingStockId::try_from(
+            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000999",
+        )
+        .expect("valid id");
+        let owned_id = OwnedRollingStockId::try_from(
+            "trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111",
+        )
+        .expect("valid owned id");
+        let decoder_id = DecoderId::try_from("trn:decoder:acme:d-100").expect("valid decoder id");
+        let dcc_address = DccAddress::new(777).expect("valid dcc address");
+
+        let drs = DigitalRollingStock::new(id.clone(), owned_id, dcc_address, decoder_id);
+        repo.save(drs)
+            .await
+            .expect("save should insert created aggregate");
+
+        let saved = repo.find_by_id(&id).await.expect("query should run");
+        assert!(
+            saved.is_some(),
+            "expected created aggregate to be persisted"
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_dcc_inventory.sql")
+    )]
+    async fn it_should_save_decoder_changed_event(pool: SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
+
+        let id = DigitalRollingStockId::try_from(
+            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001",
+        )
+        .expect("valid id");
+        let decoder_id = DecoderId::try_from("trn:decoder:acme:d-100").expect("valid decoder id");
+
+        let mut drs = repo
+            .find_by_id(&id)
+            .await
+            .expect("query should run")
+            .expect("aggregate should exist");
+        drs.change_decoder(decoder_id);
+
+        repo.save(drs)
+            .await
+            .expect("save should persist decoder change");
+
+        let installed_decoder: Option<String> = sqlx::query_scalar(
+            "SELECT installed_decoder_id FROM digital_rolling_stocks WHERE id = ?1",
+        )
+        .bind(id.as_ref())
+        .fetch_one(&pool)
+        .await
+        .expect("row should be queryable");
+
+        assert_eq!(installed_decoder.as_deref(), Some("trn:decoder:acme:d-100"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_dcc_inventory.sql")
+    )]
+    async fn it_should_save_dcc_address_changed_event(pool: SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
+
+        let id = DigitalRollingStockId::try_from(
+            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001",
+        )
+        .expect("valid id");
+
+        let mut drs = repo
+            .find_by_id(&id)
+            .await
+            .expect("query should run")
+            .expect("aggregate should exist");
+        drs.change_dcc_address(DccAddress::new(501).expect("valid dcc address"));
+
+        repo.save(drs)
+            .await
+            .expect("save should persist dcc address change");
+
+        let updated_address: i64 =
+            sqlx::query_scalar("SELECT dcc_address FROM digital_rolling_stocks WHERE id = ?1")
+                .bind(id.as_ref())
+                .fetch_one(&pool)
+                .await
+                .expect("row should be queryable");
+
+        assert_eq!(updated_address, 501);
     }
 }

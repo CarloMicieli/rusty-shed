@@ -426,4 +426,92 @@ mod tests {
             result
         );
     }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_manufacturers_inner_enriches_seeded_and_usage_metadata(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let manufacturer_id = ManufacturerId::new_from_parts(&["seeded-maker"]);
+
+        sqlx::query(
+            r#"
+            INSERT INTO manufacturers (
+                id,
+                name,
+                status,
+                country_code,
+                website_url,
+                created_at,
+                updated_at,
+                version,
+                is_system_seeded
+            )
+            VALUES (?1, ?2, 'ACTIVE', NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 1)
+            "#,
+        )
+        .bind(manufacturer_id.as_ref())
+        .bind("Seeded Manufacturer")
+        .execute(&pool)
+        .await
+        .expect("seed manufacturer should insert");
+
+        let manufacturers = get_manufacturers_inner(&state)
+            .await
+            .expect("query should succeed");
+
+        let seeded = manufacturers
+            .into_iter()
+            .find(|m| m.id == manufacturer_id)
+            .expect("seeded manufacturer should be present");
+
+        assert!(seeded.is_system_seeded);
+        assert_eq!(seeded.usage_count, 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_manufacturer_by_id_inner_returns_none_when_missing(pool: SqlitePool) {
+        let state = app_state(pool);
+        let missing_id = ManufacturerId::new_from_parts(&["missing-maker"]);
+
+        let manufacturer = get_manufacturer_by_id_inner(&state, missing_id)
+            .await
+            .expect("query should succeed");
+
+        assert!(manufacturer.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_manufacturer_by_id_inner_enriches_seeded_and_usage_metadata(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let manufacturer_id = ManufacturerId::new_from_parts(&["seeded-maker"]);
+
+        sqlx::query(
+            r#"
+            INSERT INTO manufacturers (
+                id,
+                name,
+                status,
+                country_code,
+                website_url,
+                created_at,
+                updated_at,
+                version,
+                is_system_seeded
+            )
+            VALUES (?1, ?2, 'ACTIVE', NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 1)
+            "#,
+        )
+        .bind(manufacturer_id.as_ref())
+        .bind("Seeded Manufacturer")
+        .execute(&pool)
+        .await
+        .expect("seed manufacturer should insert");
+
+        let manufacturer = get_manufacturer_by_id_inner(&state, manufacturer_id)
+            .await
+            .expect("query should succeed")
+            .expect("manufacturer should exist");
+
+        assert!(manufacturer.is_system_seeded);
+        assert_eq!(manufacturer.usage_count, 0);
+    }
 }

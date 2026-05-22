@@ -648,4 +648,31 @@ mod tests {
             result
         );
     }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn add_rolling_stock_to_model_invalid_railway_model_id_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = AddRollingStockToModelArgs {
+            railway_model_id: "not-a-railway-model-id".to_string(),
+            railway_company_id: "trn:railway-company:fs".to_string(),
+            category: "LOCOMOTIVE".to_string(),
+            series_code: "E444".to_string(),
+            road_number: None,
+            livery: None,
+            depot: None,
+            control: None,
+            dcc_interface: None,
+            coupling_socket: None,
+            close_couplers: None,
+            sub_type: None,
+            friendly_name: None,
+            prototype_id: None,
+            is_dummy: None,
+        };
+
+        let result = add_rolling_stock_to_model_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
 }

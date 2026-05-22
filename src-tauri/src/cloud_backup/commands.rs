@@ -271,7 +271,9 @@ pub async fn cloud_backup_get_sync_status(
     cloud_backup_get_sync_status_inner(&state).await
 }
 
-fn validate_restore_confirmation(args: &RestoreBackupArgs) -> std::result::Result<(), CommandError> {
+fn validate_restore_confirmation(
+    args: &RestoreBackupArgs,
+) -> std::result::Result<(), CommandError> {
     if args.confirmation != "RESTORE" {
         return Err(CommandError::validation_field(
             "confirmation",
@@ -293,8 +295,7 @@ fn ensure_online_for_restore(is_online: bool) -> std::result::Result<(), Command
 fn resolve_restore_user_email(
     connected_email: Option<String>,
 ) -> std::result::Result<String, CommandError> {
-    connected_email
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))
+    connected_email.ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))
 }
 
 /// Inner implementation for `cloud_backup_restore`
@@ -400,6 +401,99 @@ mod tests {
         match cmd_err {
             CommandError::ValidationError(_) => {}
             _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_offline_error() {
+        let err = CloudBackupError::OfflineError;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("OFFLINE_ERROR")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_oauth_cancelled() {
+        let err = CloudBackupError::OAuthCancelled;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("OAUTH_CANCELLED")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_oauth_timeout() {
+        let err = CloudBackupError::OAuthTimeout;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("OAUTH_TIMEOUT")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_token_expired() {
+        let err = CloudBackupError::TokenExpired;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("TOKEN_EXPIRED")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_import_in_progress() {
+        let err = CloudBackupError::ImportInProgress;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("IMPORT_IN_PROGRESS")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_backup_not_found() {
+        let err = CloudBackupError::BackupNotFound("bkp-123".to_string());
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::NotFound(msg) => assert_eq!(msg, "Backup not found: bkp-123"),
+            _ => panic!("Expected NotFound"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_integrity_check_failed() {
+        let err = CloudBackupError::IntegrityCheckFailed("hash mismatch".to_string());
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => {
+                assert!(msg.contains("INTEGRITY_ERROR"));
+                assert!(msg.contains("hash mismatch"));
+            }
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_not_implemented() {
+        let err = CloudBackupError::NotImplemented;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("NOT_IMPLEMENTED")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_fallback_to_unknown() {
+        let err = CloudBackupError::UnexpectedError("boom".to_string());
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::Unknown { message, .. } => assert!(message.contains("boom")),
+            _ => panic!("Expected Unknown"),
         }
     }
 

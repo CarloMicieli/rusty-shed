@@ -1015,6 +1015,64 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
+    async fn get_collection_item_details_invalid_model_id_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+
+        let result = get_collection_item_details_inner(
+            &state,
+            "not-a-railway-model-id".to_string(),
+            None,
+            Language::English,
+        )
+        .await;
+
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn sell_collection_item_valid_args_reach_domain_layer(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = SellCollectionItemArgs {
+            item_id: "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730".to_string(),
+            sale_date: "2025-06-01".to_string(),
+            amount: 5000,
+            currency: "EUR".to_string(),
+            buyer_id: None,
+        };
+
+        let result = sell_collection_item_inner(&state, args).await;
+        assert!(
+            !matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected non-validation result, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn receive_preorder_valid_args_reach_domain_layer(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = ReceivePreorderArgs {
+            item_id: "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730".to_string(),
+            received_date: "2025-06-01".to_string(),
+        };
+
+        let result = receive_preorder_inner(&state, args).await;
+        assert!(
+            !matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected non-validation result, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
     async fn record_acquisition_invalid_date_format_returns_validation_error(pool: SqlitePool) {
         let state = app_state(pool);
         let mut args = valid_record_acquisition_args();
