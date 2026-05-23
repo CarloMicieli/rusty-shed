@@ -138,7 +138,8 @@ impl OAuthService {
             client_id: &self.client_id,
         };
 
-        self.refresh_token_with_transport(user_email, &transport).await
+        self.refresh_token_with_transport(user_email, &transport)
+            .await
     }
 
     async fn refresh_token_with_transport<T: RefreshTokenTransport + Sync>(
@@ -287,9 +288,9 @@ fn parse_refreshed_tokens(body: &str, previous_refresh_token: &str) -> Result<OA
 #[cfg(test)]
 mod tests {
     use super::*;
+    use oauth2::{RedirectUrl, TokenUrl};
     use std::collections::HashMap;
     use std::sync::Mutex;
-    use oauth2::{RedirectUrl, TokenUrl};
 
     struct TestStorage {
         data: Mutex<HashMap<String, OAuthTokens>>,

@@ -567,8 +567,11 @@ struct SimpleUploadResponse {
 
 #[async_trait]
 trait SimpleUploadTransport {
-    async fn upload_simple_multipart(&self, boundary: &str, body: Vec<u8>)
-        -> Result<SimpleUploadResponse>;
+    async fn upload_simple_multipart(
+        &self,
+        boundary: &str,
+        body: Vec<u8>,
+    ) -> Result<SimpleUploadResponse>;
 }
 
 #[async_trait]
@@ -725,8 +728,7 @@ fn build_simple_upload_multipart_body(
 
     let mut body: Vec<u8> = Vec::new();
     body.extend_from_slice(
-        format!("--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n")
-            .as_bytes(),
+        format!("--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n").as_bytes(),
     );
     body.extend_from_slice(metadata_json.as_bytes());
     body.extend_from_slice(b"\r\n");
@@ -1396,7 +1398,10 @@ mod tests {
         assert_eq!(files[0].id, "f1");
         assert_eq!(files[0].name, "backup-1.gz");
         assert_eq!(files[0].size, 128);
-        assert_eq!(files[0].modified_time.as_deref(), Some("2026-05-23T09:00:00Z"));
+        assert_eq!(
+            files[0].modified_time.as_deref(),
+            Some("2026-05-23T09:00:00Z")
+        );
         assert_eq!(files[0].app_properties.as_ref().map(|m| m.len()), Some(1));
     }
 

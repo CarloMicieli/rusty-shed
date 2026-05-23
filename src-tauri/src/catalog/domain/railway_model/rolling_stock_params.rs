@@ -512,8 +512,9 @@ fn build_railcar_params(
     input: RailcarInputData,
 ) -> Result<RollingStockParams, DomainError> {
     let company_id = validate_company_id(&mut ctx, &input.railway_company_id);
-    let railcar_type =
-        input.railcar_type.and_then(|s| ctx.collect("railcar_type", s.parse::<RailcarType>()));
+    let railcar_type = input
+        .railcar_type
+        .and_then(|s| ctx.collect("railcar_type", s.parse::<RailcarType>()));
     let control = validate_opt_parse(&mut ctx, "control", input.control);
     let dcc = validate_opt_parse(&mut ctx, "dcc_interface", input.dcc_interface);
     let length = validate_length(&mut ctx, input.length_over_buffers);
@@ -546,12 +547,15 @@ fn build_passenger_car_params(
     input: PassengerCarInputData,
 ) -> Result<RollingStockParams, DomainError> {
     let company_id = validate_company_id(&mut ctx, &input.railway_company_id);
-    let passenger_car_type =
-        ctx.collect("passenger_car_type", input.passenger_car_type.parse::<PassengerCarType>());
+    let passenger_car_type = ctx.collect(
+        "passenger_car_type",
+        input.passenger_car_type.parse::<PassengerCarType>(),
+    );
     let length = validate_length(&mut ctx, input.length_over_buffers);
     let specs = validate_specs(&mut ctx, input.technical_specifications, true);
-    let service_level =
-        input.service_level.and_then(|s| ctx.collect("service_level", s.parse::<ServiceLevel>()));
+    let service_level = input
+        .service_level
+        .and_then(|s| ctx.collect("service_level", s.parse::<ServiceLevel>()));
     ctx.finish()?;
     let railway_company_id = company_id
         .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
@@ -846,7 +850,10 @@ mod tests {
         };
 
         let params = RollingStockParams::try_from(input).expect("conversion should succeed");
-        assert!(matches!(params, RollingStockParams::FreightCarParams { .. }));
+        assert!(matches!(
+            params,
+            RollingStockParams::FreightCarParams { .. }
+        ));
     }
 
     #[test]
