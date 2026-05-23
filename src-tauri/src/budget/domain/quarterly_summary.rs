@@ -30,7 +30,7 @@ impl QuarterlySummary {
         category_breakdown: Vec<CategorySpending>,
     ) -> Self {
         let total_spending = if category_breakdown.is_empty() {
-            MonetaryAmount::new(0, crate::core::domain::Currency::EUR) // Default currency
+            MonetaryAmount::new(0, crate::core::domain::Currency::EUR)
         } else {
             let first_currency = category_breakdown[0].amount.currency;
             category_breakdown

@@ -26,7 +26,6 @@ impl DeleteTrackInventoryUseCase {
     {
         let mut repo = unit_of_work.track_inventories_repo();
 
-        // Verify inventory exists
         let _inventory = repo
             .find_by_id(id)
             .await?
@@ -35,9 +34,6 @@ impl DeleteTrackInventoryUseCase {
                 identifier: id.to_string(),
             })?;
 
-        // Delete cascades via database constraints:
-        // - track_inventory_items (ON DELETE CASCADE)
-        // - track_purchases (ON DELETE CASCADE)
         repo.delete(id).await?;
 
         Ok(())

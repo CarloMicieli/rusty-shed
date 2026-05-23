@@ -28,7 +28,6 @@ impl ExtraBudgetEntry {
         amount: MonetaryAmount,
         reason: Option<String>,
     ) -> Result<Self, String> {
-        // Validate amount is positive
         if amount.amount <= 0 {
             return Err("Amount must be positive".to_string());
         }

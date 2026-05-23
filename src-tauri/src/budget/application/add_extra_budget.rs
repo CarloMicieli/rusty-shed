@@ -42,12 +42,10 @@ impl AddExtraBudgetUseCase {
     where
         U: BudgetUowExt + Send,
     {
-        // Validate input
         input
             .validate()
             .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-        // Load the budget configuration aggregate — it is the root for budget events.
         let mut config = {
             let mut repo = uow.budget_repo();
             repo.get_config()
@@ -58,7 +56,6 @@ impl AddExtraBudgetUseCase {
                 })?
         };
 
-        // Build the entry value object
         let entry = ExtraBudgetEntry {
             id: ExtraBudgetId::default(),
             year: input.year,
@@ -69,10 +66,8 @@ impl AddExtraBudgetUseCase {
             version: 0,
         };
 
-        // Emit the ExtraBudgetAdded event on the aggregate
         config.add_extra_budget(&entry);
 
-        // Save: the repository drains pending_events and runs handle_event for each
         {
             let mut repo = uow.budget_repo();
             repo.save(config).await?;
