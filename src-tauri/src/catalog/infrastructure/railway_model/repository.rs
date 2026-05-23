@@ -2061,6 +2061,82 @@ mod tests {
         let series_code: Option<String> = row.get("series_code");
         assert_eq!(series_code, Some("SC".to_string()));
     }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_translations_returns_none_when_model_does_not_exist(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let id =
+            RailwayModelId::try_from("trn:railway-model:acme:missing").expect("valid model id");
+
+        let result = repo
+            .find_translations(&id)
+            .await
+            .expect("query should not fail");
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_translations_returns_en_entry_and_missing_it(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let id = RailwayModelId::try_from("trn:railway-model:acme:60100").expect("valid id");
+
+        let translations = repo
+            .find_translations(&id)
+            .await
+            .expect("query should not fail")
+            .expect("model exists so translations envelope should exist");
+
+        assert_eq!(translations.railway_model_id, id);
+        assert_eq!(
+            translations.en.and_then(|entry| entry.description),
+            Some("Locomotiva elettrica E.444.005 Tartaruga".to_string())
+        );
+        assert!(translations.it.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_translations_ignores_non_supported_languages(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        sqlx::query(
+            "INSERT INTO railway_model_translations (railway_model_id, language_code, description, details) \
+             VALUES (?1, 'de', 'Deutsche Beschreibung', 'Zusatz')",
+        )
+        .bind("trn:railway-model:acme:60100")
+        .execute(&mut *conn)
+        .await
+        .expect("should insert non-supported translation");
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        let id = RailwayModelId::try_from("trn:railway-model:acme:60100").expect("valid id");
+
+        let translations = repo
+            .find_translations(&id)
+            .await
+            .expect("query should not fail")
+            .expect("model exists");
+
+        assert!(translations.it.is_none());
+        assert_eq!(
+            translations.en.and_then(|entry| entry.details),
+            None,
+            "unexpected language rows must not leak into supported entries"
+        );
+    }
 }
 
 /*

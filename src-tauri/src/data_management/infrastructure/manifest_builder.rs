@@ -205,6 +205,258 @@ fn probe_model_image(media_dir: &Path, model_id: &str) -> Option<String> {
     None
 }
 
+#[derive(Debug, Clone, Copy)]
+struct ExportInclusions {
+    include_maintenance_logs: bool,
+    include_collection_items: bool,
+    include_wishlists: bool,
+    include_railway_models: bool,
+    include_track_inventory: bool,
+    include_sellers: bool,
+    include_dcc_roster: bool,
+}
+
+fn resolve_export_inclusions(selection: &ExportEntitySelection) -> ExportInclusions {
+    let include_maintenance_logs = selection.include_maintenance_logs;
+    let include_collection_items = selection.include_collection_items || include_maintenance_logs;
+    let include_wishlists = selection.include_wishlists;
+    let include_railway_models =
+        selection.include_railway_models || include_collection_items || include_wishlists;
+    let include_track_inventory = selection.include_track_inventory;
+    let include_sellers = selection.include_sellers;
+    let include_dcc_roster = selection.include_dcc_roster;
+
+    ExportInclusions {
+        include_maintenance_logs,
+        include_collection_items,
+        include_wishlists,
+        include_railway_models,
+        include_track_inventory,
+        include_sellers,
+        include_dcc_roster,
+    }
+}
+
+async fn export_manufacturers_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let rows = sqlx::query(
+        "SELECT id, name, registered_company_name, country_code, status, website_url, \
+                street_address, extended_address, city, state_region, postal_code \
+         FROM manufacturers ORDER BY name",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let manufacturers: Vec<Value> = rows
+        .iter()
+        .map(|row| {
+            strip_null_fields(json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "name": row.try_get::<String, _>("name").ok(),
+                "registeredCompanyName": row.try_get::<Option<String>, _>("registered_company_name").ok().flatten(),
+                "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
+                "status": enum_value(row.try_get::<String, _>("status").ok(), db_manufacturer_status_to_schema),
+                "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
+                "streetAddress": row.try_get::<Option<String>, _>("street_address").ok().flatten(),
+                "extendedAddress": row.try_get::<Option<String>, _>("extended_address").ok().flatten(),
+                "city": row.try_get::<Option<String>, _>("city").ok().flatten(),
+                "stateRegion": row.try_get::<Option<String>, _>("state_region").ok().flatten(),
+                "postalCode": row.try_get::<Option<String>, _>("postal_code").ok().flatten(),
+            }))
+        })
+        .collect();
+    data["manufacturers"] = json!(manufacturers);
+
+    Ok(())
+}
+
+async fn export_railway_models_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let rc_rows = sqlx::query(
+        "SELECT id, name, country_code, status, operating_since, operating_until \
+         FROM railway_companies ORDER BY name",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let railway_companies: Vec<Value> = rc_rows
+        .iter()
+        .map(|row| {
+            strip_null_fields(json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "name": row.try_get::<String, _>("name").ok(),
+                "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
+                "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
+                "operatingSince": row.try_get::<Option<String>, _>("operating_since").ok().flatten(),
+                "operatingUntil": row.try_get::<Option<String>, _>("operating_until").ok().flatten(),
+            }))
+        })
+        .collect();
+    data["railwayCompanies"] = json!(railway_companies);
+
+    let model_rows = sqlx::query(
+        "SELECT rm.id, rm.manufacturer_id, rm.product_code, rm.category, rm.scale, \
+                                    rm.power_method, rm.epoch, rm.delivery_date, rm.availability_status \
+                     FROM railway_models rm \
+         ORDER BY rm.id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let mut models: Vec<Value> = Vec::new();
+    for row in &model_rows {
+        let model_id: String = row
+            .try_get("id")
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let rs_rows = sqlx::query(
+            "SELECT id, railway_company_id, series_code, series, road_number, \
+                friendly_name, depot, livery, electric_multiple_unit_type, \
+                freight_car_type, locomotive_type, passenger_car_type, railcar_type, \
+                service_level, length_inches, length_millimeters, \
+                technical_minimum_radius_mm, technical_coupling_socket, \
+                technical_coupling_close_couplers, technical_coupling_digital_shunting, \
+                technical_flywheel_fitted, technical_body_shell, technical_chassis, \
+                technical_interior_lights, technical_lights, technical_sprung_buffers, \
+                dcc_interface, control, is_dummy \
+             FROM rolling_stocks WHERE railway_model_id = ? ORDER BY series_code",
+        )
+        .bind(&model_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let rolling_stocks: Vec<Value> = rs_rows
+            .iter()
+            .map(|rs| {
+                strip_null_fields(json!({
+                    "id": rs.try_get::<String, _>("id").ok(),
+                    "railwayCompanyId": rs.try_get::<String, _>("railway_company_id").ok(),
+                    "seriesCode": rs.try_get::<String, _>("series_code").ok(),
+                    "series": rs.try_get::<Option<String>, _>("series").ok().flatten(),
+                    "roadNumber": rs.try_get::<Option<String>, _>("road_number").ok().flatten(),
+                    "depot": rs.try_get::<Option<String>, _>("depot").ok().flatten(),
+                    "livery": rs.try_get::<Option<String>, _>("livery").ok().flatten(),
+                    "friendlyName": rs.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
+                    "electricMultipleUnitType": rs.try_get::<Option<String>, _>("electric_multiple_unit_type").ok().flatten(),
+                    "freightCarType": rs.try_get::<Option<String>, _>("freight_car_type").ok().flatten(),
+                    "locomotiveType": rs.try_get::<Option<String>, _>("locomotive_type").ok().flatten(),
+                    "passengerCarType": rs.try_get::<Option<String>, _>("passenger_car_type").ok().flatten(),
+                    "railcarType": rs.try_get::<Option<String>, _>("railcar_type").ok().flatten(),
+                    "serviceLevel": rs.try_get::<Option<String>, _>("service_level").ok().flatten(),
+                    "isDummy": rs.try_get::<i64, _>("is_dummy").ok().map(|v| v != 0),
+                    "lengthInches": rs.try_get::<Option<String>, _>("length_inches")
+                        .ok()
+                        .flatten()
+                        .and_then(|s| s.parse::<f64>().ok()),
+                    "lengthMillimeters": rs.try_get::<Option<String>, _>("length_millimeters")
+                        .ok()
+                        .flatten()
+                        .and_then(|s| s.parse::<f64>().ok()),
+                    "technicalMinimumRadiusMm": rs.try_get::<Option<String>, _>("technical_minimum_radius_mm")
+                        .ok()
+                        .flatten()
+                        .and_then(|s| s.parse::<f64>().ok()),
+                    "technicalCouplingSocket": rs.try_get::<Option<String>, _>("technical_coupling_socket").ok().flatten(),
+                    "technicalCouplingCloseCouplers": rs.try_get::<Option<String>, _>("technical_coupling_close_couplers").ok().flatten(),
+                    "technicalCouplingDigitalShunting": rs.try_get::<Option<String>, _>("technical_coupling_digital_shunting").ok().flatten(),
+                    "technicalFlywheelFitted": rs.try_get::<Option<String>, _>("technical_flywheel_fitted").ok().flatten(),
+                    "technicalBodyShell": rs.try_get::<Option<String>, _>("technical_body_shell").ok().flatten(),
+                    "technicalChassis": rs.try_get::<Option<String>, _>("technical_chassis").ok().flatten(),
+                    "technicalInteriorLights": rs.try_get::<Option<String>, _>("technical_interior_lights").ok().flatten(),
+                    "technicalLights": rs.try_get::<Option<String>, _>("technical_lights").ok().flatten(),
+                    "technicalSprungBuffers": rs.try_get::<Option<String>, _>("technical_sprung_buffers").ok().flatten(),
+                    "dccInterface": rs.try_get::<Option<String>, _>("dcc_interface").ok().flatten(),
+                    "control": rs.try_get::<Option<String>, _>("control").ok().flatten(),
+                }))
+            })
+            .collect();
+
+        let category_db: String = row
+            .try_get("category")
+            .unwrap_or_else(|_| "LOCOMOTIVES".to_string());
+        let power_method_db: String = row
+            .try_get("power_method")
+            .unwrap_or_else(|_| "DC".to_string());
+        let product_code: String = row.try_get("product_code").unwrap_or_default();
+
+        let translation_rows = sqlx::query(
+            "SELECT language_code, description, details \
+             FROM railway_model_translations WHERE railway_model_id = ?",
+        )
+        .bind(&model_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let mut description = Map::new();
+        let mut details = Map::new();
+        for tr in &translation_rows {
+            let language = tr
+                .try_get::<String, _>("language_code")
+                .unwrap_or_else(|_| "en".to_string());
+            if language != "en" && language != "it" {
+                continue;
+            }
+            if let Some(text) = tr
+                .try_get::<Option<String>, _>("description")
+                .ok()
+                .flatten()
+            {
+                description.insert(language.clone(), Value::String(text));
+            }
+            if let Some(text) = tr.try_get::<Option<String>, _>("details").ok().flatten() {
+                details.insert(language, Value::String(text));
+            }
+        }
+        if !description.contains_key("en") {
+            description.insert("en".to_string(), Value::String(product_code.clone()));
+        }
+
+        let availability_status = enum_value(
+            row.try_get::<Option<String>, _>("availability_status")
+                .ok()
+                .flatten(),
+            db_availability_status_to_schema,
+        );
+
+        models.push(strip_null_fields(json!({
+            "id": model_id,
+            "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
+            "productCode": product_code,
+            "description": Value::Object(description),
+            "details": if details.is_empty() { Value::Null } else { Value::Object(details) },
+            "scale": row.try_get::<String, _>("scale").ok(),
+            "epoch": row.try_get::<String, _>("epoch").ok(),
+            "category": db_category_to_schema(&category_db),
+            "powerMethod": db_power_method_to_schema(&power_method_db),
+            "deliveryDate": row.try_get::<Option<String>, _>("delivery_date").ok().flatten(),
+            "availabilityStatus": availability_status,
+            "rollingStocks": rolling_stocks,
+        })));
+    }
+    data["railwayModels"] = json!(models);
+
+    Ok(())
+}
+
 // ─── Main builder ────────────────────────────────────────────────────────────
 
 /// Build export manifest from selected entities.
@@ -227,222 +479,20 @@ pub async fn build_manifest(
 
     // Resolve FK dependencies so the exported manifest is always self-consistent.
     // Each entity must be present whenever something that references it is exported.
-    let include_maintenance_logs = selection.include_maintenance_logs;
-    let include_collection_items = selection.include_collection_items || include_maintenance_logs;
-    // Wishlists reference railway_model_id — export railway models when wishlists are included
-    let include_wishlists = selection.include_wishlists;
-    let include_railway_models =
-        selection.include_railway_models || include_collection_items || include_wishlists;
-    let include_track_inventory = selection.include_track_inventory;
-    let include_sellers = selection.include_sellers;
-    // Decoders reference manufacturer_id — export manufacturers when DCC roster is included
-    let include_dcc_roster = selection.include_dcc_roster;
+    let inclusions = resolve_export_inclusions(selection);
 
-    // Export manufacturers when railway models, track inventory, or DCC roster are selected (FK dependency)
-    if include_railway_models || include_track_inventory || include_dcc_roster {
-        let rows = sqlx::query(
-            "SELECT id, name, registered_company_name, country_code, status, website_url, \
-                    street_address, extended_address, city, state_region, postal_code \
-             FROM manufacturers ORDER BY name",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+    export_manufacturers_if_needed(
+        &mut data,
+        pool,
+        inclusions.include_railway_models
+            || inclusions.include_track_inventory
+            || inclusions.include_dcc_roster,
+    )
+    .await?;
 
-        let manufacturers: Vec<Value> = rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "name": row.try_get::<String, _>("name").ok(),
-                    "registeredCompanyName": row.try_get::<Option<String>, _>("registered_company_name").ok().flatten(),
-                    "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
-                    "status": enum_value(row.try_get::<String, _>("status").ok(), db_manufacturer_status_to_schema),
-                    "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
-                    "streetAddress": row.try_get::<Option<String>, _>("street_address").ok().flatten(),
-                    "extendedAddress": row.try_get::<Option<String>, _>("extended_address").ok().flatten(),
-                    "city": row.try_get::<Option<String>, _>("city").ok().flatten(),
-                    "stateRegion": row.try_get::<Option<String>, _>("state_region").ok().flatten(),
-                    "postalCode": row.try_get::<Option<String>, _>("postal_code").ok().flatten(),
-                }))
-            })
-            .collect();
-        data["manufacturers"] = json!(manufacturers);
-    }
+    export_railway_models_if_needed(&mut data, pool, inclusions.include_railway_models).await?;
 
-    if include_railway_models {
-        // Railway companies (referenced by rolling stocks)
-        let rc_rows = sqlx::query(
-            "SELECT id, name, country_code, status, operating_since, operating_until \
-             FROM railway_companies ORDER BY name",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let railway_companies: Vec<Value> = rc_rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "name": row.try_get::<String, _>("name").ok(),
-                    "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
-                    "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
-                    "operatingSince": row.try_get::<Option<String>, _>("operating_since").ok().flatten(),
-                    "operatingUntil": row.try_get::<Option<String>, _>("operating_until").ok().flatten(),
-                }))
-            })
-            .collect();
-        data["railwayCompanies"] = json!(railway_companies);
-
-        // Railway models with localized description/details + nested rolling stocks
-        let model_rows = sqlx::query(
-            "SELECT rm.id, rm.manufacturer_id, rm.product_code, rm.category, rm.scale, \
-                                        rm.power_method, rm.epoch, rm.delivery_date, rm.availability_status \
-                         FROM railway_models rm \
-             ORDER BY rm.id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let mut models: Vec<Value> = Vec::new();
-        for row in &model_rows {
-            let model_id: String = row
-                .try_get("id")
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            // Fetch nested rolling stocks
-            let rs_rows = sqlx::query(
-                "SELECT id, railway_company_id, series_code, series, road_number, \
-                    friendly_name, depot, livery, electric_multiple_unit_type, \
-                    freight_car_type, locomotive_type, passenger_car_type, railcar_type, \
-                    service_level, length_inches, length_millimeters, \
-                    technical_minimum_radius_mm, technical_coupling_socket, \
-                    technical_coupling_close_couplers, technical_coupling_digital_shunting, \
-                    technical_flywheel_fitted, technical_body_shell, technical_chassis, \
-                    technical_interior_lights, technical_lights, technical_sprung_buffers, \
-                    dcc_interface, control, is_dummy \
-                 FROM rolling_stocks WHERE railway_model_id = ? ORDER BY series_code",
-            )
-            .bind(&model_id)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let rolling_stocks: Vec<Value> = rs_rows
-                .iter()
-                .map(|rs| {
-                    strip_null_fields(json!({
-                        "id": rs.try_get::<String, _>("id").ok(),
-                        "railwayCompanyId": rs.try_get::<String, _>("railway_company_id").ok(),
-                        "seriesCode": rs.try_get::<String, _>("series_code").ok(),
-                        "series": rs.try_get::<Option<String>, _>("series").ok().flatten(),
-                        "roadNumber": rs.try_get::<Option<String>, _>("road_number").ok().flatten(),
-                        "depot": rs.try_get::<Option<String>, _>("depot").ok().flatten(),
-                        "livery": rs.try_get::<Option<String>, _>("livery").ok().flatten(),
-                        "friendlyName": rs.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
-                        "electricMultipleUnitType": rs.try_get::<Option<String>, _>("electric_multiple_unit_type").ok().flatten(),
-                        "freightCarType": rs.try_get::<Option<String>, _>("freight_car_type").ok().flatten(),
-                        "locomotiveType": rs.try_get::<Option<String>, _>("locomotive_type").ok().flatten(),
-                        "passengerCarType": rs.try_get::<Option<String>, _>("passenger_car_type").ok().flatten(),
-                        "railcarType": rs.try_get::<Option<String>, _>("railcar_type").ok().flatten(),
-                        "serviceLevel": rs.try_get::<Option<String>, _>("service_level").ok().flatten(),
-                        "isDummy": rs.try_get::<i64, _>("is_dummy").ok().map(|v| v != 0),
-                        "lengthInches": rs.try_get::<Option<String>, _>("length_inches")
-                            .ok()
-                            .flatten()
-                            .and_then(|s| s.parse::<f64>().ok()),
-                        "lengthMillimeters": rs.try_get::<Option<String>, _>("length_millimeters")
-                            .ok()
-                            .flatten()
-                            .and_then(|s| s.parse::<f64>().ok()),
-                        "technicalMinimumRadiusMm": rs.try_get::<Option<String>, _>("technical_minimum_radius_mm")
-                            .ok()
-                            .flatten()
-                            .and_then(|s| s.parse::<f64>().ok()),
-                        "technicalCouplingSocket": rs.try_get::<Option<String>, _>("technical_coupling_socket").ok().flatten(),
-                        "technicalCouplingCloseCouplers": rs.try_get::<Option<String>, _>("technical_coupling_close_couplers").ok().flatten(),
-                        "technicalCouplingDigitalShunting": rs.try_get::<Option<String>, _>("technical_coupling_digital_shunting").ok().flatten(),
-                        "technicalFlywheelFitted": rs.try_get::<Option<String>, _>("technical_flywheel_fitted").ok().flatten(),
-                        "technicalBodyShell": rs.try_get::<Option<String>, _>("technical_body_shell").ok().flatten(),
-                        "technicalChassis": rs.try_get::<Option<String>, _>("technical_chassis").ok().flatten(),
-                        "technicalInteriorLights": rs.try_get::<Option<String>, _>("technical_interior_lights").ok().flatten(),
-                        "technicalLights": rs.try_get::<Option<String>, _>("technical_lights").ok().flatten(),
-                        "technicalSprungBuffers": rs.try_get::<Option<String>, _>("technical_sprung_buffers").ok().flatten(),
-                        "dccInterface": rs.try_get::<Option<String>, _>("dcc_interface").ok().flatten(),
-                        "control": rs.try_get::<Option<String>, _>("control").ok().flatten(),
-                    }))
-                })
-                .collect();
-
-            let category_db: String = row
-                .try_get("category")
-                .unwrap_or_else(|_| "LOCOMOTIVES".to_string());
-            let power_method_db: String = row
-                .try_get("power_method")
-                .unwrap_or_else(|_| "DC".to_string());
-            let product_code: String = row.try_get("product_code").unwrap_or_default();
-
-            let translation_rows = sqlx::query(
-                "SELECT language_code, description, details \
-                 FROM railway_model_translations WHERE railway_model_id = ?",
-            )
-            .bind(&model_id)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let mut description = Map::new();
-            let mut details = Map::new();
-            for tr in &translation_rows {
-                let language = tr
-                    .try_get::<String, _>("language_code")
-                    .unwrap_or_else(|_| "en".to_string());
-                if language != "en" && language != "it" {
-                    continue;
-                }
-                if let Some(text) = tr
-                    .try_get::<Option<String>, _>("description")
-                    .ok()
-                    .flatten()
-                {
-                    description.insert(language.clone(), Value::String(text));
-                }
-                if let Some(text) = tr.try_get::<Option<String>, _>("details").ok().flatten() {
-                    details.insert(language, Value::String(text));
-                }
-            }
-            if !description.contains_key("en") {
-                description.insert("en".to_string(), Value::String(product_code.clone()));
-            }
-
-            let availability_status = enum_value(
-                row.try_get::<Option<String>, _>("availability_status")
-                    .ok()
-                    .flatten(),
-                db_availability_status_to_schema,
-            );
-
-            models.push(strip_null_fields(json!({
-                "id": model_id,
-                "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
-                "productCode": product_code,
-                "description": Value::Object(description),
-                "details": if details.is_empty() { Value::Null } else { Value::Object(details) },
-                "scale": row.try_get::<String, _>("scale").ok(),
-                "epoch": row.try_get::<String, _>("epoch").ok(),
-                "category": db_category_to_schema(&category_db),
-                "powerMethod": db_power_method_to_schema(&power_method_db),
-                "deliveryDate": row.try_get::<Option<String>, _>("delivery_date").ok().flatten(),
-                "availabilityStatus": availability_status,
-                "rollingStocks": rolling_stocks,
-            })));
-        }
-        data["railwayModels"] = json!(models);
-    }
-
-    if include_collection_items {
+    if inclusions.include_collection_items {
         let item_rows = sqlx::query(
             "SELECT ci.id, ci.railway_model_id, ci.added_date, ci.removed_date, \
                     ci.purchase_condition, ci.model_condition, ci.box_condition, ci.notes, \
@@ -619,7 +669,7 @@ pub async fn build_manifest(
         data["ownedRollingStocks"] = json!(owned_rolling_stocks);
     }
 
-    if include_sellers {
+    if inclusions.include_sellers {
         let rows = sqlx::query(
             "SELECT id, name, type, email, phone, website_url, \
                     street_address, city, state_region, postal_code, country_code \
@@ -633,7 +683,7 @@ pub async fn build_manifest(
         data["sellers"] = json!(sellers);
     }
 
-    if include_maintenance_logs {
+    if inclusions.include_maintenance_logs {
         // Query maintenance cards joined to owned_rolling_stocks to get collection_item_id.
         // The schema requires MaintenanceCard.collectionItemId; the DB stores
         // maintenance_cards.owned_rolling_stock_id → owned_rolling_stocks.collection_item_id.
@@ -696,7 +746,7 @@ pub async fn build_manifest(
         data["maintenanceCards"] = json!(maintenance_cards);
     }
 
-    if include_track_inventory {
+    if inclusions.include_track_inventory {
         // Track products
         let tp_rows = sqlx::query(
             "SELECT track_id, manufacturer_id, product_code, description, \
@@ -997,7 +1047,7 @@ pub async fn build_manifest(
         data["trainFormations"] = json!(train_formations);
     }
 
-    if include_wishlists {
+    if inclusions.include_wishlists {
         let wl_rows =
             sqlx::query("SELECT id, name, notes, is_default FROM wishlists ORDER BY name")
                 .fetch_all(pool)
@@ -1075,7 +1125,7 @@ pub async fn build_manifest(
         data["wishlists"] = json!(wishlists);
     }
 
-    if include_dcc_roster {
+    if inclusions.include_dcc_roster {
         let decoder_rows = sqlx::query(
             "SELECT id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface \
              FROM decoders ORDER BY id",
@@ -1328,5 +1378,26 @@ mod tests {
         );
         assert_eq!(db_purchase_condition_to_schema("USED"), Some("PRE_OWNED"));
         assert_eq!(db_purchase_condition_to_schema("UNKNOWN"), None);
+    }
+
+    #[test]
+    fn test_db_availability_status_to_schema_all_variants() {
+        assert_eq!(
+            db_availability_status_to_schema("AVAILABLE"),
+            Some("AVAILABLE")
+        );
+        assert_eq!(
+            db_availability_status_to_schema("ANNOUNCED"),
+            Some("ANNOUNCED")
+        );
+        assert_eq!(
+            db_availability_status_to_schema("CANCELLED"),
+            Some("CANCELLED")
+        );
+        assert_eq!(
+            db_availability_status_to_schema("DISCONTINUED"),
+            Some("DISCONTINUED")
+        );
+        assert_eq!(db_availability_status_to_schema("UNKNOWN"), None);
     }
 }
