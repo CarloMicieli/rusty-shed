@@ -208,9 +208,7 @@ impl TryFrom<CreateRollingStockInput> for RollingStockParams {
     type Error = DomainError;
 
     fn try_from(input: CreateRollingStockInput) -> Result<Self, Self::Error> {
-        let mut ctx = ValidationContext::default();
-
-        let params = match input {
+        match input {
             CreateRollingStockInput::Locomotive {
                 railway_company_id,
                 friendly_name,
@@ -225,34 +223,24 @@ impl TryFrom<CreateRollingStockInput> for RollingStockParams {
                 dcc_interface,
                 length_over_buffers,
                 technical_specifications,
-            } => {
-                let company_id = validate_company_id(&mut ctx, &railway_company_id);
-                let locomotive_type =
-                    ctx.collect("locomotive_type", locomotive_type.parse::<LocomotiveType>());
-                let control = validate_opt_parse(&mut ctx, "control", control);
-                let dcc = validate_opt_parse(&mut ctx, "dcc_interface", dcc_interface);
-                let length = validate_length(&mut ctx, length_over_buffers);
-                let specs = validate_specs(&mut ctx, technical_specifications, true);
-
-                // Checkpoint: Stop if validation failed
-                ctx.finish()?;
-
-                RollingStockParams::LocomotiveParams {
-                    railway_company_id: company_id.unwrap(),
+            } => build_locomotive_params(
+                ValidationContext::default(),
+                LocomotiveInputData {
+                    railway_company_id,
                     friendly_name,
-                    series_code: format_series_code(series_code),
+                    series_code,
                     road_number,
                     series,
                     depot,
                     livery,
-                    locomotive_type: locomotive_type.unwrap(),
-                    is_dummy: is_dummy.unwrap_or(false),
+                    locomotive_type,
+                    is_dummy,
                     control,
-                    dcc_interface: dcc,
-                    length_over_buffers: length,
-                    technical_specifications: specs,
-                }
-            }
+                    dcc_interface,
+                    length_over_buffers,
+                    technical_specifications,
+                },
+            ),
             CreateRollingStockInput::ElectricMultipleUnit {
                 railway_company_id,
                 friendly_name,
@@ -267,36 +255,24 @@ impl TryFrom<CreateRollingStockInput> for RollingStockParams {
                 dcc_interface,
                 length_over_buffers,
                 technical_specifications,
-            } => {
-                let company_id = validate_company_id(&mut ctx, &railway_company_id);
-                let electric_multiple_unit_type = ctx.collect(
-                    "electric_multiple_unit_type",
-                    electric_multiple_unit_type.parse::<ElectricMultipleUnitType>(),
-                );
-                let control = validate_opt_parse(&mut ctx, "control", control);
-                let dcc = validate_opt_parse(&mut ctx, "dcc_interface", dcc_interface);
-                let length = validate_length(&mut ctx, length_over_buffers);
-                let specs = validate_specs(&mut ctx, technical_specifications, true);
-
-                // Checkpoint: Stop if validation failed
-                ctx.finish()?;
-
-                RollingStockParams::ElectricMultipleUnitParams {
-                    railway_company_id: company_id.unwrap(),
+            } => build_electric_multiple_unit_params(
+                ValidationContext::default(),
+                ElectricMultipleUnitInputData {
+                    railway_company_id,
                     friendly_name,
-                    series_code: format_series_code(series_code),
+                    series_code,
                     road_number,
                     series,
                     depot,
                     livery,
-                    electric_multiple_unit_type: electric_multiple_unit_type.unwrap(),
-                    is_dummy: is_dummy.unwrap_or(false),
+                    electric_multiple_unit_type,
+                    is_dummy,
                     control,
-                    dcc_interface: dcc,
-                    length_over_buffers: length,
-                    technical_specifications: specs,
-                }
-            }
+                    dcc_interface,
+                    length_over_buffers,
+                    technical_specifications,
+                },
+            ),
             CreateRollingStockInput::Railcar {
                 railway_company_id,
                 friendly_name,
@@ -311,34 +287,24 @@ impl TryFrom<CreateRollingStockInput> for RollingStockParams {
                 dcc_interface,
                 length_over_buffers,
                 technical_specifications,
-            } => {
-                let company_id = validate_company_id(&mut ctx, &railway_company_id);
-                let railcar_type = railcar_type
-                    .and_then(|s| ctx.collect("railcar_type", s.parse::<RailcarType>()));
-                let control = validate_opt_parse(&mut ctx, "control", control);
-                let dcc = validate_opt_parse(&mut ctx, "dcc_interface", dcc_interface);
-                let length = validate_length(&mut ctx, length_over_buffers);
-                let specs = validate_specs(&mut ctx, technical_specifications, true);
-
-                // Checkpoint: Stop if validation failed
-                ctx.finish()?;
-
-                RollingStockParams::RailcarParams {
-                    railway_company_id: company_id.unwrap(),
+            } => build_railcar_params(
+                ValidationContext::default(),
+                RailcarInputData {
+                    railway_company_id,
                     friendly_name,
-                    series_code: format_series_code(series_code),
+                    series_code,
                     road_number,
                     series,
                     depot,
                     livery,
-                    railcar_type: railcar_type.unwrap(),
-                    is_dummy: is_dummy.unwrap_or(false),
+                    railcar_type,
+                    is_dummy,
                     control,
-                    dcc_interface: dcc,
-                    length_over_buffers: length,
-                    technical_specifications: specs,
-                }
-            }
+                    dcc_interface,
+                    length_over_buffers,
+                    technical_specifications,
+                },
+            ),
             CreateRollingStockInput::PassengerCar {
                 railway_company_id,
                 friendly_name,
@@ -350,33 +316,21 @@ impl TryFrom<CreateRollingStockInput> for RollingStockParams {
                 service_level,
                 length_over_buffers,
                 technical_specifications,
-            } => {
-                let company_id = validate_company_id(&mut ctx, &railway_company_id);
-                let passenger_car_type = ctx.collect(
-                    "passenger_car_type",
-                    passenger_car_type.parse::<PassengerCarType>(),
-                );
-                let length = validate_length(&mut ctx, length_over_buffers);
-                let specs = validate_specs(&mut ctx, technical_specifications, true);
-                let service_level = service_level
-                    .and_then(|s| ctx.collect("service_level", s.parse::<ServiceLevel>()));
-
-                // Checkpoint: Stop if validation failed
-                ctx.finish()?;
-
-                RollingStockParams::PassengerCarParams {
-                    railway_company_id: company_id.unwrap(),
+            } => build_passenger_car_params(
+                ValidationContext::default(),
+                PassengerCarInputData {
+                    railway_company_id,
                     friendly_name,
-                    series_code: format_series_code(series_code),
+                    series_code,
                     road_number,
                     series,
                     livery,
                     passenger_car_type,
-                    length_over_buffers: length,
-                    technical_specifications: specs,
                     service_level,
-                }
-            }
+                    length_over_buffers,
+                    technical_specifications,
+                },
+            ),
             CreateRollingStockInput::FreightCar {
                 railway_company_id,
                 friendly_name,
@@ -387,32 +341,260 @@ impl TryFrom<CreateRollingStockInput> for RollingStockParams {
                 freight_car_type,
                 length_over_buffers,
                 technical_specifications,
-            } => {
-                let company_id = validate_company_id(&mut ctx, &railway_company_id);
-                let freight_car_type = freight_car_type
-                    .and_then(|s| ctx.collect("freight_car_type", s.parse::<FreightCarType>()));
-                let length = validate_length(&mut ctx, length_over_buffers);
-                let specs = validate_specs(&mut ctx, technical_specifications, true);
-
-                // Checkpoint: Stop if validation failed
-                ctx.finish()?;
-
-                RollingStockParams::FreightCarParams {
-                    railway_company_id: company_id.unwrap(),
+            } => build_freight_car_params(
+                ValidationContext::default(),
+                FreightCarInputData {
+                    railway_company_id,
                     friendly_name,
-                    series_code: format_series_code(series_code),
+                    series_code,
                     road_number,
                     series,
                     livery,
                     freight_car_type,
-                    length_over_buffers: length,
-                    technical_specifications: specs,
-                }
-            }
-        };
-
-        Ok(params)
+                    length_over_buffers,
+                    technical_specifications,
+                },
+            ),
+        }
     }
+}
+
+struct LocomotiveInputData {
+    railway_company_id: String,
+    friendly_name: String,
+    series_code: String,
+    road_number: String,
+    series: Option<String>,
+    depot: Option<String>,
+    livery: Option<String>,
+    locomotive_type: String,
+    is_dummy: Option<bool>,
+    control: Option<String>,
+    dcc_interface: Option<String>,
+    length_over_buffers: Option<LengthOverBuffersInput>,
+    technical_specifications: Option<TechnicalSpecificationsInput>,
+}
+
+struct ElectricMultipleUnitInputData {
+    railway_company_id: String,
+    friendly_name: String,
+    series_code: String,
+    road_number: Option<String>,
+    series: Option<String>,
+    depot: Option<String>,
+    livery: Option<String>,
+    electric_multiple_unit_type: String,
+    is_dummy: Option<bool>,
+    control: Option<String>,
+    dcc_interface: Option<String>,
+    length_over_buffers: Option<LengthOverBuffersInput>,
+    technical_specifications: Option<TechnicalSpecificationsInput>,
+}
+
+struct RailcarInputData {
+    railway_company_id: String,
+    friendly_name: String,
+    series_code: String,
+    road_number: Option<String>,
+    series: Option<String>,
+    depot: Option<String>,
+    livery: Option<String>,
+    railcar_type: Option<String>,
+    is_dummy: Option<bool>,
+    control: Option<String>,
+    dcc_interface: Option<String>,
+    length_over_buffers: Option<LengthOverBuffersInput>,
+    technical_specifications: Option<TechnicalSpecificationsInput>,
+}
+
+struct PassengerCarInputData {
+    railway_company_id: String,
+    friendly_name: String,
+    series_code: String,
+    road_number: Option<String>,
+    series: Option<String>,
+    livery: Option<String>,
+    passenger_car_type: String,
+    service_level: Option<String>,
+    length_over_buffers: Option<LengthOverBuffersInput>,
+    technical_specifications: Option<TechnicalSpecificationsInput>,
+}
+
+struct FreightCarInputData {
+    railway_company_id: String,
+    friendly_name: String,
+    series_code: String,
+    road_number: Option<String>,
+    series: Option<String>,
+    livery: Option<String>,
+    freight_car_type: Option<String>,
+    length_over_buffers: Option<LengthOverBuffersInput>,
+    technical_specifications: Option<TechnicalSpecificationsInput>,
+}
+
+fn build_locomotive_params(
+    mut ctx: ValidationContext,
+    input: LocomotiveInputData,
+) -> Result<RollingStockParams, DomainError> {
+    let company_id = validate_company_id(&mut ctx, &input.railway_company_id);
+    let locomotive_type = ctx.collect(
+        "locomotive_type",
+        input.locomotive_type.parse::<LocomotiveType>(),
+    );
+    let control = validate_opt_parse(&mut ctx, "control", input.control);
+    let dcc = validate_opt_parse(&mut ctx, "dcc_interface", input.dcc_interface);
+    let length = validate_length(&mut ctx, input.length_over_buffers);
+    let specs = validate_specs(&mut ctx, input.technical_specifications, true);
+    ctx.finish()?;
+    let railway_company_id = company_id
+        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+    let locomotive_type = locomotive_type
+        .ok_or_else(|| DomainError::Validation("invalid locomotive_type".to_string()))?;
+
+    Ok(RollingStockParams::LocomotiveParams {
+        railway_company_id,
+        friendly_name: input.friendly_name,
+        series_code: format_series_code(input.series_code),
+        road_number: input.road_number,
+        series: input.series,
+        depot: input.depot,
+        livery: input.livery,
+        locomotive_type,
+        is_dummy: input.is_dummy.unwrap_or(false),
+        control,
+        dcc_interface: dcc,
+        length_over_buffers: length,
+        technical_specifications: specs,
+    })
+}
+
+fn build_electric_multiple_unit_params(
+    mut ctx: ValidationContext,
+    input: ElectricMultipleUnitInputData,
+) -> Result<RollingStockParams, DomainError> {
+    let company_id = validate_company_id(&mut ctx, &input.railway_company_id);
+    let emu_type = ctx.collect(
+        "electric_multiple_unit_type",
+        input
+            .electric_multiple_unit_type
+            .parse::<ElectricMultipleUnitType>(),
+    );
+    let control = validate_opt_parse(&mut ctx, "control", input.control);
+    let dcc = validate_opt_parse(&mut ctx, "dcc_interface", input.dcc_interface);
+    let length = validate_length(&mut ctx, input.length_over_buffers);
+    let specs = validate_specs(&mut ctx, input.technical_specifications, true);
+    ctx.finish()?;
+    let railway_company_id = company_id
+        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+    let electric_multiple_unit_type = emu_type.ok_or_else(|| {
+        DomainError::Validation("invalid electric_multiple_unit_type".to_string())
+    })?;
+
+    Ok(RollingStockParams::ElectricMultipleUnitParams {
+        railway_company_id,
+        friendly_name: input.friendly_name,
+        series_code: format_series_code(input.series_code),
+        road_number: input.road_number,
+        series: input.series,
+        depot: input.depot,
+        livery: input.livery,
+        electric_multiple_unit_type,
+        is_dummy: input.is_dummy.unwrap_or(false),
+        control,
+        dcc_interface: dcc,
+        length_over_buffers: length,
+        technical_specifications: specs,
+    })
+}
+
+fn build_railcar_params(
+    mut ctx: ValidationContext,
+    input: RailcarInputData,
+) -> Result<RollingStockParams, DomainError> {
+    let company_id = validate_company_id(&mut ctx, &input.railway_company_id);
+    let railcar_type =
+        input.railcar_type.and_then(|s| ctx.collect("railcar_type", s.parse::<RailcarType>()));
+    let control = validate_opt_parse(&mut ctx, "control", input.control);
+    let dcc = validate_opt_parse(&mut ctx, "dcc_interface", input.dcc_interface);
+    let length = validate_length(&mut ctx, input.length_over_buffers);
+    let specs = validate_specs(&mut ctx, input.technical_specifications, true);
+    ctx.finish()?;
+    let railway_company_id = company_id
+        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+    let railcar_type =
+        railcar_type.ok_or_else(|| DomainError::Validation("invalid railcar_type".to_string()))?;
+
+    Ok(RollingStockParams::RailcarParams {
+        railway_company_id,
+        friendly_name: input.friendly_name,
+        series_code: format_series_code(input.series_code),
+        road_number: input.road_number,
+        series: input.series,
+        depot: input.depot,
+        livery: input.livery,
+        railcar_type,
+        is_dummy: input.is_dummy.unwrap_or(false),
+        control,
+        dcc_interface: dcc,
+        length_over_buffers: length,
+        technical_specifications: specs,
+    })
+}
+
+fn build_passenger_car_params(
+    mut ctx: ValidationContext,
+    input: PassengerCarInputData,
+) -> Result<RollingStockParams, DomainError> {
+    let company_id = validate_company_id(&mut ctx, &input.railway_company_id);
+    let passenger_car_type =
+        ctx.collect("passenger_car_type", input.passenger_car_type.parse::<PassengerCarType>());
+    let length = validate_length(&mut ctx, input.length_over_buffers);
+    let specs = validate_specs(&mut ctx, input.technical_specifications, true);
+    let service_level =
+        input.service_level.and_then(|s| ctx.collect("service_level", s.parse::<ServiceLevel>()));
+    ctx.finish()?;
+    let railway_company_id = company_id
+        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+
+    Ok(RollingStockParams::PassengerCarParams {
+        railway_company_id,
+        friendly_name: input.friendly_name,
+        series_code: format_series_code(input.series_code),
+        road_number: input.road_number,
+        series: input.series,
+        livery: input.livery,
+        passenger_car_type,
+        length_over_buffers: length,
+        technical_specifications: specs,
+        service_level,
+    })
+}
+
+fn build_freight_car_params(
+    mut ctx: ValidationContext,
+    input: FreightCarInputData,
+) -> Result<RollingStockParams, DomainError> {
+    let company_id = validate_company_id(&mut ctx, &input.railway_company_id);
+    let freight_car_type = input
+        .freight_car_type
+        .and_then(|s| ctx.collect("freight_car_type", s.parse::<FreightCarType>()));
+    let length = validate_length(&mut ctx, input.length_over_buffers);
+    let specs = validate_specs(&mut ctx, input.technical_specifications, true);
+    ctx.finish()?;
+    let railway_company_id = company_id
+        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+
+    Ok(RollingStockParams::FreightCarParams {
+        railway_company_id,
+        friendly_name: input.friendly_name,
+        series_code: format_series_code(input.series_code),
+        road_number: input.road_number,
+        series: input.series,
+        livery: input.livery,
+        freight_car_type,
+        length_over_buffers: length,
+        technical_specifications: specs,
+    })
 }
 
 fn format_series_code(code: String) -> Option<String> {
@@ -597,5 +779,95 @@ mod tests {
         } else {
             panic!("expected validation error");
         }
+    }
+
+    #[test]
+    fn it_should_convert_electric_multiple_unit_input_success() {
+        let input = CreateRollingStockInput::ElectricMultipleUnit {
+            railway_company_id: "trn:railway-company:ry-1".to_string(),
+            friendly_name: "Test EMU".to_string(),
+            series_code: "EMU-SC".to_string(),
+            road_number: Some("EMU-1".to_string()),
+            series: None,
+            depot: None,
+            livery: None,
+            electric_multiple_unit_type: "DRIVING_CAR".to_string(),
+            is_dummy: Some(true),
+            control: None,
+            dcc_interface: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+        };
+
+        let params = RollingStockParams::try_from(input).expect("conversion should succeed");
+        assert!(matches!(
+            params,
+            RollingStockParams::ElectricMultipleUnitParams { is_dummy: true, .. }
+        ));
+    }
+
+    #[test]
+    fn it_should_convert_passenger_car_input_success() {
+        let input = CreateRollingStockInput::PassengerCar {
+            railway_company_id: "trn:railway-company:ry-1".to_string(),
+            friendly_name: "Test Passenger".to_string(),
+            series_code: "PC-SC".to_string(),
+            road_number: Some("PC-1".to_string()),
+            series: None,
+            livery: None,
+            passenger_car_type: "OPEN_COACH".to_string(),
+            service_level: Some("1".to_string()),
+            length_over_buffers: None,
+            technical_specifications: None,
+        };
+
+        let params = RollingStockParams::try_from(input).expect("conversion should succeed");
+        assert!(matches!(
+            params,
+            RollingStockParams::PassengerCarParams {
+                service_level: Some(ServiceLevel::First),
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn it_should_convert_freight_car_input_success() {
+        let input = CreateRollingStockInput::FreightCar {
+            railway_company_id: "trn:railway-company:ry-1".to_string(),
+            friendly_name: "Test Freight".to_string(),
+            series_code: "FC-SC".to_string(),
+            road_number: Some("FC-1".to_string()),
+            series: None,
+            livery: None,
+            freight_car_type: Some("FLAT_WAGON".to_string()),
+            length_over_buffers: None,
+            technical_specifications: None,
+        };
+
+        let params = RollingStockParams::try_from(input).expect("conversion should succeed");
+        assert!(matches!(params, RollingStockParams::FreightCarParams { .. }));
+    }
+
+    #[test]
+    fn it_should_convert_railcar_input_success() {
+        let input = CreateRollingStockInput::Railcar {
+            railway_company_id: "trn:railway-company:ry-1".to_string(),
+            friendly_name: "Test Railcar".to_string(),
+            series_code: "RC-SC".to_string(),
+            road_number: Some("RC-1".to_string()),
+            series: None,
+            depot: None,
+            livery: None,
+            railcar_type: Some("POWER_CAR".to_string()),
+            is_dummy: Some(false),
+            control: None,
+            dcc_interface: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+        };
+
+        let params = RollingStockParams::try_from(input).expect("conversion should succeed");
+        assert!(matches!(params, RollingStockParams::RailcarParams { .. }));
     }
 }

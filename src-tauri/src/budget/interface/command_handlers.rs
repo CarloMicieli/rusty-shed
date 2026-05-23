@@ -347,6 +347,28 @@ pub async fn get_quarterly_summaries_inner(
         .collect())
 }
 
+fn resolve_quarterly_year(input: Option<Year>) -> Result<Year, CommandError> {
+    match input {
+        Some(year) => Ok(year),
+        None => Year::try_from(chrono::Utc::now().year())
+            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string()))),
+    }
+}
+
+async fn resolve_quarterly_currency(
+    app: tauri::AppHandle,
+    currency: Option<String>,
+) -> Result<String, CommandError> {
+    if let Some(code) = currency {
+        return Ok(code);
+    }
+
+    let settings = crate::settings::get_settings(app)
+        .await
+        .map_err(|e| CommandError::validation_field("currency", e))?;
+    Ok(settings.currency)
+}
+
 // ---------------------------------------------------------------------------
 // Tauri command wrappers – thin shims that delegate to inner functions
 // ---------------------------------------------------------------------------
@@ -518,20 +540,8 @@ pub async fn get_quarterly_summaries(
     state: tauri::State<'_, AppState>,
     args: GetQuarterlySummariesArgs,
 ) -> Result<Vec<QuarterlySummary>, CommandError> {
-    let year = match args.year {
-        Some(y) => y,
-        None => Year::try_from(chrono::Utc::now().year())
-            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?,
-    };
-    let currency_code = match args.currency {
-        Some(ref code) => code.clone(),
-        None => {
-            let settings = crate::settings::get_settings(app)
-                .await
-                .map_err(|e| CommandError::validation_field("currency", e))?;
-            settings.currency
-        }
-    };
+    let year = resolve_quarterly_year(args.year)?;
+    let currency_code = resolve_quarterly_currency(app, args.currency).await?;
     get_quarterly_summaries_inner(&state, year, currency_code).await
 }
 
@@ -605,5 +615,18 @@ mod tests {
             .expect("query should succeed");
 
         assert!(summaries.is_empty());
+    }
+
+    #[test]
+    fn resolve_quarterly_year_prefers_explicit_value() {
+        let year = Year::try_from(2024).expect("valid year");
+        let resolved = resolve_quarterly_year(Some(year)).expect("resolution should succeed");
+        assert_eq!(resolved.value(), 2024);
+    }
+
+    #[test]
+    fn resolve_quarterly_year_defaults_to_current_year() {
+        let resolved = resolve_quarterly_year(None).expect("resolution should succeed");
+        assert_eq!(resolved.value(), chrono::Utc::now().year());
     }
 }
