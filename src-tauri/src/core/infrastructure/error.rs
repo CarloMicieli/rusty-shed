@@ -425,6 +425,33 @@ mod tests {
     }
 
     #[rstest]
+    #[case::database_error(DataManagementError::DatabaseError("db down".to_string()), "DatabaseError")]
+    #[case::not_found(DataManagementError::NotFound("missing archive".to_string()), "NotFound")]
+    #[case::schema_violation(DataManagementError::SchemaViolation("schema mismatch".to_string()), "BusinessRule")]
+    #[case::invalid_input(DataManagementError::InvalidInput("bad input".to_string()), "BusinessRule")]
+    #[case::archive_error(DataManagementError::ArchiveError("archive failed".to_string()), "Unknown")]
+    #[case::io_error(DataManagementError::IoError("io failed".to_string()), "Unknown")]
+    #[case::unknown(DataManagementError::Unknown("mystery".to_string()), "Unknown")]
+    fn data_management_error_maps_to_command_error(
+        #[case] source: DataManagementError,
+        #[case] expected_variant: &str,
+    ) {
+        let command_error: CommandError = source.into();
+
+        match (expected_variant, command_error) {
+            ("DatabaseError", CommandError::DatabaseError(msg)) => {
+                assert!(!msg.is_empty())
+            }
+            ("NotFound", CommandError::NotFound(msg)) => assert!(!msg.is_empty()),
+            ("BusinessRule", CommandError::BusinessRule(msg)) => assert!(!msg.is_empty()),
+            ("Unknown", CommandError::Unknown { message, .. }) => {
+                assert!(!message.is_empty())
+            }
+            other => panic!("unexpected conversion result: {other:?}"),
+        }
+    }
+
+    #[rstest]
     #[case::not_found("not_found")]
     #[case::validation("validation")]
     #[case::infrastructure("infrastructure")]

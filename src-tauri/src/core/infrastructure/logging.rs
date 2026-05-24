@@ -153,3 +153,22 @@ pub mod test_helper {
         });
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(tracing::Level::ERROR, LogLevel::Error)]
+    #[case(tracing::Level::WARN, LogLevel::Warn)]
+    #[case(tracing::Level::INFO, LogLevel::Info)]
+    #[case(tracing::Level::DEBUG, LogLevel::Debug)]
+    #[case(tracing::Level::TRACE, LogLevel::Trace)]
+    fn it_should_map_tracing_levels_to_log_levels(
+        #[case] level: tracing::Level,
+        #[case] expected: LogLevel,
+    ) {
+        assert_eq!(expected, tracing_level_to_log_level(level));
+    }
+}
