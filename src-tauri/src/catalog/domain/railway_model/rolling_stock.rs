@@ -986,8 +986,19 @@ impl RollingStock {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::railway_model::TechnicalSpecificationsBuilder;
+    use crate::core::domain::length::Length;
     use pretty_assertions::assert_eq;
+    use rust_decimal_macros::dec;
     use uuid::Uuid;
+
+    fn sample_length_over_buffers() -> LengthOverBuffers {
+        LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(42)))
+    }
+
+    fn sample_technical_specifications() -> TechnicalSpecifications {
+        TechnicalSpecificationsBuilder::default().build()
+    }
 
     #[test]
     fn locomotive_accessors_return_expected_values() {
@@ -1128,5 +1139,93 @@ mod tests {
         assert_eq!(railcar.control(), Some(Control::DccSound));
         assert_eq!(railcar.dcc_interface(), Some(DccInterface::Plux8));
         assert!(railcar.with_decoder());
+    }
+
+    #[test]
+    fn length_and_technical_specifications_accessors_return_expected_values() {
+        let id = RollingStockId::from_uuid(&Uuid::new_v4());
+        let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+        let length = sample_length_over_buffers();
+        let technical_specifications = sample_technical_specifications();
+
+        let locomotives = vec![
+            RollingStock::Locomotive {
+                id: id.clone(),
+                railway_id: railway.clone(),
+                livery: None,
+                length_over_buffer: Some(length.clone()),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: None,
+                series_code: "L-1".to_string(),
+                road_number: None,
+                series: None,
+                depot: None,
+                locomotive_type: LocomotiveType::DieselLocomotive,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            },
+            RollingStock::ElectricMultipleUnit {
+                id: id.clone(),
+                railway_id: railway.clone(),
+                livery: None,
+                length_over_buffer: Some(length.clone()),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: None,
+                series_code: "E-1".to_string(),
+                road_number: None,
+                series: None,
+                depot: None,
+                electric_multiple_unit_type: ElectricMultipleUnitType::PowerCar,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            },
+            RollingStock::FreightCar {
+                id: id.clone(),
+                railway_id: railway.clone(),
+                livery: None,
+                length_over_buffer: Some(length.clone()),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: None,
+                series_code: "F-1".to_string(),
+                road_number: None,
+                freight_car_type: None,
+            },
+            RollingStock::PassengerCar {
+                id: id.clone(),
+                railway_id: railway.clone(),
+                livery: None,
+                length_over_buffer: Some(length.clone()),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: None,
+                series_code: "P-1".to_string(),
+                road_number: None,
+                series: None,
+                passenger_car_type: None,
+                service_level: None,
+            },
+            RollingStock::Railcar {
+                id,
+                railway_id: railway,
+                livery: None,
+                length_over_buffer: Some(length.clone()),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: None,
+                series_code: "R-1".to_string(),
+                road_number: None,
+                series: None,
+                depot: None,
+                railcar_type: RailcarType::PowerCar,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            },
+        ];
+
+        for rolling_stock in locomotives {
+            assert_eq!(rolling_stock.length_over_buffer(), Some(&length));
+            assert_eq!(rolling_stock.technical_specifications(), Some(&technical_specifications));
+        }
     }
 }
