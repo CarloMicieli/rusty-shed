@@ -645,6 +645,15 @@ impl DuplicateChecker {
 mod tests {
     use super::*;
 
+    async fn test_pool() -> sqlx::SqlitePool {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
+        pool
+    }
+
     #[test]
     fn test_duplicate_check_result_counts() {
         let result = DuplicateCheckResult {
@@ -668,7 +677,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_formation_categories_empty_input() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
             "CREATE TABLE formation_categories (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, is_custom INTEGER NOT NULL DEFAULT 0)",
         )
@@ -686,7 +695,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_train_formations_detects_duplicate_name() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
             "CREATE TABLE train_formations (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE)",
         )
@@ -725,7 +734,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_wishlists_detects_duplicate_name() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
             "CREATE TABLE wishlists (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, \
              notes TEXT, is_default INTEGER NOT NULL DEFAULT 0, version INTEGER NOT NULL DEFAULT 0, \
@@ -763,7 +772,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_prototypes_uses_composite_key() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
             "CREATE TABLE prototypes (id TEXT PRIMARY KEY, railway_company_id TEXT NOT NULL, series_code TEXT NOT NULL, specification_type TEXT NOT NULL, is_custom INTEGER NOT NULL DEFAULT 0)",
         )
@@ -805,7 +814,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_decoders_empty_input() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
             "CREATE TABLE decoders (id TEXT PRIMARY KEY, manufacturer_id TEXT NOT NULL, \
              product_code TEXT, decoder_type TEXT NOT NULL, protocol TEXT NOT NULL, \
@@ -822,7 +831,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_decoders_detects_duplicate_id() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
             "CREATE TABLE decoders (id TEXT PRIMARY KEY, manufacturer_id TEXT NOT NULL, \
              product_code TEXT, decoder_type TEXT NOT NULL, protocol TEXT NOT NULL, \
@@ -877,7 +886,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_digital_roster_empty_input() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
             "CREATE TABLE digital_rolling_stocks (id TEXT PRIMARY KEY, \
              owned_rolling_stock_id TEXT NOT NULL, dcc_address INTEGER NOT NULL, \
@@ -894,18 +903,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_digital_roster_detects_duplicate_by_owned_id() {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        let pool = test_pool().await;
         sqlx::query(
-            "CREATE TABLE digital_rolling_stocks (id TEXT PRIMARY KEY, \
-             owned_rolling_stock_id TEXT NOT NULL, dcc_address INTEGER NOT NULL, \
-             installed_decoder_id TEXT)",
+            "CREATE TABLE owned_rolling_stocks (id TEXT PRIMARY KEY, dcc_address INTEGER, installed_decoder_id TEXT)",
         )
         .execute(&pool)
         .await
         .expect("create table");
         sqlx::query(
-            "INSERT INTO digital_rolling_stocks (id, owned_rolling_stock_id, dcc_address) \
-             VALUES ('drs-1', 'ors-abc', 3)",
+            "INSERT INTO owned_rolling_stocks (id, dcc_address) VALUES ('ors-abc', 3)",
         )
         .execute(&pool)
         .await

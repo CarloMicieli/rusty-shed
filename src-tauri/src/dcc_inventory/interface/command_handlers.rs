@@ -211,6 +211,10 @@ mod tests {
         let pool = SqlitePool::connect(":memory:")
             .await
             .expect("in-memory pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
         AppState::new_with_factory(pool, Arc::new(OneShotFactory::new(uow)))
     }
 

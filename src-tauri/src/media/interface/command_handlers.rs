@@ -650,6 +650,10 @@ mod tests {
         let pool = SqlitePool::connect(":memory:")
             .await
             .expect("in-memory pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
         AppState::new(pool, models_dir, std::path::PathBuf::new())
     }
 

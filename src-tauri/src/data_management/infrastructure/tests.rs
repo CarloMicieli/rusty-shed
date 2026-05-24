@@ -344,6 +344,10 @@ mod roundtrip {
             .connect("sqlite::memory:")
             .await
             .expect("create in-memory import pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
         sqlx::migrate!("./migrations")
             .run(&pool)
             .await

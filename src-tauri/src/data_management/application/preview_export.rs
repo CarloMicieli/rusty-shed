@@ -148,6 +148,10 @@ mod tests {
         let pool = SqlitePool::connect(":memory:")
             .await
             .expect("in-memory pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
 
         sqlx::query(
             "CREATE TABLE railway_models (
@@ -302,6 +306,10 @@ mod tests {
         let pool = SqlitePool::connect(":memory:")
             .await
             .expect("in-memory pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
         sqlx::query(
             "CREATE TABLE train_formations (
                 id TEXT PRIMARY KEY,
