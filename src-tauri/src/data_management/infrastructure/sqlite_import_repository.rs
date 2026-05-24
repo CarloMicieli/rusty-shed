@@ -2255,12 +2255,16 @@ mod tests {
                 .expect("maintenance event should be persisted");
         assert_eq!(event_count, 1);
 
-        let roster_count: i64 =
-            sqlx::query_scalar("SELECT COUNT(1) FROM digital_rolling_stocks WHERE id = ?")
-                .bind("trn:digital-rolling-stock:e2e:001")
-                .fetch_one(&pool)
-                .await
-                .expect("digital roster row should be persisted");
+        let roster_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(1) FROM owned_rolling_stocks \
+             WHERE id = ? AND dcc_address = ? AND installed_decoder_id = ?",
+        )
+        .bind("trn:ors:e2e:001")
+        .bind(7_i64)
+        .bind("trn:decoder:e2e:001")
+        .fetch_one(&pool)
+        .await
+        .expect("digital setup should be persisted on owned_rolling_stocks");
         assert_eq!(roster_count, 1);
     }
 }

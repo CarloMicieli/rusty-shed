@@ -2197,17 +2197,13 @@ mod tests {
 
         let control: Option<String> = row.get("control");
         let dcc_interface: Option<String> = row.get("dcc_interface");
-        let length_mm: Option<String> = row.get("length_millimeters");
-        let length_inches: Option<String> = row.get("length_inches");
+        let length_mm: Option<f64> = row.get("length_millimeters");
+        let length_inches: Option<f64> = row.get("length_inches");
 
         assert_eq!(control, Some("DCC_SOUND".to_string()));
         assert_eq!(dcc_interface, Some("PLUX22".to_string()));
-        let parsed_mm = length_mm
-            .and_then(|v| v.parse::<f64>().ok())
-            .expect("length_millimeters should be parseable");
-        let parsed_inches = length_inches
-            .and_then(|v| v.parse::<f64>().ok())
-            .expect("length_inches should be parseable");
+        let parsed_mm = length_mm.expect("length_millimeters should be present");
+        let parsed_inches = length_inches.expect("length_inches should be present");
 
         assert!((parsed_mm - 254.0).abs() < f64::EPSILON);
         assert!((parsed_inches - 10.0).abs() < f64::EPSILON);

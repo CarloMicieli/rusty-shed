@@ -782,16 +782,16 @@ mod roundtrip {
         .expect("seed decoder");
 
         sqlx::query(
-              "UPDATE owned_rolling_stocks \
+            "UPDATE owned_rolling_stocks \
                SET dcc_address = ?, installed_decoder_id = ? \
                WHERE id = ?",
         )
         .bind(42_i64)
         .bind("trn:decoder:test-manufacturer:d100")
-           .bind("ors-test-001")
+        .bind("ors-test-001")
         .execute(&pool)
         .await
-           .expect("seed owned rolling stock digital setup");
+        .expect("seed owned rolling stock digital setup");
 
         let selection = ExportEntitySelection {
             include_railway_models: false,

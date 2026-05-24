@@ -910,12 +910,10 @@ mod tests {
         .execute(&pool)
         .await
         .expect("create table");
-        sqlx::query(
-            "INSERT INTO owned_rolling_stocks (id, dcc_address) VALUES ('ors-abc', 3)",
-        )
-        .execute(&pool)
-        .await
-        .expect("insert");
+        sqlx::query("INSERT INTO owned_rolling_stocks (id, dcc_address) VALUES ('ors-abc', 3)")
+            .execute(&pool)
+            .await
+            .expect("insert");
 
         let checker = DuplicateChecker::new(pool);
         let items = vec![
