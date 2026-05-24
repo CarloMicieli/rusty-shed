@@ -91,17 +91,20 @@ pub async fn get_import_preview_inner(
         .await
         .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?;
 
-    // Use cached manifest if available, otherwise fall back to archive extraction
-    let manifest_json: serde_json::Value = if let Some(ref manifest) = session.validated_manifest {
-        serde_json::to_value(manifest).map_err(|e| {
+    // Use cached manifest if available, otherwise fall back to archive extraction.
+    // When the manifest is already cached, preview does not need archive I/O.
+    let (manifest_json, source_path) = if let Some(ref manifest) = session.validated_manifest {
+        let value = serde_json::to_value(manifest).map_err(|e| {
             CommandError::unknown(format!("Failed to serialize cached manifest: {}", e))
-        })?
+        })?;
+        (value, None)
     } else {
         let manifest_bytes = ArchiveExtractor::extract_manifest_async(session.source_path.clone())
             .await
             .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
-        serde_json::from_slice(&manifest_bytes)
-            .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?
+        let value = serde_json::from_slice(&manifest_bytes)
+            .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?;
+        (value, Some(&session.source_path))
     };
 
     // Generate preview using application layer
@@ -109,7 +112,7 @@ pub async fn get_import_preview_inner(
     let preview_use_case = PreviewImportUseCase::new(repo)
         .map_err(|e| CommandError::unknown(format!("Failed to initialize preview: {}", e)))?;
     let preview = preview_use_case
-        .execute(manifest_json, Some(&session.source_path))
+        .execute(manifest_json, source_path.map(|p| p.as_path()))
         .await
         .map_err(|e| CommandError::unknown(format!("Preview generation failed: {}", e)))?;
 
@@ -346,7 +349,9 @@ pub async fn is_import_in_progress(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_management::domain::{ArchiveFormat, ImportSession};
+    use crate::data_management::domain::{
+        ArchiveFormat, DataContainerDto, ImportSession, ImportState, ManifestDto,
+    };
     use sqlx::SqlitePool;
     use std::path::PathBuf;
 
@@ -390,5 +395,46 @@ mod tests {
         let result = get_import_preview_inner(&state, args).await;
 
         assert!(matches!(result, Err(CommandError::Unknown { .. })));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_import_preview_with_cached_manifest_returns_preview_and_updates_state(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+
+        let mut session = ImportSession::new(
+            PathBuf::from("/tmp/unused-cached-manifest.zip"),
+            ArchiveFormat::Zip,
+        );
+        let session_id = session.id.clone();
+        session.validated_manifest = Some(ManifestDto {
+            schema: None,
+            version: "1.0".to_string(),
+            exported_at: None,
+            source: None,
+            data: DataContainerDto::default(),
+        });
+        state.import_session_store.insert(session).await;
+
+        let args = GetImportPreviewArgs {
+            session_id: session_id.clone(),
+        };
+        let preview = get_import_preview_inner(&state, args)
+            .await
+            .expect("preview should succeed for cached empty manifest");
+
+        assert_eq!(preview.session_id, session_id);
+        assert!(preview.can_import);
+        assert_eq!(preview.total_records.manufacturers, 0);
+        assert_eq!(preview.new_records.manufacturers, 0);
+        assert_eq!(preview.duplicate_records.manufacturers, 0);
+
+        let stored = state
+            .import_session_store
+            .get(&preview.session_id)
+            .await
+            .expect("session should remain in store");
+        assert_eq!(stored.state, ImportState::Previewed);
     }
 }

@@ -834,6 +834,99 @@ mod tests {
         assert_eq!(notes.as_deref(), Some("Updated notes from test"));
     }
 
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_collection_item_purchase_date_with_missing_item_returns_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:11111111-1111-1111-1111-111111111111"
+                .to_string(),
+            update: CollectionItemUpdateArgs::PurchaseDate {
+                purchase_date: NaiveDate::from_ymd_opt(2025, 2, 1),
+            },
+        };
+
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(result.is_err(), "Expected error for missing item, got success");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_collection_item_added_date_with_missing_item_returns_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:22222222-2222-2222-2222-222222222222"
+                .to_string(),
+            update: CollectionItemUpdateArgs::AddedDate {
+                added_date: NaiveDate::from_ymd_opt(2025, 2, 2),
+            },
+        };
+
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(result.is_err(), "Expected error for missing item, got success");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_collection_item_invalid_purchase_condition_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:33333333-3333-3333-3333-333333333333"
+                .to_string(),
+            update: CollectionItemUpdateArgs::PurchaseCondition {
+                purchase_condition: Some("UNKNOWN".to_string()),
+            },
+        };
+
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_collection_item_invalid_model_condition_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:44444444-4444-4444-4444-444444444444"
+                .to_string(),
+            update: CollectionItemUpdateArgs::ModelCondition {
+                model_condition: Some("BROKEN".to_string()),
+            },
+        };
+
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_collection_item_invalid_box_condition_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:55555555-5555-5555-5555-555555555555"
+                .to_string(),
+            update: CollectionItemUpdateArgs::BoxCondition {
+                box_condition: Some("WORN".to_string()),
+            },
+        };
+
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
     // ── add_collection_item_inner ────────────────────────────────────────
 
     #[sqlx::test(migrations = "./migrations")]

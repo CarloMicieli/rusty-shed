@@ -389,4 +389,83 @@ mod tests {
         let result = f.set_traction_override("el-1", 2);
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_rename_updates_name() {
+        let mut f = make_formation();
+        f.rename("Renamed Formation".into())
+            .expect("rename should succeed");
+        assert_eq!(f.name, "Renamed Formation");
+    }
+
+    #[test]
+    fn test_add_remove_assign_unassign_and_override_update_element_state() {
+        let mut f = make_formation();
+        let el = FormationElement {
+            id: "el-1".into(),
+            prototype_id: "p-1".into(),
+            owned_rolling_stock_id: None,
+            position_order: 0,
+            traction_override: 0,
+        };
+        f.add_element(el);
+        assert_eq!(f.elements.len(), 1);
+
+        f.assign_rolling_stock("el-1", "ors-1".into())
+            .expect("assign should succeed");
+        assert_eq!(f.elements[0].owned_rolling_stock_id.as_deref(), Some("ors-1"));
+
+        f.unassign_rolling_stock("el-1")
+            .expect("unassign should succeed");
+        assert_eq!(f.elements[0].owned_rolling_stock_id, None);
+
+        f.set_traction_override("el-1", -1)
+            .expect("override should succeed");
+        assert_eq!(f.elements[0].traction_override, -1);
+
+        f.remove_element("el-1").expect("remove should succeed");
+        assert!(f.elements.is_empty());
+    }
+
+    #[test]
+    fn test_reorder_updates_element_order() {
+        let mut f = make_formation();
+        f.add_element(FormationElement {
+            id: "el-1".into(),
+            prototype_id: "p-1".into(),
+            owned_rolling_stock_id: None,
+            position_order: 0,
+            traction_override: 0,
+        });
+        f.add_element(FormationElement {
+            id: "el-2".into(),
+            prototype_id: "p-2".into(),
+            owned_rolling_stock_id: None,
+            position_order: 1,
+            traction_override: 0,
+        });
+
+        f.reorder_elements(vec!["el-2".into(), "el-1".into()])
+            .expect("reorder should succeed");
+
+        let ordered_ids: Vec<&str> = f.elements.iter().map(|element| element.id.as_str()).collect();
+        assert_eq!(ordered_ids, vec!["el-2", "el-1"]);
+    }
+
+    #[test]
+    fn test_apply_event_created_and_deleted_variants_do_not_break_state() {
+        let mut f = make_formation();
+        f.name = "Old Name".into();
+
+        f.apply_event(&TrainFormationEvent::Created {
+            id: f.id.clone(),
+            name: "Created Name".into(),
+        });
+        assert_eq!(f.name, "Created Name");
+
+        f.apply_event(&TrainFormationEvent::Deleted {
+            id: f.id.clone(),
+        });
+        assert_eq!(f.name, "Created Name");
+    }
 }

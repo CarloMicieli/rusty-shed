@@ -3,7 +3,8 @@ use crate::cloud_backup::domain::{
     dtos::{BackupListItem, BackupListResponse, ListBackupsArgs},
 };
 use crate::cloud_backup::infrastructure::{
-    google_drive::GoogleDriveClient, oauth_service::OAuthService, secure_storage::SecureStorage,
+    google_drive::{DriveFile, GoogleDriveClient}, oauth_service::OAuthService,
+    secure_storage::SecureStorage,
 };
 use chrono::DateTime;
 
@@ -40,58 +41,55 @@ pub async fn list_backups(
     // List all files in folder
     let files = drive_client.list_files(&folder_id).await?;
 
-    // Convert to backup list items
-    let mut backups: Vec<BackupListItem> = Vec::new();
-    for file in files {
-        // Parse app properties
-        let app_props = file.app_properties.as_ref();
-
-        // Extract label (fallback to filename; UI can localize)
-        let label = file.name.clone();
-
-        // Extract record count
-        let record_count = app_props
-            .and_then(|p| p.get("recordCount"))
-            .and_then(|v| v.as_str())
-            .and_then(|s| s.parse::<u64>().ok())
-            .unwrap_or(0);
-
-        // Determine if initial
-        let is_initial = app_props
-            .and_then(|p| p.get("isInitial"))
-            .and_then(|v| v.as_str())
-            .map(|value| value == "true")
-            .unwrap_or(false);
-
-        // Format created_at from modified_time
-        let created_at = app_props
-            .and_then(|p| p.get("backupTimestamp"))
-            .and_then(|v| v.as_str())
-            .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
-            .map(|dt| dt.to_rfc3339())
-            .or_else(|| {
-                file.modified_time
-                    .as_ref()
-                    .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
-                    .map(|dt| dt.to_rfc3339())
-            })
-            .unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
-
-        backups.push(BackupListItem {
-            id: file.id,
-            label,
-            created_at,
-            size_bytes: file.size,
-            size_formatted: format_bytes(file.size),
-            record_count,
-            is_initial,
-        });
-    }
+    let backups = map_drive_files(files);
 
     Ok(BackupListResponse {
         total_count: backups.len(),
         backups,
     })
+}
+
+fn map_drive_files(files: Vec<DriveFile>) -> Vec<BackupListItem> {
+    files.into_iter().map(map_drive_file).collect()
+}
+
+fn map_drive_file(file: DriveFile) -> BackupListItem {
+    let app_props = file.app_properties.as_ref();
+
+    let record_count = app_props
+        .and_then(|p| p.get("recordCount"))
+        .and_then(|v| v.as_str())
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(0);
+
+    let is_initial = app_props
+        .and_then(|p| p.get("isInitial"))
+        .and_then(|v| v.as_str())
+        .map(|value| value == "true")
+        .unwrap_or(false);
+
+    let created_at = app_props
+        .and_then(|p| p.get("backupTimestamp"))
+        .and_then(|v| v.as_str())
+        .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
+        .map(|dt| dt.to_rfc3339())
+        .or_else(|| {
+            file.modified_time
+                .as_ref()
+                .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
+                .map(|dt| dt.to_rfc3339())
+        })
+        .unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
+
+    BackupListItem {
+        id: file.id,
+        label: file.name,
+        created_at,
+        size_bytes: file.size,
+        size_formatted: format_bytes(file.size),
+        record_count,
+        is_initial,
+    }
 }
 
 /// Format bytes to human-readable string
@@ -113,7 +111,8 @@ fn format_bytes(bytes: u64) -> String {
 mod tests {
     use super::*;
     use crate::cloud_backup::domain::CloudBackupError;
-    use crate::cloud_backup::infrastructure::{OAuthTokens, SecureStorage};
+    use crate::cloud_backup::infrastructure::{OAuthTokens, SecureStorage, google_drive::DriveFile};
+    use serde_json::json;
     use async_trait::async_trait;
     use std::sync::Arc;
 
@@ -194,5 +193,67 @@ mod tests {
         .expect_err("expired token without refresh token should fail");
 
         assert!(matches!(err, CloudBackupError::TokenExpired));
+    }
+
+    #[test]
+    fn map_drive_file_uses_app_properties_when_present() {
+        let mut props = serde_json::Map::new();
+        props.insert("recordCount".to_string(), json!("17"));
+        props.insert("isInitial".to_string(), json!("true"));
+        props.insert(
+            "backupTimestamp".to_string(),
+            json!("2025-01-01T10:00:00Z"),
+        );
+
+        let item = map_drive_file(DriveFile {
+            id: "file-1".to_string(),
+            name: "Backup #1".to_string(),
+            size: 1024,
+            modified_time: Some("2024-12-01T09:00:00Z".to_string()),
+            app_properties: Some(props),
+        });
+
+        assert_eq!(item.id, "file-1");
+        assert_eq!(item.label, "Backup #1");
+        assert_eq!(item.size_bytes, 1024);
+        assert_eq!(item.size_formatted, "1.0 KB");
+        assert_eq!(item.record_count, 17);
+        assert!(item.is_initial);
+        assert_eq!(item.created_at, "2025-01-01T10:00:00+00:00");
+    }
+
+    #[test]
+    fn map_drive_file_falls_back_to_modified_time_and_defaults() {
+        let mut props = serde_json::Map::new();
+        props.insert("recordCount".to_string(), json!("invalid"));
+        props.insert("isInitial".to_string(), json!("false"));
+
+        let item = map_drive_file(DriveFile {
+            id: "file-2".to_string(),
+            name: "Backup #2".to_string(),
+            size: 500,
+            modified_time: Some("2024-11-10T15:30:00Z".to_string()),
+            app_properties: Some(props),
+        });
+
+        assert_eq!(item.record_count, 0);
+        assert!(!item.is_initial);
+        assert_eq!(item.size_formatted, "500.0 B");
+        assert_eq!(item.created_at, "2024-11-10T15:30:00+00:00");
+    }
+
+    #[test]
+    fn map_drive_file_uses_now_when_no_timestamp_is_available() {
+        let item = map_drive_file(DriveFile {
+            id: "file-3".to_string(),
+            name: "Backup #3".to_string(),
+            size: 1,
+            modified_time: None,
+            app_properties: None,
+        });
+
+        assert_eq!(item.record_count, 0);
+        assert!(!item.is_initial);
+        assert!(DateTime::parse_from_rfc3339(&item.created_at).is_ok());
     }
 }

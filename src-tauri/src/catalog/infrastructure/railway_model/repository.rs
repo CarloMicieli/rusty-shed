@@ -1370,6 +1370,148 @@ mod tests {
         migrations = "./migrations",
         fixtures("../../../../fixtures/test_railway_model.sql")
     )]
+    async fn save_updates_scale_epoch_category_and_delivery_date_from_event(
+        pool: sqlx::SqlitePool,
+    ) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!({
+                "scale": "N",
+                "epoch": "V",
+                "category": "PASSENGER_CARS",
+                "delivery_date": "2026-Q1"
+            }),
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should apply all model field updates");
+
+        let row = sqlx::query(
+            "SELECT scale, epoch, category, delivery_date FROM railway_models WHERE id = ?1",
+        )
+        .bind("trn:railway-model:acme:60100")
+        .fetch_one(&mut *conn)
+        .await
+        .expect("updated railway model should be queryable");
+
+        let scale: String = row.get("scale");
+        let epoch: String = row.get("epoch");
+        let category: String = row.get("category");
+        let delivery_date: Option<String> = row.get("delivery_date");
+
+        assert_eq!(scale, "N");
+        assert_eq!(epoch, "V");
+        assert_eq!(category, "PASSENGER_CARS");
+        assert_eq!(delivery_date.as_deref(), Some("2026-Q1"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_clears_delivery_date_when_patch_contains_null(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        sqlx::query("UPDATE railway_models SET delivery_date = ?1 WHERE id = ?2")
+            .bind("2025-Q2")
+            .bind("trn:railway-model:acme:60100")
+            .execute(&mut *conn)
+            .await
+            .expect("seed update should succeed");
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!({ "delivery_date": null }),
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should allow clearing delivery date");
+
+        let delivery_date: Option<String> =
+            sqlx::query_scalar("SELECT delivery_date FROM railway_models WHERE id = ?1")
+                .bind("trn:railway-model:acme:60100")
+                .fetch_one(&mut *conn)
+                .await
+                .expect("delivery date should be queryable");
+
+        assert_eq!(delivery_date, None);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_returns_validation_error_for_invalid_scale_patch(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!({ "scale": "INVALID" }),
+        });
+
+        let result = repo.save(&mut aggregate).await;
+
+        assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_ignores_non_object_patch_for_model_update(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let before_scale: String =
+            sqlx::query_scalar("SELECT scale FROM railway_models WHERE id = ?1")
+                .bind("trn:railway-model:acme:60100")
+                .fetch_one(&mut *conn)
+                .await
+                .expect("scale should be queryable before save");
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!(["not", "an", "object"]),
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should ignore non-object patches");
+
+        let after_scale: String = sqlx::query_scalar("SELECT scale FROM railway_models WHERE id = ?1")
+            .bind("trn:railway-model:acme:60100")
+            .fetch_one(&mut *conn)
+            .await
+            .expect("scale should be queryable after save");
+
+        assert_eq!(after_scale, before_scale);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
     async fn save_upserts_translation_from_event(pool: sqlx::SqlitePool) {
         let mut conn = pool.acquire().await.expect("should acquire connection");
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
