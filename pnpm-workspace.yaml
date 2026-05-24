@@ -1,5 +1,9 @@
-ignoredBuiltDependencies:
-  - es5-ext
+packages:
+  - 'packages/*' # Keep your existing packages glob pattern if you already have one
 
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  '@parcel/watcher': true
+  'es5-ext': false
+  'esbuild': true
+  'lightningcss': true
+  'rolldown': true
