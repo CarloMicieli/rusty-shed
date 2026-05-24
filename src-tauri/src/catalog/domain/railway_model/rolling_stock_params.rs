@@ -718,9 +718,9 @@ fn validate_coupling(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
     use crate::catalog::domain::railway_model::TechnicalSpecificationsBuilder;
     use crate::core::domain::length::Length;
+    use pretty_assertions::assert_eq;
     use rust_decimal_macros::dec;
 
     fn sample_length_over_buffers() -> LengthOverBuffers {

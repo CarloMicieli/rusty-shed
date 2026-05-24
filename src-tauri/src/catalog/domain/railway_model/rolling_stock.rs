@@ -1225,7 +1225,10 @@ mod tests {
 
         for rolling_stock in locomotives {
             assert_eq!(rolling_stock.length_over_buffer(), Some(&length));
-            assert_eq!(rolling_stock.technical_specifications(), Some(&technical_specifications));
+            assert_eq!(
+                rolling_stock.technical_specifications(),
+                Some(&technical_specifications)
+            );
         }
     }
 }
