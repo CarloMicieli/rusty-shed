@@ -84,3 +84,29 @@ impl AppUowFactory for SqliteUowFactory {
         Ok(Box::new(uow))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn test_migrations_compile_and_run() {
+        // 1. Create a pristine, isolated in-memory database connection pool
+        let pool = sqlx::SqlitePool::connect("sqlite::memory:")
+            .await
+            .expect("Failed to connect to in-memory SQLite database");
+
+        // 2. Point to your migrations folder relative to the src-tauri root
+        // This macro validates SQL syntax and runs them in order
+        sqlx::migrate!("./migrations")
+            .run(&pool)
+            .await
+            .expect("Failed to run database migrations successfully");
+
+        // 3. Optional: Verify a table exists to ensure it executed completely
+        let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM manufacturers")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to query the migrated manufacturers table");
+
+        assert_eq!(row.0, 0, "The newly initialized database should be empty.");
+    }
+}
