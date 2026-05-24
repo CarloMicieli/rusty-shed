@@ -482,7 +482,7 @@ mod roundtrip {
         let rs_count: i64 = sqlx::query_scalar(
             "SELECT COUNT(*) FROM rolling_stocks \
              WHERE id = 'rs-test-001' AND railway_model_id = 'trn:railway-model:test-manufacturer:test-001' \
-               AND service_level = 'FIRST_SECOND' AND length_millimeters = '213' \
+             AND service_level = 'FIRST_SECOND' AND CAST(length_millimeters AS REAL) = 213 \
                AND technical_coupling_socket = 'NEM_362' AND control = 'DCC_READY'",
         )
         .fetch_one(&import_pool)
@@ -674,19 +674,18 @@ mod roundtrip {
         .await
         .expect("seed decoder");
 
-        // Seed a digital roster entry linked to the owned rolling stock seeded by seed_pool
+        // Seed digital setup on the owned rolling stock seeded by seed_pool
         sqlx::query(
-            "INSERT INTO digital_rolling_stocks \
-             (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
-             VALUES (?, ?, ?, ?)",
+            "UPDATE owned_rolling_stocks \
+             SET dcc_address = ?, installed_decoder_id = ? \
+             WHERE id = ?",
         )
-        .bind("drs-test-001")
-        .bind("ors-test-001")
         .bind(42_i64)
         .bind("trn:decoder:test-manufacturer:d100")
+        .bind("ors-test-001")
         .execute(&pool)
         .await
-        .expect("seed digital roster entry");
+        .expect("seed owned rolling stock digital setup");
 
         let selection = ExportEntitySelection {
             include_railway_models: false,
@@ -747,7 +746,7 @@ mod roundtrip {
         assert_eq!(decoder_count, 1, "decoder must exist in import DB");
 
         let roster_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM digital_rolling_stocks WHERE id = 'drs-test-001'",
+            "SELECT COUNT(*) FROM owned_rolling_stocks WHERE id = 'ors-test-001' AND dcc_address IS NOT NULL",
         )
         .fetch_one(&import_pool)
         .await
@@ -779,17 +778,16 @@ mod roundtrip {
         .expect("seed decoder");
 
         sqlx::query(
-            "INSERT INTO digital_rolling_stocks \
-             (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
-             VALUES (?, ?, ?, ?)",
+              "UPDATE owned_rolling_stocks \
+               SET dcc_address = ?, installed_decoder_id = ? \
+               WHERE id = ?",
         )
-        .bind("drs-test-001")
-        .bind("ors-test-001")
         .bind(42_i64)
         .bind("trn:decoder:test-manufacturer:d100")
+           .bind("ors-test-001")
         .execute(&pool)
         .await
-        .expect("seed digital roster entry");
+           .expect("seed owned rolling stock digital setup");
 
         let selection = ExportEntitySelection {
             include_railway_models: false,
@@ -858,7 +856,7 @@ mod roundtrip {
         assert_eq!(decoder_count, 1, "decoder must not be duplicated");
 
         let roster_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM digital_rolling_stocks WHERE id = 'drs-test-001'",
+            "SELECT COUNT(*) FROM owned_rolling_stocks WHERE id = 'ors-test-001' AND dcc_address IS NOT NULL",
         )
         .fetch_one(&import_pool)
         .await

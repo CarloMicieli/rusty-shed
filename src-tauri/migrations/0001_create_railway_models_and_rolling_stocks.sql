@@ -106,9 +106,9 @@ CREATE TABLE IF NOT EXISTS rolling_stocks
     passenger_car_type                   TEXT,
     railcar_type                         TEXT,
     service_level                        TEXT,
-    length_inches                        TEXT, --no support for decimal in sqlite, so using TEXT
-    length_millimeters                   TEXT, --no support for decimal in sqlite, so using TEXT
-    technical_minimum_radius_mm          TEXT, --no support for decimal in sqlite, so using TEXT
+    length_inches                        REAL,
+    length_millimeters                   REAL,
+    technical_minimum_radius_mm          REAL,
     technical_coupling_socket            TEXT,
     technical_coupling_close_couplers    TEXT,
     technical_coupling_digital_shunting  TEXT,

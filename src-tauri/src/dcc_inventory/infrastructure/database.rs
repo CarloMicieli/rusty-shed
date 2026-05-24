@@ -15,9 +15,14 @@ pub async fn find_digital_rolling_stock_by_id(
     id: &DigitalRollingStockId,
 ) -> Result<Option<DigitalRollingStockRow>, sqlx::Error> {
     let sql = r#"
-        SELECT id, owned_rolling_stock_id, dcc_address, installed_decoder_id
-        FROM digital_rolling_stocks
-        WHERE id = ?1
+        SELECT
+            REPLACE(ors.id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id,
+            ors.id AS owned_rolling_stock_id,
+            ors.dcc_address,
+            ors.installed_decoder_id
+        FROM owned_rolling_stocks ors
+        WHERE ors.id = REPLACE(?1, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')
+          AND ors.dcc_address IS NOT NULL
         LIMIT 1
     "#;
 
@@ -33,22 +38,22 @@ pub async fn find_digital_rolling_stock_by_id(
 /// Propagates any [`sqlx::Error`] from the underlying query.
 pub async fn insert_digital_rolling_stock(
     executor: &mut sqlx::SqliteConnection,
-    id: &DigitalRollingStockId,
+    _id: &DigitalRollingStockId,
     owned_rolling_stock_id: &OwnedRollingStockId,
     dcc_address: u16,
     decoder_id: Option<DecoderId>,
 ) -> Result<(), sqlx::Error> {
     let sql = r#"
-        INSERT INTO digital_rolling_stocks
-            (id, owned_rolling_stock_id, dcc_address, installed_decoder_id)
-        VALUES (?1, ?2, ?3, ?4)
+        UPDATE owned_rolling_stocks
+        SET dcc_address = ?1,
+            installed_decoder_id = ?2
+        WHERE id = ?3
     "#;
 
     sqlx::query(sql)
-        .bind(id)
-        .bind(owned_rolling_stock_id)
         .bind(dcc_address)
         .bind(decoder_id)
+        .bind(owned_rolling_stock_id)
         .execute(executor)
         .await?;
 
@@ -65,9 +70,9 @@ pub async fn update_digital_rolling_stock_decoder(
     decoder_id: Option<DecoderId>,
 ) -> Result<(), sqlx::Error> {
     let sql = r#"
-        UPDATE digital_rolling_stocks
+        UPDATE owned_rolling_stocks
         SET installed_decoder_id = ?1
-        WHERE id = ?2
+        WHERE id = REPLACE(?2, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')
     "#;
 
     sqlx::query(sql)
@@ -89,9 +94,9 @@ pub async fn update_digital_rolling_stock_address(
     dcc_address: u16,
 ) -> Result<(), sqlx::Error> {
     let sql = r#"
-        UPDATE digital_rolling_stocks
+        UPDATE owned_rolling_stocks
         SET dcc_address = ?1
-        WHERE id = ?2
+        WHERE id = REPLACE(?2, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')
     "#;
 
     sqlx::query(sql)
@@ -114,9 +119,9 @@ pub async fn find_all_digital_rolling_stocks_view(
 ) -> Result<Vec<EnrichedRow>, sqlx::Error> {
     let sql = r#"
         SELECT
-            drs.id,
-            drs.owned_rolling_stock_id,
-            drs.dcc_address,
+            REPLACE(ors.id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id,
+            ors.id AS owned_rolling_stock_id,
+            ors.dcc_address,
             d.id AS decoder_id,
             d.product_code AS decoder_product_code,
             d.decoder_type,
@@ -130,15 +135,14 @@ pub async fn find_all_digital_rolling_stocks_view(
             rc.name AS railway_company_name,
             rm.scale,
             rm.power_method
-        FROM digital_rolling_stocks drs
-        JOIN decoders d ON drs.installed_decoder_id = d.id
+        FROM owned_rolling_stocks ors
+        JOIN decoders d ON ors.installed_decoder_id = d.id
         LEFT JOIN manufacturers m ON d.manufacturer_id = m.id
-        JOIN owned_rolling_stocks ors ON drs.owned_rolling_stock_id = ors.id
         LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
         LEFT JOIN railway_companies rc ON rs.railway_company_id = rc.id
         LEFT JOIN railway_models rm ON rs.railway_model_id = rm.id
         WHERE d.decoder_type != 'FUNCTION'
-        ORDER BY drs.dcc_address ASC
+        ORDER BY ors.dcc_address ASC
     "#;
 
     sqlx::query_as::<_, EnrichedRow>(sql)
@@ -159,14 +163,17 @@ pub async fn get_digital_summary(
             COALESCE(SUM(
                 CASE
                     WHEN (rs.is_dummy = 0 OR rs.is_dummy IS NULL)
-                    AND (rs.control IN ('DCC_SOUND', 'DCC_FITTED') OR drs.id IS NOT NULL)
+                    AND (
+                        rs.control IN ('DCC_SOUND', 'DCC_FITTED')
+                        OR ors.dcc_address IS NOT NULL
+                        OR ors.installed_decoder_id IS NOT NULL
+                    )
                     THEN 1
                     ELSE 0
                 END
             ), 0) as digital_count
         FROM owned_rolling_stocks ors
         LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
-        LEFT JOIN digital_rolling_stocks drs ON drs.owned_rolling_stock_id = ors.id
         JOIN collection_items ci ON ors.collection_item_id = ci.id
         WHERE ci.removed_date IS NULL
     "#;
@@ -190,10 +197,10 @@ pub async fn check_address_exists(
     exclude_id: Option<&DigitalRollingStockId>,
 ) -> Result<Option<DigitalRollingStockId>, sqlx::Error> {
     let sql = r#"
-        SELECT id
-        FROM digital_rolling_stocks
+        SELECT REPLACE(id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id
+        FROM owned_rolling_stocks
         WHERE dcc_address = ?1
-        AND id != COALESCE(?2, '')
+        AND id != COALESCE(REPLACE(?2, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:'), '')
         LIMIT 1
     "#;
 
@@ -224,12 +231,11 @@ pub async fn find_installable_rolling_stocks(
             rs.road_number,
             rs.series_code,
             rc.name AS railway_company_name,
-            CASE WHEN drs.id IS NOT NULL THEN 1 ELSE 0 END AS has_decoder,
+            CASE WHEN ors.installed_decoder_id IS NOT NULL THEN 1 ELSE 0 END AS has_decoder,
             rs.dcc_interface
         FROM owned_rolling_stocks ors
         LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
         LEFT JOIN railway_companies rc ON rs.railway_company_id = rc.id
-        LEFT JOIN digital_rolling_stocks drs ON drs.owned_rolling_stock_id = ors.id
         JOIN collection_items ci ON ors.collection_item_id = ci.id
         WHERE ci.removed_date IS NULL
         AND (rs.is_dummy = 0 OR rs.is_dummy IS NULL)

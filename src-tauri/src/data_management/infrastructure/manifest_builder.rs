@@ -362,18 +362,9 @@ async fn export_railway_models_if_needed(
                     "railcarType": rs.try_get::<Option<String>, _>("railcar_type").ok().flatten(),
                     "serviceLevel": rs.try_get::<Option<String>, _>("service_level").ok().flatten(),
                     "isDummy": rs.try_get::<i64, _>("is_dummy").ok().map(|v| v != 0),
-                    "lengthInches": rs.try_get::<Option<String>, _>("length_inches")
-                        .ok()
-                        .flatten()
-                        .and_then(|s| s.parse::<f64>().ok()),
-                    "lengthMillimeters": rs.try_get::<Option<String>, _>("length_millimeters")
-                        .ok()
-                        .flatten()
-                        .and_then(|s| s.parse::<f64>().ok()),
-                    "technicalMinimumRadiusMm": rs.try_get::<Option<String>, _>("technical_minimum_radius_mm")
-                        .ok()
-                        .flatten()
-                        .and_then(|s| s.parse::<f64>().ok()),
+                    "lengthInches": rs.try_get::<Option<f64>, _>("length_inches").ok().flatten(),
+                    "lengthMillimeters": rs.try_get::<Option<f64>, _>("length_millimeters").ok().flatten(),
+                    "technicalMinimumRadiusMm": rs.try_get::<Option<f64>, _>("technical_minimum_radius_mm").ok().flatten(),
                     "technicalCouplingSocket": rs.try_get::<Option<String>, _>("technical_coupling_socket").ok().flatten(),
                     "technicalCouplingCloseCouplers": rs.try_get::<Option<String>, _>("technical_coupling_close_couplers").ok().flatten(),
                     "technicalCouplingDigitalShunting": rs.try_get::<Option<String>, _>("technical_coupling_digital_shunting").ok().flatten(),
@@ -1147,8 +1138,14 @@ async fn export_dcc_roster_if_needed(
     data["decoders"] = json!(decoders);
 
     let roster_rows = sqlx::query(
-        "SELECT id, owned_rolling_stock_id, dcc_address, installed_decoder_id \
-         FROM digital_rolling_stocks ORDER BY id",
+        "SELECT \
+            REPLACE(id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id, \
+            id AS owned_rolling_stock_id, \
+            dcc_address, \
+            installed_decoder_id \
+         FROM owned_rolling_stocks \
+         WHERE dcc_address IS NOT NULL OR installed_decoder_id IS NOT NULL \
+         ORDER BY id",
     )
     .fetch_all(pool)
     .await

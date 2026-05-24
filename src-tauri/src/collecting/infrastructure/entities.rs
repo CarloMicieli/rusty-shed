@@ -94,9 +94,9 @@ pub struct OwnedRollingStockRow {
     pub depot: Option<String>,
     // Rolling stock DCC interface connector (aliased to avoid clash with decoder_interface)
     pub rs_dcc_interface: Option<String>,
-    // Length over buffers stored as TEXT in the DB
-    pub length_millimeters: Option<String>,
-    pub length_inches: Option<String>,
+    // Length over buffers stored as REAL in the DB
+    pub length_millimeters: Option<f64>,
+    pub length_inches: Option<f64>,
     // Currently installed coupler type id (FK to coupler_types.id)
     pub current_coupler_id: Option<String>,
 }

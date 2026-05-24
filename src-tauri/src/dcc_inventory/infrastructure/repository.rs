@@ -190,7 +190,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001",
+            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .unwrap();
 
@@ -217,7 +217,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001",
+            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .unwrap();
 
@@ -263,7 +263,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000999",
+            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .expect("valid id");
         let owned_id = OwnedRollingStockId::try_from(
@@ -294,7 +294,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001",
+            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .expect("valid id");
         let decoder_id = DecoderId::try_from("trn:decoder:acme:d-100").expect("valid decoder id");
@@ -311,7 +311,7 @@ mod tests {
             .expect("save should persist decoder change");
 
         let installed_decoder: Option<String> = sqlx::query_scalar(
-            "SELECT installed_decoder_id FROM digital_rolling_stocks WHERE id = ?1",
+            "SELECT installed_decoder_id FROM owned_rolling_stocks WHERE id = REPLACE(?1, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')",
         )
         .bind(id.as_ref())
         .fetch_one(&pool)
@@ -330,7 +330,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001",
+            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .expect("valid id");
 
@@ -345,12 +345,13 @@ mod tests {
             .await
             .expect("save should persist dcc address change");
 
-        let updated_address: i64 =
-            sqlx::query_scalar("SELECT dcc_address FROM digital_rolling_stocks WHERE id = ?1")
-                .bind(id.as_ref())
-                .fetch_one(&pool)
-                .await
-                .expect("row should be queryable");
+        let updated_address: i64 = sqlx::query_scalar(
+            "SELECT dcc_address FROM owned_rolling_stocks WHERE id = REPLACE(?1, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')",
+        )
+        .bind(id.as_ref())
+        .fetch_one(&pool)
+        .await
+        .expect("row should be queryable");
 
         assert_eq!(updated_address, 501);
     }

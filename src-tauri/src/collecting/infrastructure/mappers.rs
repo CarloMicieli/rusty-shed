@@ -16,6 +16,8 @@ use crate::core::domain::identifiers::Identifier;
 use crate::core::domain::length::Length;
 use crate::dcc_inventory::domain::DecoderId;
 use anyhow::anyhow;
+use rust_decimal::Decimal;
+use rust_decimal::prelude::FromPrimitive;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -107,16 +109,10 @@ impl CollectionMapper {
                             .as_deref()
                             .and_then(|s| DccInterface::from_str(s).ok());
 
-                        // Parse length over buffers from text columns
+                        // Reconstruct length over buffers from numeric columns
                         let length_over_buffers = match (
-                            rs_row
-                                .length_millimeters
-                                .as_deref()
-                                .and_then(|s| s.parse::<rust_decimal::Decimal>().ok()),
-                            rs_row
-                                .length_inches
-                                .as_deref()
-                                .and_then(|s| s.parse::<rust_decimal::Decimal>().ok()),
+                            rs_row.length_millimeters.and_then(Decimal::from_f64),
+                            rs_row.length_inches.and_then(Decimal::from_f64),
                         ) {
                             (Some(mm), _) => {
                                 Some(LengthOverBuffers::from_millimeters(Length::Millimeters(mm)))

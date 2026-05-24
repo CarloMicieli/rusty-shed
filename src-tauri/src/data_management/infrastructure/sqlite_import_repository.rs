@@ -101,21 +101,6 @@ fn build_new_id_sets(duplicates: &AllDuplicates) -> NewIdSets {
     }
 }
 
-fn format_decimal_for_text(value: f64) -> String {
-    if value.fract() == 0.0 {
-        format!("{value:.0}")
-    } else {
-        let mut text = value.to_string();
-        while text.contains('.') && text.ends_with('0') {
-            text.pop();
-        }
-        if text.ends_with('.') {
-            text.pop();
-        }
-        text
-    }
-}
-
 fn synthesize_rolling_stock_id(
     model_id: &str,
     railway_company_id: &str,
@@ -215,9 +200,9 @@ impl SqliteImportRepository {
             .bind(&rs.passenger_car_type)
             .bind(&rs.railcar_type)
             .bind(&rs.service_level)
-            .bind(rs.length_inches.map(format_decimal_for_text))
-            .bind(rs.length_millimeters.map(format_decimal_for_text))
-            .bind(rs.technical_minimum_radius_mm.map(format_decimal_for_text))
+            .bind(rs.length_inches)
+            .bind(rs.length_millimeters)
+            .bind(rs.technical_minimum_radius_mm)
             .bind(&rs.technical_coupling_socket)
             .bind(&rs.technical_coupling_close_couplers)
             .bind(&rs.technical_coupling_digital_shunting)
@@ -467,20 +452,21 @@ impl SqliteImportRepository {
                 continue;
             }
 
-            sqlx::query(
-                "INSERT OR IGNORE INTO digital_rolling_stocks \
-                 (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
-                 VALUES (?, ?, ?, ?)",
+            let result = sqlx::query(
+                "UPDATE owned_rolling_stocks \
+                 SET dcc_address = ?, installed_decoder_id = ? \
+                 WHERE id = ?",
             )
-            .bind(&item.id)
-            .bind(&item.owned_rolling_stock_id)
             .bind(item.dcc_address)
             .bind(&item.decoder_id)
+            .bind(&item.owned_rolling_stock_id)
             .execute(&mut **tx)
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
-            added += 1;
+            if result.rows_affected() > 0 {
+                added += 1;
+            }
         }
 
         Ok((added, skipped_missing_owned_stock))
@@ -1427,13 +1413,6 @@ mod tests {
         .execute(pool)
         .await
         .expect("railway model seed should succeed");
-    }
-
-    #[test]
-    fn format_decimal_for_text_strips_trailing_zeroes() {
-        assert_eq!(format_decimal_for_text(12.0), "12");
-        assert_eq!(format_decimal_for_text(12.50), "12.5");
-        assert_eq!(format_decimal_for_text(12.125), "12.125");
     }
 
     #[test]

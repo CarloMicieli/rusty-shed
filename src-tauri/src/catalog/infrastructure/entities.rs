@@ -7,8 +7,6 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::scale::Scale;
 use chrono::{NaiveDate, NaiveDateTime};
-use rust_decimal::Decimal;
-use sqlx::types::Text;
 
 /// Row mapping for the `manufacturers` table.
 ///
@@ -162,14 +160,14 @@ pub struct RollingStockRow {
     /// Livery description, if available (paint scheme / decoration).
     pub livery: Option<String>,
 
-    /// Length in inches as stored in the DB (Decimal wrapped in TEXT).
-    pub length_inches: Option<Text<Decimal>>,
+    /// Length in inches as stored in the DB.
+    pub length_inches: Option<f64>,
 
-    /// Length in millimeters as stored in the DB (Decimal wrapped in TEXT).
-    pub length_millimeters: Option<Text<Decimal>>,
+    /// Length in millimeters as stored in the DB.
+    pub length_millimeters: Option<f64>,
 
-    /// Technical minimum radius in millimeters (stored as TEXT decimal).
-    pub technical_minimum_radius_mm: Option<Text<Decimal>>,
+    /// Technical minimum radius in millimeters.
+    pub technical_minimum_radius_mm: Option<f64>,
 
     /// Coupling socket type or description.
     pub technical_coupling_socket: Option<String>,

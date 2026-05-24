@@ -86,7 +86,9 @@ pub async fn get_export_preview(
 
     // Count DCC roster entries if selected
     if selection.include_dcc_roster {
-        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM digital_rolling_stocks")
+        let count: (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM owned_rolling_stocks WHERE dcc_address IS NOT NULL OR installed_decoder_id IS NOT NULL",
+        )
             .fetch_one(pool)
             .await
             .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
@@ -197,13 +199,15 @@ mod tests {
         .expect("create maintenance_events");
 
         sqlx::query(
-            "CREATE TABLE digital_rolling_stocks (
-                id TEXT PRIMARY KEY
+            "CREATE TABLE owned_rolling_stocks (
+                id TEXT PRIMARY KEY,
+                dcc_address INTEGER,
+                installed_decoder_id TEXT
             )",
         )
         .execute(&pool)
         .await
-        .expect("create digital_rolling_stocks");
+        .expect("create owned_rolling_stocks");
 
         pool
     }

@@ -12,6 +12,8 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::core::domain::{Language, domain_error::DomainError, metadata::Metadata};
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
+use rust_decimal::prelude::FromPrimitive;
 use std::str::FromStr;
 use url::Url;
 
@@ -238,9 +240,8 @@ impl TryFrom<RailwayCompanyRow> for RailwayCompany {
 /// Returns `None` if both `length_inches` and `length_millimeters` are `None`.
 /// If either value is present, attempts to construct a valid `LengthOverBuffers`.
 pub fn reconstruct_length_over_buffers(row: &RollingStockRow) -> Option<LengthOverBuffers> {
-    // sqlx::types::Text<T> implements Deref<Target = T>, so we can dereference and copy
-    let inches = row.length_inches.as_deref().copied();
-    let millimeters = row.length_millimeters.as_deref().copied();
+    let inches = row.length_inches.and_then(Decimal::from_f64);
+    let millimeters = row.length_millimeters.and_then(Decimal::from_f64);
 
     match (inches, millimeters) {
         (None, None) => None,
@@ -257,8 +258,8 @@ pub fn reconstruct_technical_specifications(
     // Parse the optional feature flag fields
     let minimum_radius = row
         .technical_minimum_radius_mm
-        .as_ref()
-        .and_then(|t| Radius::from_millimeters(**t).ok());
+        .and_then(Decimal::from_f64)
+        .and_then(|t| Radius::from_millimeters(t).ok());
 
     let coupling_socket = row
         .technical_coupling_socket

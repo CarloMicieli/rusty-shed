@@ -606,8 +606,9 @@ impl DuplicateChecker {
             .collect();
 
         let query = format!(
-            "SELECT owned_rolling_stock_id FROM digital_rolling_stocks \
-             WHERE owned_rolling_stock_id IN ({})",
+            "SELECT id FROM owned_rolling_stocks \
+             WHERE id IN ({}) \
+               AND (dcc_address IS NOT NULL OR installed_decoder_id IS NOT NULL)",
             owned_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
