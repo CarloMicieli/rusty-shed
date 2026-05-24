@@ -170,35 +170,46 @@ impl Wishlist {
             WishlistEvent::ItemPurchased {
                 item_id,
                 purchased_price,
-            } => {
-                if let Some(item) = self.items.iter_mut().find(|i| i.id == *item_id) {
-                    item.status = WishlistStatus::Purchased;
-                    item.purchased_price = Some(purchased_price.clone());
-                }
-            }
+            } => self.apply_item_purchased(item_id, purchased_price),
             WishlistEvent::ItemUpdated {
                 item_id,
                 priority,
                 status,
                 desired_price,
                 added_date,
-            } => {
-                if let Some(item) = self.items.iter_mut().find(|i| i.id == *item_id) {
-                    if let Some(p) = priority {
-                        item.priority = p.clone();
-                    }
-                    if let Some(s) = status {
-                        item.status = s.clone();
-                    }
-                    match desired_price {
-                        Some(Some(price)) => item.desired_price = Some(price.clone()),
-                        Some(None) => item.desired_price = None,
-                        None => {}
-                    }
-                    if let Some(d) = added_date {
-                        item.added_date = *d;
-                    }
-                }
+            } => self.apply_item_updated(item_id, priority, status, desired_price, added_date),
+        }
+    }
+
+    fn apply_item_purchased(&mut self, item_id: &WishlistItemId, purchased_price: &MonetaryAmount) {
+        if let Some(item) = self.items.iter_mut().find(|i| i.id == *item_id) {
+            item.status = WishlistStatus::Purchased;
+            item.purchased_price = Some(purchased_price.clone());
+        }
+    }
+
+    fn apply_item_updated(
+        &mut self,
+        item_id: &WishlistItemId,
+        priority: &Option<WishlistPriority>,
+        status: &Option<WishlistStatus>,
+        desired_price: &Option<Option<MonetaryAmount>>,
+        added_date: &Option<NaiveDate>,
+    ) {
+        if let Some(item) = self.items.iter_mut().find(|i| i.id == *item_id) {
+            if let Some(p) = priority {
+                item.priority = p.clone();
+            }
+            if let Some(s) = status {
+                item.status = s.clone();
+            }
+            match desired_price {
+                Some(Some(price)) => item.desired_price = Some(price.clone()),
+                Some(None) => item.desired_price = None,
+                None => {}
+            }
+            if let Some(d) = added_date {
+                item.added_date = *d;
             }
         }
     }

@@ -347,6 +347,7 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_company::RailwayCompanyId;
     use crate::catalog::domain::railway_model::{Category, PowerMethod, ProductCode};
     use crate::catalog::domain::railway_model::{MockRailwayModelRepository, RailwayModel};
     use crate::catalog::domain::scale::Scale;
@@ -438,5 +439,93 @@ mod tests {
             .expect("should update railway model");
 
         assert_eq!(id, existing_id);
+    }
+
+    #[test]
+    fn map_simple_rolling_stock_requires_locomotive_subcategory() {
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
+        let input = SimplifiedRollingStockInput {
+            railway_company_id: "trn:railway-company:rc1".to_string(),
+            series_code: "E464".to_string(),
+            road_number: Some("001".to_string()),
+            subcategory: None,
+            category: "Locomotive".to_string(),
+        };
+
+        let result = map_simple_rolling_stock(input, company_id);
+        assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+
+    #[test]
+    fn map_simple_rolling_stock_maps_passenger_car_without_subcategory() {
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
+        let input = SimplifiedRollingStockInput {
+            railway_company_id: "trn:railway-company:rc1".to_string(),
+            series_code: "UIC-Z".to_string(),
+            road_number: Some("50 83".to_string()),
+            subcategory: None,
+            category: "PASSENGER_CAR".to_string(),
+        };
+
+        let mapped = map_simple_rolling_stock(input, company_id).expect("mapping should succeed");
+        match mapped {
+            RollingStockParams::PassengerCarParams {
+                passenger_car_type, ..
+            } => assert!(passenger_car_type.is_none()),
+            _ => panic!("expected passenger car params"),
+        }
+    }
+
+    #[test]
+    fn map_simple_rolling_stock_maps_emu_and_railcar_defaults() {
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
+
+        let emu = SimplifiedRollingStockInput {
+            railway_company_id: "trn:railway-company:rc1".to_string(),
+            series_code: "ETR".to_string(),
+            road_number: None,
+            subcategory: Some("NOT_A_REAL_EMU_TYPE".to_string()),
+            category: "ELECTRIC_MULTIPLE_UNIT".to_string(),
+        };
+        let railcar = SimplifiedRollingStockInput {
+            railway_company_id: "trn:railway-company:rc1".to_string(),
+            series_code: "ALn".to_string(),
+            road_number: None,
+            subcategory: Some("NOT_A_REAL_RAILCAR_TYPE".to_string()),
+            category: "RAILCAR".to_string(),
+        };
+
+        let emu_mapped =
+            map_simple_rolling_stock(emu, company_id.clone()).expect("emu mapping should succeed");
+        let railcar_mapped =
+            map_simple_rolling_stock(railcar, company_id).expect("railcar mapping should succeed");
+
+        assert!(matches!(
+            emu_mapped,
+            RollingStockParams::ElectricMultipleUnitParams { .. }
+        ));
+        assert!(matches!(
+            railcar_mapped,
+            RollingStockParams::RailcarParams { .. }
+        ));
+    }
+
+    #[test]
+    fn map_simple_rolling_stock_rejects_invalid_category() {
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
+        let input = SimplifiedRollingStockInput {
+            railway_company_id: "trn:railway-company:rc1".to_string(),
+            series_code: "X".to_string(),
+            road_number: None,
+            subcategory: None,
+            category: "UnknownCategory".to_string(),
+        };
+
+        let result = map_simple_rolling_stock(input, company_id);
+        assert!(matches!(result, Err(DomainError::Validation(_))));
     }
 }

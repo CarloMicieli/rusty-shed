@@ -518,4 +518,51 @@ mod tests {
         assert!(seller.is_system_seeded);
         assert_eq!(seller.usage_count, 0);
     }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn delete_seller_inner_returns_not_found_for_missing_seller(pool: SqlitePool) {
+        let state = app_state(pool);
+        let missing_id = SellerId::try_from("trn:seller:missing").expect("valid seller id");
+
+        let result = delete_seller_inner(&state, missing_id).await;
+        assert!(
+            matches!(result, Err(CommandError::NotFound(_))),
+            "Expected NotFound, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn delete_seller_inner_removes_existing_seller(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let seller_id = "trn:seller:delete-me";
+        let now = Utc::now().to_rfc3339();
+
+        sqlx::query(
+            r#"
+            INSERT INTO sellers (id, name, type, created_at, updated_at, version, is_system_seeded)
+            VALUES (?1, ?2, 'SHOP', ?3, ?4, 1, 0)
+            "#,
+        )
+        .bind(seller_id)
+        .bind("Delete Me")
+        .bind(&now)
+        .bind(&now)
+        .execute(&pool)
+        .await
+        .expect("seller should insert");
+
+        let seller_id = SellerId::try_from(seller_id).expect("valid seller id");
+        delete_seller_inner(&state, seller_id)
+            .await
+            .expect("delete should succeed");
+
+        let remaining: Option<String> = sqlx::query_scalar("SELECT id FROM sellers WHERE id = ?1")
+            .bind("trn:seller:delete-me")
+            .fetch_optional(&pool)
+            .await
+            .expect("query should succeed");
+
+        assert!(remaining.is_none(), "seller should have been removed");
+    }
 }

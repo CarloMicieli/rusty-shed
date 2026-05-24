@@ -1,10 +1,12 @@
 use crate::cloud_backup::application;
 use crate::cloud_backup::domain::*;
 use crate::cloud_backup::infrastructure::{
-    DriveClient, GoogleDriveClient, OAuthService, check_connectivity, create_platform_storage,
+    DriveClient, GoogleDriveClient, OAuthService, OAuthTokens, SecureStorage, check_connectivity,
+    create_platform_storage,
 };
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
+use async_trait::async_trait;
 use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
 
@@ -329,6 +331,34 @@ async fn resolve_restore_access_token(
 ) -> std::result::Result<String, CommandError> {
     let storage = create_platform_storage(STORAGE_SERVICE.to_string());
 
+    resolve_restore_access_token_with_storage(storage.as_ref(), oauth_service, user_email).await
+}
+
+#[async_trait]
+trait RestoreTokenRefresher: Send + Sync {
+    async fn refresh_token(
+        &self,
+        user_email: &str,
+    ) -> std::result::Result<OAuthTokens, CommandError>;
+}
+
+#[async_trait]
+impl RestoreTokenRefresher for OAuthService {
+    async fn refresh_token(
+        &self,
+        user_email: &str,
+    ) -> std::result::Result<OAuthTokens, CommandError> {
+        OAuthService::refresh_token(self, user_email)
+            .await
+            .map_err(CommandError::from)
+    }
+}
+
+async fn resolve_restore_access_token_with_storage(
+    storage: &dyn SecureStorage,
+    refresher: &(dyn RestoreTokenRefresher + Send + Sync),
+    user_email: &str,
+) -> std::result::Result<String, CommandError> {
     let tokens = storage
         .retrieve_tokens(user_email)
         .await
@@ -336,10 +366,7 @@ async fn resolve_restore_access_token(
         .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
 
     if tokens.is_expired() {
-        let refreshed = oauth_service
-            .refresh_token(user_email)
-            .await
-            .map_err(CommandError::from)?;
+        let refreshed = refresher.refresh_token(user_email).await?;
         storage
             .store_tokens(user_email, &refreshed)
             .await
@@ -397,11 +424,102 @@ pub async fn cloud_backup_restore(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use async_trait::async_trait;
+    use std::collections::HashMap;
+    use std::sync::Mutex;
 
     fn restore_args_with_confirmation(confirmation: &str) -> RestoreBackupArgs {
         RestoreBackupArgs {
             backup_id: "backup-1".to_string(),
             confirmation: confirmation.to_string(),
+        }
+    }
+
+    #[derive(Default)]
+    struct TestStorage {
+        tokens: Mutex<HashMap<String, OAuthTokens>>,
+        fail_retrieve: bool,
+    }
+
+    impl TestStorage {
+        fn with_tokens(tokens: OAuthTokens) -> Self {
+            let mut map = HashMap::new();
+            map.insert("alice@example.com".to_string(), tokens);
+            Self {
+                tokens: Mutex::new(map),
+                fail_retrieve: false,
+            }
+        }
+
+        fn failing_retrieve() -> Self {
+            Self {
+                fail_retrieve: true,
+                ..Self::default()
+            }
+        }
+    }
+
+    #[derive(Clone)]
+    struct FakeRefresher {
+        refreshed_token: OAuthTokens,
+    }
+
+    impl FakeRefresher {
+        fn new(refreshed_token: OAuthTokens) -> Self {
+            Self { refreshed_token }
+        }
+    }
+
+    #[async_trait]
+    impl RestoreTokenRefresher for FakeRefresher {
+        async fn refresh_token(
+            &self,
+            _user_email: &str,
+        ) -> std::result::Result<OAuthTokens, CommandError> {
+            Ok(self.refreshed_token.clone())
+        }
+    }
+
+    #[async_trait]
+    impl SecureStorage for TestStorage {
+        async fn store_tokens(
+            &self,
+            user_id: &str,
+            tokens: &OAuthTokens,
+        ) -> crate::cloud_backup::domain::Result<()> {
+            self.tokens
+                .lock()
+                .expect("storage lock")
+                .insert(user_id.to_string(), tokens.clone());
+            Ok(())
+        }
+
+        async fn retrieve_tokens(
+            &self,
+            user_id: &str,
+        ) -> crate::cloud_backup::domain::Result<Option<OAuthTokens>> {
+            if self.fail_retrieve {
+                return Err(CloudBackupError::NotImplemented);
+            }
+
+            Ok(self
+                .tokens
+                .lock()
+                .expect("storage lock")
+                .get(user_id)
+                .cloned())
+        }
+
+        async fn delete_tokens(&self, _user_id: &str) -> crate::cloud_backup::domain::Result<()> {
+            Ok(())
+        }
+
+        async fn has_tokens(&self, user_id: &str) -> crate::cloud_backup::domain::Result<bool> {
+            Ok(self
+                .tokens
+                .lock()
+                .expect("storage lock")
+                .contains_key(user_id))
         }
     }
 
@@ -552,5 +670,85 @@ mod tests {
             }
             other => panic!("Expected not-connected business-rule error, got: {other:?}"),
         }
+    }
+
+    #[tokio::test]
+    async fn resolve_restore_access_token_returns_cached_token_when_valid() {
+        let storage = TestStorage::with_tokens(OAuthTokens::new(
+            "access-token".to_string(),
+            Some("refresh-token".to_string()),
+            chrono::Utc::now().timestamp() + 3600,
+            "Bearer".to_string(),
+        ));
+        let refresher = FakeRefresher::new(OAuthTokens::new(
+            "new-access".to_string(),
+            Some("new-refresh".to_string()),
+            chrono::Utc::now().timestamp() + 3600,
+            "Bearer".to_string(),
+        ));
+
+        let result =
+            resolve_restore_access_token_with_storage(&storage, &refresher, "alice@example.com")
+                .await
+                .expect("cached token should be returned");
+
+        assert_eq!(result, "access-token");
+    }
+
+    #[tokio::test]
+    async fn resolve_restore_access_token_refreshes_expired_token() {
+        let storage = TestStorage::with_tokens(OAuthTokens::new(
+            "old-access".to_string(),
+            Some("old-refresh".to_string()),
+            chrono::Utc::now().timestamp() - 10,
+            "Bearer".to_string(),
+        ));
+        let refresher = FakeRefresher::new(OAuthTokens::new(
+            "new-access".to_string(),
+            Some("new-refresh".to_string()),
+            chrono::Utc::now().timestamp() + 3600,
+            "Bearer".to_string(),
+        ));
+
+        let result =
+            resolve_restore_access_token_with_storage(&storage, &refresher, "alice@example.com")
+                .await
+                .expect("expired token should refresh");
+
+        assert_eq!(result, "new-access");
+    }
+
+    #[tokio::test]
+    async fn resolve_restore_access_token_returns_not_connected_when_missing_tokens() {
+        let storage = TestStorage::default();
+        let refresher = FakeRefresher::new(OAuthTokens::new(
+            "new-access".to_string(),
+            Some("new-refresh".to_string()),
+            chrono::Utc::now().timestamp() + 3600,
+            "Bearer".to_string(),
+        ));
+
+        let result =
+            resolve_restore_access_token_with_storage(&storage, &refresher, "alice@example.com")
+                .await;
+
+        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+    }
+
+    #[tokio::test]
+    async fn resolve_restore_access_token_maps_storage_errors() {
+        let storage = TestStorage::failing_retrieve();
+        let refresher = FakeRefresher::new(OAuthTokens::new(
+            "new-access".to_string(),
+            Some("new-refresh".to_string()),
+            chrono::Utc::now().timestamp() + 3600,
+            "Bearer".to_string(),
+        ));
+
+        let result =
+            resolve_restore_access_token_with_storage(&storage, &refresher, "alice@example.com")
+                .await;
+
+        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
     }
 }

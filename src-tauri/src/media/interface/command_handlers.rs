@@ -406,20 +406,28 @@ fn map_delete_error(err: DeleteError) -> CommandError {
 
 /// Map ValidationError to CommandError
 fn map_validation_error(err: ValidationError) -> CommandError {
+    if let ValidationError::IoError(msg) = err {
+        return CommandError::unknown(msg);
+    }
+
+    CommandError::BusinessRule(map_validation_error_message(&err))
+}
+
+fn map_validation_error_message(err: &ValidationError) -> String {
     match err {
-        ValidationError::FileNotFound => CommandError::BusinessRule("File not found".to_string()),
-        ValidationError::FileTooLarge { size_mb, max_mb } => CommandError::BusinessRule(format!(
+        ValidationError::FileNotFound => "File not found".to_string(),
+        ValidationError::FileTooLarge { size_mb, max_mb } => format!(
             "File size ({} MB) exceeds maximum allowed size ({} MB)",
             size_mb, max_mb
-        )),
-        ValidationError::UnsupportedFormat { format } => CommandError::BusinessRule(format!(
+        ),
+        ValidationError::UnsupportedFormat { format } => format!(
             "Unsupported format: {}. Supported formats: JPEG, PNG, WebP",
             format
-        )),
-        ValidationError::CorruptedImage => {
-            CommandError::BusinessRule("Image file is corrupted or invalid".to_string())
+        ),
+        ValidationError::CorruptedImage => "Image file is corrupted or invalid".to_string(),
+        ValidationError::IoError(_) => {
+            unreachable!("io errors are handled in map_validation_error")
         }
-        ValidationError::IoError(msg) => CommandError::unknown(msg),
     }
 }
 
@@ -573,6 +581,67 @@ mod tests {
 
         match cmd_err {
             CommandError::Unknown { message, .. } => assert_eq!(message, "io failed"),
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_file_not_found() {
+        let cmd_err = map_validation_error(ValidationError::FileNotFound);
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert_eq!(msg, "File not found"),
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_file_too_large() {
+        let cmd_err = map_validation_error(ValidationError::FileTooLarge {
+            size_mb: 11,
+            max_mb: 10,
+        });
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => {
+                assert!(msg.contains("11"));
+                assert!(msg.contains("10"));
+            }
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_unsupported_format() {
+        let cmd_err = map_validation_error(ValidationError::UnsupportedFormat {
+            format: "gif".to_string(),
+        });
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => {
+                assert!(msg.contains("Unsupported format"));
+                assert!(msg.contains("gif"));
+            }
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_corrupted_image() {
+        let cmd_err = map_validation_error(ValidationError::CorruptedImage);
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("corrupted")),
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_io_error() {
+        let cmd_err = map_validation_error(ValidationError::IoError("io".to_string()));
+
+        match cmd_err {
+            CommandError::Unknown { message, .. } => assert_eq!(message, "io"),
             _ => panic!("Expected Unknown variant"),
         }
     }

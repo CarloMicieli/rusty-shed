@@ -675,4 +675,52 @@ mod tests {
         let result = add_rolling_stock_to_model_inner(&state, args).await;
         assert!(matches!(result, Err(CommandError::ValidationError(_))));
     }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_railway_model_delivery_date_invalid_date_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateRailwayModelDeliveryDateArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:60100")
+                .expect("valid railway model id"),
+            delivery_date: Some("not-a-delivery-date".to_string()),
+        };
+
+        let result = update_railway_model_delivery_date_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_rolling_stock_specifications_invalid_body_shell_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateRollingStockSpecificationsArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:60100")
+                .expect("valid railway model id"),
+            rolling_stock_id: crate::catalog::domain::railway_model::RollingStockId::default(),
+            series_code: "E444".to_string(),
+            road_number: None,
+            livery: None,
+            depot: None,
+            series: None,
+            friendly_name: None,
+            flywheel_fitted: None,
+            body_shell: Some("NotARealBodyShell".to_string()),
+            chassis: None,
+            interior_lights: None,
+            lights: None,
+            sprung_buffers: None,
+            dcc_interface: None,
+            control: None,
+            coupling_socket: None,
+            close_couplers: None,
+            digital_shunting: None,
+            is_dummy: None,
+        };
+
+        let result = update_rolling_stock_specifications_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
 }

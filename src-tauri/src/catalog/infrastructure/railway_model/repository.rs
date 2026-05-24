@@ -31,6 +31,19 @@ pub struct SqliteRailwayModelRepository<'conn> {
     executor: &'conn mut SqliteConnection,
 }
 
+enum PatchRoute {
+    RailwayCompany,
+    FullSpecifications,
+    DccAndLength,
+    SingleField {
+        column: &'static str,
+        key: &'static str,
+    },
+    Category,
+    Identification,
+    Ignore,
+}
+
 impl<'conn> SqliteRailwayModelRepository<'conn> {
     /// Creates a new instance of the `SqliteRailwayModelRepository`.
     ///
@@ -166,57 +179,102 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         Ok(())
     }
 
-    async fn update_rolling_stock_from_patch(
+    fn detect_patch_route(map: &serde_json::Map<String, serde_json::Value>) -> PatchRoute {
+        if map.contains_key("railway_company_id") {
+            PatchRoute::RailwayCompany
+        } else if map.contains_key("series_code") && map.contains_key("flywheel_fitted") {
+            PatchRoute::FullSpecifications
+        } else if map.contains_key("dcc_interface") || map.contains_key("dcc_length_mm") {
+            PatchRoute::DccAndLength
+        } else if map.contains_key("locomotive_type") {
+            PatchRoute::SingleField {
+                column: "locomotive_type",
+                key: "locomotive_type",
+            }
+        } else if map.contains_key("freight_car_type") {
+            PatchRoute::SingleField {
+                column: "freight_car_type",
+                key: "freight_car_type",
+            }
+        } else if map.contains_key("passenger_car_type") {
+            PatchRoute::SingleField {
+                column: "passenger_car_type",
+                key: "passenger_car_type",
+            }
+        } else if map.contains_key("electric_multiple_unit_type") {
+            PatchRoute::SingleField {
+                column: "electric_multiple_unit_type",
+                key: "electric_multiple_unit_type",
+            }
+        } else if map.contains_key("railcar_type") {
+            PatchRoute::SingleField {
+                column: "railcar_type",
+                key: "railcar_type",
+            }
+        } else if map.contains_key("service_level") {
+            PatchRoute::SingleField {
+                column: "service_level",
+                key: "service_level",
+            }
+        } else if map.contains_key("rolling_stock_category") {
+            PatchRoute::Category
+        } else if map.contains_key("series_code") {
+            PatchRoute::Identification
+        } else {
+            PatchRoute::Ignore
+        }
+    }
+
+    async fn apply_railway_company_patch(
         &mut self,
         rolling_stock_id: &RollingStockId,
-        changed: &serde_json::Value,
+        map: &serde_json::Map<String, serde_json::Value>,
     ) -> Result<(), DomainError> {
-        let map = match changed {
-            serde_json::Value::Object(m) => m,
-            _ => return Ok(()),
-        };
+        let company_id = map
+            .get("railway_company_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        sqlx::query("UPDATE rolling_stocks SET railway_company_id = ?1 WHERE id = ?2")
+            .bind(company_id)
+            .bind(rolling_stock_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+        Ok(())
+    }
 
-        if map.contains_key("railway_company_id") {
-            // Railway company patch
-            let company_id = map
-                .get("railway_company_id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            sqlx::query("UPDATE rolling_stocks SET railway_company_id = ?1 WHERE id = ?2")
-                .bind(company_id)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
-        } else if map.contains_key("series_code") && map.contains_key("flywheel_fitted") {
-            // Full specifications patch (17 columns)
-            let series_code = map
-                .get("series_code")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            let road_number = map.get("road_number").and_then(|v| v.as_str());
-            let livery = map.get("livery").and_then(|v| v.as_str());
-            let depot = map.get("depot").and_then(|v| v.as_str());
-            let series = map.get("series").and_then(|v| v.as_str());
-            let friendly_name = map.get("friendly_name").and_then(|v| v.as_str());
-            let flywheel = map.get("flywheel_fitted").and_then(|v| v.as_str());
-            let body_shell = map.get("body_shell").and_then(|v| v.as_str());
-            let chassis = map.get("chassis").and_then(|v| v.as_str());
-            let interior_lights = map.get("interior_lights").and_then(|v| v.as_str());
-            let lights = map.get("lights").and_then(|v| v.as_str());
-            let sprung_buffers = map.get("sprung_buffers").and_then(|v| v.as_str());
-            let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
-            let control = map.get("control").and_then(|v| v.as_str());
-            let coupling_socket = map.get("coupling_socket").and_then(|s| s.as_str());
-            let close_couplers = map.get("close_couplers").and_then(|s| s.as_str());
-            let digital_shunting = map.get("digital_shunting").and_then(|v| v.as_str());
-            let is_dummy = map
-                .get("is_dummy")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
+    async fn apply_full_specifications_patch(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        map: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<(), DomainError> {
+        let series_code = map
+            .get("series_code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let road_number = map.get("road_number").and_then(|v| v.as_str());
+        let livery = map.get("livery").and_then(|v| v.as_str());
+        let depot = map.get("depot").and_then(|v| v.as_str());
+        let series = map.get("series").and_then(|v| v.as_str());
+        let friendly_name = map.get("friendly_name").and_then(|v| v.as_str());
+        let flywheel = map.get("flywheel_fitted").and_then(|v| v.as_str());
+        let body_shell = map.get("body_shell").and_then(|v| v.as_str());
+        let chassis = map.get("chassis").and_then(|v| v.as_str());
+        let interior_lights = map.get("interior_lights").and_then(|v| v.as_str());
+        let lights = map.get("lights").and_then(|v| v.as_str());
+        let sprung_buffers = map.get("sprung_buffers").and_then(|v| v.as_str());
+        let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
+        let control = map.get("control").and_then(|v| v.as_str());
+        let coupling_socket = map.get("coupling_socket").and_then(|v| v.as_str());
+        let close_couplers = map.get("close_couplers").and_then(|v| v.as_str());
+        let digital_shunting = map.get("digital_shunting").and_then(|v| v.as_str());
+        let is_dummy = map
+            .get("is_dummy")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
 
-            sqlx::query(
-                r#"
+        sqlx::query(
+            r#"
                 UPDATE rolling_stocks
                 SET series_code = ?1,
                     road_number = ?2,
@@ -238,47 +296,52 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                     is_dummy = ?18
                 WHERE id = ?19
             "#,
-            )
-            .bind(series_code)
-            .bind(road_number)
-            .bind(livery)
-            .bind(depot)
-            .bind(series)
-            .bind(friendly_name)
-            .bind(flywheel)
-            .bind(body_shell)
-            .bind(chassis)
-            .bind(interior_lights)
-            .bind(lights)
-            .bind(sprung_buffers)
-            .bind(dcc_interface)
-            .bind(control)
-            .bind(coupling_socket)
-            .bind(close_couplers)
-            .bind(digital_shunting)
-            .bind(is_dummy)
-            .bind(rolling_stock_id)
-            .execute(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
-        } else if map.contains_key("dcc_interface") || map.contains_key("dcc_length_mm") {
-            // DCC / length patch — control, dcc_interface, length_mm (all nullable)
-            let control = map.get("dcc_control").and_then(|v| v.as_str());
-            let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
+        )
+        .bind(series_code)
+        .bind(road_number)
+        .bind(livery)
+        .bind(depot)
+        .bind(series)
+        .bind(friendly_name)
+        .bind(flywheel)
+        .bind(body_shell)
+        .bind(chassis)
+        .bind(interior_lights)
+        .bind(lights)
+        .bind(sprung_buffers)
+        .bind(dcc_interface)
+        .bind(control)
+        .bind(coupling_socket)
+        .bind(close_couplers)
+        .bind(digital_shunting)
+        .bind(is_dummy)
+        .bind(rolling_stock_id)
+        .execute(&mut *self.executor)
+        .await
+        .map_err(DomainError::from)?;
 
-            // Extract length_mm: it can be a number or a string (Decimal serialization)
-            let length_mm = map.get("dcc_length_mm").and_then(|v| {
-                if let Some(num) = v.as_f64() {
-                    Some(num)
-                } else if let Some(s) = v.as_str() {
-                    s.parse::<f64>().ok()
-                } else {
-                    None
-                }
-            });
+        Ok(())
+    }
 
-            sqlx::query(
-                r#"
+    async fn apply_dcc_and_length_patch(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        map: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<(), DomainError> {
+        let control = map.get("dcc_control").and_then(|v| v.as_str());
+        let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
+        let length_mm = map.get("dcc_length_mm").and_then(|v| {
+            if let Some(num) = v.as_f64() {
+                Some(num)
+            } else if let Some(s) = v.as_str() {
+                s.parse::<f64>().ok()
+            } else {
+                None
+            }
+        });
+
+        sqlx::query(
+            r#"
                 UPDATE rolling_stocks
                 SET control           = ?1,
                     dcc_interface     = ?2,
@@ -290,68 +353,53 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                     END
                 WHERE id = ?4
                 "#,
-            )
-            .bind(control)
-            .bind(dcc_interface)
-            .bind(length_mm)
+        )
+        .bind(control)
+        .bind(dcc_interface)
+        .bind(length_mm)
+        .bind(rolling_stock_id)
+        .execute(&mut *self.executor)
+        .await
+        .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    async fn apply_category_patch(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        map: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<(), DomainError> {
+        let category = map
+            .get("rolling_stock_category")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+
+        sqlx::query("UPDATE rolling_stocks SET category = ?1 WHERE id = ?2")
+            .bind(category)
             .bind(rolling_stock_id)
             .execute(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
-        } else if map.contains_key("locomotive_type") {
-            let value = map.get("locomotive_type").and_then(|v| v.as_str());
-            self.update_single_optional_text_field(rolling_stock_id, "locomotive_type", value)
-                .await?;
-        } else if map.contains_key("freight_car_type") {
-            let value = map.get("freight_car_type").and_then(|v| v.as_str());
-            self.update_single_optional_text_field(rolling_stock_id, "freight_car_type", value)
-                .await?;
-        } else if map.contains_key("passenger_car_type") {
-            let value = map.get("passenger_car_type").and_then(|v| v.as_str());
-            self.update_single_optional_text_field(rolling_stock_id, "passenger_car_type", value)
-                .await?;
-        } else if map.contains_key("electric_multiple_unit_type") {
-            let value = map
-                .get("electric_multiple_unit_type")
-                .and_then(|v| v.as_str());
-            self.update_single_optional_text_field(
-                rolling_stock_id,
-                "electric_multiple_unit_type",
-                value,
-            )
-            .await?;
-        } else if map.contains_key("railcar_type") {
-            let value = map.get("railcar_type").and_then(|v| v.as_str());
-            self.update_single_optional_text_field(rolling_stock_id, "railcar_type", value)
-                .await?;
-        } else if map.contains_key("service_level") {
-            let value = map.get("service_level").and_then(|v| v.as_str());
-            self.update_single_optional_text_field(rolling_stock_id, "service_level", value)
-                .await?;
-        } else if map.contains_key("rolling_stock_category") {
-            // Category patch — change the `category` column only.
-            let category = map
-                .get("rolling_stock_category")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            sqlx::query("UPDATE rolling_stocks SET category = ?1 WHERE id = ?2")
-                .bind(category)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
-        } else if map.contains_key("series_code") {
-            // Identification patch (4 columns)
-            let series_code = map
-                .get("series_code")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            let road_number = map.get("road_number").and_then(|v| v.as_str());
-            let livery = map.get("livery").and_then(|v| v.as_str());
-            let depot = map.get("depot").and_then(|v| v.as_str());
 
-            sqlx::query(
-                r#"
+        Ok(())
+    }
+
+    async fn apply_identification_patch(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        map: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<(), DomainError> {
+        let series_code = map
+            .get("series_code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let road_number = map.get("road_number").and_then(|v| v.as_str());
+        let livery = map.get("livery").and_then(|v| v.as_str());
+        let depot = map.get("depot").and_then(|v| v.as_str());
+
+        sqlx::query(
+            r#"
                 UPDATE rolling_stocks
                 SET series_code = ?1,
                     road_number = ?2,
@@ -359,15 +407,55 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                     depot = ?4
                 WHERE id = ?5
             "#,
-            )
-            .bind(series_code)
-            .bind(road_number)
-            .bind(livery)
-            .bind(depot)
-            .bind(rolling_stock_id)
-            .execute(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
+        )
+        .bind(series_code)
+        .bind(road_number)
+        .bind(livery)
+        .bind(depot)
+        .bind(rolling_stock_id)
+        .execute(&mut *self.executor)
+        .await
+        .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    async fn update_rolling_stock_from_patch(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        changed: &serde_json::Value,
+    ) -> Result<(), DomainError> {
+        let map = match changed {
+            serde_json::Value::Object(m) => m,
+            _ => return Ok(()),
+        };
+
+        match Self::detect_patch_route(map) {
+            PatchRoute::RailwayCompany => {
+                self.apply_railway_company_patch(rolling_stock_id, map)
+                    .await?;
+            }
+            PatchRoute::FullSpecifications => {
+                self.apply_full_specifications_patch(rolling_stock_id, map)
+                    .await?;
+            }
+            PatchRoute::DccAndLength => {
+                self.apply_dcc_and_length_patch(rolling_stock_id, map)
+                    .await?;
+            }
+            PatchRoute::SingleField { column, key } => {
+                let value = map.get(key).and_then(|v| v.as_str());
+                self.update_single_optional_text_field(rolling_stock_id, column, value)
+                    .await?;
+            }
+            PatchRoute::Category => {
+                self.apply_category_patch(rolling_stock_id, map).await?;
+            }
+            PatchRoute::Identification => {
+                self.apply_identification_patch(rolling_stock_id, map)
+                    .await?;
+            }
+            PatchRoute::Ignore => {}
         }
 
         Ok(())
@@ -1364,6 +1452,149 @@ mod tests {
                 .expect("availability status should be queryable");
 
         assert_eq!(availability.as_deref(), Some("OUT_OF_STOCK"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_updates_scale_epoch_category_and_delivery_date_from_event(
+        pool: sqlx::SqlitePool,
+    ) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!({
+                "scale": "N",
+                "epoch": "V",
+                "category": "PASSENGER_CARS",
+                "delivery_date": "2026-Q1"
+            }),
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should apply all model field updates");
+
+        let row = sqlx::query(
+            "SELECT scale, epoch, category, delivery_date FROM railway_models WHERE id = ?1",
+        )
+        .bind("trn:railway-model:acme:60100")
+        .fetch_one(&mut *conn)
+        .await
+        .expect("updated railway model should be queryable");
+
+        let scale: String = row.get("scale");
+        let epoch: String = row.get("epoch");
+        let category: String = row.get("category");
+        let delivery_date: Option<String> = row.get("delivery_date");
+
+        assert_eq!(scale, "N");
+        assert_eq!(epoch, "V");
+        assert_eq!(category, "PASSENGER_CARS");
+        assert_eq!(delivery_date.as_deref(), Some("2026-Q1"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_clears_delivery_date_when_patch_contains_null(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        sqlx::query("UPDATE railway_models SET delivery_date = ?1 WHERE id = ?2")
+            .bind("2025-Q2")
+            .bind("trn:railway-model:acme:60100")
+            .execute(&mut *conn)
+            .await
+            .expect("seed update should succeed");
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!({ "delivery_date": null }),
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should allow clearing delivery date");
+
+        let delivery_date: Option<String> =
+            sqlx::query_scalar("SELECT delivery_date FROM railway_models WHERE id = ?1")
+                .bind("trn:railway-model:acme:60100")
+                .fetch_one(&mut *conn)
+                .await
+                .expect("delivery date should be queryable");
+
+        assert_eq!(delivery_date, None);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_returns_validation_error_for_invalid_scale_patch(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!({ "scale": "INVALID" }),
+        });
+
+        let result = repo.save(&mut aggregate).await;
+
+        assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_ignores_non_object_patch_for_model_update(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let before_scale: String =
+            sqlx::query_scalar("SELECT scale FROM railway_models WHERE id = ?1")
+                .bind("trn:railway-model:acme:60100")
+                .fetch_one(&mut *conn)
+                .await
+                .expect("scale should be queryable before save");
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!(["not", "an", "object"]),
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should ignore non-object patches");
+
+        let after_scale: String =
+            sqlx::query_scalar("SELECT scale FROM railway_models WHERE id = ?1")
+                .bind("trn:railway-model:acme:60100")
+                .fetch_one(&mut *conn)
+                .await
+                .expect("scale should be queryable after save");
+
+        assert_eq!(after_scale, before_scale);
     }
 
     #[sqlx::test(

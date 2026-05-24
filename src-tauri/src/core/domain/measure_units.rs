@@ -196,6 +196,19 @@ mod tests {
         }
 
         #[rstest]
+        #[case(MeasureUnit::Millimeters, "MILLIMETERS")]
+        #[case(MeasureUnit::Inches, "INCHES")]
+        #[case(MeasureUnit::Meters, "METERS")]
+        #[case(MeasureUnit::Miles, "MILES")]
+        #[case(MeasureUnit::Kilometers, "KILOMETERS")]
+        fn it_should_return_the_stable_measure_unit_code(
+            #[case] unit: MeasureUnit,
+            #[case] expected: &str,
+        ) {
+            assert_eq!(expected, unit.code());
+        }
+
+        #[rstest]
         #[case(dec!(1.0), MeasureUnit::Inches, MeasureUnit::Inches, dec!(1.0))]
         #[case(dec!(1.0), MeasureUnit::Kilometers, MeasureUnit::Kilometers, dec!(1.0))]
         #[case(dec!(1.0), MeasureUnit::Meters, MeasureUnit::Meters, dec!(1.0))]

@@ -369,6 +369,24 @@ async fn resolve_quarterly_currency(
     Ok(settings.currency)
 }
 
+async fn resolve_budget_currency(
+    app: tauri::AppHandle,
+    currency: Option<String>,
+) -> Result<Currency, CommandError> {
+    let code = match currency {
+        Some(code) => code,
+        None => {
+            let settings = crate::settings::get_settings(app)
+                .await
+                .map_err(|e| CommandError::validation_field("currency", e))?;
+            settings.currency
+        }
+    };
+
+    Currency::from_code(&code)
+        .map_err(|e| CommandError::validation_field("currency", e.to_string()))
+}
+
 // ---------------------------------------------------------------------------
 // Tauri command wrappers – thin shims that delegate to inner functions
 // ---------------------------------------------------------------------------
@@ -392,19 +410,7 @@ pub async fn set_budget_config(
     state: tauri::State<'_, AppState>,
     args: SetBudgetConfigArgs,
 ) -> Result<BudgetConfigDto, CommandError> {
-    // Get currency from args or fall back to settings
-    let currency = match args.currency {
-        Some(ref code) => {
-            Currency::from_code(code).map_err(|e| DomainError::Validation(e.to_string()))?
-        }
-        None => {
-            let settings = crate::settings::get_settings(app)
-                .await
-                .map_err(|e| CommandError::validation_field("currency", e))?;
-            Currency::from_code(&settings.currency)
-                .map_err(|e| CommandError::validation_field("currency", e.to_string()))?
-        }
-    };
+    let currency = resolve_budget_currency(app, args.currency.clone()).await?;
     set_budget_config_inner(&state, args, currency).await
 }
 
@@ -478,19 +484,7 @@ pub async fn add_extra_budget(
     state: tauri::State<'_, AppState>,
     args: AddExtraBudgetArgs,
 ) -> Result<ExtraBudgetDto, CommandError> {
-    // Get currency from args or fall back to settings
-    let currency = match args.currency {
-        Some(ref code) => {
-            Currency::from_code(code).map_err(|e| DomainError::Validation(e.to_string()))?
-        }
-        None => {
-            let settings = crate::settings::get_settings(app)
-                .await
-                .map_err(|e| CommandError::validation_field("currency", e))?;
-            Currency::from_code(&settings.currency)
-                .map_err(|e| CommandError::validation_field("currency", e.to_string()))?
-        }
-    };
+    let currency = resolve_budget_currency(app, args.currency.clone()).await?;
     add_extra_budget_inner(&state, args, currency).await
 }
 

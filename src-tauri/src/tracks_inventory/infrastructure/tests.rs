@@ -305,3 +305,52 @@ mod get_track_products {
         assert!(result.is_empty());
     }
 }
+
+#[cfg(test)]
+mod find_track_inventory_view {
+    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+    use crate::tracks_inventory::domain::{TrackInventoryId, TracksInventoryUowExt};
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn returns_none_for_missing_inventory(pool: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
+        let mut repo = uow.track_inventories_repo();
+
+        let id =
+            TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-999999999999")
+                .unwrap();
+
+        let result = repo.find_view_by_id(&id).await.unwrap();
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn returns_populated_view_for_seeded_inventory(pool: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
+        let mut repo = uow.track_inventories_repo();
+
+        let id =
+            TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-000000000001")
+                .unwrap();
+
+        let result = repo
+            .find_view_by_id(&id)
+            .await
+            .expect("view query should succeed")
+            .expect("view should exist");
+
+        assert_eq!(result.id, id);
+        assert_eq!(result.name, "Test Inventory");
+        assert_eq!(result.items.len(), 1);
+        assert!(result.purchases.is_empty());
+
+        let item = &result.items[0];
+        assert_eq!(item.quantity, 1);
+        assert_eq!(item.required, 0);
+        assert_eq!(item.track_id.to_string(), "trn:track:acme:60100");
+    }
+}

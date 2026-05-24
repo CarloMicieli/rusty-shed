@@ -272,3 +272,91 @@ pub async fn set_item_required(
 ) -> Result<(), CommandError> {
     set_item_required_inner(&state, input).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn set_item_required_negative_required_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let input = SetItemRequiredArgs {
+            inventory_id: TrackInventoryId::try_from(
+                "trn:track-inventory:00000000-0000-0000-0000-000000000001",
+            )
+            .expect("valid inventory id"),
+            track_id: TrackId::try_from("trn:track:acme:60100").expect("valid track id"),
+            required: -1,
+        };
+
+        let result = set_item_required_inner(&state, input).await;
+
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn set_item_required_missing_item_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let input = SetItemRequiredArgs {
+            inventory_id: TrackInventoryId::try_from(
+                "trn:track-inventory:00000000-0000-0000-0000-000000000001",
+            )
+            .expect("valid inventory id"),
+            track_id: TrackId::try_from("trn:track:acme:99999").expect("valid track id"),
+            required: 3,
+        };
+
+        let result = set_item_required_inner(&state, input).await;
+
+        assert!(
+            matches!(result, Err(CommandError::NotFound(_))),
+            "Expected NotFound, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn set_item_required_updates_existing_row(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let inventory_id =
+            TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-000000000001")
+                .expect("valid inventory id");
+        let track_id = TrackId::try_from("trn:track:acme:60100").expect("valid track id");
+
+        let input = SetItemRequiredArgs {
+            inventory_id: inventory_id.clone(),
+            track_id: track_id.clone(),
+            required: 7,
+        };
+
+        set_item_required_inner(&state, input)
+            .await
+            .expect("update should succeed");
+
+        let required: i64 = sqlx::query_scalar(
+            "SELECT required FROM track_inventory_items WHERE inventory_id = ?1 AND track_id = ?2",
+        )
+        .bind(inventory_id.to_string())
+        .bind(track_id.to_string())
+        .fetch_one(&pool)
+        .await
+        .expect("required should be queryable");
+
+        assert_eq!(required, 7);
+    }
+}

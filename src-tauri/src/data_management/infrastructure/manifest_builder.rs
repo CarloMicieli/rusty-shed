@@ -457,6 +457,719 @@ async fn export_railway_models_if_needed(
     Ok(())
 }
 
+async fn export_collection_items_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    media_dir: &Path,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let item_rows = sqlx::query(
+        "SELECT ci.id, ci.railway_model_id, ci.added_date, ci.removed_date, \
+                ci.purchase_condition, ci.model_condition, ci.box_condition, ci.notes, \
+                pi.purchase_type, pi.purchase_date, pi.seller_id, \
+                pi.purchased_price_amount, pi.purchased_price_currency, \
+                pi.sale_date, pi.sale_price_amount, pi.sale_price_currency, \
+                pi.deposit_amount, pi.deposit_currency, pi.expected_date \
+         FROM collection_items ci \
+         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id \
+         ORDER BY ci.id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let items: Vec<Value> = item_rows
+        .iter()
+        .map(|row| {
+            let purchase_type_raw: Option<String> = row
+                .try_get::<Option<String>, _>("purchase_type")
+                .ok()
+                .flatten();
+
+            let schema_purchase_type = purchase_type_raw.as_deref().and_then(db_purchase_type_to_schema);
+
+            let purchase = if let Some(pt) = schema_purchase_type {
+                let purchase_date: Option<String> =
+                    row.try_get::<Option<String>, _>("purchase_date").ok().flatten();
+                let sale_date: Option<String> =
+                    row.try_get::<Option<String>, _>("sale_date").ok().flatten();
+                let seller_id: Option<String> =
+                    row.try_get::<Option<String>, _>("seller_id").ok().flatten();
+
+                let conditions_met = match pt {
+                    "purchased" => purchase_date.is_some(),
+                    "sold" => purchase_date.is_some() && sale_date.is_some(),
+                    "preOrdered" => seller_id.is_some(),
+                    _ => true,
+                };
+
+                if conditions_met {
+                    let price = match (
+                        row.try_get::<Option<i64>, _>("purchased_price_amount")
+                            .ok()
+                            .flatten(),
+                        row.try_get::<Option<String>, _>("purchased_price_currency")
+                            .ok()
+                            .flatten(),
+                    ) {
+                        (Some(amount), Some(currency)) => {
+                            json!({ "amount": amount, "currency": currency })
+                        }
+                        _ => Value::Null,
+                    };
+
+                    let sale_price = match (
+                        row.try_get::<Option<i64>, _>("sale_price_amount")
+                            .ok()
+                            .flatten(),
+                        row.try_get::<Option<String>, _>("sale_price_currency")
+                            .ok()
+                            .flatten(),
+                    ) {
+                        (Some(amount), Some(currency)) => {
+                            json!({ "amount": amount, "currency": currency })
+                        }
+                        _ => Value::Null,
+                    };
+
+                    let deposit = match (
+                        row.try_get::<Option<i64>, _>("deposit_amount")
+                            .ok()
+                            .flatten(),
+                        row.try_get::<Option<String>, _>("deposit_currency")
+                            .ok()
+                            .flatten(),
+                    ) {
+                        (Some(amount), Some(currency)) => {
+                            json!({ "amount": amount, "currency": currency })
+                        }
+                        _ => Value::Null,
+                    };
+
+                    strip_null_fields(json!({
+                        "type": pt,
+                        "purchaseDate": purchase_date,
+                        "sellerId": seller_id,
+                        "price": price,
+                        "salePrice": sale_price,
+                        "depositAmount": deposit,
+                        "saleDate": sale_date,
+                        "expectedDelivery": row.try_get::<Option<String>, _>("expected_date").ok().flatten(),
+                    }))
+                } else {
+                    Value::Null
+                }
+            } else {
+                Value::Null
+            };
+
+            let model_id_for_image: Option<String> = row.try_get::<String, _>("railway_model_id").ok();
+            let image = model_id_for_image
+                .as_deref()
+                .and_then(|id| probe_model_image(media_dir, id));
+            strip_null_fields(json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "railwayModelId": row.try_get::<String, _>("railway_model_id").ok(),
+                "addedDate": row.try_get::<String, _>("added_date").ok(),
+                "removedDate": row.try_get::<Option<String>, _>("removed_date").ok().flatten(),
+                "purchaseCondition": enum_value(
+                    row.try_get::<Option<String>, _>("purchase_condition").ok().flatten(),
+                    db_purchase_condition_to_schema,
+                ),
+                "modelCondition": enum_value(
+                    row.try_get::<Option<String>, _>("model_condition").ok().flatten(),
+                    db_model_condition_to_schema,
+                ),
+                "boxCondition": enum_value(
+                    row.try_get::<Option<String>, _>("box_condition").ok().flatten(),
+                    db_box_condition_to_schema,
+                ),
+                "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                "image": image,
+                "purchase": purchase,
+            }))
+        })
+        .collect();
+    data["collectionItems"] = json!(items);
+
+    let ors_rows = sqlx::query(
+        "SELECT id, collection_item_id, rolling_stock_id, notes, dcc_address, \
+                installed_decoder_id, current_coupler_id \
+         FROM owned_rolling_stocks \
+         WHERE collection_item_id IN (SELECT id FROM collection_items) \
+         ORDER BY id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let owned_rolling_stocks: Vec<Value> = ors_rows
+        .iter()
+        .map(|row| {
+            strip_null_fields(json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "collectionItemId": row.try_get::<String, _>("collection_item_id").ok(),
+                "rollingStockId": row.try_get::<Option<String>, _>("rolling_stock_id").ok().flatten(),
+                "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                "dccAddress": row.try_get::<Option<i64>, _>("dcc_address").ok().flatten(),
+                "installedDecoderId": row.try_get::<Option<String>, _>("installed_decoder_id").ok().flatten(),
+                "currentCouplerId": row.try_get::<Option<String>, _>("current_coupler_id").ok().flatten(),
+            }))
+        })
+        .collect();
+    data["ownedRollingStocks"] = json!(owned_rolling_stocks);
+
+    Ok(())
+}
+
+async fn export_sellers_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let rows = sqlx::query(
+        "SELECT id, name, type, email, phone, website_url, \
+                street_address, city, state_region, postal_code, country_code \
+         FROM sellers ORDER BY name",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let sellers: Vec<Value> = rows.iter().map(build_seller_value).collect();
+    data["sellers"] = json!(sellers);
+
+    Ok(())
+}
+
+async fn export_maintenance_logs_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let card_rows = sqlx::query(
+        "SELECT mc.id, ors.collection_item_id, ors.id AS owned_rolling_stock_id, \
+                mc.last_maintenance_date, mc.next_maintenance_date \
+         FROM maintenance_cards mc \
+         JOIN owned_rolling_stocks ors ON ors.id = mc.owned_rolling_stock_id \
+         ORDER BY mc.id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let mut maintenance_cards: Vec<Value> = Vec::new();
+    for card_row in &card_rows {
+        let card_id: String = card_row
+            .try_get("id")
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let event_rows = sqlx::query(
+            "SELECT id, date_performed, maintenance_type, notes \
+             FROM maintenance_events \
+             WHERE maintenance_card_id = ? \
+             ORDER BY date_performed",
+        )
+        .bind(&card_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let events: Vec<Value> = event_rows
+            .iter()
+            .map(|ev| {
+                let schema_type = ev
+                    .try_get::<Option<String>, _>("maintenance_type")
+                    .ok()
+                    .flatten()
+                    .as_deref()
+                    .and_then(db_maintenance_type_to_schema)
+                    .unwrap_or("repair");
+                strip_null_fields(json!({
+                    "id": ev.try_get::<String, _>("id").ok(),
+                    "date": ev.try_get::<String, _>("date_performed").ok(),
+                    "type": schema_type,
+                    "description": ev.try_get::<Option<String>, _>("notes").ok().flatten(),
+                }))
+            })
+            .collect();
+
+        maintenance_cards.push(strip_null_fields(json!({
+            "id": card_id,
+            "collectionItemId": card_row.try_get::<String, _>("collection_item_id").ok(),
+            "ownedRollingStockId": card_row.try_get::<String, _>("owned_rolling_stock_id").ok(),
+            "lastMaintenanceDate": card_row.try_get::<Option<String>, _>("last_maintenance_date").ok().flatten(),
+            "nextMaintenanceDate": card_row.try_get::<Option<String>, _>("next_maintenance_date").ok().flatten(),
+            "events": events,
+        })));
+    }
+    data["maintenanceCards"] = json!(maintenance_cards);
+
+    Ok(())
+}
+
+async fn export_track_inventory_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let tp_rows = sqlx::query(
+        "SELECT track_id, manufacturer_id, product_code, description, \
+                track_type, track_code, with_roadbed, length_mm, radius_mm \
+         FROM track_products ORDER BY track_id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let track_products: Vec<Value> = tp_rows
+        .iter()
+        .map(|row| {
+            strip_null_fields(json!({
+                "trackId": row.try_get::<String, _>("track_id").ok(),
+                "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
+                "productCode": row.try_get::<String, _>("product_code").ok(),
+                "description": row.try_get::<String, _>("description").ok(),
+                "trackType": row.try_get::<String, _>("track_type").ok(),
+                "trackCode": row.try_get::<String, _>("track_code").ok(),
+                "withRoadbed": row.try_get::<i64, _>("with_roadbed").ok().map(|v| v != 0),
+                "length": row.try_get::<Option<i64>, _>("length_mm").ok().flatten(),
+                "radius": row.try_get::<Option<i64>, _>("radius_mm").ok().flatten(),
+            }))
+        })
+        .collect();
+    data["trackProducts"] = json!(track_products);
+
+    let inv_rows = sqlx::query("SELECT id, name, description FROM track_inventories ORDER BY id")
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let mut referenced_seller_ids: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+    let mut track_inventories: Vec<Value> = Vec::new();
+    for inv_row in &inv_rows {
+        let inv_id: String = inv_row
+            .try_get("id")
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let item_rows = sqlx::query(
+            "SELECT track_id, quantity, required \
+             FROM track_inventory_items WHERE inventory_id = ? ORDER BY track_id",
+        )
+        .bind(&inv_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let items: Vec<Value> = item_rows
+            .iter()
+            .map(|row| {
+                strip_null_fields(json!({
+                    "trackId": row.try_get::<String, _>("track_id").ok(),
+                    "quantity": row.try_get::<i64, _>("quantity").ok(),
+                    "required": row.try_get::<i64, _>("required").ok(),
+                }))
+            })
+            .collect();
+
+        let purchase_rows = sqlx::query(
+            "SELECT id, track_id, quantity, price_amount, price_currency, \
+                    seller_id, purchase_date \
+             FROM track_purchases WHERE inventory_id = ? ORDER BY purchase_date",
+        )
+        .bind(&inv_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let purchases: Vec<Value> = purchase_rows
+            .iter()
+            .map(|row| {
+                let seller_id: Option<String> =
+                    row.try_get::<Option<String>, _>("seller_id").ok().flatten();
+                if let Some(ref sid) = seller_id {
+                    referenced_seller_ids.insert(sid.clone());
+                }
+                let price_amount: i64 = row.try_get::<i64, _>("price_amount").unwrap_or(0);
+                let price_currency: String = row
+                    .try_get::<String, _>("price_currency")
+                    .unwrap_or_else(|_| "EUR".to_string());
+                strip_null_fields(json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "trackId": row.try_get::<String, _>("track_id").ok(),
+                    "quantity": row.try_get::<i64, _>("quantity").ok(),
+                    "price": { "amount": price_amount, "currency": price_currency },
+                    "sellerId": seller_id,
+                    "purchaseDate": row.try_get::<String, _>("purchase_date").ok(),
+                }))
+            })
+            .collect();
+
+        track_inventories.push(strip_null_fields(json!({
+            "id": inv_id,
+            "name": inv_row.try_get::<String, _>("name").ok(),
+            "description": inv_row.try_get::<Option<String>, _>("description").ok().flatten(),
+            "items": items,
+            "purchases": purchases,
+        })));
+    }
+    data["trackInventories"] = json!(track_inventories);
+
+    if !referenced_seller_ids.is_empty() {
+        let existing_sellers: Vec<Value> = data["sellers"].as_array().cloned().unwrap_or_default();
+        let existing_ids: std::collections::HashSet<String> = existing_sellers
+            .iter()
+            .filter_map(|seller| seller["id"].as_str().map(|id| id.to_string()))
+            .collect();
+
+        let missing_ids: Vec<&String> = referenced_seller_ids
+            .iter()
+            .filter(|id| !existing_ids.contains(*id))
+            .collect();
+
+        if !missing_ids.is_empty() {
+            let placeholders = missing_ids
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ");
+            let query = format!(
+                "SELECT id, name, type, email, phone, website_url, \
+                        street_address, city, state_region, postal_code, country_code \
+                 FROM sellers WHERE id IN ({}) ORDER BY name",
+                placeholders
+            );
+            let mut q = sqlx::query(&query);
+            for id in &missing_ids {
+                q = q.bind(id.as_str());
+            }
+            let seller_rows = q
+                .fetch_all(pool)
+                .await
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let mut all_sellers = existing_sellers;
+            for row in &seller_rows {
+                all_sellers.push(build_seller_value(row));
+            }
+            data["sellers"] = json!(all_sellers);
+        }
+    }
+
+    Ok(())
+}
+
+async fn export_train_formations_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let cat_rows =
+        sqlx::query("SELECT id, name, is_custom FROM formation_categories ORDER BY name")
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let formation_categories: Vec<Value> = cat_rows
+        .iter()
+        .map(|row| {
+            json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "name": row.try_get::<String, _>("name").ok(),
+                "isCustom": row.try_get::<i64, _>("is_custom").ok().map(|v| v != 0).unwrap_or(false),
+            })
+        })
+        .collect();
+    data["formationCategories"] = json!(formation_categories);
+
+    let proto_rows = sqlx::query(
+        "SELECT DISTINCT p.id, p.railway_company_id, p.series_code, p.friendly_name, \
+                p.specification_type, \
+                p.locomotive_type, p.locomotive_series, \
+                p.service_level, p.passenger_car_type, \
+                p.freight_car_type, p.railcar_type, \
+                p.electric_multiple_unit_type, p.elements_count, p.is_permanently_coupled, \
+                p.is_motorized, p.is_custom \
+         FROM prototypes p \
+         WHERE p.is_custom = 1 \
+            OR p.id IN ( \
+                SELECT DISTINCT fe.prototype_id \
+                FROM formation_elements fe \
+                JOIN train_formations tf ON tf.id = fe.formation_id \
+            ) \
+         ORDER BY p.id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let prototypes: Vec<Value> = proto_rows
+        .iter()
+        .map(|row| {
+            strip_null_fields(json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "railwayCompanyId": row.try_get::<String, _>("railway_company_id").ok(),
+                "seriesCode": row.try_get::<String, _>("series_code").ok(),
+                "friendlyName": row.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
+                "specificationType": row.try_get::<String, _>("specification_type").ok(),
+                "locomotiveType": row.try_get::<Option<String>, _>("locomotive_type").ok().flatten(),
+                "locomotiveSeries": row.try_get::<Option<String>, _>("locomotive_series").ok().flatten(),
+                "serviceLevel": row.try_get::<Option<String>, _>("service_level").ok().flatten(),
+                "passengerCarType": row.try_get::<Option<String>, _>("passenger_car_type").ok().flatten(),
+                "freightCarType": row.try_get::<Option<String>, _>("freight_car_type").ok().flatten(),
+                "railcarType": row.try_get::<Option<String>, _>("railcar_type").ok().flatten(),
+                "electricMultipleUnitType": row.try_get::<Option<String>, _>("electric_multiple_unit_type").ok().flatten(),
+                "elementsCount": row.try_get::<Option<i64>, _>("elements_count").ok().flatten(),
+                "isPermanentlyCoupled": row.try_get::<Option<i64>, _>("is_permanently_coupled").ok().flatten().map(|v| v != 0),
+                "isMotorized": row.try_get::<i64, _>("is_motorized").ok().map(|v| v != 0).unwrap_or(false),
+                "isCustom": row.try_get::<i64, _>("is_custom").ok().map(|v| v != 0).unwrap_or(false),
+            }))
+        })
+        .collect();
+    data["prototypes"] = json!(prototypes);
+
+    if data["railwayCompanies"].is_null() || data["railwayCompanies"] == json!(null) {
+        let rc_rows = sqlx::query(
+            "SELECT id, name, country_code, status, operating_since, operating_until \
+             FROM railway_companies ORDER BY name",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let railway_companies: Vec<Value> = rc_rows
+            .iter()
+            .map(|row| {
+                strip_null_fields(json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "name": row.try_get::<String, _>("name").ok(),
+                    "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
+                    "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
+                    "operatingSince": row.try_get::<Option<String>, _>("operating_since").ok().flatten(),
+                    "operatingUntil": row.try_get::<Option<String>, _>("operating_until").ok().flatten(),
+                }))
+            })
+            .collect();
+        data["railwayCompanies"] = json!(railway_companies);
+    }
+
+    let tf_rows = sqlx::query(
+        "SELECT id, name, category_id, start_year, end_year, epoch, notes \
+         FROM train_formations ORDER BY name",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let mut train_formations: Vec<Value> = Vec::new();
+    for tf_row in &tf_rows {
+        let tf_id: String = tf_row
+            .try_get("id")
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let elem_rows = sqlx::query(
+            "SELECT id, prototype_id, owned_rolling_stock_id, position_order, traction_override \
+             FROM formation_elements \
+             WHERE formation_id = ? ORDER BY position_order",
+        )
+        .bind(&tf_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let elements: Vec<Value> = elem_rows
+            .iter()
+            .map(|row| {
+                strip_null_fields(json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "prototypeId": row.try_get::<String, _>("prototype_id").ok(),
+                    "ownedRollingStockId": row.try_get::<Option<String>, _>("owned_rolling_stock_id").ok().flatten(),
+                    "positionOrder": row.try_get::<i64, _>("position_order").ok(),
+                    "tractionOverride": row.try_get::<i64, _>("traction_override").ok().unwrap_or(0),
+                }))
+            })
+            .collect();
+
+        train_formations.push(strip_null_fields(json!({
+            "id": tf_id,
+            "name": tf_row.try_get::<String, _>("name").ok(),
+            "categoryId": tf_row.try_get::<Option<String>, _>("category_id").ok().flatten(),
+            "startYear": tf_row.try_get::<Option<i64>, _>("start_year").ok().flatten(),
+            "endYear": tf_row.try_get::<Option<i64>, _>("end_year").ok().flatten(),
+            "epoch": tf_row.try_get::<Option<String>, _>("epoch").ok().flatten(),
+            "notes": tf_row.try_get::<Option<String>, _>("notes").ok().flatten(),
+            "elements": elements,
+        })));
+    }
+    data["trainFormations"] = json!(train_formations);
+
+    Ok(())
+}
+
+async fn export_wishlists_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let wl_rows = sqlx::query("SELECT id, name, notes, is_default FROM wishlists ORDER BY name")
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let mut wishlists: Vec<Value> = Vec::new();
+    for wl_row in &wl_rows {
+        let wl_id: String = wl_row
+            .try_get("id")
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let item_rows = sqlx::query(
+            "SELECT id, railway_model_id, priority, status, added_date, removed_date, \
+                    notes, desired_price_amount, desired_price_currency, \
+                    purchased_price_amount, purchased_price_currency \
+             FROM wishlist_items WHERE wishlist_id = ? ORDER BY added_date",
+        )
+        .bind(&wl_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let items: Vec<Value> = item_rows
+            .iter()
+            .map(|row| {
+                let desired_price = match (
+                    row.try_get::<Option<i64>, _>("desired_price_amount")
+                        .ok()
+                        .flatten(),
+                    row.try_get::<Option<String>, _>("desired_price_currency")
+                        .ok()
+                        .flatten(),
+                ) {
+                    (Some(amount), Some(currency)) => {
+                        json!({ "amount": amount, "currency": currency })
+                    }
+                    _ => Value::Null,
+                };
+                let purchased_price = match (
+                    row.try_get::<Option<i64>, _>("purchased_price_amount")
+                        .ok()
+                        .flatten(),
+                    row.try_get::<Option<String>, _>("purchased_price_currency")
+                        .ok()
+                        .flatten(),
+                ) {
+                    (Some(amount), Some(currency)) => {
+                        json!({ "amount": amount, "currency": currency })
+                    }
+                    _ => Value::Null,
+                };
+                strip_null_fields(json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "railwayModelId": row.try_get::<String, _>("railway_model_id").ok(),
+                    "priority": row.try_get::<String, _>("priority").ok(),
+                    "status": row.try_get::<String, _>("status").ok(),
+                    "addedDate": row.try_get::<String, _>("added_date").ok(),
+                    "removedDate": row.try_get::<Option<String>, _>("removed_date").ok().flatten(),
+                    "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                    "desiredPrice": desired_price,
+                    "purchasedPrice": purchased_price,
+                }))
+            })
+            .collect();
+
+        wishlists.push(strip_null_fields(json!({
+            "id": wl_id,
+            "name": wl_row.try_get::<String, _>("name").ok(),
+            "notes": wl_row.try_get::<Option<String>, _>("notes").ok().flatten(),
+            "isDefault": wl_row.try_get::<i64, _>("is_default").ok().map(|v| v != 0).unwrap_or(false),
+            "items": items,
+        })));
+    }
+    data["wishlists"] = json!(wishlists);
+
+    Ok(())
+}
+
+async fn export_dcc_roster_if_needed(
+    data: &mut Value,
+    pool: &SqlitePool,
+    should_export: bool,
+) -> Result<(), ExportError> {
+    if !should_export {
+        return Ok(());
+    }
+
+    let decoder_rows = sqlx::query(
+        "SELECT id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface \
+         FROM decoders ORDER BY id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let decoders: Vec<Value> = decoder_rows
+        .iter()
+        .map(|row| {
+            json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
+                "productCode": row.try_get::<String, _>("product_code").ok(),
+                "decoderType": row.try_get::<String, _>("decoder_type").ok(),
+                "protocol": row.try_get::<String, _>("protocol").ok(),
+                "decoderInterface": row.try_get::<String, _>("decoder_interface").ok(),
+            })
+        })
+        .collect();
+    data["decoders"] = json!(decoders);
+
+    let roster_rows = sqlx::query(
+        "SELECT id, owned_rolling_stock_id, dcc_address, installed_decoder_id \
+         FROM digital_rolling_stocks ORDER BY id",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+    let digital_rolling_stocks: Vec<Value> = roster_rows
+        .iter()
+        .map(|row| {
+            strip_null_fields(json!({
+                "id": row.try_get::<String, _>("id").ok(),
+                "ownedRollingStockId": row.try_get::<String, _>("owned_rolling_stock_id").ok(),
+                "dccAddress": row.try_get::<i64, _>("dcc_address").ok(),
+                "decoderId": row.try_get::<Option<String>, _>("installed_decoder_id").ok().flatten(),
+            }))
+        })
+        .collect();
+    data["digitalRollingStocks"] = json!(digital_rolling_stocks);
+
+    Ok(())
+}
+
 // ─── Main builder ────────────────────────────────────────────────────────────
 
 /// Build export manifest from selected entities.
@@ -492,684 +1205,25 @@ pub async fn build_manifest(
 
     export_railway_models_if_needed(&mut data, pool, inclusions.include_railway_models).await?;
 
-    if inclusions.include_collection_items {
-        let item_rows = sqlx::query(
-            "SELECT ci.id, ci.railway_model_id, ci.added_date, ci.removed_date, \
-                    ci.purchase_condition, ci.model_condition, ci.box_condition, ci.notes, \
-                    pi.purchase_type, pi.purchase_date, pi.seller_id, \
-                    pi.purchased_price_amount, pi.purchased_price_currency, \
-                    pi.sale_date, pi.sale_price_amount, pi.sale_price_currency, \
-                    pi.deposit_amount, pi.deposit_currency, pi.expected_date \
-             FROM collection_items ci \
-             LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id \
-             ORDER BY ci.id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+    export_collection_items_if_needed(
+        &mut data,
+        pool,
+        media_dir,
+        inclusions.include_collection_items,
+    )
+    .await?;
 
-        let items: Vec<Value> = item_rows
-            .iter()
-            .map(|row| {
-                let purchase_type_raw: Option<String> = row
-                    .try_get::<Option<String>, _>("purchase_type")
-                    .ok()
-                    .flatten();
+    export_sellers_if_needed(&mut data, pool, inclusions.include_sellers).await?;
 
-                // Only build a purchase object when type maps to a known schema value.
-                // Purchase.type is required by the schema, so without it we omit the object.
-                let schema_purchase_type =
-                    purchase_type_raw.as_deref().and_then(db_purchase_type_to_schema);
+    export_maintenance_logs_if_needed(&mut data, pool, inclusions.include_maintenance_logs).await?;
 
-                let purchase = if let Some(pt) = schema_purchase_type {
-                    let purchase_date: Option<String> = row
-                        .try_get::<Option<String>, _>("purchase_date")
-                        .ok()
-                        .flatten();
-                    let sale_date: Option<String> = row
-                        .try_get::<Option<String>, _>("sale_date")
-                        .ok()
-                        .flatten();
-                    let seller_id: Option<String> = row
-                        .try_get::<Option<String>, _>("seller_id")
-                        .ok()
-                        .flatten();
+    export_track_inventory_if_needed(&mut data, pool, inclusions.include_track_inventory).await?;
 
-                    // Enforce schema allOf conditional requirements before building the object.
-                    // If a required conditional field is NULL in the DB, strip_null_fields would
-                    // remove it and produce schema-invalid JSON — so we skip the whole object.
-                    let conditions_met = match pt {
-                        "purchased" => purchase_date.is_some(),
-                        "sold" => purchase_date.is_some() && sale_date.is_some(),
-                        "preOrdered" => seller_id.is_some(),
-                        _ => true,
-                    };
+    export_train_formations_if_needed(&mut data, pool, selection.include_train_formations).await?;
 
-                    if conditions_met {
-                        let price_amount: Option<i64> = row
-                            .try_get::<Option<i64>, _>("purchased_price_amount")
-                            .ok()
-                            .flatten();
-                        let price_currency: Option<String> = row
-                            .try_get::<Option<String>, _>("purchased_price_currency")
-                            .ok()
-                            .flatten();
-                        let price = match (price_amount, price_currency) {
-                            (Some(amount), Some(currency)) => {
-                                json!({ "amount": amount, "currency": currency })
-                            }
-                            _ => Value::Null,
-                        };
+    export_wishlists_if_needed(&mut data, pool, inclusions.include_wishlists).await?;
 
-                        let sale_price_amount: Option<i64> = row
-                            .try_get::<Option<i64>, _>("sale_price_amount")
-                            .ok()
-                            .flatten();
-                        let sale_price_currency: Option<String> = row
-                            .try_get::<Option<String>, _>("sale_price_currency")
-                            .ok()
-                            .flatten();
-                        let sale_price = match (sale_price_amount, sale_price_currency) {
-                            (Some(amount), Some(currency)) => {
-                                json!({ "amount": amount, "currency": currency })
-                            }
-                            _ => Value::Null,
-                        };
-
-                        let deposit_amount_val: Option<i64> = row
-                            .try_get::<Option<i64>, _>("deposit_amount")
-                            .ok()
-                            .flatten();
-                        let deposit_currency: Option<String> = row
-                            .try_get::<Option<String>, _>("deposit_currency")
-                            .ok()
-                            .flatten();
-                        let deposit = match (deposit_amount_val, deposit_currency) {
-                            (Some(amount), Some(currency)) => {
-                                json!({ "amount": amount, "currency": currency })
-                            }
-                            _ => Value::Null,
-                        };
-
-                        strip_null_fields(json!({
-                            "type": pt,
-                            "purchaseDate": purchase_date,
-                            "sellerId": seller_id,
-                            "price": price,
-                            "salePrice": sale_price,
-                            "depositAmount": deposit,
-                            "saleDate": sale_date,
-                            "expectedDelivery": row.try_get::<Option<String>, _>("expected_date").ok().flatten(),
-                        }))
-                    } else {
-                        Value::Null
-                    }
-                } else {
-                    Value::Null
-                };
-
-                let model_id_for_image: Option<String> =
-                    row.try_get::<String, _>("railway_model_id").ok();
-                let image = model_id_for_image
-                    .as_deref()
-                    .and_then(|id| probe_model_image(media_dir, id));
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "railwayModelId": row.try_get::<String, _>("railway_model_id").ok(),
-                    "addedDate": row.try_get::<String, _>("added_date").ok(),
-                    "removedDate": row.try_get::<Option<String>, _>("removed_date").ok().flatten(),
-                    "purchaseCondition": enum_value(
-                        row.try_get::<Option<String>, _>("purchase_condition").ok().flatten(),
-                        db_purchase_condition_to_schema,
-                    ),
-                    "modelCondition": enum_value(
-                        row.try_get::<Option<String>, _>("model_condition").ok().flatten(),
-                        db_model_condition_to_schema,
-                    ),
-                    "boxCondition": enum_value(
-                        row.try_get::<Option<String>, _>("box_condition").ok().flatten(),
-                        db_box_condition_to_schema,
-                    ),
-                    "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
-                    "image": image,
-                    "purchase": purchase,
-                }))
-            })
-            .collect();
-        data["collectionItems"] = json!(items);
-
-        // Export owned_rolling_stocks that belong to exported collection items.
-        // These bridge rows link collection_items to rolling_stocks and carry optional
-        // DCC/coupler customisation fields.
-        let ors_rows = sqlx::query(
-            "SELECT id, collection_item_id, rolling_stock_id, notes, dcc_address, \
-                    installed_decoder_id, current_coupler_id \
-             FROM owned_rolling_stocks \
-             WHERE collection_item_id IN (SELECT id FROM collection_items) \
-             ORDER BY id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let owned_rolling_stocks: Vec<Value> = ors_rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "collectionItemId": row.try_get::<String, _>("collection_item_id").ok(),
-                    "rollingStockId": row.try_get::<Option<String>, _>("rolling_stock_id").ok().flatten(),
-                    "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
-                    "dccAddress": row.try_get::<Option<i64>, _>("dcc_address").ok().flatten(),
-                    "installedDecoderId": row.try_get::<Option<String>, _>("installed_decoder_id").ok().flatten(),
-                    "currentCouplerId": row.try_get::<Option<String>, _>("current_coupler_id").ok().flatten(),
-                }))
-            })
-            .collect();
-        data["ownedRollingStocks"] = json!(owned_rolling_stocks);
-    }
-
-    if inclusions.include_sellers {
-        let rows = sqlx::query(
-            "SELECT id, name, type, email, phone, website_url, \
-                    street_address, city, state_region, postal_code, country_code \
-             FROM sellers ORDER BY name",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let sellers: Vec<Value> = rows.iter().map(build_seller_value).collect();
-        data["sellers"] = json!(sellers);
-    }
-
-    if inclusions.include_maintenance_logs {
-        // Query maintenance cards joined to owned_rolling_stocks to get collection_item_id.
-        // The schema requires MaintenanceCard.collectionItemId; the DB stores
-        // maintenance_cards.owned_rolling_stock_id → owned_rolling_stocks.collection_item_id.
-        let card_rows = sqlx::query(
-            "SELECT mc.id, ors.collection_item_id, ors.id AS owned_rolling_stock_id, \
-                    mc.last_maintenance_date, mc.next_maintenance_date \
-             FROM maintenance_cards mc \
-             JOIN owned_rolling_stocks ors ON ors.id = mc.owned_rolling_stock_id \
-             ORDER BY mc.id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let mut maintenance_cards: Vec<Value> = Vec::new();
-        for card_row in &card_rows {
-            let card_id: String = card_row
-                .try_get("id")
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let event_rows = sqlx::query(
-                "SELECT id, date_performed, maintenance_type, notes \
-                 FROM maintenance_events \
-                 WHERE maintenance_card_id = ? \
-                 ORDER BY date_performed",
-            )
-            .bind(&card_id)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let events: Vec<Value> = event_rows
-                .iter()
-                .map(|ev| {
-                    let schema_type = ev
-                        .try_get::<Option<String>, _>("maintenance_type")
-                        .ok()
-                        .flatten()
-                        .as_deref()
-                        .and_then(db_maintenance_type_to_schema)
-                        .unwrap_or("repair"); // "OTHER" maps to "repair"; safe fallback for NULL
-                    strip_null_fields(json!({
-                        "id": ev.try_get::<String, _>("id").ok(),
-                        "date": ev.try_get::<String, _>("date_performed").ok(),
-                        "type": schema_type,
-                        "description": ev.try_get::<Option<String>, _>("notes").ok().flatten(),
-                    }))
-                })
-                .collect();
-
-            maintenance_cards.push(strip_null_fields(json!({
-                "id": card_id,
-                "collectionItemId": card_row.try_get::<String, _>("collection_item_id").ok(),
-                "ownedRollingStockId": card_row.try_get::<String, _>("owned_rolling_stock_id").ok(),
-                "lastMaintenanceDate": card_row.try_get::<Option<String>, _>("last_maintenance_date").ok().flatten(),
-                "nextMaintenanceDate": card_row.try_get::<Option<String>, _>("next_maintenance_date").ok().flatten(),
-                "events": events,
-            })));
-        }
-        data["maintenanceCards"] = json!(maintenance_cards);
-    }
-
-    if inclusions.include_track_inventory {
-        // Track products
-        let tp_rows = sqlx::query(
-            "SELECT track_id, manufacturer_id, product_code, description, \
-                    track_type, track_code, with_roadbed, length_mm, radius_mm \
-             FROM track_products ORDER BY track_id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let track_products: Vec<Value> = tp_rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "trackId": row.try_get::<String, _>("track_id").ok(),
-                    "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
-                    "productCode": row.try_get::<String, _>("product_code").ok(),
-                    "description": row.try_get::<String, _>("description").ok(),
-                    "trackType": row.try_get::<String, _>("track_type").ok(),
-                    "trackCode": row.try_get::<String, _>("track_code").ok(),
-                    "withRoadbed": row.try_get::<i64, _>("with_roadbed").ok().map(|v| v != 0),
-                    "length": row.try_get::<Option<i64>, _>("length_mm").ok().flatten(),
-                    "radius": row.try_get::<Option<i64>, _>("radius_mm").ok().flatten(),
-                }))
-            })
-            .collect();
-        data["trackProducts"] = json!(track_products);
-
-        // Track inventories with nested items and purchases
-        let inv_rows =
-            sqlx::query("SELECT id, name, description FROM track_inventories ORDER BY id")
-                .fetch_all(pool)
-                .await
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        // Collect seller_ids referenced by track purchases to auto-include those sellers
-        let mut referenced_seller_ids: std::collections::HashSet<String> =
-            std::collections::HashSet::new();
-
-        let mut track_inventories: Vec<Value> = Vec::new();
-        for inv_row in &inv_rows {
-            let inv_id: String = inv_row
-                .try_get("id")
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            // Nested items
-            let item_rows = sqlx::query(
-                "SELECT track_id, quantity, required \
-                 FROM track_inventory_items WHERE inventory_id = ? ORDER BY track_id",
-            )
-            .bind(&inv_id)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let items: Vec<Value> = item_rows
-                .iter()
-                .map(|row| {
-                    strip_null_fields(json!({
-                        "trackId": row.try_get::<String, _>("track_id").ok(),
-                        "quantity": row.try_get::<i64, _>("quantity").ok(),
-                        "required": row.try_get::<i64, _>("required").ok(),
-                    }))
-                })
-                .collect();
-
-            // Nested purchases
-            let purchase_rows = sqlx::query(
-                "SELECT id, track_id, quantity, price_amount, price_currency, \
-                        seller_id, purchase_date \
-                 FROM track_purchases WHERE inventory_id = ? ORDER BY purchase_date",
-            )
-            .bind(&inv_id)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let purchases: Vec<Value> = purchase_rows
-                .iter()
-                .map(|row| {
-                    let seller_id: Option<String> =
-                        row.try_get::<Option<String>, _>("seller_id").ok().flatten();
-                    if let Some(ref sid) = seller_id {
-                        referenced_seller_ids.insert(sid.clone());
-                    }
-                    let price_amount: i64 = row.try_get::<i64, _>("price_amount").unwrap_or(0);
-                    let price_currency: String = row
-                        .try_get::<String, _>("price_currency")
-                        .unwrap_or_else(|_| "EUR".to_string());
-                    strip_null_fields(json!({
-                        "id": row.try_get::<String, _>("id").ok(),
-                        "trackId": row.try_get::<String, _>("track_id").ok(),
-                        "quantity": row.try_get::<i64, _>("quantity").ok(),
-                        "price": { "amount": price_amount, "currency": price_currency },
-                        "sellerId": seller_id,
-                        "purchaseDate": row.try_get::<String, _>("purchase_date").ok(),
-                    }))
-                })
-                .collect();
-
-            track_inventories.push(strip_null_fields(json!({
-                "id": inv_id,
-                "name": inv_row.try_get::<String, _>("name").ok(),
-                "description": inv_row.try_get::<Option<String>, _>("description").ok().flatten(),
-                "items": items,
-                "purchases": purchases,
-            })));
-        }
-        data["trackInventories"] = json!(track_inventories);
-
-        // Auto-include sellers referenced by track purchases (merge with any already exported)
-        if !referenced_seller_ids.is_empty() {
-            let existing_sellers: Vec<Value> =
-                data["sellers"].as_array().cloned().unwrap_or_default();
-            let existing_ids: std::collections::HashSet<String> = existing_sellers
-                .iter()
-                .filter_map(|s| s["id"].as_str().map(|id| id.to_string()))
-                .collect();
-
-            let missing_ids: Vec<&String> = referenced_seller_ids
-                .iter()
-                .filter(|id| !existing_ids.contains(*id))
-                .collect();
-
-            if !missing_ids.is_empty() {
-                let placeholders = missing_ids
-                    .iter()
-                    .map(|_| "?")
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                let query = format!(
-                    "SELECT id, name, type, email, phone, website_url, \
-                            street_address, city, state_region, postal_code, country_code \
-                     FROM sellers WHERE id IN ({}) ORDER BY name",
-                    placeholders
-                );
-                let mut q = sqlx::query(&query);
-                for id in &missing_ids {
-                    q = q.bind(id.as_str());
-                }
-                let seller_rows = q
-                    .fetch_all(pool)
-                    .await
-                    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-                let mut all_sellers = existing_sellers;
-                for row in &seller_rows {
-                    all_sellers.push(build_seller_value(row));
-                }
-                data["sellers"] = json!(all_sellers);
-            }
-        }
-    }
-
-    if selection.include_train_formations {
-        // Formation categories
-        let cat_rows =
-            sqlx::query("SELECT id, name, is_custom FROM formation_categories ORDER BY name")
-                .fetch_all(pool)
-                .await
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let formation_categories: Vec<Value> = cat_rows
-            .iter()
-            .map(|row| {
-                json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "name": row.try_get::<String, _>("name").ok(),
-                    "isCustom": row.try_get::<i64, _>("is_custom").ok().map(|v| v != 0).unwrap_or(false),
-                })
-            })
-            .collect();
-        data["formationCategories"] = json!(formation_categories);
-
-        // Prototypes referenced by formations (and custom ones)
-        let proto_rows = sqlx::query(
-            "SELECT DISTINCT p.id, p.railway_company_id, p.series_code, p.friendly_name, \
-                    p.specification_type, \
-                    p.locomotive_type, p.locomotive_series, \
-                    p.service_level, p.passenger_car_type, \
-                    p.freight_car_type, p.railcar_type, \
-                    p.electric_multiple_unit_type, p.elements_count, p.is_permanently_coupled, \
-                    p.is_motorized, p.is_custom \
-             FROM prototypes p \
-             WHERE p.is_custom = 1 \
-                OR p.id IN ( \
-                    SELECT DISTINCT fe.prototype_id \
-                    FROM formation_elements fe \
-                    JOIN train_formations tf ON tf.id = fe.formation_id \
-                ) \
-             ORDER BY p.id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let prototypes: Vec<Value> = proto_rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "railwayCompanyId": row.try_get::<String, _>("railway_company_id").ok(),
-                    "seriesCode": row.try_get::<String, _>("series_code").ok(),
-                    "friendlyName": row.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
-                    "specificationType": row.try_get::<String, _>("specification_type").ok(),
-                    "locomotiveType": row.try_get::<Option<String>, _>("locomotive_type").ok().flatten(),
-                    "locomotiveSeries": row.try_get::<Option<String>, _>("locomotive_series").ok().flatten(),
-                    "serviceLevel": row.try_get::<Option<String>, _>("service_level").ok().flatten(),
-                    "passengerCarType": row.try_get::<Option<String>, _>("passenger_car_type").ok().flatten(),
-                    "freightCarType": row.try_get::<Option<String>, _>("freight_car_type").ok().flatten(),
-                    "railcarType": row.try_get::<Option<String>, _>("railcar_type").ok().flatten(),
-                    "electricMultipleUnitType": row.try_get::<Option<String>, _>("electric_multiple_unit_type").ok().flatten(),
-                    "elementsCount": row.try_get::<Option<i64>, _>("elements_count").ok().flatten(),
-                    "isPermanentlyCoupled": row.try_get::<Option<i64>, _>("is_permanently_coupled").ok().flatten().map(|v| v != 0),
-                    "isMotorized": row.try_get::<i64, _>("is_motorized").ok().map(|v| v != 0).unwrap_or(false),
-                    "isCustom": row.try_get::<i64, _>("is_custom").ok().map(|v| v != 0).unwrap_or(false),
-                }))
-            })
-            .collect();
-        data["prototypes"] = json!(prototypes);
-
-        // Train formations need a railway_companies entry for any prototype's railway_company_id
-        // Ensure railway_companies is exported (FK dependency)
-        if data["railwayCompanies"].is_null() || data["railwayCompanies"] == json!(null) {
-            let rc_rows = sqlx::query(
-                "SELECT id, name, country_code, status, operating_since, operating_until \
-                 FROM railway_companies ORDER BY name",
-            )
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let railway_companies: Vec<Value> = rc_rows
-                .iter()
-                .map(|row| {
-                    strip_null_fields(json!({
-                        "id": row.try_get::<String, _>("id").ok(),
-                        "name": row.try_get::<String, _>("name").ok(),
-                        "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
-                        "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
-                        "operatingSince": row.try_get::<Option<String>, _>("operating_since").ok().flatten(),
-                        "operatingUntil": row.try_get::<Option<String>, _>("operating_until").ok().flatten(),
-                    }))
-                })
-                .collect();
-            data["railwayCompanies"] = json!(railway_companies);
-        }
-
-        // Train formations with nested elements
-        let tf_rows = sqlx::query(
-            "SELECT id, name, category_id, start_year, end_year, epoch, notes \
-             FROM train_formations ORDER BY name",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let mut train_formations: Vec<Value> = Vec::new();
-        for tf_row in &tf_rows {
-            let tf_id: String = tf_row
-                .try_get("id")
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let elem_rows = sqlx::query(
-                "SELECT id, prototype_id, owned_rolling_stock_id, position_order, traction_override \
-                 FROM formation_elements \
-                 WHERE formation_id = ? ORDER BY position_order",
-            )
-            .bind(&tf_id)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let elements: Vec<Value> = elem_rows
-                .iter()
-                .map(|row| {
-                    strip_null_fields(json!({
-                        "id": row.try_get::<String, _>("id").ok(),
-                        "prototypeId": row.try_get::<String, _>("prototype_id").ok(),
-                        "ownedRollingStockId": row.try_get::<Option<String>, _>("owned_rolling_stock_id").ok().flatten(),
-                        "positionOrder": row.try_get::<i64, _>("position_order").ok(),
-                        "tractionOverride": row.try_get::<i64, _>("traction_override").ok().unwrap_or(0),
-                    }))
-                })
-                .collect();
-
-            train_formations.push(strip_null_fields(json!({
-                "id": tf_id,
-                "name": tf_row.try_get::<String, _>("name").ok(),
-                "categoryId": tf_row.try_get::<Option<String>, _>("category_id").ok().flatten(),
-                "startYear": tf_row.try_get::<Option<i64>, _>("start_year").ok().flatten(),
-                "endYear": tf_row.try_get::<Option<i64>, _>("end_year").ok().flatten(),
-                "epoch": tf_row.try_get::<Option<String>, _>("epoch").ok().flatten(),
-                "notes": tf_row.try_get::<Option<String>, _>("notes").ok().flatten(),
-                "elements": elements,
-            })));
-        }
-        data["trainFormations"] = json!(train_formations);
-    }
-
-    if inclusions.include_wishlists {
-        let wl_rows =
-            sqlx::query("SELECT id, name, notes, is_default FROM wishlists ORDER BY name")
-                .fetch_all(pool)
-                .await
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let mut wishlists: Vec<Value> = Vec::new();
-        for wl_row in &wl_rows {
-            let wl_id: String = wl_row
-                .try_get("id")
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let item_rows = sqlx::query(
-                "SELECT id, railway_model_id, priority, status, added_date, removed_date, \
-                        notes, desired_price_amount, desired_price_currency, \
-                        purchased_price_amount, purchased_price_currency \
-                 FROM wishlist_items WHERE wishlist_id = ? ORDER BY added_date",
-            )
-            .bind(&wl_id)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-            let items: Vec<Value> = item_rows
-                .iter()
-                .map(|row| {
-                    let desired_price = match (
-                        row.try_get::<Option<i64>, _>("desired_price_amount")
-                            .ok()
-                            .flatten(),
-                        row.try_get::<Option<String>, _>("desired_price_currency")
-                            .ok()
-                            .flatten(),
-                    ) {
-                        (Some(amount), Some(currency)) => {
-                            json!({ "amount": amount, "currency": currency })
-                        }
-                        _ => Value::Null,
-                    };
-                    let purchased_price = match (
-                        row.try_get::<Option<i64>, _>("purchased_price_amount")
-                            .ok()
-                            .flatten(),
-                        row.try_get::<Option<String>, _>("purchased_price_currency")
-                            .ok()
-                            .flatten(),
-                    ) {
-                        (Some(amount), Some(currency)) => {
-                            json!({ "amount": amount, "currency": currency })
-                        }
-                        _ => Value::Null,
-                    };
-                    strip_null_fields(json!({
-                        "id": row.try_get::<String, _>("id").ok(),
-                        "railwayModelId": row.try_get::<String, _>("railway_model_id").ok(),
-                        "priority": row.try_get::<String, _>("priority").ok(),
-                        "status": row.try_get::<String, _>("status").ok(),
-                        "addedDate": row.try_get::<String, _>("added_date").ok(),
-                        "removedDate": row.try_get::<Option<String>, _>("removed_date").ok().flatten(),
-                        "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
-                        "desiredPrice": desired_price,
-                        "purchasedPrice": purchased_price,
-                    }))
-                })
-                .collect();
-
-            wishlists.push(strip_null_fields(json!({
-                "id": wl_id,
-                "name": wl_row.try_get::<String, _>("name").ok(),
-                "notes": wl_row.try_get::<Option<String>, _>("notes").ok().flatten(),
-                "isDefault": wl_row.try_get::<i64, _>("is_default").ok().map(|v| v != 0).unwrap_or(false),
-                "items": items,
-            })));
-        }
-        data["wishlists"] = json!(wishlists);
-    }
-
-    if inclusions.include_dcc_roster {
-        let decoder_rows = sqlx::query(
-            "SELECT id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface \
-             FROM decoders ORDER BY id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let decoders: Vec<Value> = decoder_rows
-            .iter()
-            .map(|row| {
-                json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
-                    "productCode": row.try_get::<String, _>("product_code").ok(),
-                    "decoderType": row.try_get::<String, _>("decoder_type").ok(),
-                    "protocol": row.try_get::<String, _>("protocol").ok(),
-                    "decoderInterface": row.try_get::<String, _>("decoder_interface").ok(),
-                })
-            })
-            .collect();
-        data["decoders"] = json!(decoders);
-
-        let roster_rows = sqlx::query(
-            "SELECT id, owned_rolling_stock_id, dcc_address, installed_decoder_id \
-             FROM digital_rolling_stocks ORDER BY id",
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
-
-        let digital_rolling_stocks: Vec<Value> = roster_rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "ownedRollingStockId": row.try_get::<String, _>("owned_rolling_stock_id").ok(),
-                    "dccAddress": row.try_get::<i64, _>("dcc_address").ok(),
-                    "decoderId": row.try_get::<Option<String>, _>("installed_decoder_id").ok().flatten(),
-                }))
-            })
-            .collect();
-        data["digitalRollingStocks"] = json!(digital_rolling_stocks);
-    }
+    export_dcc_roster_if_needed(&mut data, pool, inclusions.include_dcc_roster).await?;
 
     // Build final manifest — "data" key matches ManifestDto.data in the import feature
     let manifest = json!({
@@ -1187,6 +1241,7 @@ pub async fn build_manifest(
 mod tests {
     use super::*;
     use serde_json::json;
+    use sqlx::SqlitePool;
 
     // ─── strip_null_fields ────────────────────────────────────────────────────
 
@@ -1399,5 +1454,157 @@ mod tests {
             Some("DISCONTINUED")
         );
         assert_eq!(db_availability_status_to_schema("UNKNOWN"), None);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn export_track_inventory_if_needed_returns_early_when_disabled(pool: SqlitePool) {
+        let mut data = json!({});
+
+        export_track_inventory_if_needed(&mut data, &pool, false)
+            .await
+            .expect("export should no-op when disabled");
+
+        assert!(data["trackProducts"].is_null());
+        assert!(data["trackInventories"].is_null());
+        assert!(data["sellers"].is_null());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn export_track_inventory_if_needed_exports_and_merges_seller_references(
+        pool: SqlitePool,
+    ) {
+        sqlx::query("INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)")
+            .bind("manufacturer-1")
+            .bind("Manufacturer")
+            .bind("ACTIVE")
+            .execute(&pool)
+            .await
+            .expect("manufacturer insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO sellers (id, name, type, email, phone, website_url, street_address, city, state_region, postal_code, country_code) \
+             VALUES (?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)",
+        )
+        .bind("seller-existing")
+        .bind("Existing Seller")
+        .bind("SHOP")
+        .execute(&pool)
+        .await
+        .expect("existing seller insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO sellers (id, name, type, email, phone, website_url, street_address, city, state_region, postal_code, country_code) \
+             VALUES (?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)",
+        )
+        .bind("seller-from-purchase")
+        .bind("Purchase Seller")
+        .bind("SHOP")
+        .execute(&pool)
+        .await
+        .expect("purchase seller insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO track_products \
+             (id, track_id, manufacturer_id, product_code, description, track_type, track_code, with_roadbed, length_mm, radius_mm, created_at, updated_at, version) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
+        )
+        .bind("track-product-1")
+        .bind("track-1")
+        .bind("manufacturer-1")
+        .bind("TR-1")
+        .bind("Straight")
+        .bind("STRAIGHT")
+        .bind("ST")
+        .bind(1_i64)
+        .bind(Some(231_i64))
+        .bind(Option::<i64>::None)
+        .execute(&pool)
+        .await
+        .expect("track product insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO track_inventories (id, name, description, created_at, updated_at, version) \
+             VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
+        )
+        .bind("inventory-1")
+        .bind("Layout A")
+        .bind(Some("Main inventory"))
+        .execute(&pool)
+        .await
+        .expect("track inventory insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO track_inventory_items (inventory_id, track_id, quantity, required) \
+             VALUES (?, ?, ?, ?)",
+        )
+        .bind("inventory-1")
+        .bind("track-1")
+        .bind(4_i64)
+        .bind(2_i64)
+        .execute(&pool)
+        .await
+        .expect("track inventory item insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO track_purchases \
+             (id, inventory_id, track_id, quantity, price_amount, price_currency, seller_id, purchase_date, created_at) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+        )
+        .bind("purchase-1")
+        .bind("inventory-1")
+        .bind("track-1")
+        .bind(1_i64)
+        .bind(1299_i64)
+        .bind("EUR")
+        .bind(Some("seller-from-purchase"))
+        .bind("2025-01-10")
+        .execute(&pool)
+        .await
+        .expect("track purchase insert should succeed");
+
+        let mut data = json!({
+            "sellers": [
+                {
+                    "id": "seller-existing",
+                    "name": "Existing Seller",
+                    "sellerType": "SHOP"
+                }
+            ]
+        });
+
+        export_track_inventory_if_needed(&mut data, &pool, true)
+            .await
+            .expect("track inventory export should succeed");
+
+        assert_eq!(
+            data["trackProducts"]
+                .as_array()
+                .expect("track products should be an array")
+                .len(),
+            1
+        );
+        assert_eq!(
+            data["trackInventories"]
+                .as_array()
+                .expect("track inventories should be an array")
+                .len(),
+            1
+        );
+
+        let exported_sellers = data["sellers"]
+            .as_array()
+            .expect("sellers should be an array after merge");
+        let mut exported_ids: Vec<String> = exported_sellers
+            .iter()
+            .filter_map(|seller| seller["id"].as_str().map(ToOwned::to_owned))
+            .collect();
+        exported_ids.sort();
+        assert_eq!(
+            exported_ids,
+            vec![
+                "seller-existing".to_string(),
+                "seller-from-purchase".to_string()
+            ]
+        );
     }
 }

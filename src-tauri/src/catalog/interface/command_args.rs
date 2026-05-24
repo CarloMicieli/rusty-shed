@@ -311,6 +311,20 @@ impl TryFrom<CreateRollingStockArgs> for CreateRollingStockInput {
     type Error = DomainError;
 
     fn try_from(args: CreateRollingStockArgs) -> Result<Self, Self::Error> {
+        fn map_length_over_buffers(
+            value: Option<LengthOverBuffersArgs>,
+        ) -> Result<Option<LengthOverBuffersInput>, DomainError> {
+            value.map(LengthOverBuffersInput::try_from).transpose()
+        }
+
+        fn map_technical_specifications(
+            value: Option<TechnicalSpecificationsArgs>,
+        ) -> Result<Option<TechnicalSpecificationsInput>, DomainError> {
+            value
+                .map(TechnicalSpecificationsInput::try_from)
+                .transpose()
+        }
+
         match args {
             CreateRollingStockArgs::Locomotive {
                 railway_company_id,
@@ -327,15 +341,9 @@ impl TryFrom<CreateRollingStockArgs> for CreateRollingStockInput {
                 length_over_buffers,
                 technical_specifications,
             } => {
-                let length_over_buffers = match length_over_buffers {
-                    Some(l) => Some(LengthOverBuffersInput::try_from(l)?),
-                    None => None,
-                };
-
-                let technical_specifications = match technical_specifications {
-                    Some(t) => Some(TechnicalSpecificationsInput::try_from(t)?),
-                    None => None,
-                };
+                let length_over_buffers = map_length_over_buffers(length_over_buffers)?;
+                let technical_specifications =
+                    map_technical_specifications(technical_specifications)?;
 
                 Ok(CreateRollingStockInput::Locomotive {
                     railway_company_id,
@@ -365,15 +373,9 @@ impl TryFrom<CreateRollingStockArgs> for CreateRollingStockInput {
                 length_over_buffers,
                 technical_specifications,
             } => {
-                let length_over_buffers = match length_over_buffers {
-                    Some(l) => Some(LengthOverBuffersInput::try_from(l)?),
-                    None => None,
-                };
-
-                let technical_specifications = match technical_specifications {
-                    Some(t) => Some(TechnicalSpecificationsInput::try_from(t)?),
-                    None => None,
-                };
+                let length_over_buffers = map_length_over_buffers(length_over_buffers)?;
+                let technical_specifications =
+                    map_technical_specifications(technical_specifications)?;
 
                 Ok(CreateRollingStockInput::PassengerCar {
                     railway_company_id,
@@ -399,15 +401,9 @@ impl TryFrom<CreateRollingStockArgs> for CreateRollingStockInput {
                 length_over_buffers,
                 technical_specifications,
             } => {
-                let length_over_buffers = match length_over_buffers {
-                    Some(l) => Some(LengthOverBuffersInput::try_from(l)?),
-                    None => None,
-                };
-
-                let technical_specifications = match technical_specifications {
-                    Some(t) => Some(TechnicalSpecificationsInput::try_from(t)?),
-                    None => None,
-                };
+                let length_over_buffers = map_length_over_buffers(length_over_buffers)?;
+                let technical_specifications =
+                    map_technical_specifications(technical_specifications)?;
 
                 Ok(CreateRollingStockInput::FreightCar {
                     railway_company_id,
@@ -436,15 +432,9 @@ impl TryFrom<CreateRollingStockArgs> for CreateRollingStockInput {
                 length_over_buffers,
                 technical_specifications,
             } => {
-                let length_over_buffers = match length_over_buffers {
-                    Some(l) => Some(LengthOverBuffersInput::try_from(l)?),
-                    None => None,
-                };
-
-                let technical_specifications = match technical_specifications {
-                    Some(t) => Some(TechnicalSpecificationsInput::try_from(t)?),
-                    None => None,
-                };
+                let length_over_buffers = map_length_over_buffers(length_over_buffers)?;
+                let technical_specifications =
+                    map_technical_specifications(technical_specifications)?;
 
                 Ok(CreateRollingStockInput::Railcar {
                     railway_company_id,
@@ -477,15 +467,9 @@ impl TryFrom<CreateRollingStockArgs> for CreateRollingStockInput {
                 length_over_buffers,
                 technical_specifications,
             } => {
-                let length_over_buffers = match length_over_buffers {
-                    Some(l) => Some(LengthOverBuffersInput::try_from(l)?),
-                    None => None,
-                };
-
-                let technical_specifications = match technical_specifications {
-                    Some(t) => Some(TechnicalSpecificationsInput::try_from(t)?),
-                    None => None,
-                };
+                let length_over_buffers = map_length_over_buffers(length_over_buffers)?;
+                let technical_specifications =
+                    map_technical_specifications(technical_specifications)?;
 
                 Ok(CreateRollingStockInput::ElectricMultipleUnit {
                     railway_company_id,

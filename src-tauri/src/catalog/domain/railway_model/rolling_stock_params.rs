@@ -718,7 +718,112 @@ fn validate_coupling(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::railway_model::TechnicalSpecificationsBuilder;
+    use crate::core::domain::length::Length;
     use pretty_assertions::assert_eq;
+    use rust_decimal_macros::dec;
+
+    fn sample_length_over_buffers() -> LengthOverBuffers {
+        LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(42)))
+    }
+
+    fn sample_technical_specifications() -> TechnicalSpecifications {
+        TechnicalSpecificationsBuilder::default().build()
+    }
+
+    fn assert_accessor_values(params: &RollingStockParams) {
+        let expected_length = sample_length_over_buffers();
+        let expected_technical_specifications = sample_technical_specifications();
+
+        assert_eq!(params.length_over_buffers(), Some(&expected_length));
+        assert_eq!(
+            params.technical_specifications(),
+            Some(&expected_technical_specifications)
+        );
+    }
+
+    #[test]
+    fn it_should_return_the_optional_accessors_for_all_variants() {
+        let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:ry-1")
+            .expect("valid railway company id");
+        let length_over_buffers = sample_length_over_buffers();
+        let technical_specifications = sample_technical_specifications();
+
+        let params = vec![
+            RollingStockParams::ElectricMultipleUnitParams {
+                railway_company_id: railway_company_id.clone(),
+                livery: None,
+                length_over_buffers: Some(length_over_buffers),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: "EMU".to_string(),
+                series_code: None,
+                road_number: None,
+                series: None,
+                depot: None,
+                electric_multiple_unit_type: ElectricMultipleUnitType::DrivingCar,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            },
+            RollingStockParams::FreightCarParams {
+                railway_company_id: railway_company_id.clone(),
+                livery: None,
+                length_over_buffers: Some(length_over_buffers),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: "Freight".to_string(),
+                series_code: None,
+                series: None,
+                road_number: None,
+                freight_car_type: None,
+            },
+            RollingStockParams::LocomotiveParams {
+                railway_company_id: railway_company_id.clone(),
+                livery: None,
+                length_over_buffers: Some(length_over_buffers),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: "Loco".to_string(),
+                series_code: None,
+                road_number: "123".to_string(),
+                series: None,
+                depot: None,
+                locomotive_type: LocomotiveType::ElectricLocomotive,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            },
+            RollingStockParams::PassengerCarParams {
+                railway_company_id: railway_company_id.clone(),
+                livery: None,
+                length_over_buffers: Some(length_over_buffers),
+                technical_specifications: Some(technical_specifications.clone()),
+                friendly_name: "Passenger".to_string(),
+                series_code: None,
+                road_number: None,
+                series: None,
+                passenger_car_type: None,
+                service_level: None,
+            },
+            RollingStockParams::RailcarParams {
+                railway_company_id,
+                livery: None,
+                length_over_buffers: Some(length_over_buffers),
+                technical_specifications: Some(technical_specifications),
+                friendly_name: "Railcar".to_string(),
+                series_code: None,
+                road_number: None,
+                series: None,
+                depot: None,
+                railcar_type: RailcarType::PowerCar,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            },
+        ];
+
+        for param in &params {
+            assert_accessor_values(param);
+        }
+    }
 
     #[test]
     fn it_should_convert_locomotive_input_success() {

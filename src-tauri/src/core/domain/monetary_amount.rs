@@ -232,6 +232,46 @@ mod tests {
         assert!(a.add_same_currency(&b).is_err());
     }
 
+    #[test]
+    fn it_should_add_optional_none_none() {
+        let result = MonetaryAmount::add_optional(None, None).unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn it_should_add_optional_clone_left_when_right_missing() {
+        let a = MonetaryAmount::new(150, Currency::EUR);
+        let result = MonetaryAmount::add_optional(Some(&a), None).unwrap();
+
+        assert_eq!(result, Some(a));
+    }
+
+    #[test]
+    fn it_should_add_optional_clone_right_when_left_missing() {
+        let b = MonetaryAmount::new(200, Currency::USD);
+        let result = MonetaryAmount::add_optional(None, Some(&b)).unwrap();
+
+        assert_eq!(result, Some(b));
+    }
+
+    #[test]
+    fn it_should_add_optional_sum_same_currency() {
+        let a = MonetaryAmount::new(100, Currency::EUR);
+        let b = MonetaryAmount::new(250, Currency::EUR);
+        let result = MonetaryAmount::add_optional(Some(&a), Some(&b)).unwrap();
+
+        assert_eq!(result, Some(MonetaryAmount::new(350, Currency::EUR)));
+    }
+
+    #[test]
+    fn it_should_add_optional_reject_currency_mismatch() {
+        let a = MonetaryAmount::new(100, Currency::EUR);
+        let b = MonetaryAmount::new(250, Currency::USD);
+        let result = MonetaryAmount::add_optional(Some(&a), Some(&b));
+
+        assert!(matches!(result, Err(MonetaryAmountError::CurrencyMismatch)));
+    }
+
     #[rstest]
     #[case(100, true)]
     #[case(1, true)]
