@@ -14,6 +14,25 @@ pub struct SqliteBudgetRepository<'conn> {
     executor: &'conn mut SqliteConnection,
 }
 
+enum BudgetEventRoute<'a> {
+    BudgetConfigured(&'a BudgetEvent),
+    ExtraBudgetAdded {
+        extra_budget_id: &'a ExtraBudgetId,
+        year: i32,
+        month: u8,
+        amount: &'a crate::core::domain::MonetaryAmount,
+        reason: &'a Option<String>,
+        timestamp: &'a chrono::DateTime<chrono::Utc>,
+    },
+    ExtraBudgetRemoved {
+        extra_budget_id: &'a ExtraBudgetId,
+    },
+    AnnualResetPerformed {
+        year: i32,
+        timestamp: &'a chrono::DateTime<chrono::Utc>,
+    },
+}
+
 impl<'conn> SqliteBudgetRepository<'conn> {
     /// Create a new SqliteBudgetRepository.
     pub fn new(executor: &'conn mut SqliteConnection) -> Self {
@@ -105,20 +124,42 @@ impl<'conn> SqliteBudgetRepository<'conn> {
         Ok(())
     }
 
-    /// Route a single domain event to the correct SQL operation.
-    ///
-    /// The match is exhaustive: adding a new `BudgetEvent` variant forces the
-    /// compiler to require a corresponding persistence branch here.
-    ///
-    /// Note: This method handles conversion of domain types to persistence format.
-    /// For example, BudgetMode enum is converted to DB-compatible string ("YEARLY"/"MONTHLY")
-    /// here, not in the domain layer.
-    async fn handle_event(&mut self, event: &BudgetEvent) -> Result<(), DomainError> {
+    fn classify_event(event: &BudgetEvent) -> BudgetEventRoute<'_> {
         match event {
-            BudgetEvent::BudgetConfigured { .. } => {
-                self.handle_budget_configured_event(event).await?;
-            }
+            BudgetEvent::BudgetConfigured { .. } => BudgetEventRoute::BudgetConfigured(event),
             BudgetEvent::ExtraBudgetAdded {
+                extra_budget_id,
+                year,
+                month,
+                amount,
+                reason,
+                timestamp,
+            } => BudgetEventRoute::ExtraBudgetAdded {
+                extra_budget_id,
+                year: *year,
+                month: *month,
+                amount,
+                reason,
+                timestamp,
+            },
+            BudgetEvent::ExtraBudgetRemoved {
+                extra_budget_id, ..
+            } => BudgetEventRoute::ExtraBudgetRemoved { extra_budget_id },
+            BudgetEvent::AnnualResetPerformed { year, timestamp } => {
+                BudgetEventRoute::AnnualResetPerformed {
+                    year: *year,
+                    timestamp,
+                }
+            }
+        }
+    }
+
+    async fn apply_event_route(&mut self, route: BudgetEventRoute<'_>) -> Result<(), DomainError> {
+        match route {
+            BudgetEventRoute::BudgetConfigured(event) => {
+                self.handle_budget_configured_event(event).await
+            }
+            BudgetEventRoute::ExtraBudgetAdded {
                 extra_budget_id,
                 year,
                 month,
@@ -128,24 +169,33 @@ impl<'conn> SqliteBudgetRepository<'conn> {
             } => {
                 self.handle_extra_budget_added(
                     extra_budget_id,
-                    *year,
-                    *month,
+                    year,
+                    month,
                     amount,
                     reason,
                     timestamp,
                 )
-                .await?;
+                .await
             }
-            BudgetEvent::ExtraBudgetRemoved {
-                extra_budget_id, ..
-            } => {
-                self.handle_extra_budget_removed(extra_budget_id).await?;
+            BudgetEventRoute::ExtraBudgetRemoved { extra_budget_id } => {
+                self.handle_extra_budget_removed(extra_budget_id).await
             }
-            BudgetEvent::AnnualResetPerformed { year, timestamp } => {
-                self.handle_annual_reset(*year, timestamp).await?;
+            BudgetEventRoute::AnnualResetPerformed { year, timestamp } => {
+                self.handle_annual_reset(year, timestamp).await
             }
         }
-        Ok(())
+    }
+
+    /// Route a single domain event to the correct SQL operation.
+    ///
+    /// The match is exhaustive: adding a new `BudgetEvent` variant forces the
+    /// compiler to require a corresponding persistence branch here.
+    ///
+    /// Note: This method handles conversion of domain types to persistence format.
+    /// For example, BudgetMode enum is converted to DB-compatible string ("YEARLY"/"MONTHLY")
+    /// here, not in the domain layer.
+    async fn handle_event(&mut self, event: &BudgetEvent) -> Result<(), DomainError> {
+        self.apply_event_route(Self::classify_event(event)).await
     }
 }
 
@@ -391,6 +441,55 @@ mod tests {
                 .await
                 .expect("quarterly query should succeed");
             assert_eq!(quarterly, vec![(4, "LOCOMOTIVES".to_string(), 17_500)]);
+        }
+
+        uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_persist_all_budget_event_variants_via_save(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let mut config = BudgetConfiguration::new(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(240_000, Currency::EUR),
+        )
+        .expect("valid budget config");
+
+        let extra = ExtraBudgetEntry::new(
+            Year::try_from(2026).expect("valid year"),
+            Month::try_from(5).expect("valid month"),
+            MonetaryAmount::new(15_000, Currency::EUR),
+            Some("bonus".to_string()),
+        )
+        .expect("valid extra budget entry");
+
+        config.add_extra_budget(&extra);
+        config.remove_extra_budget(extra.id.clone());
+        config.last_reset_year = Year::try_from(2020).expect("valid reset year");
+        config
+            .perform_annual_reset()
+            .expect("annual reset should succeed");
+
+        {
+            let mut repo = uow.budget_repo();
+            repo.save(config).await.expect("save should succeed");
+
+            let loaded_config = repo
+                .get_config()
+                .await
+                .expect("get_config should succeed")
+                .expect("config should exist");
+            assert_eq!(loaded_config.mode, BudgetMode::Monthly);
+            assert_eq!(loaded_config.base_amount.amount, 240_000);
+
+            let removed_extra = repo
+                .get_extra_budget_by_id(&extra.id)
+                .await
+                .expect("get_extra_budget_by_id should succeed");
+            assert!(removed_extra.is_none());
         }
 
         uow.commit().await.expect("commit should succeed");
