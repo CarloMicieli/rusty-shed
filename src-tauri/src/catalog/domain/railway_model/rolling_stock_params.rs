@@ -753,7 +753,7 @@ mod tests {
             RollingStockParams::ElectricMultipleUnitParams {
                 railway_company_id: railway_company_id.clone(),
                 livery: None,
-                length_over_buffers: Some(length_over_buffers.clone()),
+                length_over_buffers: Some(length_over_buffers),
                 technical_specifications: Some(technical_specifications.clone()),
                 friendly_name: "EMU".to_string(),
                 series_code: None,
@@ -768,7 +768,7 @@ mod tests {
             RollingStockParams::FreightCarParams {
                 railway_company_id: railway_company_id.clone(),
                 livery: None,
-                length_over_buffers: Some(length_over_buffers.clone()),
+                length_over_buffers: Some(length_over_buffers),
                 technical_specifications: Some(technical_specifications.clone()),
                 friendly_name: "Freight".to_string(),
                 series_code: None,
@@ -779,7 +779,7 @@ mod tests {
             RollingStockParams::LocomotiveParams {
                 railway_company_id: railway_company_id.clone(),
                 livery: None,
-                length_over_buffers: Some(length_over_buffers.clone()),
+                length_over_buffers: Some(length_over_buffers),
                 technical_specifications: Some(technical_specifications.clone()),
                 friendly_name: "Loco".to_string(),
                 series_code: None,
@@ -794,7 +794,7 @@ mod tests {
             RollingStockParams::PassengerCarParams {
                 railway_company_id: railway_company_id.clone(),
                 livery: None,
-                length_over_buffers: Some(length_over_buffers.clone()),
+                length_over_buffers: Some(length_over_buffers),
                 technical_specifications: Some(technical_specifications.clone()),
                 friendly_name: "Passenger".to_string(),
                 series_code: None,
