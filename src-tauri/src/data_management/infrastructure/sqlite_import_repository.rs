@@ -767,16 +767,15 @@ impl SqliteImportRepository {
             let product_db_id = Uuid::new_v4().to_string();
             sqlx::query(
                 "INSERT OR IGNORE INTO track_products \
-                 (id, track_id, manufacturer_id, product_code, description, \
+                 (id, track_id, manufacturer_id, product_code, \
                   track_type, track_code, with_roadbed, length_mm, radius_mm, \
                   created_at, updated_at, version) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
             )
             .bind(&product_db_id)
             .bind(&product.track_id)
             .bind(&product.manufacturer_id)
             .bind(&product.product_code)
-            .bind(&product.description)
             .bind(&product.track_type)
             .bind(&product.track_code)
             .bind(product.with_roadbed as i64)
@@ -785,6 +784,32 @@ impl SqliteImportRepository {
             .execute(&mut **tx)
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            for language_code in ["en", "it"] {
+                let description = match language_code {
+                    "en" => product.description.en.as_deref(),
+                    _ => product.description.it.as_deref(),
+                };
+                let details = product.details.as_ref().and_then(|d| match language_code {
+                    "en" => d.en.as_deref(),
+                    _ => d.it.as_deref(),
+                });
+
+                if description.is_some() || details.is_some() {
+                    sqlx::query(
+                        "INSERT OR IGNORE INTO track_product_translations \
+                         (track_id, language_code, description, details) \
+                         VALUES (?, ?, ?, ?)",
+                    )
+                    .bind(&product.track_id)
+                    .bind(language_code)
+                    .bind(description)
+                    .bind(details)
+                    .execute(&mut **tx)
+                    .await
+                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                }
+            }
         }
 
         Ok(())

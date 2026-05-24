@@ -1,4 +1,5 @@
 use crate::tracks_inventory::domain::{TrackCode, TrackId, TrackInventoryId, TrackType};
+use crate::core::domain::Language;
 use crate::tracks_inventory::infrastructure::entities::{
     TrackInventoryHeaderViewRow, TrackInventoryItemRow, TrackInventoryItemViewRow,
     TrackInventoryRow, TrackInventorySummaryRow, TrackProductRow, TrackProductViewRow,
@@ -314,7 +315,19 @@ pub async fn find_inventory_item_views(
             tii.quantity,
             tii.required,
             tp.product_code,
-            tp.description,
+                        COALESCE(
+                                (SELECT description
+                                 FROM track_product_translations
+                                 WHERE track_id = tp.track_id
+                                     AND language_code = 'en'
+                                 LIMIT 1),
+                                (SELECT description
+                                 FROM track_product_translations
+                                 WHERE track_id = tp.track_id
+                                 ORDER BY language_code
+                                 LIMIT 1),
+                                ''
+                        ) AS description,
             tp.track_type,
             tp.track_code,
             tp.with_roadbed,
@@ -351,7 +364,19 @@ pub async fn find_inventory_purchase_views(
             tp_hist.purchase_date,
             s.name as seller_name,
             tp.product_code,
-            tp.description,
+                        COALESCE(
+                                (SELECT description
+                                 FROM track_product_translations
+                                 WHERE track_id = tp.track_id
+                                     AND language_code = 'en'
+                                 LIMIT 1),
+                                (SELECT description
+                                 FROM track_product_translations
+                                 WHERE track_id = tp.track_id
+                                 ORDER BY language_code
+                                 LIMIT 1),
+                                ''
+                        ) AS description,
             tp.track_type,
             tp.track_code,
             tp.with_roadbed,
@@ -380,7 +405,7 @@ pub async fn find_track_product_by_id(
 ) -> Result<Option<TrackProductRow>, sqlx::Error> {
     let sql = r#"
         SELECT track_id, product_code, manufacturer_id, with_roadbed,
-               length_mm, radius_mm, track_code, track_type, description
+               length_mm, radius_mm, track_code, track_type
         FROM track_products
         WHERE track_id = ?1
         LIMIT 1
@@ -398,7 +423,7 @@ pub async fn find_track_product_by_code(
 ) -> Result<Option<TrackProductRow>, sqlx::Error> {
     let sql = r#"
         SELECT track_id, product_code, manufacturer_id, with_roadbed,
-               length_mm, radius_mm, track_code, track_type, description
+               length_mm, radius_mm, track_code, track_type
         FROM track_products
         WHERE manufacturer_id = ?1 AND product_code = ?2
         LIMIT 1
@@ -413,12 +438,30 @@ pub async fn find_track_product_by_code(
 /// Fetches all track product view rows joined with the manufacturer name.
 pub async fn find_all_product_views(
     executor: &mut sqlx::SqliteConnection,
+    lang: Language,
 ) -> Result<Vec<TrackProductViewRow>, sqlx::Error> {
     let sql = r#"
         SELECT
             tp.track_id,
             tp.product_code,
-            tp.description,
+            COALESCE(
+                (SELECT description
+                 FROM track_product_translations
+                 WHERE track_id = tp.track_id
+                   AND language_code = ?1
+                 LIMIT 1),
+                (SELECT description
+                 FROM track_product_translations
+                 WHERE track_id = tp.track_id
+                   AND language_code = 'en'
+                 LIMIT 1),
+                (SELECT description
+                 FROM track_product_translations
+                 WHERE track_id = tp.track_id
+                 ORDER BY language_code
+                 LIMIT 1),
+                ''
+            ) AS description,
             tp.track_type,
             tp.track_code,
             tp.with_roadbed,
@@ -429,7 +472,10 @@ pub async fn find_all_product_views(
         INNER JOIN manufacturers m ON tp.manufacturer_id = m.id
         ORDER BY m.name, tp.product_code
     "#;
-    sqlx::query_as(sql).fetch_all(executor).await
+    sqlx::query_as(sql)
+        .bind(lang.to_string())
+        .fetch_all(executor)
+        .await
 }
 
 /// Upserts a track product record.
@@ -467,5 +513,149 @@ pub async fn upsert_track_product(
         .bind(track_type)
         .execute(executor)
         .await?;
+    Ok(())
+}
+
+/// Updates an existing track product row by its `track_id`.
+#[allow(clippy::too_many_arguments)]
+pub async fn update_track_product(
+    executor: &mut sqlx::SqliteConnection,
+    track_id: &TrackId,
+    manufacturer_id: &str,
+    product_code: &str,
+    with_roadbed: i64,
+    length_mm: Option<i32>,
+    radius_mm: Option<i32>,
+    track_code: TrackCode,
+    track_type: TrackType,
+) -> Result<(), sqlx::Error> {
+    let sql = r#"
+        UPDATE track_products
+        SET manufacturer_id = ?1,
+            product_code = ?2,
+            with_roadbed = ?3,
+            length_mm = ?4,
+            radius_mm = ?5,
+            track_code = ?6,
+            track_type = ?7,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE track_id = ?8
+    "#;
+
+    sqlx::query(sql)
+        .bind(manufacturer_id)
+        .bind(product_code)
+        .bind(with_roadbed)
+        .bind(length_mm)
+        .bind(radius_mm)
+        .bind(track_code)
+        .bind(track_type)
+        .bind(track_id)
+        .execute(executor)
+        .await?;
+
+    Ok(())
+}
+
+/// Deletes a track product row by `track_id`.
+pub async fn delete_track_product(
+    executor: &mut sqlx::SqliteConnection,
+    track_id: &TrackId,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM track_products WHERE track_id = ?1")
+        .bind(track_id)
+        .execute(executor)
+        .await?;
+    Ok(())
+}
+
+/// Creates or updates one translation row for a track product.
+pub async fn upsert_track_product_translation(
+    executor: &mut sqlx::SqliteConnection,
+    track_id: &TrackId,
+    language_code: &str,
+    description: Option<String>,
+    details: Option<String>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+            INSERT INTO track_product_translations (
+                track_id,
+                language_code,
+                description,
+                details,
+                updated_at
+            )
+            VALUES (?1, ?2, ?3, ?4, CURRENT_TIMESTAMP)
+            ON CONFLICT(track_id, language_code)
+            DO UPDATE SET
+                description = excluded.description,
+                details = excluded.details,
+                updated_at = CURRENT_TIMESTAMP
+        "#,
+    )
+    .bind(track_id)
+    .bind(language_code)
+    .bind(description)
+    .bind(details)
+    .execute(executor)
+    .await?;
+
+    Ok(())
+}
+
+/// Deletes one translation row for a track product language.
+pub async fn delete_track_product_translation(
+    executor: &mut sqlx::SqliteConnection,
+    track_id: &TrackId,
+    language_code: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "DELETE FROM track_product_translations WHERE track_id = ?1 AND language_code = ?2",
+    )
+    .bind(track_id)
+    .bind(language_code)
+    .execute(executor)
+    .await?;
+
+    Ok(())
+}
+
+/// Rebuilds FTS rows for a single track product within the current transaction.
+pub async fn rebuild_track_product_search_index(
+    executor: &mut sqlx::SqliteConnection,
+    track_id: &TrackId,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM track_product_search_idx WHERE track_id = ?1")
+        .bind(track_id)
+        .execute(&mut *executor)
+        .await?;
+
+    sqlx::query(
+        r#"
+            INSERT INTO track_product_search_idx (
+                track_id,
+                language_code,
+                description,
+                details,
+                track_code,
+                track_type
+            )
+            SELECT
+                t.track_id,
+                t.language_code,
+                COALESCE(t.description, ''),
+                COALESCE(t.details, ''),
+                COALESCE(p.track_code, ''),
+                COALESCE(p.track_type, '')
+            FROM track_product_translations t
+            JOIN track_products p ON p.track_id = t.track_id
+            WHERE t.track_id = ?1
+        "#,
+    )
+    .bind(track_id)
+    .execute(&mut *executor)
+    .await?;
+
     Ok(())
 }

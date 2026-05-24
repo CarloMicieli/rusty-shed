@@ -3,6 +3,10 @@ pub mod command_handlers;
 pub mod query_handlers;
 
 pub use crate::tracks_inventory::interface::command_args::AddTrackPurchaseArgs;
+pub use crate::tracks_inventory::interface::command_args::DeleteTrackProductArgs;
+pub use crate::tracks_inventory::interface::command_args::DeleteTrackProductTranslationArgs;
 pub use crate::tracks_inventory::interface::command_args::NewTrackInventoryArgs;
 pub use crate::tracks_inventory::interface::command_args::RenameTrackInventoryArgs;
 pub use crate::tracks_inventory::interface::command_args::SetTrackItemQuantityArgs;
+pub use crate::tracks_inventory::interface::command_args::UpdateTrackProductArgs;
+pub use crate::tracks_inventory::interface::command_args::UpsertTrackProductTranslationArgs;

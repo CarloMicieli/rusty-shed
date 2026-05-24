@@ -1,11 +1,13 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::core::domain::Language;
 use crate::core::domain::length::Length;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::core::infrastructure::error::CommandError;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::tracks_inventory::application::{
-    AddTrackPurchaseInput, CreateTrackProductInput, NewTrackInventoryInput,
-    RenameTrackInventoryInput, SetTrackItemQuantityInput,
+    AddTrackPurchaseInput, CreateTrackProductInput, DeleteTrackProductInput,
+    DeleteTrackProductTranslationInput, NewTrackInventoryInput, RenameTrackInventoryInput,
+    SetTrackItemQuantityInput, UpdateTrackProductInput, UpsertTrackProductTranslationInput,
 };
 use crate::tracks_inventory::domain::{TrackCode, TrackId, TrackInventoryId, TrackType};
 use chrono::NaiveDate;
@@ -71,12 +73,16 @@ pub struct SetTrackItemQuantityArgs {
 #[serde(rename_all = "camelCase")]
 #[garde(allow_unvalidated)]
 pub struct CreateTrackProductArgs {
+    /// Language code for the initial translation.
+    pub lang: Language,
     /// Manufacturer that produces this track product
     pub manufacturer_id: ManufacturerId,
     /// Manufacturer's product code or name
     pub product_code: String,
     /// Human-readable description of the track piece
-    pub description: String,
+    pub description: Option<String>,
+    /// Optional details text for the track piece.
+    pub details: Option<String>,
     /// Geometric type of the track piece
     pub track_type: TrackType,
     /// Rail profile code describing the rail height
@@ -87,6 +93,64 @@ pub struct CreateTrackProductArgs {
     pub length: Option<Length>,
     /// Radius for curved track elements, when applicable
     pub radius: Option<Length>,
+}
+
+/// Command argument to update an existing track product
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+#[garde(allow_unvalidated)]
+pub struct UpdateTrackProductArgs {
+    /// Track product id to update.
+    pub track_id: TrackId,
+    /// Manufacturer that produces this track product
+    pub manufacturer_id: ManufacturerId,
+    /// Manufacturer's product code or name
+    pub product_code: String,
+    /// Geometric type of the track piece
+    pub track_type: TrackType,
+    /// Rail profile code describing the rail height
+    pub track_code: TrackCode,
+    /// Whether this track piece includes an integrated roadbed
+    pub with_roadbed: bool,
+    /// Length for straight track pieces, when applicable
+    pub length: Option<Length>,
+    /// Radius for curved track elements, when applicable
+    pub radius: Option<Length>,
+}
+
+/// Command argument to delete an existing track product.
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+#[garde(allow_unvalidated)]
+pub struct DeleteTrackProductArgs {
+    /// Track product id to delete.
+    pub track_id: TrackId,
+}
+
+/// Command argument to upsert one track product translation.
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+#[garde(allow_unvalidated)]
+pub struct UpsertTrackProductTranslationArgs {
+    /// Track product id to update.
+    pub track_id: TrackId,
+    /// Language code.
+    pub lang: Language,
+    /// Human-readable description.
+    pub description: Option<String>,
+    /// Optional details.
+    pub details: Option<String>,
+}
+
+/// Command argument to delete one track product translation.
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+#[garde(allow_unvalidated)]
+pub struct DeleteTrackProductTranslationArgs {
+    /// Track product id to update.
+    pub track_id: TrackId,
+    /// Language code to delete.
+    pub lang: Language,
 }
 
 /// Command argument to set the required quantity for a track item
@@ -133,15 +197,62 @@ impl TryFrom<CreateTrackProductArgs> for CreateTrackProductInput {
 
     fn try_from(value: CreateTrackProductArgs) -> Result<Self, Self::Error> {
         Ok(CreateTrackProductInput {
+            lang: value.lang,
             manufacturer_id: value.manufacturer_id,
             product_code: value.product_code,
             description: value.description,
+            details: value.details,
             track_type: value.track_type,
             track_code: value.track_code,
             with_roadbed: value.with_roadbed,
             length: value.length,
             radius: value.radius,
         })
+    }
+}
+
+impl TryFrom<UpdateTrackProductArgs> for UpdateTrackProductInput {
+    type Error = CommandError;
+
+    fn try_from(value: UpdateTrackProductArgs) -> Result<Self, Self::Error> {
+        Ok(UpdateTrackProductInput {
+            track_id: value.track_id,
+            manufacturer_id: value.manufacturer_id,
+            product_code: value.product_code,
+            track_type: value.track_type,
+            track_code: value.track_code,
+            with_roadbed: value.with_roadbed,
+            length: value.length,
+            radius: value.radius,
+        })
+    }
+}
+
+impl From<DeleteTrackProductArgs> for DeleteTrackProductInput {
+    fn from(value: DeleteTrackProductArgs) -> Self {
+        Self {
+            track_id: value.track_id,
+        }
+    }
+}
+
+impl From<UpsertTrackProductTranslationArgs> for UpsertTrackProductTranslationInput {
+    fn from(value: UpsertTrackProductTranslationArgs) -> Self {
+        Self {
+            track_id: value.track_id,
+            lang: value.lang,
+            description: value.description,
+            details: value.details,
+        }
+    }
+}
+
+impl From<DeleteTrackProductTranslationArgs> for DeleteTrackProductTranslationInput {
+    fn from(value: DeleteTrackProductTranslationArgs) -> Self {
+        Self {
+            track_id: value.track_id,
+            lang: value.lang,
+        }
     }
 }
 

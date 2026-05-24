@@ -316,7 +316,9 @@ pub struct TrackProductRecord {
     pub track_id: String,
     pub manufacturer_id: String,
     pub product_code: String,
-    pub description: String,
+    pub description: LocalizedTextRecord,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub details: Option<LocalizedTextRecord>,
     pub track_type: String,
     pub track_code: String,
     pub with_roadbed: bool,

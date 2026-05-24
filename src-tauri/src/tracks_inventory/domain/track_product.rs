@@ -24,9 +24,6 @@ pub struct TrackProduct {
     /// Reference to the manufacturer entity that produces this track product.
     pub manufacturer_id: ManufacturerId,
 
-    /// Human-readable description of the track piece.
-    pub description: String,
-
     /// Whether this track piece includes an integrated roadbed/base.
     pub with_roadbed: bool,
 

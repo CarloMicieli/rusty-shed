@@ -25,8 +25,6 @@ pub struct TrackProductRow {
     pub track_code: Option<TrackCode>,
     /// Optional track type (e.g. "STRAIGHT", "CURVE").
     pub track_type: Option<String>,
-    /// Optional human-readable description.
-    pub description: Option<String>,
 }
 
 /// Row representation for inventory items.

@@ -296,12 +296,15 @@ mod get_track_inventories {
 #[cfg(test)]
 mod get_track_products {
     use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+    use crate::core::domain::Language;
     use crate::tracks_inventory::application::GetTrackProductsQuery;
 
     #[sqlx::test(migrations = "./migrations")]
     async fn list_products_empty(pool: sqlx::SqlitePool) {
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
-        let result = GetTrackProductsQuery::execute(&mut uow).await.unwrap();
+        let result = GetTrackProductsQuery::execute(&mut uow, Language::English)
+            .await
+            .unwrap();
         assert!(result.is_empty());
     }
 }

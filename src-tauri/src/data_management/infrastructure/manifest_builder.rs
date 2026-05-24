@@ -721,7 +721,15 @@ async fn export_track_inventory_if_needed(
     }
 
     let tp_rows = sqlx::query(
-        "SELECT track_id, manufacturer_id, product_code, description, \
+        "SELECT track_id, manufacturer_id, product_code, \
+            (SELECT description FROM track_product_translations t \
+             WHERE t.track_id = track_products.track_id AND t.language_code = 'en' LIMIT 1) AS description_en, \
+            (SELECT description FROM track_product_translations t \
+             WHERE t.track_id = track_products.track_id AND t.language_code = 'it' LIMIT 1) AS description_it, \
+            (SELECT details FROM track_product_translations t \
+             WHERE t.track_id = track_products.track_id AND t.language_code = 'en' LIMIT 1) AS details_en, \
+            (SELECT details FROM track_product_translations t \
+             WHERE t.track_id = track_products.track_id AND t.language_code = 'it' LIMIT 1) AS details_it, \
                 track_type, track_code, with_roadbed, length_mm, radius_mm \
          FROM track_products ORDER BY track_id",
     )
@@ -736,7 +744,14 @@ async fn export_track_inventory_if_needed(
                 "trackId": row.try_get::<String, _>("track_id").ok(),
                 "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
                 "productCode": row.try_get::<String, _>("product_code").ok(),
-                "description": row.try_get::<String, _>("description").ok(),
+                "description": {
+                    "en": row.try_get::<Option<String>, _>("description_en").ok().flatten(),
+                    "it": row.try_get::<Option<String>, _>("description_it").ok().flatten(),
+                },
+                "details": {
+                    "en": row.try_get::<Option<String>, _>("details_en").ok().flatten(),
+                    "it": row.try_get::<Option<String>, _>("details_it").ok().flatten(),
+                },
                 "trackType": row.try_get::<String, _>("track_type").ok(),
                 "trackCode": row.try_get::<String, _>("track_code").ok(),
                 "withRoadbed": row.try_get::<i64, _>("with_roadbed").ok().map(|v| v != 0),
@@ -1502,14 +1517,13 @@ mod tests {
 
         sqlx::query(
             "INSERT INTO track_products \
-             (id, track_id, manufacturer_id, product_code, description, track_type, track_code, with_roadbed, length_mm, radius_mm, created_at, updated_at, version) \
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
+               (id, track_id, manufacturer_id, product_code, track_type, track_code, with_roadbed, length_mm, radius_mm, created_at, updated_at, version) \
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
         )
         .bind("track-product-1")
         .bind("track-1")
         .bind("manufacturer-1")
         .bind("TR-1")
-        .bind("Straight")
         .bind("STRAIGHT")
         .bind("ST")
         .bind(1_i64)
@@ -1518,6 +1532,17 @@ mod tests {
         .execute(&pool)
         .await
         .expect("track product insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO track_product_translations \
+             (track_id, language_code, description, details, created_at, updated_at) \
+             VALUES (?, 'en', ?, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+        )
+        .bind("track-1")
+        .bind("Straight")
+        .execute(&pool)
+        .await
+        .expect("track product translation insert should succeed");
 
         sqlx::query(
             "INSERT INTO track_inventories (id, name, description, created_at, updated_at, version) \
