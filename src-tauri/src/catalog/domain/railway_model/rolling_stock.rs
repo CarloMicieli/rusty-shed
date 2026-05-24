@@ -486,14 +486,35 @@ impl RollingStock {
 
     /// Apply a full technical specification patch to this rolling stock and return a JSON patch.
     pub fn apply_specifications(&mut self, spec: RollingStockSpecPatch) -> serde_json::Value {
-        let coupling = if spec.coupling_socket.is_some()
-            || spec.close_couplers.is_some()
-            || spec.digital_shunting.is_some()
+        let series_code = spec.series_code.clone();
+        let road_number = spec.road_number.clone();
+        let livery = spec.livery.clone();
+        let depot = spec.depot.clone();
+        let series = spec.series.clone();
+        let friendly_name = spec.friendly_name.clone();
+
+        let flywheel_fitted = spec.flywheel_fitted;
+        let body_shell = spec.body_shell;
+        let chassis = spec.chassis;
+        let interior_lights = spec.interior_lights;
+        let lights = spec.lights;
+        let sprung_buffers = spec.sprung_buffers;
+
+        let dcc_interface = spec.dcc_interface;
+        let control = spec.control;
+        let coupling_socket = spec.coupling_socket;
+        let close_couplers = spec.close_couplers;
+        let digital_shunting = spec.digital_shunting;
+        let is_dummy = spec.is_dummy;
+
+        let coupling = if coupling_socket.is_some()
+            || close_couplers.is_some()
+            || digital_shunting.is_some()
         {
             Some(Coupling {
-                socket: spec.coupling_socket,
-                close_couplers: spec.close_couplers,
-                digital_shunting: spec.digital_shunting,
+                socket: coupling_socket,
+                close_couplers,
+                digital_shunting,
             })
         } else {
             None
@@ -502,12 +523,12 @@ impl RollingStock {
         let tech_specs = TechnicalSpecifications {
             minimum_radius: None,
             coupling,
-            flywheel_fitted: spec.flywheel_fitted,
-            body_shell: spec.body_shell,
-            chassis: spec.chassis,
-            interior_lights: spec.interior_lights,
-            lights: spec.lights,
-            sprung_buffers: spec.sprung_buffers,
+            flywheel_fitted,
+            body_shell,
+            chassis,
+            interior_lights,
+            lights,
+            sprung_buffers,
         };
 
         match self {
@@ -523,21 +544,21 @@ impl RollingStock {
                 control: ct,
                 is_dummy: id,
                 ..
-            } => {
-                *sc = spec.series_code.clone();
-                *rn = spec.road_number.clone();
-                *lv = spec.livery.clone();
-                *dp = spec.depot.clone();
-                *sr = spec.series.clone();
-                *fn_ = spec.friendly_name.clone();
-                *ts = Some(tech_specs);
-                *di = spec.dcc_interface;
-                *ct = spec.control;
-                if let Some(dummy) = spec.is_dummy {
-                    *id = dummy;
-                }
             }
-            RollingStock::ElectricMultipleUnit {
+            | RollingStock::ElectricMultipleUnit {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                depot: dp,
+                series: sr,
+                friendly_name: fn_,
+                technical_specifications: ts,
+                dcc_interface: di,
+                control: ct,
+                is_dummy: id,
+                ..
+            }
+            | RollingStock::Railcar {
                 series_code: sc,
                 road_number: rn,
                 livery: lv,
@@ -550,42 +571,16 @@ impl RollingStock {
                 is_dummy: id,
                 ..
             } => {
-                *sc = spec.series_code.clone();
-                *rn = spec.road_number.clone();
-                *lv = spec.livery.clone();
-                *dp = spec.depot.clone();
-                *sr = spec.series.clone();
-                *fn_ = spec.friendly_name.clone();
+                *sc = series_code.clone();
+                *rn = road_number.clone();
+                *lv = livery.clone();
+                *dp = depot.clone();
+                *sr = series.clone();
+                *fn_ = friendly_name.clone();
                 *ts = Some(tech_specs);
-                *di = spec.dcc_interface;
-                *ct = spec.control;
-                if let Some(dummy) = spec.is_dummy {
-                    *id = dummy;
-                }
-            }
-            RollingStock::Railcar {
-                series_code: sc,
-                road_number: rn,
-                livery: lv,
-                depot: dp,
-                series: sr,
-                friendly_name: fn_,
-                technical_specifications: ts,
-                dcc_interface: di,
-                control: ct,
-                is_dummy: id,
-                ..
-            } => {
-                *sc = spec.series_code.clone();
-                *rn = spec.road_number.clone();
-                *lv = spec.livery.clone();
-                *dp = spec.depot.clone();
-                *sr = spec.series.clone();
-                *fn_ = spec.friendly_name.clone();
-                *ts = Some(tech_specs);
-                *di = spec.dcc_interface;
-                *ct = spec.control;
-                if let Some(dummy) = spec.is_dummy {
+                *di = dcc_interface;
+                *ct = control;
+                if let Some(dummy) = is_dummy {
                     *id = dummy;
                 }
             }
@@ -597,10 +592,10 @@ impl RollingStock {
                 technical_specifications: ts,
                 ..
             } => {
-                *sc = spec.series_code.clone();
-                *rn = spec.road_number.clone();
-                *lv = spec.livery.clone();
-                *fn_ = spec.friendly_name.clone();
+                *sc = series_code.clone();
+                *rn = road_number.clone();
+                *lv = livery.clone();
+                *fn_ = friendly_name.clone();
                 *ts = Some(tech_specs);
             }
             RollingStock::PassengerCar {
@@ -612,34 +607,34 @@ impl RollingStock {
                 technical_specifications: ts,
                 ..
             } => {
-                *sc = spec.series_code.clone();
-                *rn = spec.road_number.clone();
-                *lv = spec.livery.clone();
-                *sr = spec.series.clone();
-                *fn_ = spec.friendly_name.clone();
+                *sc = series_code.clone();
+                *rn = road_number.clone();
+                *lv = livery.clone();
+                *sr = series.clone();
+                *fn_ = friendly_name.clone();
                 *ts = Some(tech_specs);
             }
         }
 
         serde_json::json!({
-            "series_code": spec.series_code,
-            "road_number": spec.road_number,
-            "livery": spec.livery,
-            "depot": spec.depot,
-            "series": spec.series,
-            "friendly_name": spec.friendly_name,
-            "flywheel_fitted": spec.flywheel_fitted.map(|f| f.to_string()),
-            "body_shell": spec.body_shell.map(|b| b.to_string()),
-            "chassis": spec.chassis.map(|c| c.to_string()),
-            "interior_lights": spec.interior_lights.map(|f| f.to_string()),
-            "lights": spec.lights.map(|f| f.to_string()),
-            "sprung_buffers": spec.sprung_buffers.map(|f| f.to_string()),
-            "dcc_interface": spec.dcc_interface.map(|d| d.to_string()),
-            "control": spec.control.map(|c| c.to_string()),
-            "coupling_socket": spec.coupling_socket.map(|s| s.to_string()),
-            "close_couplers": spec.close_couplers.map(|f| f.to_string()),
-            "digital_shunting": spec.digital_shunting.map(|f| f.to_string()),
-            "is_dummy": spec.is_dummy,
+            "series_code": series_code,
+            "road_number": road_number,
+            "livery": livery,
+            "depot": depot,
+            "series": series,
+            "friendly_name": friendly_name,
+            "flywheel_fitted": flywheel_fitted.map(|f| f.to_string()),
+            "body_shell": body_shell.map(|b| b.to_string()),
+            "chassis": chassis.map(|c| c.to_string()),
+            "interior_lights": interior_lights.map(|f| f.to_string()),
+            "lights": lights.map(|f| f.to_string()),
+            "sprung_buffers": sprung_buffers.map(|f| f.to_string()),
+            "dcc_interface": dcc_interface.map(|d| d.to_string()),
+            "control": control.map(|c| c.to_string()),
+            "coupling_socket": coupling_socket.map(|s| s.to_string()),
+            "close_couplers": close_couplers.map(|f| f.to_string()),
+            "digital_shunting": digital_shunting.map(|f| f.to_string()),
+            "is_dummy": is_dummy,
         })
     }
 

@@ -577,6 +577,67 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_map_validation_error_file_not_found() {
+        let cmd_err = map_validation_error(ValidationError::FileNotFound);
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert_eq!(msg, "File not found"),
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_file_too_large() {
+        let cmd_err = map_validation_error(ValidationError::FileTooLarge {
+            size_mb: 11,
+            max_mb: 10,
+        });
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => {
+                assert!(msg.contains("11"));
+                assert!(msg.contains("10"));
+            }
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_unsupported_format() {
+        let cmd_err = map_validation_error(ValidationError::UnsupportedFormat {
+            format: "gif".to_string(),
+        });
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => {
+                assert!(msg.contains("Unsupported format"));
+                assert!(msg.contains("gif"));
+            }
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_corrupted_image() {
+        let cmd_err = map_validation_error(ValidationError::CorruptedImage);
+
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("corrupted")),
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_validation_error_io_error() {
+        let cmd_err = map_validation_error(ValidationError::IoError("io".to_string()));
+
+        match cmd_err {
+            CommandError::Unknown { message, .. } => assert_eq!(message, "io"),
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
     async fn test_state(models_dir: std::path::PathBuf) -> AppState {
         let pool = SqlitePool::connect(":memory:")
             .await

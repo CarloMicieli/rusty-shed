@@ -388,4 +388,20 @@ mod tests {
         Normalizer::normalize_manifest(&mut m);
         assert_eq!(m["data"]["manufacturers"][0]["status"], "ACTIVE");
     }
+
+    #[test]
+    fn normalize_availability_status_maps_legacy_values() {
+        let cases = [
+            ("available", Some("AVAILABLE")),
+            ("announced", Some("ANNOUNCED")),
+            ("cancelled", Some("CANCELLED")),
+            ("discontinued", Some("DISCONTINUED")),
+            ("AVAILABLE", None),
+            ("unknown", None),
+        ];
+
+        for (raw, expected) in cases {
+            assert_eq!(normalize_availability_status(raw), expected);
+        }
+    }
 }
