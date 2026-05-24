@@ -42,7 +42,7 @@ pnpm-debug.log*
 *.temp
 *.swp
 *.swo
-coverage
+coverage/
 
 # IDEs
 .vscode/
