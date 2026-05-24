@@ -316,10 +316,9 @@ mod find_track_inventory_view {
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.track_inventories_repo();
 
-        let id = TrackInventoryId::try_from(
-            "trn:track-inventory:00000000-0000-0000-0000-999999999999",
-        )
-        .unwrap();
+        let id =
+            TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-999999999999")
+                .unwrap();
 
         let result = repo.find_view_by_id(&id).await.unwrap();
 
@@ -334,10 +333,9 @@ mod find_track_inventory_view {
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.track_inventories_repo();
 
-        let id = TrackInventoryId::try_from(
-            "trn:track-inventory:00000000-0000-0000-0000-000000000001",
-        )
-        .unwrap();
+        let id =
+            TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-000000000001")
+                .unwrap();
 
         let result = repo
             .find_view_by_id(&id)

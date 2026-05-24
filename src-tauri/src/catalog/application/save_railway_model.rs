@@ -443,8 +443,8 @@ mod tests {
 
     #[test]
     fn map_simple_rolling_stock_requires_locomotive_subcategory() {
-        let company_id = RailwayCompanyId::try_from("trn:railway-company:rc1")
-            .expect("company id should parse");
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
         let input = SimplifiedRollingStockInput {
             railway_company_id: "trn:railway-company:rc1".to_string(),
             series_code: "E464".to_string(),
@@ -459,8 +459,8 @@ mod tests {
 
     #[test]
     fn map_simple_rolling_stock_maps_passenger_car_without_subcategory() {
-        let company_id = RailwayCompanyId::try_from("trn:railway-company:rc1")
-            .expect("company id should parse");
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
         let input = SimplifiedRollingStockInput {
             railway_company_id: "trn:railway-company:rc1".to_string(),
             series_code: "UIC-Z".to_string(),
@@ -480,8 +480,8 @@ mod tests {
 
     #[test]
     fn map_simple_rolling_stock_maps_emu_and_railcar_defaults() {
-        let company_id = RailwayCompanyId::try_from("trn:railway-company:rc1")
-            .expect("company id should parse");
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
 
         let emu = SimplifiedRollingStockInput {
             railway_company_id: "trn:railway-company:rc1".to_string(),
@@ -498,8 +498,8 @@ mod tests {
             category: "RAILCAR".to_string(),
         };
 
-        let emu_mapped = map_simple_rolling_stock(emu, company_id.clone())
-            .expect("emu mapping should succeed");
+        let emu_mapped =
+            map_simple_rolling_stock(emu, company_id.clone()).expect("emu mapping should succeed");
         let railcar_mapped =
             map_simple_rolling_stock(railcar, company_id).expect("railcar mapping should succeed");
 
@@ -515,8 +515,8 @@ mod tests {
 
     #[test]
     fn map_simple_rolling_stock_rejects_invalid_category() {
-        let company_id = RailwayCompanyId::try_from("trn:railway-company:rc1")
-            .expect("company id should parse");
+        let company_id =
+            RailwayCompanyId::try_from("trn:railway-company:rc1").expect("company id should parse");
         let input = SimplifiedRollingStockInput {
             railway_company_id: "trn:railway-company:rc1".to_string(),
             series_code: "X".to_string(),

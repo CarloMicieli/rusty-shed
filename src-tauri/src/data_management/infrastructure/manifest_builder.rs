@@ -761,7 +761,8 @@ async fn export_track_inventory_if_needed(
         .await
         .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
 
-    let mut referenced_seller_ids: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut referenced_seller_ids: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
     let mut track_inventories: Vec<Value> = Vec::new();
     for inv_row in &inv_rows {
         let inv_id: String = inv_row
@@ -801,7 +802,8 @@ async fn export_track_inventory_if_needed(
         let purchases: Vec<Value> = purchase_rows
             .iter()
             .map(|row| {
-                let seller_id: Option<String> = row.try_get::<Option<String>, _>("seller_id").ok().flatten();
+                let seller_id: Option<String> =
+                    row.try_get::<Option<String>, _>("seller_id").ok().flatten();
                 if let Some(ref sid) = seller_id {
                     referenced_seller_ids.insert(sid.clone());
                 }
@@ -843,7 +845,11 @@ async fn export_track_inventory_if_needed(
             .collect();
 
         if !missing_ids.is_empty() {
-            let placeholders = missing_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+            let placeholders = missing_ids
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ");
             let query = format!(
                 "SELECT id, name, type, email, phone, website_url, \
                         street_address, city, state_region, postal_code, country_code \
@@ -879,10 +885,11 @@ async fn export_train_formations_if_needed(
         return Ok(());
     }
 
-    let cat_rows = sqlx::query("SELECT id, name, is_custom FROM formation_categories ORDER BY name")
-        .fetch_all(pool)
-        .await
-        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+    let cat_rows =
+        sqlx::query("SELECT id, name, is_custom FROM formation_categories ORDER BY name")
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
 
     let formation_categories: Vec<Value> = cat_rows
         .iter()
@@ -1062,7 +1069,9 @@ async fn export_wishlists_if_needed(
                         .ok()
                         .flatten(),
                 ) {
-                    (Some(amount), Some(currency)) => json!({ "amount": amount, "currency": currency }),
+                    (Some(amount), Some(currency)) => {
+                        json!({ "amount": amount, "currency": currency })
+                    }
                     _ => Value::Null,
                 };
                 let purchased_price = match (
@@ -1073,7 +1082,9 @@ async fn export_wishlists_if_needed(
                         .ok()
                         .flatten(),
                 ) {
-                    (Some(amount), Some(currency)) => json!({ "amount": amount, "currency": currency }),
+                    (Some(amount), Some(currency)) => {
+                        json!({ "amount": amount, "currency": currency })
+                    }
                     _ => Value::Null,
                 };
                 strip_null_fields(json!({
@@ -1204,13 +1215,11 @@ pub async fn build_manifest(
 
     export_sellers_if_needed(&mut data, pool, inclusions.include_sellers).await?;
 
-    export_maintenance_logs_if_needed(&mut data, pool, inclusions.include_maintenance_logs)
-        .await?;
+    export_maintenance_logs_if_needed(&mut data, pool, inclusions.include_maintenance_logs).await?;
 
     export_track_inventory_if_needed(&mut data, pool, inclusions.include_track_inventory).await?;
 
-    export_train_formations_if_needed(&mut data, pool, selection.include_train_formations)
-        .await?;
+    export_train_formations_if_needed(&mut data, pool, selection.include_train_formations).await?;
 
     export_wishlists_if_needed(&mut data, pool, inclusions.include_wishlists).await?;
 
@@ -1464,15 +1473,13 @@ mod tests {
     async fn export_track_inventory_if_needed_exports_and_merges_seller_references(
         pool: SqlitePool,
     ) {
-        sqlx::query(
-            "INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)",
-        )
-        .bind("manufacturer-1")
-        .bind("Manufacturer")
-        .bind("ACTIVE")
-        .execute(&pool)
-        .await
-        .expect("manufacturer insert should succeed");
+        sqlx::query("INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)")
+            .bind("manufacturer-1")
+            .bind("Manufacturer")
+            .bind("ACTIVE")
+            .execute(&pool)
+            .await
+            .expect("manufacturer insert should succeed");
 
         sqlx::query(
             "INSERT INTO sellers (id, name, type, email, phone, website_url, street_address, city, state_region, postal_code, country_code) \
@@ -1594,7 +1601,10 @@ mod tests {
         exported_ids.sort();
         assert_eq!(
             exported_ids,
-            vec!["seller-existing".to_string(), "seller-from-purchase".to_string()]
+            vec![
+                "seller-existing".to_string(),
+                "seller-from-purchase".to_string()
+            ]
         );
     }
 }

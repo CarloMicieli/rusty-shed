@@ -3,7 +3,8 @@ use crate::cloud_backup::domain::{
     dtos::{BackupListItem, BackupListResponse, ListBackupsArgs},
 };
 use crate::cloud_backup::infrastructure::{
-    google_drive::{DriveFile, GoogleDriveClient}, oauth_service::OAuthService,
+    google_drive::{DriveFile, GoogleDriveClient},
+    oauth_service::OAuthService,
     secure_storage::SecureStorage,
 };
 use chrono::DateTime;
@@ -111,9 +112,11 @@ fn format_bytes(bytes: u64) -> String {
 mod tests {
     use super::*;
     use crate::cloud_backup::domain::CloudBackupError;
-    use crate::cloud_backup::infrastructure::{OAuthTokens, SecureStorage, google_drive::DriveFile};
-    use serde_json::json;
+    use crate::cloud_backup::infrastructure::{
+        OAuthTokens, SecureStorage, google_drive::DriveFile,
+    };
     use async_trait::async_trait;
+    use serde_json::json;
     use std::sync::Arc;
 
     #[test]
@@ -200,10 +203,7 @@ mod tests {
         let mut props = serde_json::Map::new();
         props.insert("recordCount".to_string(), json!("17"));
         props.insert("isInitial".to_string(), json!("true"));
-        props.insert(
-            "backupTimestamp".to_string(),
-            json!("2025-01-01T10:00:00Z"),
-        );
+        props.insert("backupTimestamp".to_string(), json!("2025-01-01T10:00:00Z"));
 
         let item = map_drive_file(DriveFile {
             id: "file-1".to_string(),

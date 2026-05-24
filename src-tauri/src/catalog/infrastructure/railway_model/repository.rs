@@ -1499,11 +1499,12 @@ mod tests {
             .await
             .expect("save should ignore non-object patches");
 
-        let after_scale: String = sqlx::query_scalar("SELECT scale FROM railway_models WHERE id = ?1")
-            .bind("trn:railway-model:acme:60100")
-            .fetch_one(&mut *conn)
-            .await
-            .expect("scale should be queryable after save");
+        let after_scale: String =
+            sqlx::query_scalar("SELECT scale FROM railway_models WHERE id = ?1")
+                .bind("trn:railway-model:acme:60100")
+                .fetch_one(&mut *conn)
+                .await
+                .expect("scale should be queryable after save");
 
         assert_eq!(after_scale, before_scale);
     }

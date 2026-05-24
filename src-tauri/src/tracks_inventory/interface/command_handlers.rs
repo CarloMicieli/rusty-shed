@@ -286,9 +286,10 @@ mod tests {
     async fn set_item_required_negative_required_returns_validation_error(pool: SqlitePool) {
         let state = app_state(pool);
         let input = SetItemRequiredArgs {
-            inventory_id:
-                TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-000000000001")
-                    .expect("valid inventory id"),
+            inventory_id: TrackInventoryId::try_from(
+                "trn:track-inventory:00000000-0000-0000-0000-000000000001",
+            )
+            .expect("valid inventory id"),
             track_id: TrackId::try_from("trn:track:acme:60100").expect("valid track id"),
             required: -1,
         };
@@ -309,9 +310,10 @@ mod tests {
     async fn set_item_required_missing_item_returns_not_found(pool: SqlitePool) {
         let state = app_state(pool);
         let input = SetItemRequiredArgs {
-            inventory_id:
-                TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-000000000001")
-                    .expect("valid inventory id"),
+            inventory_id: TrackInventoryId::try_from(
+                "trn:track-inventory:00000000-0000-0000-0000-000000000001",
+            )
+            .expect("valid inventory id"),
             track_id: TrackId::try_from("trn:track:acme:99999").expect("valid track id"),
             required: 3,
         };

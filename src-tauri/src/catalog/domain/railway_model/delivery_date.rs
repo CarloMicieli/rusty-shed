@@ -304,4 +304,26 @@ mod tests {
         let de: DeliveryDate = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(orig, de);
     }
+
+    #[rstest]
+    #[case("q1", Quarter::Q1)]
+    #[case("Q2", Quarter::Q2)]
+    #[case("q3", Quarter::Q3)]
+    #[case("Q4", Quarter::Q4)]
+    fn quarter_from_str_parses_all_quarters(#[case] input: &str, #[case] expected: Quarter) {
+        let parsed = Quarter::from_str(input).expect("should parse quarter");
+        assert_eq!(parsed, expected);
+    }
+
+    #[rstest]
+    #[case("")]
+    #[case("Q0")]
+    #[case("Q5")]
+    #[case("Quarter1")]
+    fn quarter_from_str_rejects_invalid_values(#[case] input: &str) {
+        assert!(
+            Quarter::from_str(input).is_err(),
+            "{input} should be invalid"
+        );
+    }
 }

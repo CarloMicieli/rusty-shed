@@ -1238,8 +1238,8 @@ mod tests {
         {
             let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);
 
-            let formation = TrainFormation::create("tf-shift-1".into(), "Shift Test".into())
-                .expect("create");
+            let formation =
+                TrainFormation::create("tf-shift-1".into(), "Shift Test".into()).expect("create");
             repo.save(&formation).await.expect("save formation");
 
             for (eid, pos) in [
@@ -1273,15 +1273,17 @@ mod tests {
         .await
         .expect("load positions");
 
-        assert_eq!(positions, vec![("el-shift-1".to_string(), 0), ("el-shift-3".to_string(), 1)]);
+        assert_eq!(
+            positions,
+            vec![("el-shift-1".to_string(), 0), ("el-shift-3".to_string(), 1)]
+        );
 
-        let missing: Option<i32> = sqlx::query_scalar(
-            "SELECT position_order FROM formation_elements WHERE id = ?",
-        )
-        .bind("el-shift-2")
-        .fetch_optional(&pool)
-        .await
-        .expect("query removed element");
+        let missing: Option<i32> =
+            sqlx::query_scalar("SELECT position_order FROM formation_elements WHERE id = ?")
+                .bind("el-shift-2")
+                .fetch_optional(&pool)
+                .await
+                .expect("query removed element");
         assert!(missing.is_none());
     }
 

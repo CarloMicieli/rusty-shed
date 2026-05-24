@@ -835,7 +835,9 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn update_collection_item_purchase_date_with_missing_item_returns_error(pool: SqlitePool) {
+    async fn update_collection_item_purchase_date_with_missing_item_returns_error(
+        pool: SqlitePool,
+    ) {
         let state = app_state(pool);
         let args = UpdateCollectionItemArgs {
             collection_item_id: "trn:collection-item:11111111-1111-1111-1111-111111111111"
@@ -846,7 +848,10 @@ mod tests {
         };
 
         let result = update_collection_item_inner(&state, args).await;
-        assert!(result.is_err(), "Expected error for missing item, got success");
+        assert!(
+            result.is_err(),
+            "Expected error for missing item, got success"
+        );
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -861,7 +866,10 @@ mod tests {
         };
 
         let result = update_collection_item_inner(&state, args).await;
-        assert!(result.is_err(), "Expected error for missing item, got success");
+        assert!(
+            result.is_err(),
+            "Expected error for missing item, got success"
+        );
     }
 
     #[sqlx::test(migrations = "./migrations")]

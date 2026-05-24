@@ -413,7 +413,10 @@ mod tests {
 
         f.assign_rolling_stock("el-1", "ors-1".into())
             .expect("assign should succeed");
-        assert_eq!(f.elements[0].owned_rolling_stock_id.as_deref(), Some("ors-1"));
+        assert_eq!(
+            f.elements[0].owned_rolling_stock_id.as_deref(),
+            Some("ors-1")
+        );
 
         f.unassign_rolling_stock("el-1")
             .expect("unassign should succeed");
@@ -448,7 +451,11 @@ mod tests {
         f.reorder_elements(vec!["el-2".into(), "el-1".into()])
             .expect("reorder should succeed");
 
-        let ordered_ids: Vec<&str> = f.elements.iter().map(|element| element.id.as_str()).collect();
+        let ordered_ids: Vec<&str> = f
+            .elements
+            .iter()
+            .map(|element| element.id.as_str())
+            .collect();
         assert_eq!(ordered_ids, vec!["el-2", "el-1"]);
     }
 
@@ -463,9 +470,7 @@ mod tests {
         });
         assert_eq!(f.name, "Created Name");
 
-        f.apply_event(&TrainFormationEvent::Deleted {
-            id: f.id.clone(),
-        });
+        f.apply_event(&TrainFormationEvent::Deleted { id: f.id.clone() });
         assert_eq!(f.name, "Created Name");
     }
 }

@@ -1814,12 +1814,11 @@ mod tests {
         .await
         .expect("persist should insert rolling stocks for confirmed duplicate model ids");
 
-        let rs_count: i64 =
-            sqlx::query_scalar("SELECT COUNT(1) FROM rolling_stocks WHERE id = ?")
-                .bind("trn:rolling-stock:dup:001")
-                .fetch_one(&pool)
-                .await
-                .expect("rolling_stocks should be queryable");
+        let rs_count: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM rolling_stocks WHERE id = ?")
+            .bind("trn:rolling-stock:dup:001")
+            .fetch_one(&pool)
+            .await
+            .expect("rolling_stocks should be queryable");
         assert_eq!(rs_count, 1);
     }
 
@@ -1939,11 +1938,12 @@ mod tests {
             .expect("wishlists should be queryable");
         assert_eq!(wishlist_count, 1);
 
-        let wishlist_default: i64 = sqlx::query_scalar("SELECT is_default FROM wishlists WHERE id = ?")
-            .bind("trn:wishlist:001")
-            .fetch_one(&pool)
-            .await
-            .expect("wishlist default flag should be queryable");
+        let wishlist_default: i64 =
+            sqlx::query_scalar("SELECT is_default FROM wishlists WHERE id = ?")
+                .bind("trn:wishlist:001")
+                .fetch_one(&pool)
+                .await
+                .expect("wishlist default flag should be queryable");
         assert_eq!(wishlist_default, 0);
 
         let wishlist_item_count: i64 =
@@ -1960,19 +1960,20 @@ mod tests {
         let repo = app_repo(pool.clone());
         let mut data = DataContainerDto::default();
 
-        data.manufacturers.push(crate::data_management::domain::ManufacturerRecord {
-            id: "trn:manufacturer:e2e".to_string(),
-            name: "E2E Manufacturer".to_string(),
-            registered_company_name: None,
-            country_code: Some("IT".to_string()),
-            status: Some("ACTIVE".to_string()),
-            website_url: None,
-            street_address: None,
-            extended_address: None,
-            city: None,
-            state_region: None,
-            postal_code: None,
-        });
+        data.manufacturers
+            .push(crate::data_management::domain::ManufacturerRecord {
+                id: "trn:manufacturer:e2e".to_string(),
+                name: "E2E Manufacturer".to_string(),
+                registered_company_name: None,
+                country_code: Some("IT".to_string()),
+                status: Some("ACTIVE".to_string()),
+                website_url: None,
+                street_address: None,
+                extended_address: None,
+                city: None,
+                state_region: None,
+                postal_code: None,
+            });
 
         data.railway_companies.push(RailwayCompanyRecord {
             id: "trn:railway-company:e2e".to_string(),
@@ -2035,15 +2036,16 @@ mod tests {
             }],
         });
 
-        data.sellers.push(crate::data_management::domain::SellerRecord {
-            id: "trn:seller:e2e".to_string(),
-            name: "E2E Seller".to_string(),
-            seller_type: "SHOP".to_string(),
-            email: None,
-            phone: None,
-            website_url: None,
-            address: None,
-        });
+        data.sellers
+            .push(crate::data_management::domain::SellerRecord {
+                id: "trn:seller:e2e".to_string(),
+                name: "E2E Seller".to_string(),
+                seller_type: "SHOP".to_string(),
+                email: None,
+                phone: None,
+                website_url: None,
+                address: None,
+            });
 
         data.collection_items.push(CollectionItemRecord {
             id: "trn:collection-item:e2e:001".to_string(),
@@ -2139,24 +2141,25 @@ mod tests {
                 is_custom: true,
             });
 
-        data.prototypes.push(crate::data_management::domain::PrototypeRecord {
-            id: "trn:prototype:e2e:001".to_string(),
-            railway_company_id: "trn:railway-company:e2e".to_string(),
-            series_code: "E652".to_string(),
-            friendly_name: Some("Prototype locomotive".to_string()),
-            specification_type: "LOCOMOTIVE".to_string(),
-            locomotive_type: Some("ELECTRIC".to_string()),
-            locomotive_series: Some("E652".to_string()),
-            service_level: Some("INTERCITY".to_string()),
-            passenger_car_type: None,
-            freight_car_type: None,
-            railcar_type: None,
-            electric_multiple_unit_type: None,
-            elements_count: None,
-            is_permanently_coupled: None,
-            is_motorized: true,
-            is_custom: true,
-        });
+        data.prototypes
+            .push(crate::data_management::domain::PrototypeRecord {
+                id: "trn:prototype:e2e:001".to_string(),
+                railway_company_id: "trn:railway-company:e2e".to_string(),
+                series_code: "E652".to_string(),
+                friendly_name: Some("Prototype locomotive".to_string()),
+                specification_type: "LOCOMOTIVE".to_string(),
+                locomotive_type: Some("ELECTRIC".to_string()),
+                locomotive_series: Some("E652".to_string()),
+                service_level: Some("INTERCITY".to_string()),
+                passenger_car_type: None,
+                freight_car_type: None,
+                railcar_type: None,
+                electric_multiple_unit_type: None,
+                elements_count: None,
+                is_permanently_coupled: None,
+                is_motorized: true,
+                is_custom: true,
+            });
 
         data.train_formations
             .push(crate::data_management::domain::TrainFormationRecord {
@@ -2198,22 +2201,24 @@ mod tests {
                 }],
             });
 
-        data.decoders.push(crate::data_management::domain::DecoderRecord {
-            id: "trn:decoder:e2e:001".to_string(),
-            manufacturer_id: "trn:manufacturer:e2e".to_string(),
-            product_code: "DEC-E2E-001".to_string(),
-            decoder_type: "SOUND".to_string(),
-            protocol: "DCC".to_string(),
-            decoder_interface: "NEM652".to_string(),
-        });
+        data.decoders
+            .push(crate::data_management::domain::DecoderRecord {
+                id: "trn:decoder:e2e:001".to_string(),
+                manufacturer_id: "trn:manufacturer:e2e".to_string(),
+                product_code: "DEC-E2E-001".to_string(),
+                decoder_type: "SOUND".to_string(),
+                protocol: "DCC".to_string(),
+                decoder_interface: "NEM652".to_string(),
+            });
 
-        data.digital_rolling_stocks
-            .push(crate::data_management::domain::DigitalRollingStockRecord {
+        data.digital_rolling_stocks.push(
+            crate::data_management::domain::DigitalRollingStockRecord {
                 id: "trn:digital-rolling-stock:e2e:001".to_string(),
                 owned_rolling_stock_id: "trn:ors:e2e:001".to_string(),
                 dcc_address: 7,
                 decoder_id: Some("trn:decoder:e2e:001".to_string()),
-            });
+            },
+        );
 
         let mut duplicates = empty_duplicates();
         duplicates.manufacturer_dupes.new_ids = vec!["trn:manufacturer:e2e".to_string()];
@@ -2222,12 +2227,14 @@ mod tests {
         duplicates.seller_dupes.new_ids = vec!["trn:seller:e2e".to_string()];
         duplicates.track_product_dupes.new_ids = vec!["trn:track:e2e:001".to_string()];
         duplicates.track_inventory_dupes.new_ids = vec!["trn:track-inventory:e2e:001".to_string()];
-        duplicates.formation_category_dupes.new_ids = vec!["trn:formation-category:e2e".to_string()];
+        duplicates.formation_category_dupes.new_ids =
+            vec!["trn:formation-category:e2e".to_string()];
         duplicates.train_formation_dupes.new_ids = vec!["trn:formation:e2e:001".to_string()];
         duplicates.prototype_dupes.new_ids = vec!["trn:prototype:e2e:001".to_string()];
         duplicates.wishlist_dupes.new_ids = vec!["trn:wishlist:e2e:001".to_string()];
         duplicates.decoder_dupes.new_ids = vec!["trn:decoder:e2e:001".to_string()];
-        duplicates.digital_roster_dupes.new_ids = vec!["trn:digital-rolling-stock:e2e:001".to_string()];
+        duplicates.digital_roster_dupes.new_ids =
+            vec!["trn:digital-rolling-stock:e2e:001".to_string()];
 
         let media_dir = tempfile::tempdir().expect("temp dir should be created");
         let result = repo
