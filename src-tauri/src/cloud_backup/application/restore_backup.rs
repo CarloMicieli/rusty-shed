@@ -5,6 +5,7 @@ use crate::cloud_backup::domain::{
 use crate::cloud_backup::infrastructure::{DriveClient, is_online};
 use chrono::Utc;
 use flate2::read::GzDecoder;
+use std::future::Future;
 use std::io::Read;
 use std::path::Path;
 use std::sync::Arc;
@@ -30,20 +31,32 @@ pub async fn restore_backup(
     drive_client: Arc<dyn DriveClient + Send + Sync>,
     app: AppHandle,
 ) -> Result<()> {
+    let event = restore_backup_inner(args, db_path, drive_client, || async { is_online().await })
+        .await?;
+
+    // Emit restore-complete event so the frontend can reload
+    emit_restore_complete(&app, event);
+
+    Ok(())
+}
+
+async fn restore_backup_inner<F, Fut>(
+    args: RestoreBackupArgs,
+    db_path: &Path,
+    drive_client: Arc<dyn DriveClient + Send + Sync>,
+    online_check: F,
+) -> Result<RestoreCompleteEvent>
+where
+    F: Fn() -> Fut,
+    Fut: Future<Output = bool>,
+{
     // T078: Acquire operation lock to prevent concurrent restores
     let _lock = try_acquire_lock(OperationType::Restore)?;
 
     validate_confirmation(&args.confirmation)?;
-    ensure_online().await?;
+    ensure_online_with(online_check).await?;
 
-    let event = restore_backup_core(args, db_path, drive_client).await?;
-
-    // Emit restore-complete event so the frontend can reload
-    if let Err(e) = app.emit("cloud-backup://restore-complete", event) {
-        tracing::warn!("Failed to emit restore-complete event: {e}");
-    }
-
-    Ok(())
+    restore_backup_core(args, db_path, drive_client).await
 }
 
 fn validate_confirmation(confirmation: &str) -> Result<()> {
@@ -54,12 +67,26 @@ fn validate_confirmation(confirmation: &str) -> Result<()> {
     }
 }
 
-async fn ensure_online() -> Result<()> {
-    if !is_online().await {
+async fn ensure_online_with<F, Fut>(online_check: F) -> Result<()>
+where
+    F: Fn() -> Fut,
+    Fut: Future<Output = bool>,
+{
+    if !online_check().await {
         return Err(CloudBackupError::OfflineError);
     }
 
     Ok(())
+}
+
+fn emit_restore_complete<R, E>(app: &E, event: RestoreCompleteEvent)
+where
+    R: tauri::Runtime,
+    E: Emitter<R>,
+{
+    if let Err(e) = app.emit("cloud-backup://restore-complete", event) {
+        tracing::warn!("Failed to emit restore-complete event: {e}");
+    }
 }
 
 async fn restore_backup_core(
@@ -168,9 +195,19 @@ mod tests {
     use super::*;
     use crate::cloud_backup::domain::dtos::RestoreBackupArgs;
     use crate::cloud_backup::infrastructure::mock::MockDriveClient;
+    use serial_test::serial;
     use std::io::Write;
     use std::sync::Arc;
     use tempfile::tempdir;
+
+    fn test_app_handle() -> AppHandle {
+        tauri::Builder::default()
+            .any_thread()
+            .build(tauri::generate_context!())
+            .expect("test app should build")
+            .handle()
+            .clone()
+    }
 
     #[test]
     fn test_decompress_backup() {
@@ -251,5 +288,99 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(backups.len(), 1, "a safety backup should be created");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn restore_backup_inner_rejects_invalid_confirmation() {
+        let tmp = tempdir().expect("tempdir should be created");
+        let db_path = tmp.path().join("app.sqlite");
+        std::fs::write(&db_path, b"old database bytes").expect("seed db should be writable");
+
+        let mut drive = MockDriveClient::new();
+        drive.expect_download_file().times(0);
+
+        let args = RestoreBackupArgs {
+            backup_id: "backup-123".to_string(),
+            confirmation: "restore".to_string(),
+        };
+
+        let error = restore_backup_inner(args, &db_path, Arc::new(drive), || async { true })
+            .await
+            .expect_err("invalid confirmation should fail");
+
+        assert!(matches!(error, CloudBackupError::InvalidConfirmation));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn restore_backup_inner_rejects_offline_state() {
+        let tmp = tempdir().expect("tempdir should be created");
+        let db_path = tmp.path().join("app.sqlite");
+        std::fs::write(&db_path, b"old database bytes").expect("seed db should be writable");
+
+        let mut drive = MockDriveClient::new();
+        drive.expect_download_file().times(0);
+
+        let args = RestoreBackupArgs {
+            backup_id: "backup-123".to_string(),
+            confirmation: "RESTORE".to_string(),
+        };
+
+        let error = restore_backup_inner(args, &db_path, Arc::new(drive), || async { false })
+            .await
+            .expect_err("offline state should fail");
+
+        assert!(matches!(error, CloudBackupError::OfflineError));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn restore_backup_inner_replaces_database_when_online() {
+        let tmp = tempdir().expect("tempdir should be created");
+        let db_path = tmp.path().join("app.sqlite");
+        std::fs::write(&db_path, b"old database bytes").expect("seed db should be writable");
+
+        let mut sqlite_bytes = Vec::from(SQLITE_MAGIC);
+        sqlite_bytes.extend_from_slice(&[7_u8; 256]);
+
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder
+            .write_all(&sqlite_bytes)
+            .expect("gzip encoder should write bytes");
+        let compressed = encoder.finish().expect("gzip payload should finish");
+
+        let mut drive = MockDriveClient::new();
+        drive
+            .expect_download_file()
+            .withf(|backup_id| backup_id == "backup-123")
+            .times(1)
+            .return_once(move |_| Ok(compressed));
+
+        let args = RestoreBackupArgs {
+            backup_id: "backup-123".to_string(),
+            confirmation: "RESTORE".to_string(),
+        };
+
+        let event = restore_backup_inner(args, &db_path, Arc::new(drive), || async { true })
+            .await
+            .expect("restore should succeed");
+
+        assert_eq!(event.backup_id, "backup-123");
+
+        let restored = std::fs::read(&db_path).expect("restored db should be readable");
+        assert_eq!(restored, sqlite_bytes);
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn restore_backup_emits_completion_event() {
+        let app = test_app_handle();
+        let event = RestoreCompleteEvent {
+            backup_id: "backup-123".to_string(),
+            restored_at: Utc::now().to_rfc3339(),
+        };
+
+        emit_restore_complete(&app, event);
     }
 }
