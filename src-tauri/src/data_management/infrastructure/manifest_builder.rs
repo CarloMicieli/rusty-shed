@@ -1139,7 +1139,7 @@ async fn export_dcc_roster_if_needed(
 
     let roster_rows = sqlx::query(
         "SELECT \
-            id AS id, \
+            REPLACE(id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id, \
             id AS owned_rolling_stock_id, \
             dcc_address, \
             installed_decoder_id \
