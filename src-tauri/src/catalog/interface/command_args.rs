@@ -1880,4 +1880,86 @@ mod garde_tests {
             "{errors:?}"
         );
     }
+
+    #[test]
+    fn update_rolling_stock_specifications_try_from_maps_booleans_and_optionals() {
+        let args = UpdateRollingStockSpecificationsArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:rm-1")
+                .expect("valid railway model id"),
+            rolling_stock_id: RollingStockId::try_from(
+                "trn:rolling-stock:3302b9a7-252c-4b41-8de2-eb71efb1888e",
+            )
+            .expect("valid rolling stock id"),
+            series_code: "E444".to_string(),
+            road_number: Some("001".to_string()),
+            livery: Some("Blue".to_string()),
+            depot: None,
+            series: None,
+            friendly_name: Some("Ligure".to_string()),
+            flywheel_fitted: Some(true),
+            body_shell: None,
+            chassis: None,
+            interior_lights: None,
+            lights: None,
+            sprung_buffers: Some(false),
+            dcc_interface: None,
+            control: None,
+            coupling_socket: None,
+            close_couplers: Some(true),
+            digital_shunting: Some(false),
+            is_dummy: Some(false),
+        };
+
+        let input =
+            UpdateRollingStockSpecificationsInput::try_from(args).expect("conversion should work");
+
+        assert_eq!(input.spec.series_code, "E444");
+        assert_eq!(input.spec.road_number.as_deref(), Some("001"));
+        assert_eq!(input.spec.friendly_name.as_deref(), Some("Ligure"));
+        assert_eq!(input.spec.flywheel_fitted, Some(FeatureFlag::Yes));
+        assert_eq!(input.spec.sprung_buffers, Some(FeatureFlag::No));
+        assert_eq!(input.spec.close_couplers, Some(FeatureFlag::Yes));
+        assert_eq!(input.spec.digital_shunting, Some(FeatureFlag::No));
+        assert_eq!(input.spec.is_dummy, Some(false));
+    }
+
+    #[test]
+    fn update_rolling_stock_specifications_try_from_rejects_invalid_coupling_socket() {
+        let args = UpdateRollingStockSpecificationsArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:rm-1")
+                .expect("valid railway model id"),
+            rolling_stock_id: RollingStockId::try_from(
+                "trn:rolling-stock:3302b9a7-252c-4b41-8de2-eb71efb1888e",
+            )
+            .expect("valid rolling stock id"),
+            series_code: "E444".to_string(),
+            road_number: None,
+            livery: None,
+            depot: None,
+            series: None,
+            friendly_name: None,
+            flywheel_fitted: None,
+            body_shell: None,
+            chassis: None,
+            interior_lights: None,
+            lights: None,
+            sprung_buffers: None,
+            dcc_interface: None,
+            control: None,
+            coupling_socket: Some("INVALID_SOCKET".to_string()),
+            close_couplers: None,
+            digital_shunting: None,
+            is_dummy: None,
+        };
+
+        let err = match UpdateRollingStockSpecificationsInput::try_from(args) {
+            Ok(_) => panic!("invalid coupling_socket should fail conversion"),
+            Err(err) => err,
+        };
+
+        assert!(
+            err.to_string().contains("coupling_socket"),
+            "unexpected error: {err}"
+        );
+    }
 }

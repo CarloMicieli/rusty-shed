@@ -258,6 +258,37 @@ mod tests {
     }
 
     #[rstest]
+    #[case(Scale::H0, "H0")]
+    #[case(Scale::H0m, "H0m")]
+    #[case(Scale::H0e, "H0e")]
+    #[case(Scale::N, "N")]
+    #[case(Scale::TT, "TT")]
+    #[case(Scale::Z, "Z")]
+    #[case(Scale::G, "G")]
+    #[case(Scale::Scale1, "1")]
+    #[case(Scale::Scale0, "0")]
+    #[case(Scale::Scale00, "00")]
+    fn as_code_returns_expected_codes(#[case] scale: Scale, #[case] expected: &str) {
+        assert_eq!(scale.as_code(), expected);
+    }
+
+    #[rstest]
+    #[case(Scale::H0)]
+    #[case(Scale::H0m)]
+    #[case(Scale::H0e)]
+    #[case(Scale::N)]
+    #[case(Scale::TT)]
+    #[case(Scale::Z)]
+    #[case(Scale::G)]
+    #[case(Scale::Scale1)]
+    #[case(Scale::Scale0)]
+    #[case(Scale::Scale00)]
+    fn as_code_roundtrips_through_try_from(#[case] scale: Scale) {
+        let parsed = Scale::try_from(scale.as_code()).expect("as_code output should parse");
+        assert_eq!(parsed, scale);
+    }
+
+    #[rstest]
     #[case(Scale::Z, "\"Z\"")]
     #[case(Scale::Scale1, "\"1\"")]
     #[case(Scale::Scale0, "\"0\"")]

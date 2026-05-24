@@ -23,7 +23,7 @@ pub struct BudgetConfiguration {
     pub metadata: Metadata,
 
     #[serde(skip)]
-    pub(crate) pending_events: Vec<BudgetEvent>, // Made pub(crate) for infrastructure layer access
+    pub(crate) pending_events: Vec<BudgetEvent>,
 }
 
 impl BudgetConfiguration {
@@ -49,7 +49,6 @@ impl BudgetConfiguration {
             pending_events: Vec::new(),
         };
 
-        // Record the configuration event with domain types (not DB-compatible strings)
         config.pending_events.push(BudgetEvent::BudgetConfigured {
             config_id: config.id,
             mode,
@@ -69,7 +68,6 @@ impl BudgetConfiguration {
         self.base_amount = base_amount.clone();
         self.metadata.updated_at = Utc::now();
 
-        // Record the update event with domain types (not DB-compatible strings)
         self.pending_events.push(BudgetEvent::BudgetConfigured {
             config_id: self.id,
             mode,

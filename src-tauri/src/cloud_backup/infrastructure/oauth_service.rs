@@ -1,5 +1,6 @@
 use crate::cloud_backup::domain::{CloudBackupError, GoogleConnection, Result};
 use crate::cloud_backup::infrastructure::{OAuthTokens, SecureStorage};
+use async_trait::async_trait;
 use oauth2::{AuthUrl, CsrfToken, PkceCodeChallenge, PkceCodeVerifier};
 use std::sync::Arc;
 
@@ -64,13 +65,29 @@ impl OAuthService {
         pkce_verifier: PkceCodeVerifier,
         redirect_uri: &str,
     ) -> Result<GoogleConnection> {
-        // Exchange authorization code for access token using manual HTTP request
-        // oauth2 v5 has breaking API changes, so we'll implement token exchange manually
-        let token_url = GOOGLE_TOKEN_URL;
-        let http_client = reqwest::Client::new();
+        let token_data = self
+            .exchange_authorization_code(&auth_code, &pkce_verifier, redirect_uri)
+            .await?;
+        let tokens = Self::parse_token_payload(&token_data)?;
 
+        // Fetch user email
+        let email = self.fetch_user_email(tokens.access_token_str()).await?;
+
+        // Store tokens securely
+        self.storage.store_tokens(&email, &tokens).await?;
+
+        Ok(GoogleConnection::new(email))
+    }
+
+    async fn exchange_authorization_code(
+        &self,
+        auth_code: &str,
+        pkce_verifier: &PkceCodeVerifier,
+        redirect_uri: &str,
+    ) -> Result<serde_json::Value> {
+        let http_client = reqwest::Client::new();
         let params = [
-            ("code", auth_code.as_str()),
+            ("code", auth_code),
             ("client_id", self.client_id.as_str()),
             ("code_verifier", pkce_verifier.secret()),
             ("grant_type", "authorization_code"),
@@ -78,7 +95,7 @@ impl OAuthService {
         ];
 
         let response = http_client
-            .post(token_url)
+            .post(GOOGLE_TOKEN_URL)
             .form(&params)
             .send()
             .await
@@ -92,41 +109,44 @@ impl OAuthService {
             )));
         }
 
-        let token_data: serde_json::Value = response
+        response
             .json()
             .await
-            .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))?;
+            .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))
+    }
 
-        // Extract token fields
+    fn parse_token_payload(token_data: &serde_json::Value) -> Result<OAuthTokens> {
         let access_token = token_data["access_token"]
             .as_str()
             .ok_or_else(|| CloudBackupError::TokenExchangeFailed("No access token".to_string()))?
             .to_string();
-
         let refresh_token = token_data["refresh_token"].as_str().map(|s| s.to_string());
-
         let expires_in = token_data["expires_in"].as_i64().unwrap_or(3600);
         let expires_at = chrono::Utc::now().timestamp() + expires_in;
 
-        // Create OAuth tokens
-        let tokens = OAuthTokens::new(
-            access_token.clone(),
+        Ok(OAuthTokens::new(
+            access_token,
             refresh_token,
             expires_at,
             "Bearer".to_string(),
-        );
-
-        // Fetch user email
-        let email = self.fetch_user_email(&access_token).await?;
-
-        // Store tokens securely
-        self.storage.store_tokens(&email, &tokens).await?;
-
-        Ok(GoogleConnection::new(email))
+        ))
     }
 
     /// Refresh expired access token
     pub async fn refresh_token(&self, user_email: &str) -> Result<OAuthTokens> {
+        let transport = ReqwestRefreshTransport {
+            client_id: &self.client_id,
+        };
+
+        self.refresh_token_with_transport(user_email, &transport)
+            .await
+    }
+
+    async fn refresh_token_with_transport<T: RefreshTokenTransport + Sync>(
+        &self,
+        user_email: &str,
+        transport: &T,
+    ) -> Result<OAuthTokens> {
         let tokens = self
             .storage
             .retrieve_tokens(user_email)
@@ -137,51 +157,14 @@ impl OAuthService {
             .refresh_token_str()
             .ok_or(CloudBackupError::TokenExpired)?;
 
-        let http_client = reqwest::Client::new();
-
-        let params = [
-            ("client_id", self.client_id.as_str()),
-            ("refresh_token", refresh_token),
-            ("grant_type", "refresh_token"),
-        ];
-
-        let response = http_client
-            .post(GOOGLE_TOKEN_URL)
-            .form(&params)
-            .send()
-            .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-
-        if !response.status().is_success() {
+        let response = transport.refresh(refresh_token).await?;
+        if !(200..300).contains(&response.status) {
             return Err(CloudBackupError::TokenExchangeFailed(
                 "Token refresh failed".to_string(),
             ));
         }
 
-        let token_data: serde_json::Value = response
-            .json()
-            .await
-            .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))?;
-
-        let access_token = token_data["access_token"]
-            .as_str()
-            .ok_or_else(|| CloudBackupError::TokenExchangeFailed("No access token".to_string()))?
-            .to_string();
-
-        let new_refresh_token = token_data["refresh_token"]
-            .as_str()
-            .map(|s| s.to_string())
-            .or_else(|| Some(refresh_token.to_string())); // Keep old if not provided
-
-        let expires_in = token_data["expires_in"].as_i64().unwrap_or(3600);
-        let expires_at = chrono::Utc::now().timestamp() + expires_in;
-
-        let new_tokens = OAuthTokens::new(
-            access_token,
-            new_refresh_token,
-            expires_at,
-            "Bearer".to_string(),
-        );
+        let new_tokens = parse_refreshed_tokens(&response.body, refresh_token)?;
 
         self.storage.store_tokens(user_email, &new_tokens).await?;
 
@@ -235,10 +218,136 @@ impl OAuthService {
     }
 }
 
+#[derive(Debug, Clone)]
+struct RefreshTokenResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait RefreshTokenTransport {
+    async fn refresh(&self, refresh_token: &str) -> Result<RefreshTokenResponse>;
+}
+
+struct ReqwestRefreshTransport<'a> {
+    client_id: &'a str,
+}
+
+#[async_trait]
+impl RefreshTokenTransport for ReqwestRefreshTransport<'_> {
+    async fn refresh(&self, refresh_token: &str) -> Result<RefreshTokenResponse> {
+        let http_client = reqwest::Client::new();
+        let params = [
+            ("client_id", self.client_id),
+            ("refresh_token", refresh_token),
+            ("grant_type", "refresh_token"),
+        ];
+
+        let response = http_client
+            .post(GOOGLE_TOKEN_URL)
+            .form(&params)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(RefreshTokenResponse { status, body })
+    }
+}
+
+fn parse_refreshed_tokens(body: &str, previous_refresh_token: &str) -> Result<OAuthTokens> {
+    let token_data: serde_json::Value = serde_json::from_str(body)
+        .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))?;
+
+    let access_token = token_data["access_token"]
+        .as_str()
+        .ok_or_else(|| CloudBackupError::TokenExchangeFailed("No access token".to_string()))?
+        .to_string();
+
+    let refresh_token = token_data["refresh_token"]
+        .as_str()
+        .map(|value| value.to_string())
+        .or_else(|| Some(previous_refresh_token.to_string()));
+
+    let expires_in = token_data["expires_in"].as_i64().unwrap_or(3600);
+    let expires_at = chrono::Utc::now().timestamp() + expires_in;
+
+    Ok(OAuthTokens::new(
+        access_token,
+        refresh_token,
+        expires_at,
+        "Bearer".to_string(),
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use oauth2::{RedirectUrl, TokenUrl};
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+
+    struct TestStorage {
+        data: Mutex<HashMap<String, OAuthTokens>>,
+    }
+
+    impl TestStorage {
+        fn new() -> Self {
+            Self {
+                data: Mutex::new(HashMap::new()),
+            }
+        }
+    }
+
+    #[async_trait]
+    impl SecureStorage for TestStorage {
+        async fn store_tokens(&self, user_id: &str, tokens: &OAuthTokens) -> Result<()> {
+            self.data
+                .lock()
+                .expect("storage lock")
+                .insert(user_id.to_string(), tokens.clone());
+            Ok(())
+        }
+
+        async fn retrieve_tokens(&self, user_id: &str) -> Result<Option<OAuthTokens>> {
+            Ok(self
+                .data
+                .lock()
+                .expect("storage lock")
+                .get(user_id)
+                .cloned())
+        }
+
+        async fn delete_tokens(&self, user_id: &str) -> Result<()> {
+            self.data.lock().expect("storage lock").remove(user_id);
+            Ok(())
+        }
+
+        async fn has_tokens(&self, user_id: &str) -> Result<bool> {
+            Ok(self
+                .data
+                .lock()
+                .expect("storage lock")
+                .contains_key(user_id))
+        }
+    }
+
+    #[derive(Clone)]
+    struct FakeRefreshTransport {
+        response: Result<RefreshTokenResponse>,
+    }
+
+    #[async_trait]
+    impl RefreshTokenTransport for FakeRefreshTransport {
+        async fn refresh(&self, _refresh_token: &str) -> Result<RefreshTokenResponse> {
+            self.response.clone()
+        }
+    }
 
     #[test]
     fn test_oauth_urls() {
@@ -252,5 +361,140 @@ mod tests {
         let (challenge, verifier) = PkceCodeChallenge::new_random_sha256();
         assert!(!verifier.secret().is_empty());
         assert!(!challenge.as_str().is_empty());
+    }
+
+    #[test]
+    fn test_parse_refreshed_tokens_keeps_previous_refresh_token_when_missing() {
+        let tokens = parse_refreshed_tokens(r#"{"access_token":"new-access"}"#, "old-refresh")
+            .expect("expected refreshed token parsing to succeed");
+
+        assert_eq!(tokens.access_token_str(), "new-access");
+        assert_eq!(tokens.refresh_token_str(), Some("old-refresh"));
+    }
+
+    #[tokio::test]
+    async fn test_refresh_token_with_transport_success_stores_tokens() {
+        let storage = Arc::new(TestStorage::new());
+        let user_email = "alice@example.com";
+        storage
+            .store_tokens(
+                user_email,
+                &OAuthTokens::new(
+                    "old-access".to_string(),
+                    Some("old-refresh".to_string()),
+                    chrono::Utc::now().timestamp() - 10,
+                    "Bearer".to_string(),
+                ),
+            )
+            .await
+            .expect("seed tokens should store");
+
+        let service = OAuthService::new("client-id".to_string(), storage.clone());
+        let transport = FakeRefreshTransport {
+            response: Ok(RefreshTokenResponse {
+                status: 200,
+                body: r#"{"access_token":"new-access","expires_in":120}"#.to_string(),
+            }),
+        };
+
+        let refreshed = service
+            .refresh_token_with_transport(user_email, &transport)
+            .await
+            .expect("refresh should succeed");
+
+        assert_eq!(refreshed.access_token_str(), "new-access");
+        assert_eq!(refreshed.refresh_token_str(), Some("old-refresh"));
+
+        let stored = storage
+            .retrieve_tokens(user_email)
+            .await
+            .expect("retrieve should succeed")
+            .expect("tokens should exist");
+        assert_eq!(stored.access_token_str(), "new-access");
+    }
+
+    #[tokio::test]
+    async fn test_refresh_token_with_transport_requires_existing_connection() {
+        let storage = Arc::new(TestStorage::new());
+        let service = OAuthService::new("client-id".to_string(), storage);
+        let transport = FakeRefreshTransport {
+            response: Ok(RefreshTokenResponse {
+                status: 200,
+                body: r#"{"access_token":"new-access"}"#.to_string(),
+            }),
+        };
+
+        let error = service
+            .refresh_token_with_transport("missing@example.com", &transport)
+            .await
+            .expect_err("refresh should fail when no stored tokens exist");
+
+        assert!(matches!(error, CloudBackupError::NotConnected));
+    }
+
+    #[tokio::test]
+    async fn test_refresh_token_with_transport_requires_refresh_token() {
+        let storage = Arc::new(TestStorage::new());
+        let user_email = "alice@example.com";
+        storage
+            .store_tokens(
+                user_email,
+                &OAuthTokens::new(
+                    "old-access".to_string(),
+                    None,
+                    chrono::Utc::now().timestamp() - 10,
+                    "Bearer".to_string(),
+                ),
+            )
+            .await
+            .expect("seed tokens should store");
+
+        let service = OAuthService::new("client-id".to_string(), storage);
+        let transport = FakeRefreshTransport {
+            response: Ok(RefreshTokenResponse {
+                status: 200,
+                body: r#"{"access_token":"new-access"}"#.to_string(),
+            }),
+        };
+
+        let error = service
+            .refresh_token_with_transport(user_email, &transport)
+            .await
+            .expect_err("refresh should fail when no refresh token exists");
+
+        assert!(matches!(error, CloudBackupError::TokenExpired));
+    }
+
+    #[tokio::test]
+    async fn test_refresh_token_with_transport_rejects_non_success_response() {
+        let storage = Arc::new(TestStorage::new());
+        let user_email = "alice@example.com";
+        storage
+            .store_tokens(
+                user_email,
+                &OAuthTokens::new(
+                    "old-access".to_string(),
+                    Some("old-refresh".to_string()),
+                    chrono::Utc::now().timestamp() - 10,
+                    "Bearer".to_string(),
+                ),
+            )
+            .await
+            .expect("seed tokens should store");
+
+        let service = OAuthService::new("client-id".to_string(), storage);
+        let transport = FakeRefreshTransport {
+            response: Ok(RefreshTokenResponse {
+                status: 401,
+                body: "expired".to_string(),
+            }),
+        };
+
+        let error = service
+            .refresh_token_with_transport(user_email, &transport)
+            .await
+            .expect_err("refresh should fail for non-success status");
+
+        assert!(matches!(error, CloudBackupError::TokenExchangeFailed(_)));
     }
 }

@@ -1,6 +1,8 @@
 use crate::cloud_backup::domain::{CloudBackupError, Result};
+use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::json;
+use std::collections::HashMap;
 
 /// Extract detailed error information from Google Drive API responses
 ///
@@ -21,61 +23,59 @@ use serde_json::json;
 /// - 429 → Rate limited
 /// - 5xx → Service unavailable
 fn extract_drive_error(status: u16, error_text: &str) -> CloudBackupError {
-    // Try to parse as JSON first
-    if let Ok(error_json) = serde_json::from_str::<serde_json::Value>(error_text)
-        && let Some(error_obj) = error_json.get("error")
-    {
-        let error_code = error_obj.get("code").and_then(|c| c.as_u64()).unwrap_or(0);
-
-        let error_msg = error_obj
-            .get("message")
-            .and_then(|m| m.as_str())
-            .unwrap_or("Unknown error");
-
-        // Handle specific error codes
-        match error_code {
-            403 => {
-                // Check for specific 403 reasons
-                if error_msg.contains("quotaExceeded") || error_msg.contains("storageQuotaExceeded")
-                {
-                    return CloudBackupError::DriveError(
-                            "Your Google Drive storage quota is full. Please free up space and try again.".to_string()
-                        );
-                } else if error_msg.contains("Forbidden") || error_msg.contains("permission") {
-                    return CloudBackupError::DriveError(
-                        "Permission denied. Please reconnect your Google account.".to_string(),
-                    );
-                } else {
-                    return CloudBackupError::DriveError(format!(
-                        "Access forbidden: {}",
-                        error_msg
-                    ));
-                }
-            }
-            401 => {
-                return CloudBackupError::TokenExpired;
-            }
-            404 => {
-                return CloudBackupError::DriveError("File or folder not found.".to_string());
-            }
-            429 => {
-                return CloudBackupError::DriveError(
-                    "Rate limit exceeded. Please wait a moment and try again.".to_string(),
-                );
-            }
-            500..=599 => {
-                return CloudBackupError::DriveError(
-                    "Google Drive service is temporarily unavailable. Please try again later."
-                        .to_string(),
-                );
-            }
-            _ => {
-                return CloudBackupError::DriveError(format!("API Error: {}", error_msg));
-            }
-        }
+    if let Some((error_code, error_msg)) = parse_drive_api_error(error_text) {
+        return map_drive_api_error(error_code, &error_msg);
     }
 
-    // Handle HTTP status codes directly
+    map_http_status_error(status, error_text)
+}
+
+fn parse_drive_api_error(error_text: &str) -> Option<(u16, String)> {
+    let error_json = serde_json::from_str::<serde_json::Value>(error_text).ok()?;
+    let error_obj = error_json.get("error")?;
+    let error_code = error_obj
+        .get("code")
+        .and_then(|c| c.as_u64())
+        .map(|v| v as u16)
+        .unwrap_or_default();
+    let error_msg = error_obj
+        .get("message")
+        .and_then(|m| m.as_str())
+        .unwrap_or("Unknown error")
+        .to_string();
+
+    Some((error_code, error_msg))
+}
+
+fn map_drive_api_error(error_code: u16, error_msg: &str) -> CloudBackupError {
+    match error_code {
+        403 => {
+            if error_msg.contains("quotaExceeded") || error_msg.contains("storageQuotaExceeded") {
+                CloudBackupError::DriveError(
+                    "Your Google Drive storage quota is full. Please free up space and try again."
+                        .to_string(),
+                )
+            } else if error_msg.contains("Forbidden") || error_msg.contains("permission") {
+                CloudBackupError::DriveError(
+                    "Permission denied. Please reconnect your Google account.".to_string(),
+                )
+            } else {
+                CloudBackupError::DriveError(format!("Access forbidden: {}", error_msg))
+            }
+        }
+        401 => CloudBackupError::TokenExpired,
+        404 => CloudBackupError::DriveError("File or folder not found.".to_string()),
+        429 => CloudBackupError::DriveError(
+            "Rate limit exceeded. Please wait a moment and try again.".to_string(),
+        ),
+        500..=599 => CloudBackupError::DriveError(
+            "Google Drive service is temporarily unavailable. Please try again later.".to_string(),
+        ),
+        _ => CloudBackupError::DriveError(format!("API Error: {}", error_msg)),
+    }
+}
+
+fn map_http_status_error(status: u16, error_text: &str) -> CloudBackupError {
     match status {
         401 | 403 => CloudBackupError::TokenExpired,
         404 => CloudBackupError::DriveError("Resource not found.".to_string()),
@@ -249,83 +249,33 @@ impl GoogleDriveClient {
         file_data: Vec<u8>,
         metadata: serde_json::Value,
     ) -> Result<UploadedFile> {
-        let mut file_metadata = json!({
-            "name": file_name,
-            "parents": [folder_id]
-        });
+        let transport = ReqwestSimpleUploadTransport {
+            http_client: &self.http_client,
+            access_token: &self.access_token,
+        };
 
-        // Merge app properties if present
-        if let Some(props) = metadata.get("appProperties") {
-            file_metadata["appProperties"] = props.clone();
-        }
-
-        // Build a multipart/related body as required by the Drive upload API
-        let boundary_uuid = uuid::Uuid::new_v4().simple().to_string();
-        let boundary = format!("boundary-{}", boundary_uuid);
-        let metadata_json = serde_json::to_string(&file_metadata).map_err(|e| {
-            CloudBackupError::DriveError(format!("Failed to serialize file metadata: {}", e))
-        })?;
-
-        let mut body: Vec<u8> = Vec::new();
-        body.extend_from_slice(
-            format!("--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n")
-                .as_bytes(),
-        );
-        body.extend_from_slice(metadata_json.as_bytes());
-        body.extend_from_slice(b"\r\n");
-        body.extend_from_slice(
-            format!("--{boundary}\r\nContent-Type: application/octet-stream\r\n\r\n").as_bytes(),
-        );
-        body.extend_from_slice(&file_data);
-        body.extend_from_slice(b"\r\n");
-        body.extend_from_slice(format!("--{boundary}--\r\n").as_bytes());
-
-        let response = self
-            .http_client
-            .post("https://www.googleapis.com/upload/drive/v3/files")
-            .bearer_auth(&self.access_token)
-            .header(
-                "Content-Type",
-                format!("multipart/related; boundary={}", boundary),
-            )
-            .query(&[("uploadType", "multipart"), ("fields", "id,name,size")])
-            .body(body)
-            .send()
+        self.simple_upload_with_transport(folder_id, file_name, file_data, metadata, &transport)
             .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+    }
 
-        if !response.status().is_success() {
-            let status = response.status().as_u16();
-            let error_text = response
-                .text()
-                .await
-                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-            return Err(extract_drive_error(status, &error_text));
+    async fn simple_upload_with_transport<T: SimpleUploadTransport + Sync>(
+        &self,
+        folder_id: &str,
+        file_name: &str,
+        file_data: Vec<u8>,
+        metadata: serde_json::Value,
+        transport: &T,
+    ) -> Result<UploadedFile> {
+        let file_metadata = build_resumable_file_metadata(folder_id, file_name, &metadata);
+        let boundary = format!("boundary-{}", uuid::Uuid::new_v4().simple());
+        let body = build_simple_upload_multipart_body(&boundary, &file_metadata, &file_data)?;
+
+        let response = transport.upload_simple_multipart(&boundary, body).await?;
+        if !is_success_status(response.status) {
+            return Err(extract_drive_error(response.status, &response.body));
         }
 
-        let data: serde_json::Value = response.json().await.map_err(|e| {
-            CloudBackupError::DriveError(format!("Failed to parse response: {}", e))
-        })?;
-
-        let id = data["id"]
-            .as_str()
-            .ok_or_else(|| {
-                CloudBackupError::DriveError("No file ID in upload response".to_string())
-            })?
-            .to_string();
-
-        let name = data["name"]
-            .as_str()
-            .ok_or_else(|| {
-                CloudBackupError::DriveError("No file name in upload response".to_string())
-            })?
-            .to_string();
-
-        Ok(UploadedFile {
-            id,
-            name,
-            size: data["size"].as_u64().unwrap_or(0),
-        })
+        parse_uploaded_file_response(&response.body, false)
     }
 
     /// Resumable upload for files ≥ 5 MB
@@ -343,100 +293,49 @@ impl GoogleDriveClient {
         file_data: Vec<u8>,
         metadata: serde_json::Value,
     ) -> Result<UploadedFile> {
-        let mut file_metadata = json!({
-            "name": file_name,
-            "parents": [folder_id]
-        });
+        let transport = ReqwestResumableUploadTransport {
+            http_client: &self.http_client,
+            access_token: &self.access_token,
+        };
 
-        if let Some(props) = metadata.get("appProperties") {
-            file_metadata["appProperties"] = props.clone();
-        }
+        self.resumable_upload_with_transport(folder_id, file_name, file_data, metadata, &transport)
+            .await
+    }
 
+    async fn resumable_upload_with_transport<T: ResumableUploadTransport + Sync>(
+        &self,
+        folder_id: &str,
+        file_name: &str,
+        file_data: Vec<u8>,
+        metadata: serde_json::Value,
+        transport: &T,
+    ) -> Result<UploadedFile> {
+        let file_metadata = build_resumable_file_metadata(folder_id, file_name, &metadata);
         let file_size = file_data.len();
 
-        // Step 1: Initiate the resumable upload session
-        let init_response = self
-            .http_client
-            .post("https://www.googleapis.com/upload/drive/v3/files")
-            .bearer_auth(&self.access_token)
-            .header("X-Upload-Content-Type", "application/octet-stream")
-            .header("X-Upload-Content-Length", file_size.to_string())
-            .query(&[("uploadType", "resumable"), ("fields", "id,name,size")])
-            .json(&file_metadata)
-            .send()
-            .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-
-        if !init_response.status().is_success() {
-            let status = init_response.status().as_u16();
-            let error_text = init_response
-                .text()
-                .await
-                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-            return Err(extract_drive_error(status, &error_text));
+        let init_response = transport
+            .initiate_resumable_upload(file_size, file_metadata)
+            .await?;
+        if !is_success_status(init_response.status) {
+            return Err(extract_drive_error(
+                init_response.status,
+                &init_response.body,
+            ));
         }
 
-        let upload_url = init_response
-            .headers()
-            .get("location")
-            .ok_or_else(|| {
-                CloudBackupError::DriveError(
-                    "No upload URL in resumable upload initiation response".to_string(),
-                )
-            })?
-            .to_str()
-            .map_err(|e| CloudBackupError::DriveError(format!("Invalid upload URL header: {}", e)))?
-            .to_string();
+        let upload_url = extract_upload_url(&init_response.headers)?;
 
-        // Step 2: Upload the full file in a single PUT request
-        let upload_response = self
-            .http_client
-            .put(&upload_url)
-            .header("Content-Type", "application/octet-stream")
-            .header("Content-Length", file_size.to_string())
-            .header(
-                "Content-Range",
-                format!("bytes 0-{}/{}", file_size - 1, file_size),
-            )
-            .body(file_data)
-            .send()
-            .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-
-        if !upload_response.status().is_success() {
-            let status = upload_response.status().as_u16();
-            let error_text = upload_response
-                .text()
-                .await
-                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-            return Err(extract_drive_error(status, &error_text));
+        let upload_response = transport
+            .upload_resumable_content(&upload_url, file_size, file_data)
+            .await?;
+        if !is_success_status(upload_response.status) {
+            return Err(extract_drive_error(
+                upload_response.status,
+                &upload_response.body,
+            ));
         }
 
-        let data: serde_json::Value = upload_response.json().await.map_err(|e| {
-            CloudBackupError::DriveError(format!("Failed to parse upload response: {}", e))
-        })?;
-
-        let id = data["id"]
-            .as_str()
-            .ok_or_else(|| {
-                CloudBackupError::DriveError("No file ID in resumable upload response".to_string())
-            })?
-            .to_string();
-
-        let name = data["name"]
-            .as_str()
-            .ok_or_else(|| {
-                CloudBackupError::DriveError(
-                    "No file name in resumable upload response".to_string(),
-                )
-            })?
-            .to_string();
-
-        Ok(UploadedFile {
-            id,
-            name,
-            size: data["size"].as_u64().unwrap_or(0),
-        })
+        parse_uploaded_file_response(&upload_response.body, true)
     }
 
     /// Download a file from Google Drive
@@ -518,26 +417,12 @@ impl GoogleDriveClient {
             return Err(extract_drive_error(status, &error_text));
         }
 
-        let data: serde_json::Value = response.json().await.map_err(|e| {
-            CloudBackupError::DriveError(format!("Failed to parse response: {}", e))
-        })?;
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
 
-        let files = data["files"]
-            .as_array()
-            .ok_or_else(|| CloudBackupError::DriveError("No files in response".to_string()))?
-            .iter()
-            .filter_map(|f| {
-                Some(DriveFile {
-                    id: f["id"].as_str()?.to_string(),
-                    name: f["name"].as_str()?.to_string(),
-                    size: f["size"].as_u64().unwrap_or(0),
-                    modified_time: f["modifiedTime"].as_str().map(|s| s.to_string()),
-                    app_properties: f["appProperties"].as_object().cloned(),
-                })
-            })
-            .collect();
-
-        Ok(files)
+        parse_drive_files_response(&body)
     }
 
     /// Delete a file from Google Drive
@@ -661,6 +546,284 @@ impl GoogleDriveClient {
     }
 }
 
+#[derive(Debug, Clone)]
+struct ResumableInitResponse {
+    status: u16,
+    headers: HashMap<String, String>,
+    body: String,
+}
+
+#[derive(Debug, Clone)]
+struct ResumableUploadResponse {
+    status: u16,
+    body: String,
+}
+
+#[derive(Debug, Clone)]
+struct SimpleUploadResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait SimpleUploadTransport {
+    async fn upload_simple_multipart(
+        &self,
+        boundary: &str,
+        body: Vec<u8>,
+    ) -> Result<SimpleUploadResponse>;
+}
+
+#[async_trait]
+trait ResumableUploadTransport {
+    async fn initiate_resumable_upload(
+        &self,
+        file_size: usize,
+        file_metadata: serde_json::Value,
+    ) -> Result<ResumableInitResponse>;
+
+    async fn upload_resumable_content(
+        &self,
+        upload_url: &str,
+        file_size: usize,
+        file_data: Vec<u8>,
+    ) -> Result<ResumableUploadResponse>;
+}
+
+struct ReqwestResumableUploadTransport<'a> {
+    http_client: &'a Client,
+    access_token: &'a str,
+}
+
+struct ReqwestSimpleUploadTransport<'a> {
+    http_client: &'a Client,
+    access_token: &'a str,
+}
+
+#[async_trait]
+impl SimpleUploadTransport for ReqwestSimpleUploadTransport<'_> {
+    async fn upload_simple_multipart(
+        &self,
+        boundary: &str,
+        body: Vec<u8>,
+    ) -> Result<SimpleUploadResponse> {
+        let response = self
+            .http_client
+            .post("https://www.googleapis.com/upload/drive/v3/files")
+            .bearer_auth(self.access_token)
+            .header(
+                "Content-Type",
+                format!("multipart/related; boundary={boundary}"),
+            )
+            .query(&[("uploadType", "multipart"), ("fields", "id,name,size")])
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(SimpleUploadResponse { status, body })
+    }
+}
+
+#[async_trait]
+impl ResumableUploadTransport for ReqwestResumableUploadTransport<'_> {
+    async fn initiate_resumable_upload(
+        &self,
+        file_size: usize,
+        file_metadata: serde_json::Value,
+    ) -> Result<ResumableInitResponse> {
+        let response = self
+            .http_client
+            .post("https://www.googleapis.com/upload/drive/v3/files")
+            .bearer_auth(self.access_token)
+            .header("X-Upload-Content-Type", "application/octet-stream")
+            .header("X-Upload-Content-Length", file_size.to_string())
+            .query(&[("uploadType", "resumable"), ("fields", "id,name,size")])
+            .json(&file_metadata)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let headers = response
+            .headers()
+            .iter()
+            .filter_map(|(name, value)| {
+                value
+                    .to_str()
+                    .ok()
+                    .map(|text| (name.as_str().to_ascii_lowercase(), text.to_string()))
+            })
+            .collect::<HashMap<_, _>>();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(ResumableInitResponse {
+            status,
+            headers,
+            body,
+        })
+    }
+
+    async fn upload_resumable_content(
+        &self,
+        upload_url: &str,
+        file_size: usize,
+        file_data: Vec<u8>,
+    ) -> Result<ResumableUploadResponse> {
+        let response = self
+            .http_client
+            .put(upload_url)
+            .header("Content-Type", "application/octet-stream")
+            .header("Content-Length", file_size.to_string())
+            .header("Content-Range", build_content_range(file_size))
+            .body(file_data)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(ResumableUploadResponse { status, body })
+    }
+}
+
+fn build_resumable_file_metadata(
+    folder_id: &str,
+    file_name: &str,
+    metadata: &serde_json::Value,
+) -> serde_json::Value {
+    let mut file_metadata = json!({
+        "name": file_name,
+        "parents": [folder_id]
+    });
+
+    if let Some(props) = metadata.get("appProperties") {
+        file_metadata["appProperties"] = props.clone();
+    }
+
+    file_metadata
+}
+
+fn build_simple_upload_multipart_body(
+    boundary: &str,
+    file_metadata: &serde_json::Value,
+    file_data: &[u8],
+) -> Result<Vec<u8>> {
+    let metadata_json = serde_json::to_string(file_metadata).map_err(|e| {
+        CloudBackupError::DriveError(format!("Failed to serialize file metadata: {}", e))
+    })?;
+
+    let mut body: Vec<u8> = Vec::new();
+    body.extend_from_slice(
+        format!("--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n").as_bytes(),
+    );
+    body.extend_from_slice(metadata_json.as_bytes());
+    body.extend_from_slice(b"\r\n");
+    body.extend_from_slice(
+        format!("--{boundary}\r\nContent-Type: application/octet-stream\r\n\r\n").as_bytes(),
+    );
+    body.extend_from_slice(file_data);
+    body.extend_from_slice(b"\r\n");
+    body.extend_from_slice(format!("--{boundary}--\r\n").as_bytes());
+
+    Ok(body)
+}
+
+fn build_content_range(file_size: usize) -> String {
+    let end = file_size.saturating_sub(1);
+    format!("bytes 0-{end}/{file_size}")
+}
+
+fn is_success_status(status: u16) -> bool {
+    (200..300).contains(&status)
+}
+
+fn extract_upload_url(headers: &HashMap<String, String>) -> Result<String> {
+    headers.get("location").cloned().ok_or_else(|| {
+        CloudBackupError::DriveError(
+            "No upload URL in resumable upload initiation response".to_string(),
+        )
+    })
+}
+
+fn parse_uploaded_file_response(body: &str, is_resumable: bool) -> Result<UploadedFile> {
+    let data: serde_json::Value = serde_json::from_str(body).map_err(|e| {
+        let context = if is_resumable {
+            "Failed to parse upload response"
+        } else {
+            "Failed to parse response"
+        };
+        CloudBackupError::DriveError(format!("{context}: {e}"))
+    })?;
+
+    let id = data["id"]
+        .as_str()
+        .ok_or_else(|| {
+            if is_resumable {
+                CloudBackupError::DriveError("No file ID in resumable upload response".to_string())
+            } else {
+                CloudBackupError::DriveError("No file ID in upload response".to_string())
+            }
+        })?
+        .to_string();
+
+    let name = data["name"]
+        .as_str()
+        .ok_or_else(|| {
+            if is_resumable {
+                CloudBackupError::DriveError(
+                    "No file name in resumable upload response".to_string(),
+                )
+            } else {
+                CloudBackupError::DriveError("No file name in upload response".to_string())
+            }
+        })?
+        .to_string();
+
+    Ok(UploadedFile {
+        id,
+        name,
+        size: data["size"].as_u64().unwrap_or(0),
+    })
+}
+
+fn parse_drive_file_entry(file: &serde_json::Value) -> Option<DriveFile> {
+    Some(DriveFile {
+        id: file["id"].as_str()?.to_string(),
+        name: file["name"].as_str()?.to_string(),
+        size: file["size"].as_u64().unwrap_or(0),
+        modified_time: file["modifiedTime"].as_str().map(|value| value.to_string()),
+        app_properties: file["appProperties"].as_object().cloned(),
+    })
+}
+
+fn parse_drive_files_response(body: &str) -> Result<Vec<DriveFile>> {
+    let data: serde_json::Value = serde_json::from_str(body)
+        .map_err(|e| CloudBackupError::DriveError(format!("Failed to parse response: {}", e)))?;
+
+    let files = data["files"]
+        .as_array()
+        .ok_or_else(|| CloudBackupError::DriveError("No files in response".to_string()))?
+        .iter()
+        .filter_map(parse_drive_file_entry)
+        .collect();
+
+    Ok(files)
+}
+
 /// Represents a file from Google Drive
 ///
 /// Contains metadata about a file retrieved from the Drive API.
@@ -694,10 +857,573 @@ pub struct UploadedFile {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Arc, Mutex};
+
+    #[derive(Debug, Clone)]
+    struct FakeSimpleTransportState {
+        boundary: Option<String>,
+        body: Option<Vec<u8>>,
+    }
+
+    impl FakeSimpleTransportState {
+        fn new() -> Self {
+            Self {
+                boundary: None,
+                body: None,
+            }
+        }
+    }
+
+    struct FakeSimpleTransport {
+        response: Result<SimpleUploadResponse>,
+        state: Arc<Mutex<FakeSimpleTransportState>>,
+    }
+
+    impl FakeSimpleTransport {
+        fn new(
+            response: Result<SimpleUploadResponse>,
+            state: Arc<Mutex<FakeSimpleTransportState>>,
+        ) -> Self {
+            Self { response, state }
+        }
+    }
+
+    #[async_trait]
+    impl SimpleUploadTransport for FakeSimpleTransport {
+        async fn upload_simple_multipart(
+            &self,
+            boundary: &str,
+            body: Vec<u8>,
+        ) -> Result<SimpleUploadResponse> {
+            let mut lock = self.state.lock().expect("state lock");
+            lock.boundary = Some(boundary.to_string());
+            lock.body = Some(body);
+            self.response.clone()
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct FakeTransportState {
+        init_request_size: Option<usize>,
+        init_request_metadata: Option<serde_json::Value>,
+        upload_url: Option<String>,
+        upload_size: Option<usize>,
+        upload_data_len: Option<usize>,
+    }
+
+    impl FakeTransportState {
+        fn new() -> Self {
+            Self {
+                init_request_size: None,
+                init_request_metadata: None,
+                upload_url: None,
+                upload_size: None,
+                upload_data_len: None,
+            }
+        }
+    }
+
+    struct FakeResumableTransport {
+        init_response: Result<ResumableInitResponse>,
+        upload_response: Result<ResumableUploadResponse>,
+        state: Arc<Mutex<FakeTransportState>>,
+    }
+
+    impl FakeResumableTransport {
+        fn new(
+            init_response: Result<ResumableInitResponse>,
+            upload_response: Result<ResumableUploadResponse>,
+            state: Arc<Mutex<FakeTransportState>>,
+        ) -> Self {
+            Self {
+                init_response,
+                upload_response,
+                state,
+            }
+        }
+    }
+
+    #[async_trait]
+    impl ResumableUploadTransport for FakeResumableTransport {
+        async fn initiate_resumable_upload(
+            &self,
+            file_size: usize,
+            file_metadata: serde_json::Value,
+        ) -> Result<ResumableInitResponse> {
+            let mut lock = self.state.lock().expect("state lock");
+            lock.init_request_size = Some(file_size);
+            lock.init_request_metadata = Some(file_metadata);
+            self.init_response.clone()
+        }
+
+        async fn upload_resumable_content(
+            &self,
+            upload_url: &str,
+            file_size: usize,
+            file_data: Vec<u8>,
+        ) -> Result<ResumableUploadResponse> {
+            let mut lock = self.state.lock().expect("state lock");
+            lock.upload_url = Some(upload_url.to_string());
+            lock.upload_size = Some(file_size);
+            lock.upload_data_len = Some(file_data.len());
+            self.upload_response.clone()
+        }
+    }
 
     #[test]
     fn test_google_drive_client_creation() {
         let client = GoogleDriveClient::new("test_client_id".to_string(), "test_token".to_string());
         assert_eq!(client.access_token, "test_token");
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_quota_exceeded() {
+        let error = extract_drive_error(
+            403,
+            r#"{"error":{"code":403,"message":"storageQuotaExceeded"}}"#,
+        );
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("storage quota")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_permission_denied() {
+        let error = extract_drive_error(
+            403,
+            r#"{"error":{"code":403,"message":"Forbidden: permission denied"}}"#,
+        );
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("Permission denied")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_token_expired_from_json() {
+        let error = extract_drive_error(401, r#"{"error":{"code":401,"message":"Expired"}}"#);
+        assert!(matches!(error, CloudBackupError::TokenExpired));
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_not_found_from_json() {
+        let error = extract_drive_error(404, r#"{"error":{"code":404,"message":"Not Found"}}"#);
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("File or folder not found")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_rate_limit_from_json() {
+        let error = extract_drive_error(429, r#"{"error":{"code":429,"message":"Too many"}}"#);
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("Rate limit exceeded")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_maps_server_error_from_json() {
+        let error = extract_drive_error(500, r#"{"error":{"code":500,"message":"Oops"}}"#);
+
+        match error {
+            CloudBackupError::DriveError(msg) => {
+                assert!(msg.contains("temporarily unavailable"))
+            }
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_falls_back_to_http_status_mapping() {
+        let error = extract_drive_error(404, "not-json");
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("Resource not found")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_drive_error_falls_back_to_generic_http_error() {
+        let error = extract_drive_error(418, "teapot");
+
+        match error {
+            CloudBackupError::DriveError(msg) => {
+                assert!(msg.contains("Drive API error (418): teapot"))
+            }
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_build_content_range_for_non_empty_and_empty_payload() {
+        assert_eq!(build_content_range(10), "bytes 0-9/10");
+        assert_eq!(build_content_range(0), "bytes 0-0/0");
+    }
+
+    #[test]
+    fn test_build_resumable_file_metadata_merges_app_properties() {
+        let metadata = build_resumable_file_metadata(
+            "folder-1",
+            "backup.db.gz",
+            &json!({"appProperties": {"checksum": "abc"}}),
+        );
+
+        assert_eq!(metadata["name"], "backup.db.gz");
+        assert_eq!(metadata["parents"][0], "folder-1");
+        assert_eq!(metadata["appProperties"]["checksum"], "abc");
+    }
+
+    #[test]
+    fn test_build_simple_upload_multipart_body_contains_metadata_and_payload() {
+        let metadata = build_resumable_file_metadata(
+            "folder-1",
+            "backup.db.gz",
+            &json!({"appProperties": {"checksum": "abc"}}),
+        );
+
+        let body = build_simple_upload_multipart_body("boundary-test", &metadata, &[1, 2, 3])
+            .expect("body should build");
+        let body_text = String::from_utf8_lossy(&body);
+
+        assert!(body_text.contains("--boundary-test"));
+        assert!(body_text.contains("\"name\":\"backup.db.gz\""));
+        assert!(body_text.contains("\"checksum\":\"abc\""));
+        assert!(body.ends_with(b"--boundary-test--\r\n"));
+    }
+
+    #[tokio::test]
+    async fn test_simple_upload_with_transport_success() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let state = Arc::new(Mutex::new(FakeSimpleTransportState::new()));
+        let transport = FakeSimpleTransport::new(
+            Ok(SimpleUploadResponse {
+                status: 200,
+                body: r#"{"id":"file-1","name":"backup.db.gz","size":7}"#.to_string(),
+            }),
+            state.clone(),
+        );
+
+        let uploaded = client
+            .simple_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1, 2, 3],
+                json!({"appProperties": {"checksum": "abc"}}),
+                &transport,
+            )
+            .await
+            .expect("upload should succeed");
+
+        assert_eq!(uploaded.id, "file-1");
+        assert_eq!(uploaded.name, "backup.db.gz");
+        assert_eq!(uploaded.size, 7);
+
+        let lock = state.lock().expect("state lock");
+        let boundary = lock.boundary.clone().unwrap_or_default();
+        assert!(boundary.starts_with("boundary-"));
+        let body = lock.body.clone().unwrap_or_default();
+        let body_text = String::from_utf8_lossy(&body);
+        assert!(body_text.contains("\"checksum\":\"abc\""));
+    }
+
+    #[tokio::test]
+    async fn test_simple_upload_with_transport_maps_auth_error() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeSimpleTransport::new(
+            Ok(SimpleUploadResponse {
+                status: 401,
+                body: "expired".to_string(),
+            }),
+            Arc::new(Mutex::new(FakeSimpleTransportState::new())),
+        );
+
+        let error = client
+            .simple_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1],
+                json!({}),
+                &transport,
+            )
+            .await
+            .expect_err("expected auth error");
+
+        assert!(matches!(error, CloudBackupError::TokenExpired));
+    }
+
+    #[tokio::test]
+    async fn test_simple_upload_with_transport_rejects_missing_id_in_payload() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeSimpleTransport::new(
+            Ok(SimpleUploadResponse {
+                status: 200,
+                body: r#"{"name":"backup.db.gz"}"#.to_string(),
+            }),
+            Arc::new(Mutex::new(FakeSimpleTransportState::new())),
+        );
+
+        let error = client
+            .simple_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1],
+                json!({}),
+                &transport,
+            )
+            .await
+            .expect_err("expected parse validation error");
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("No file ID")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_resumable_upload_with_transport_success() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let state = Arc::new(Mutex::new(FakeTransportState::new()));
+
+        let transport = FakeResumableTransport::new(
+            Ok(ResumableInitResponse {
+                status: 200,
+                headers: HashMap::from([(
+                    "location".to_string(),
+                    "https://upload.example/session".to_string(),
+                )]),
+                body: "{}".to_string(),
+            }),
+            Ok(ResumableUploadResponse {
+                status: 200,
+                body: r#"{"id":"file-1","name":"backup.db.gz","size":1024}"#.to_string(),
+            }),
+            state.clone(),
+        );
+
+        let uploaded = client
+            .resumable_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1, 2, 3, 4],
+                json!({"appProperties": {"checksum": "abc"}}),
+                &transport,
+            )
+            .await
+            .expect("upload should succeed");
+
+        assert_eq!(uploaded.id, "file-1");
+        assert_eq!(uploaded.name, "backup.db.gz");
+        assert_eq!(uploaded.size, 1024);
+
+        let lock = state.lock().expect("state lock");
+        assert_eq!(lock.init_request_size, Some(4));
+        assert_eq!(lock.upload_size, Some(4));
+        assert_eq!(lock.upload_data_len, Some(4));
+        assert_eq!(
+            lock.upload_url.clone().unwrap_or_default(),
+            "https://upload.example/session"
+        );
+        let checksum = lock
+            .init_request_metadata
+            .as_ref()
+            .and_then(|m| m.get("appProperties"))
+            .and_then(|p| p.get("checksum"))
+            .and_then(|v| v.as_str())
+            .unwrap_or_default();
+        assert_eq!(checksum, "abc");
+    }
+
+    #[tokio::test]
+    async fn test_resumable_upload_with_transport_maps_init_auth_error() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeResumableTransport::new(
+            Ok(ResumableInitResponse {
+                status: 401,
+                headers: HashMap::new(),
+                body: "expired".to_string(),
+            }),
+            Ok(ResumableUploadResponse {
+                status: 200,
+                body: "{}".to_string(),
+            }),
+            Arc::new(Mutex::new(FakeTransportState::new())),
+        );
+
+        let error = client
+            .resumable_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1],
+                json!({}),
+                &transport,
+            )
+            .await
+            .expect_err("expected auth error");
+
+        assert!(matches!(error, CloudBackupError::TokenExpired));
+    }
+
+    #[tokio::test]
+    async fn test_resumable_upload_with_transport_handles_missing_upload_url() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeResumableTransport::new(
+            Ok(ResumableInitResponse {
+                status: 200,
+                headers: HashMap::new(),
+                body: "{}".to_string(),
+            }),
+            Ok(ResumableUploadResponse {
+                status: 200,
+                body: "{}".to_string(),
+            }),
+            Arc::new(Mutex::new(FakeTransportState::new())),
+        );
+
+        let error = client
+            .resumable_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1],
+                json!({}),
+                &transport,
+            )
+            .await
+            .expect_err("expected missing location error");
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("No upload URL")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_resumable_upload_with_transport_maps_network_drop_during_upload() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeResumableTransport::new(
+            Ok(ResumableInitResponse {
+                status: 200,
+                headers: HashMap::from([(
+                    "location".to_string(),
+                    "https://upload.example/session".to_string(),
+                )]),
+                body: "{}".to_string(),
+            }),
+            Err(CloudBackupError::NetworkError(
+                "simulated network drop".to_string(),
+            )),
+            Arc::new(Mutex::new(FakeTransportState::new())),
+        );
+
+        let error = client
+            .resumable_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1, 2],
+                json!({}),
+                &transport,
+            )
+            .await
+            .expect_err("expected network error");
+
+        match error {
+            CloudBackupError::NetworkError(msg) => assert!(msg.contains("network drop")),
+            other => panic!("expected NetworkError, got: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_resumable_upload_with_transport_rejects_missing_id_in_payload() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeResumableTransport::new(
+            Ok(ResumableInitResponse {
+                status: 200,
+                headers: HashMap::from([(
+                    "location".to_string(),
+                    "https://upload.example/session".to_string(),
+                )]),
+                body: "{}".to_string(),
+            }),
+            Ok(ResumableUploadResponse {
+                status: 200,
+                body: r#"{"name":"backup.db.gz"}"#.to_string(),
+            }),
+            Arc::new(Mutex::new(FakeTransportState::new())),
+        );
+
+        let error = client
+            .resumable_upload_with_transport(
+                "folder-1",
+                "backup.db.gz",
+                vec![1],
+                json!({}),
+                &transport,
+            )
+            .await
+            .expect_err("expected parse validation error");
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("No file ID")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_parse_drive_files_response_maps_valid_entries_and_skips_invalid_rows() {
+        let body = r#"{
+            "files": [
+                {
+                    "id": "f1",
+                    "name": "backup-1.gz",
+                    "size": 128,
+                    "modifiedTime": "2026-05-23T09:00:00Z",
+                    "appProperties": {"recordCount": "10"}
+                },
+                {
+                    "id": "f2",
+                    "size": 64
+                }
+            ]
+        }"#;
+
+        let files = parse_drive_files_response(body).expect("expected successful parse");
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].id, "f1");
+        assert_eq!(files[0].name, "backup-1.gz");
+        assert_eq!(files[0].size, 128);
+        assert_eq!(
+            files[0].modified_time.as_deref(),
+            Some("2026-05-23T09:00:00Z")
+        );
+        assert_eq!(files[0].app_properties.as_ref().map(|m| m.len()), Some(1));
+    }
+
+    #[test]
+    fn test_parse_drive_files_response_rejects_missing_files_key() {
+        let error = parse_drive_files_response("{}")
+            .expect_err("expected an error for a response without files");
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("No files in response")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_parse_drive_files_response_rejects_invalid_json() {
+        let error =
+            parse_drive_files_response("not-json").expect_err("expected invalid json to fail");
+
+        match error {
+            CloudBackupError::DriveError(msg) => assert!(msg.contains("Failed to parse response")),
+            other => panic!("expected DriveError, got: {other:?}"),
+        }
     }
 }

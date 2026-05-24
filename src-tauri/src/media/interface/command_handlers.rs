@@ -499,6 +499,84 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_map_storage_error_directory_creation() {
+        let err = StorageError::DirectoryCreation("mkdir failed".to_string());
+        let cmd_err = map_storage_error(err);
+
+        match cmd_err {
+            CommandError::Unknown { message, .. } => {
+                assert!(message.contains("Failed to create storage directory"));
+                assert!(message.contains("mkdir failed"));
+            }
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_storage_error_copy_failed() {
+        let err = StorageError::CopyFailed("copy failed".to_string());
+        let cmd_err = map_storage_error(err);
+
+        match cmd_err {
+            CommandError::Unknown { message, .. } => {
+                assert!(message.contains("Failed to copy file"));
+                assert!(message.contains("copy failed"));
+            }
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_storage_error_write_failed() {
+        let err = StorageError::WriteFailed("write failed".to_string());
+        let cmd_err = map_storage_error(err);
+
+        match cmd_err {
+            CommandError::Unknown { message, .. } => {
+                assert!(message.contains("Failed to write file"));
+                assert!(message.contains("write failed"));
+            }
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_storage_error_delete_failed() {
+        let err = StorageError::DeleteFailed("delete failed".to_string());
+        let cmd_err = map_storage_error(err);
+
+        match cmd_err {
+            CommandError::Unknown { message, .. } => {
+                assert!(message.contains("Failed to delete file"));
+                assert!(message.contains("delete failed"));
+            }
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_storage_error_file_not_found() {
+        let err = StorageError::FileNotFound("missing.png".to_string());
+        let cmd_err = map_storage_error(err);
+
+        match cmd_err {
+            CommandError::NotFound(message) => assert_eq!(message, "missing.png"),
+            _ => panic!("Expected NotFound variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_storage_error_io_error() {
+        let err = StorageError::IoError("io failed".to_string());
+        let cmd_err = map_storage_error(err);
+
+        match cmd_err {
+            CommandError::Unknown { message, .. } => assert_eq!(message, "io failed"),
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
     async fn test_state(models_dir: std::path::PathBuf) -> AppState {
         let pool = SqlitePool::connect(":memory:")
             .await
@@ -573,5 +651,44 @@ mod tests {
         .await;
 
         assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[tokio::test]
+    async fn test_upload_model_image_invalid_model_id_returns_business_rule() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+        let args = UploadModelImageArgs {
+            model_id: "invalid-model-id".to_string(),
+            file_path: "/tmp/model.png".to_string(),
+        };
+
+        let result = upload_model_image_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+    }
+
+    #[tokio::test]
+    async fn test_upload_model_image_bytes_invalid_model_id_returns_business_rule() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+        let args = UploadModelImageBytesArgs {
+            model_id: "invalid-model-id".to_string(),
+            file_name: "model.png".to_string(),
+            file_data: vec![1, 2, 3],
+        };
+
+        let result = upload_model_image_bytes_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+    }
+
+    #[tokio::test]
+    async fn test_delete_model_image_invalid_model_id_returns_business_rule() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+        let args = DeleteModelImageArgs {
+            model_id: "invalid-model-id".to_string(),
+        };
+
+        let result = delete_model_image_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
     }
 }

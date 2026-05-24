@@ -112,99 +112,136 @@ impl SchemaValidator {
         let collection_item_ids = Self::extract_ids(data, "collectionItems");
         let seller_ids = Self::extract_ids(data, "sellers");
 
-        // Validate railway models reference valid manufacturers;
-        // validate nested rolling stocks reference valid railway companies.
-        if let Some(models) = data.get("railwayModels").and_then(|v| v.as_array()) {
-            for (model_idx, model) in models.iter().enumerate() {
-                if let Some(manufacturer_id) = model.get("manufacturerId").and_then(|v| v.as_str())
-                    && !manufacturer_ids.contains(manufacturer_id)
-                {
-                    errors.push(ValidationError::new(
-                        format!("data.railwayModels[{}].manufacturerId", model_idx),
-                        "referential_integrity",
-                        format!(
-                            "Manufacturer '{}' not found in manufacturers list",
-                            manufacturer_id
-                        ),
-                    ));
-                }
-
-                if let Some(rolling_stocks) = model.get("rollingStocks").and_then(|v| v.as_array())
-                {
-                    for (rs_idx, rs) in rolling_stocks.iter().enumerate() {
-                        if let Some(rc_id) = rs.get("railwayCompanyId").and_then(|v| v.as_str())
-                            && !railway_company_ids.contains(rc_id)
-                        {
-                            errors.push(ValidationError::new(
-                                format!(
-                                    "data.railwayModels[{}].rollingStocks[{}].railwayCompanyId",
-                                    model_idx, rs_idx
-                                ),
-                                "referential_integrity",
-                                format!(
-                                    "Railway company '{}' not found in railwayCompanies list",
-                                    rc_id
-                                ),
-                            ));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Validate collection items reference valid railway models and sellers.
-        if let Some(items) = data.get("collectionItems").and_then(|v| v.as_array()) {
-            for (idx, item) in items.iter().enumerate() {
-                if let Some(model_id) = item.get("railwayModelId").and_then(|v| v.as_str())
-                    && !railway_model_ids.contains(model_id)
-                {
-                    errors.push(ValidationError::new(
-                        format!("data.collectionItems[{}].railwayModelId", idx),
-                        "referential_integrity",
-                        format!(
-                            "Railway model '{}' not found in railwayModels list",
-                            model_id
-                        ),
-                    ));
-                }
-
-                if let Some(seller_id) = item
-                    .get("purchase")
-                    .and_then(|p| p.get("sellerId"))
-                    .and_then(|v| v.as_str())
-                    && !seller_ids.contains(seller_id)
-                {
-                    errors.push(ValidationError::new(
-                        format!("data.collectionItems[{}].purchase.sellerId", idx),
-                        "referential_integrity",
-                        format!("Seller '{}' not found in sellers list", seller_id),
-                    ));
-                }
-            }
-        }
-
-        // Validate maintenance cards reference valid collection items
-        if let Some(cards) = data.get("maintenanceCards").and_then(|v| v.as_array()) {
-            for (idx, card) in cards.iter().enumerate() {
-                if let Some(item_id) = card.get("collectionItemId").and_then(|v| v.as_str())
-                    && !collection_item_ids.contains(item_id)
-                {
-                    errors.push(ValidationError::new(
-                        format!("data.maintenanceCards[{}].collectionItemId", idx),
-                        "referential_integrity",
-                        format!(
-                            "Collection item '{}' not found in collectionItems list",
-                            item_id
-                        ),
-                    ));
-                }
-            }
-        }
+        Self::validate_railway_model_references(
+            data,
+            &manufacturer_ids,
+            &railway_company_ids,
+            &mut errors,
+        );
+        Self::validate_collection_item_references(
+            data,
+            &railway_model_ids,
+            &seller_ids,
+            &mut errors,
+        );
+        Self::validate_maintenance_card_references(data, &collection_item_ids, &mut errors);
 
         if errors.is_empty() {
             Ok(())
         } else {
             Err(errors)
+        }
+    }
+
+    fn validate_railway_model_references(
+        data: &Value,
+        manufacturer_ids: &HashSet<String>,
+        railway_company_ids: &HashSet<String>,
+        errors: &mut Vec<ValidationError>,
+    ) {
+        let Some(models) = data.get("railwayModels").and_then(|v| v.as_array()) else {
+            return;
+        };
+
+        for (model_idx, model) in models.iter().enumerate() {
+            if let Some(manufacturer_id) = model.get("manufacturerId").and_then(|v| v.as_str())
+                && !manufacturer_ids.contains(manufacturer_id)
+            {
+                errors.push(ValidationError::new(
+                    format!("data.railwayModels[{}].manufacturerId", model_idx),
+                    "referential_integrity",
+                    format!(
+                        "Manufacturer '{}' not found in manufacturers list",
+                        manufacturer_id
+                    ),
+                ));
+            }
+
+            let Some(rolling_stocks) = model.get("rollingStocks").and_then(|v| v.as_array()) else {
+                continue;
+            };
+
+            for (rs_idx, rs) in rolling_stocks.iter().enumerate() {
+                if let Some(rc_id) = rs.get("railwayCompanyId").and_then(|v| v.as_str())
+                    && !railway_company_ids.contains(rc_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!(
+                            "data.railwayModels[{}].rollingStocks[{}].railwayCompanyId",
+                            model_idx, rs_idx
+                        ),
+                        "referential_integrity",
+                        format!(
+                            "Railway company '{}' not found in railwayCompanies list",
+                            rc_id
+                        ),
+                    ));
+                }
+            }
+        }
+    }
+
+    fn validate_collection_item_references(
+        data: &Value,
+        railway_model_ids: &HashSet<String>,
+        seller_ids: &HashSet<String>,
+        errors: &mut Vec<ValidationError>,
+    ) {
+        let Some(items) = data.get("collectionItems").and_then(|v| v.as_array()) else {
+            return;
+        };
+
+        for (idx, item) in items.iter().enumerate() {
+            if let Some(model_id) = item.get("railwayModelId").and_then(|v| v.as_str())
+                && !railway_model_ids.contains(model_id)
+            {
+                errors.push(ValidationError::new(
+                    format!("data.collectionItems[{}].railwayModelId", idx),
+                    "referential_integrity",
+                    format!(
+                        "Railway model '{}' not found in railwayModels list",
+                        model_id
+                    ),
+                ));
+            }
+
+            if let Some(seller_id) = item
+                .get("purchase")
+                .and_then(|p| p.get("sellerId"))
+                .and_then(|v| v.as_str())
+                && !seller_ids.contains(seller_id)
+            {
+                errors.push(ValidationError::new(
+                    format!("data.collectionItems[{}].purchase.sellerId", idx),
+                    "referential_integrity",
+                    format!("Seller '{}' not found in sellers list", seller_id),
+                ));
+            }
+        }
+    }
+
+    fn validate_maintenance_card_references(
+        data: &Value,
+        collection_item_ids: &HashSet<String>,
+        errors: &mut Vec<ValidationError>,
+    ) {
+        let Some(cards) = data.get("maintenanceCards").and_then(|v| v.as_array()) else {
+            return;
+        };
+
+        for (idx, card) in cards.iter().enumerate() {
+            if let Some(item_id) = card.get("collectionItemId").and_then(|v| v.as_str())
+                && !collection_item_ids.contains(item_id)
+            {
+                errors.push(ValidationError::new(
+                    format!("data.maintenanceCards[{}].collectionItemId", idx),
+                    "referential_integrity",
+                    format!(
+                        "Collection item '{}' not found in collectionItems list",
+                        item_id
+                    ),
+                ));
+            }
         }
     }
 
@@ -351,5 +388,90 @@ mod tests {
             "data": {}
         });
         assert!(validator.validate(&manifest).is_ok());
+    }
+
+    #[test]
+    fn test_validate_referential_integrity_passes_when_links_exist() {
+        let manifest = json!({
+            "data": {
+                "manufacturers": [{ "id": "trn:manufacturer:acme" }],
+                "railwayCompanies": [{ "id": "trn:railway-company:fs" }],
+                "railwayModels": [{
+                    "id": "trn:railway-model:acme:100",
+                    "manufacturerId": "trn:manufacturer:acme",
+                    "rollingStocks": [{ "railwayCompanyId": "trn:railway-company:fs" }]
+                }],
+                "sellers": [{ "id": "trn:seller:shop" }],
+                "collectionItems": [{
+                    "id": "trn:collection-item:1",
+                    "railwayModelId": "trn:railway-model:acme:100",
+                    "purchase": { "sellerId": "trn:seller:shop" }
+                }],
+                "maintenanceCards": [{
+                    "collectionItemId": "trn:collection-item:1"
+                }]
+            }
+        });
+
+        let result = SchemaValidator::validate_referential_integrity(&manifest);
+        assert!(result.is_ok(), "expected no referential integrity errors");
+    }
+
+    #[test]
+    fn test_validate_referential_integrity_collects_all_missing_references() {
+        let manifest = json!({
+            "data": {
+                "manufacturers": [],
+                "railwayCompanies": [],
+                "railwayModels": [{
+                    "id": "trn:railway-model:missing:1",
+                    "manufacturerId": "trn:manufacturer:missing",
+                    "rollingStocks": [{ "railwayCompanyId": "trn:railway-company:missing" }]
+                }],
+                "collectionItems": [{
+                    "id": "trn:collection-item:missing",
+                    "railwayModelId": "trn:railway-model:unknown",
+                    "purchase": { "sellerId": "trn:seller:missing" }
+                }],
+                "maintenanceCards": [{ "collectionItemId": "trn:collection-item:unknown" }]
+            }
+        });
+
+        let errors = SchemaValidator::validate_referential_integrity(&manifest)
+            .expect_err("expected referential integrity errors");
+
+        assert_eq!(errors.len(), 5);
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.railwayModels[0].manufacturerId")
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.railwayModels[0].rollingStocks[0].railwayCompanyId")
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.collectionItems[0].railwayModelId")
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.collectionItems[0].purchase.sellerId")
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.maintenanceCards[0].collectionItemId")
+        );
+    }
+
+    #[test]
+    fn test_validate_referential_integrity_skips_when_no_data_section() {
+        let manifest = json!({ "version": "1.0" });
+        let result = SchemaValidator::validate_referential_integrity(&manifest);
+        assert!(result.is_ok());
     }
 }

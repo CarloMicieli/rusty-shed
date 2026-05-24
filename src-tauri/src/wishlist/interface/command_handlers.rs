@@ -172,17 +172,10 @@ pub async fn add_railway_model_to_wish_list_inner(
     let target_wishlist_id = WishlistId::try_from(args.wishlist_id.as_str())
         .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
     let id_provider = RuntimeIdProvider::new();
-    let desired_price: Option<MonetaryAmount> = match (
+    let desired_price = parse_optional_desired_price(
         args.desired_price_amount,
-        args.desired_price_currency.clone(),
-    ) {
-        (Some(amount), Some(code)) => {
-            let currency = Currency::from_code(&code)
-                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
-            Some(MonetaryAmount::new(amount, currency))
-        }
-        _ => None,
-    };
+        args.desired_price_currency.as_deref(),
+    )?;
     let add_input = AddToWishlistInput {
         wishlist_id: target_wishlist_id,
         railway_model_id,
@@ -195,6 +188,20 @@ pub async fn add_railway_model_to_wish_list_inner(
     AddToWishlistUseCase::execute(&mut unit_of_work, id_provider, add_input).await?;
     unit_of_work.commit().await?;
     Ok(())
+}
+
+fn parse_optional_desired_price(
+    amount: Option<i64>,
+    currency_code: Option<&str>,
+) -> Result<Option<MonetaryAmount>, CommandError> {
+    match (amount, currency_code) {
+        (Some(amount), Some(code)) => {
+            let currency = Currency::from_code(code)
+                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+            Ok(Some(MonetaryAmount::new(amount, currency)))
+        }
+        _ => Ok(None),
+    }
 }
 
 pub async fn update_wishlist_item_inner(
@@ -340,6 +347,7 @@ pub async fn update_wishlist_item(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::interface::{SimplifiedRailwayModelArgs, SimplifiedRollingStockArgs};
     use anyhow::Result;
     use pretty_assertions::assert_eq;
     use sqlx::SqlitePool;
@@ -573,6 +581,54 @@ mod tests {
         };
         let item = update_wishlist_item_inner(&state, args).await?;
         assert_eq!(item.priority, WishlistPriority::High);
+        Ok(())
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures(
+            "../../../fixtures/test_wishlist.sql",
+            "../../../fixtures/test_railway_company.sql"
+        )
+    )]
+    async fn add_railway_model_to_wish_list_inserts_new_item(pool: SqlitePool) -> Result<()> {
+        let state = app_state(pool);
+        let wishlist_id = "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9".to_string();
+        let args = AddRailwayModelToWishListArgs {
+            railway_model: SimplifiedRailwayModelArgs {
+                manufacturer_id: "trn:manufacturer:acme".to_string(),
+                product_code: "WL-NEW-100".to_string(),
+                description: "Wishlist model from handler test".to_string(),
+                category: "LOCOMOTIVES".to_string(),
+                scale: "H0".to_string(),
+                epoch: "IV".to_string(),
+                power_method: "DC".to_string(),
+                rolling_stocks: vec![SimplifiedRollingStockArgs {
+                    railway_company_id: "trn:railway-company:fs".to_string(),
+                    series_code: "E.900".to_string(),
+                    road_number: Some("E.900.001".to_string()),
+                    subcategory: Some("ELECTRIC_LOCOMOTIVE".to_string()),
+                    category: "LOCOMOTIVE".to_string(),
+                }],
+            },
+            wishlist_id: wishlist_id.clone(),
+            priority: None,
+            status: None,
+            desired_price_amount: Some(15000),
+            desired_price_currency: Some("EUR".to_string()),
+            notes: Some("added by add_railway_model_to_wish_list test".to_string()),
+            added_date: Some(chrono::NaiveDate::from_ymd_opt(2025, 2, 14).expect("valid date")),
+        };
+
+        add_railway_model_to_wish_list_inner(&state, args).await?;
+
+        let id = WishlistId::try_from(wishlist_id.as_str())?;
+        let updated = get_wishlist_by_id_inner(&state, &id)
+            .await?
+            .expect("wishlist should exist");
+        let items = updated.items.expect("wishlist items should be present");
+        assert_eq!(items.len(), 2);
+
         Ok(())
     }
 }

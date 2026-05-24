@@ -445,4 +445,77 @@ mod tests {
             result
         );
     }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_sellers_inner_enriches_seeded_and_usage_metadata(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let seller_id = "trn:seller:seeded-shop";
+        let now = Utc::now().to_rfc3339();
+
+        sqlx::query(
+            r#"
+            INSERT INTO sellers (id, name, type, created_at, updated_at, version, is_system_seeded)
+            VALUES (?1, ?2, 'SHOP', ?3, ?4, 1, 1)
+            "#,
+        )
+        .bind(seller_id)
+        .bind("Seeded Shop")
+        .bind(&now)
+        .bind(&now)
+        .execute(&pool)
+        .await
+        .expect("seed seller should insert");
+
+        let sellers = get_sellers_inner(&state)
+            .await
+            .expect("query should succeed");
+        let seeded = sellers
+            .into_iter()
+            .find(|s| s.id.as_ref() == seller_id)
+            .expect("seeded seller should be present");
+
+        assert!(seeded.is_system_seeded);
+        assert_eq!(seeded.usage_count, 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_seller_by_id_inner_returns_none_when_missing(pool: SqlitePool) {
+        let state = app_state(pool);
+        let missing_id = SellerId::try_from("trn:seller:missing").expect("valid seller id");
+
+        let seller = get_seller_by_id_inner(&state, missing_id)
+            .await
+            .expect("query should succeed");
+        assert!(seller.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_seller_by_id_inner_enriches_seeded_and_usage_metadata(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let seller_id = "trn:seller:seeded-shop";
+        let now = Utc::now().to_rfc3339();
+
+        sqlx::query(
+            r#"
+            INSERT INTO sellers (id, name, type, created_at, updated_at, version, is_system_seeded)
+            VALUES (?1, ?2, 'SHOP', ?3, ?4, 1, 1)
+            "#,
+        )
+        .bind(seller_id)
+        .bind("Seeded Shop")
+        .bind(&now)
+        .bind(&now)
+        .execute(&pool)
+        .await
+        .expect("seed seller should insert");
+
+        let seller_id = SellerId::try_from(seller_id).expect("valid seller id");
+        let seller = get_seller_by_id_inner(&state, seller_id)
+            .await
+            .expect("query should succeed")
+            .expect("seller should exist");
+
+        assert!(seller.is_system_seeded);
+        assert_eq!(seller.usage_count, 0);
+    }
 }

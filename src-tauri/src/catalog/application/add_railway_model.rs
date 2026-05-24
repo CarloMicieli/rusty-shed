@@ -143,7 +143,6 @@ impl AddRailwayModel {
 
         aggregate.push_event(created_event);
 
-        // Persist aggregate by applying its events.
         repository
             .save(&mut aggregate)
             .await

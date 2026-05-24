@@ -199,3 +199,45 @@ pub async fn add_maintenance_event(
 ) -> Result<(), CommandError> {
     add_maintenance_event_inner(&state, input).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+    use sqlx::SqlitePool;
+    use uuid::Uuid;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    #[sqlx::test]
+    async fn add_maintenance_event_invalid_card_id_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = AddMaintenanceArgs {
+            maintenance_card_id: "not-a-maintenance-card-id".to_string(),
+            date_performed: NaiveDate::from_ymd_opt(2025, 1, 1).expect("valid date"),
+            maintenance_type: Some("LUBRICATION".to_string()),
+            notes: None,
+            next_maintenance_date: None,
+        };
+
+        let result = add_maintenance_event_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[sqlx::test]
+    async fn add_maintenance_event_invalid_type_does_not_fail_validation(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = AddMaintenanceArgs {
+            maintenance_card_id: MaintenanceCardId::from_uuid(&Uuid::new_v4()).to_string(),
+            date_performed: NaiveDate::from_ymd_opt(2025, 1, 1).expect("valid date"),
+            maintenance_type: Some("NOT_A_MAINTENANCE_TYPE".to_string()),
+            notes: None,
+            next_maintenance_date: None,
+        };
+
+        let result = add_maintenance_event_inner(&state, args).await;
+        assert!(!matches!(result, Err(CommandError::ValidationError(_))));
+    }
+}

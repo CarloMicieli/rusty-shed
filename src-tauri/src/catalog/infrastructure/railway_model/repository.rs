@@ -149,6 +149,23 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
     /// - Only `railway_company_id` → railway company patch (1 column)
     /// - `series_code` but no `flywheel_fitted` → identification patch (4 columns)
     /// - `series_code` with `flywheel_fitted` → full specifications patch (14 columns)
+    async fn update_single_optional_text_field(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        column: &str,
+        value: Option<&str>,
+    ) -> Result<(), DomainError> {
+        let query = format!("UPDATE rolling_stocks SET {column} = ?1 WHERE id = ?2");
+        sqlx::query(&query)
+            .bind(value)
+            .bind(rolling_stock_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
     async fn update_rolling_stock_from_patch(
         &mut self,
         rolling_stock_id: &RollingStockId,
@@ -283,54 +300,34 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .map_err(DomainError::from)?;
         } else if map.contains_key("locomotive_type") {
             let value = map.get("locomotive_type").and_then(|v| v.as_str());
-            sqlx::query("UPDATE rolling_stocks SET locomotive_type = ?1 WHERE id = ?2")
-                .bind(value)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
+            self.update_single_optional_text_field(rolling_stock_id, "locomotive_type", value)
+                .await?;
         } else if map.contains_key("freight_car_type") {
             let value = map.get("freight_car_type").and_then(|v| v.as_str());
-            sqlx::query("UPDATE rolling_stocks SET freight_car_type = ?1 WHERE id = ?2")
-                .bind(value)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
+            self.update_single_optional_text_field(rolling_stock_id, "freight_car_type", value)
+                .await?;
         } else if map.contains_key("passenger_car_type") {
             let value = map.get("passenger_car_type").and_then(|v| v.as_str());
-            sqlx::query("UPDATE rolling_stocks SET passenger_car_type = ?1 WHERE id = ?2")
-                .bind(value)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
+            self.update_single_optional_text_field(rolling_stock_id, "passenger_car_type", value)
+                .await?;
         } else if map.contains_key("electric_multiple_unit_type") {
             let value = map
                 .get("electric_multiple_unit_type")
                 .and_then(|v| v.as_str());
-            sqlx::query("UPDATE rolling_stocks SET electric_multiple_unit_type = ?1 WHERE id = ?2")
-                .bind(value)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
+            self.update_single_optional_text_field(
+                rolling_stock_id,
+                "electric_multiple_unit_type",
+                value,
+            )
+            .await?;
         } else if map.contains_key("railcar_type") {
             let value = map.get("railcar_type").and_then(|v| v.as_str());
-            sqlx::query("UPDATE rolling_stocks SET railcar_type = ?1 WHERE id = ?2")
-                .bind(value)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
+            self.update_single_optional_text_field(rolling_stock_id, "railcar_type", value)
+                .await?;
         } else if map.contains_key("service_level") {
             let value = map.get("service_level").and_then(|v| v.as_str());
-            sqlx::query("UPDATE rolling_stocks SET service_level = ?1 WHERE id = ?2")
-                .bind(value)
-                .bind(rolling_stock_id)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
+            self.update_single_optional_text_field(rolling_stock_id, "service_level", value)
+                .await?;
         } else if map.contains_key("rolling_stock_category") {
             // Category patch — change the `category` column only.
             let category = map
@@ -744,6 +741,263 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         }
         Ok(())
     }
+
+    async fn apply_railway_model_created(
+        &mut self,
+        params: &RailwayModelParams,
+    ) -> Result<(), DomainError> {
+        let railway_model_id = self.insert_railway_model(params).await?;
+        for rolling_stock in &params.rolling_stocks {
+            let rs_id = RollingStockId::from_uuid(&Uuid::new_v4());
+            self.insert_rolling_stock(&rs_id, &railway_model_id, rolling_stock)
+                .await?;
+        }
+
+        Ok(())
+    }
+
+    async fn apply_railway_model_updated(
+        &mut self,
+        railway_model_id: &RailwayModelId,
+        changed: &serde_json::Value,
+    ) -> Result<(), DomainError> {
+        let serde_json::Value::Object(map) = changed else {
+            return Ok(());
+        };
+
+        if let Some(serde_json::Value::String(availability)) = map.get("availability_status") {
+            let update_cmd = r#"UPDATE railway_models SET availability_status = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+            sqlx::query(update_cmd)
+                .bind(availability)
+                .bind(railway_model_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        }
+
+        if let Some(serde_json::Value::String(scale_str)) = map.get("scale") {
+            let scale = Scale::try_from(scale_str.as_str())
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
+            let update_cmd = r#"UPDATE railway_models SET scale = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+            sqlx::query(update_cmd)
+                .bind(&scale)
+                .bind(railway_model_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        }
+
+        if let Some(serde_json::Value::String(epoch)) = map.get("epoch") {
+            let update_cmd = r#"UPDATE railway_models SET epoch = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+            sqlx::query(update_cmd)
+                .bind(epoch)
+                .bind(railway_model_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        }
+
+        if let Some(serde_json::Value::String(category)) = map.get("category") {
+            let update_cmd = r#"UPDATE railway_models SET category = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+            sqlx::query(update_cmd)
+                .bind(category)
+                .bind(railway_model_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        }
+
+        if map.contains_key("delivery_date") {
+            let date_val = map.get("delivery_date");
+            let date_str = match date_val {
+                Some(serde_json::Value::String(s)) => Some(s.as_str()),
+                _ => None,
+            };
+            let update_cmd = r#"UPDATE railway_models SET delivery_date = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+            sqlx::query(update_cmd)
+                .bind(date_str)
+                .bind(railway_model_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        }
+
+        Ok(())
+    }
+
+    async fn apply_translation_upserted(
+        &mut self,
+        railway_model_id: &RailwayModelId,
+        lang: Language,
+        description: Option<String>,
+        details: Option<String>,
+    ) -> Result<(), DomainError> {
+        let lang_str = lang.to_string();
+        let desc_empty = description.as_deref().map(|s| s.is_empty()).unwrap_or(true);
+        let details_empty = details.as_deref().map(|s| s.is_empty()).unwrap_or(true);
+
+        if description.is_none() && details.is_none() {
+            return Ok(());
+        }
+
+        if desc_empty && details_empty {
+            sqlx::query(
+                r#"DELETE FROM railway_model_translations
+                   WHERE railway_model_id = ?1 AND language_code = ?2"#,
+            )
+            .bind(railway_model_id)
+            .bind(&lang_str)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+            return Ok(());
+        }
+
+        sqlx::query(
+            r#"INSERT INTO railway_model_translations
+                   (railway_model_id, language_code, description, details, updated_at)
+               VALUES (?1, ?2, ?3, ?4, CURRENT_TIMESTAMP)
+               ON CONFLICT(railway_model_id, language_code)
+               DO UPDATE SET
+                   description = CASE WHEN ?3 IS NOT NULL THEN ?3 ELSE description END,
+                   details     = CASE WHEN ?4 IS NOT NULL THEN ?4 ELSE details END,
+                   updated_at  = CURRENT_TIMESTAMP"#,
+        )
+        .bind(railway_model_id)
+        .bind(&lang_str)
+        .bind(&description)
+        .bind(&details)
+        .execute(&mut *self.executor)
+        .await
+        .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    async fn apply_rolling_stock_added(
+        &mut self,
+        railway_model_id: &RailwayModelId,
+        rolling_stock_id: &RollingStockId,
+        rolling_stock_params: &RollingStockParams,
+    ) -> Result<(), DomainError> {
+        self.insert_rolling_stock(rolling_stock_id, railway_model_id, rolling_stock_params)
+            .await
+    }
+
+    async fn apply_rolling_stock_removed(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+    ) -> Result<(), DomainError> {
+        let delete_cmd = r#"DELETE FROM rolling_stocks WHERE id = ?1;"#;
+        sqlx::query(delete_cmd)
+            .bind(rolling_stock_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    async fn apply_rolling_stock_updated(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        changed: &serde_json::Value,
+    ) -> Result<(), DomainError> {
+        self.update_rolling_stock_from_patch(rolling_stock_id, changed)
+            .await
+    }
+
+    fn map_rolling_stock_row_to_view(cr: RollingStockRow) -> RollingStockView {
+        let railway = RollingStockRailway {
+            railway_company_id: cr.railway_company_id.clone(),
+            display: cr.railway_company_name.clone(),
+            country_code: cr.railway_company_country_code.clone(),
+        };
+
+        let length_over_buffer = reconstruct_length_over_buffers(&cr);
+        let technical_specifications = reconstruct_technical_specifications(&cr);
+
+        match cr.category {
+            RollingStockCategory::Locomotive => RollingStockView::Locomotive {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                depot: cr.depot,
+                locomotive_type: cr.locomotive_type.unwrap_or_default(),
+                dcc_interface: cr.dcc_interface,
+                control: cr.control,
+                is_dummy: cr.is_dummy,
+            },
+            RollingStockCategory::FreightCar => RollingStockView::FreightCar {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                freight_car_type: cr.freight_car_type,
+            },
+            RollingStockCategory::PassengerCar => RollingStockView::PassengerCar {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                passenger_car_type: cr.passenger_car_type,
+                service_level: cr.service_level,
+            },
+            RollingStockCategory::ElectricMultipleUnit => RollingStockView::ElectricMultipleUnit {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                depot: cr.depot,
+                electric_multiple_unit_type: cr.electric_multiple_unit_type.unwrap_or_default(),
+                dcc_interface: cr.dcc_interface,
+                control: cr.control,
+                is_dummy: cr.is_dummy,
+            },
+            RollingStockCategory::Railcar => RollingStockView::Railcar {
+                id: cr.id,
+                railway,
+                prototype_id: cr.prototype_id,
+                livery: cr.livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name: cr.friendly_name,
+                series_code: cr.series_code,
+                road_number: cr.road_number,
+                series: cr.series,
+                depot: cr.depot,
+                railcar_type: cr.railcar_type.unwrap_or_default(),
+                dcc_interface: cr.dcc_interface,
+                control: cr.control,
+                is_dummy: cr.is_dummy,
+            },
+        }
+    }
 }
 
 #[async_trait::async_trait]
@@ -807,104 +1061,10 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         if let Some(row) = row_opt {
             // fetch rolling stocks
             let child_rows = self.select_rolling_stocks_by_id(id).await?;
-
-            let mut rolling_stock_views = Vec::with_capacity(child_rows.len());
-            for cr in child_rows {
-                let railway = RollingStockRailway {
-                    railway_company_id: cr.railway_company_id.clone(),
-                    display: cr.railway_company_name.clone(),
-                    country_code: cr.railway_company_country_code.clone(),
-                };
-
-                let length_over_buffer = reconstruct_length_over_buffers(&cr);
-                let technical_specifications = reconstruct_technical_specifications(&cr);
-
-                let view = match cr.category {
-                    RollingStockCategory::Locomotive => RollingStockView::Locomotive {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        series: cr.series,
-                        depot: cr.depot,
-                        locomotive_type: cr.locomotive_type.unwrap_or_default(),
-                        dcc_interface: cr.dcc_interface,
-                        control: cr.control,
-                        is_dummy: cr.is_dummy,
-                    },
-                    RollingStockCategory::FreightCar => RollingStockView::FreightCar {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        freight_car_type: cr.freight_car_type,
-                    },
-                    RollingStockCategory::PassengerCar => RollingStockView::PassengerCar {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        series: cr.series,
-                        passenger_car_type: cr.passenger_car_type,
-                        service_level: cr.service_level,
-                    },
-                    RollingStockCategory::ElectricMultipleUnit => {
-                        RollingStockView::ElectricMultipleUnit {
-                            id: cr.id,
-                            railway,
-                            prototype_id: cr.prototype_id,
-                            livery: cr.livery,
-                            length_over_buffer,
-                            technical_specifications,
-                            friendly_name: cr.friendly_name,
-                            series_code: cr.series_code,
-                            road_number: cr.road_number,
-                            series: cr.series,
-                            depot: cr.depot,
-                            electric_multiple_unit_type: cr
-                                .electric_multiple_unit_type
-                                .unwrap_or_default(),
-                            dcc_interface: cr.dcc_interface,
-                            control: cr.control,
-                            is_dummy: cr.is_dummy,
-                        }
-                    }
-                    RollingStockCategory::Railcar => RollingStockView::Railcar {
-                        id: cr.id,
-                        railway,
-                        prototype_id: cr.prototype_id,
-                        livery: cr.livery,
-                        length_over_buffer,
-                        technical_specifications,
-                        friendly_name: cr.friendly_name,
-                        series_code: cr.series_code,
-                        road_number: cr.road_number,
-                        series: cr.series,
-                        depot: cr.depot,
-                        railcar_type: cr.railcar_type.unwrap_or_default(),
-                        dcc_interface: cr.dcc_interface,
-                        control: cr.control,
-                        is_dummy: cr.is_dummy,
-                    },
-                };
-
-                rolling_stock_views.push(view);
-            }
+            let rolling_stock_views = child_rows
+                .into_iter()
+                .map(Self::map_rolling_stock_row_to_view)
+                .collect::<Vec<_>>();
 
             let manufacturer = crate::catalog::domain::railway_model::RailwayModelManufacturer {
                 manufacturer_id: row.manufacturer_id,
@@ -953,83 +1113,15 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         for ev in events.into_iter() {
             match ev {
                 RailwayModelEvent::RailwayModelCreated { params, .. } => {
-                    // Reuse existing helpers which bind to the repository's executor.
-                    let _id = self.insert_railway_model(&params).await?;
-                    for rs in params.rolling_stocks.iter() {
-                        let rs_id = RollingStockId::from_uuid(&Uuid::new_v4());
-                        self.insert_rolling_stock(&rs_id, &_id, rs).await?;
-                    }
+                    self.apply_railway_model_created(&params).await?;
                 }
                 RailwayModelEvent::RailwayModelUpdated {
                     railway_model_id,
                     changed,
                     ..
                 } => {
-                    // Apply a minimal set of updates for common fields. The
-                    // `changed` payload is expected to be a JSON object.
-                    if let serde_json::Value::Object(map) = changed {
-                        if let Some(serde_json::Value::String(availability)) =
-                            map.get("availability_status")
-                        {
-                            let update_cmd = r#"UPDATE railway_models SET availability_status = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
-                            sqlx::query(update_cmd)
-                                .bind(availability)
-                                .bind(&railway_model_id)
-                                .execute(&mut *self.executor)
-                                .await
-                                .map_err(DomainError::from)?;
-                        }
-
-                        if let Some(serde_json::Value::String(scale_str)) = map.get("scale") {
-                            let scale = Scale::try_from(scale_str.as_str())
-                                .map_err(|e| DomainError::Validation(e.to_string()))?;
-                            let update_cmd = r#"UPDATE railway_models SET scale = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
-                            sqlx::query(update_cmd)
-                                .bind(&scale)
-                                .bind(&railway_model_id)
-                                .execute(&mut *self.executor)
-                                .await
-                                .map_err(DomainError::from)?;
-                        }
-
-                        if let Some(serde_json::Value::String(epoch)) = map.get("epoch") {
-                            let update_cmd = r#"UPDATE railway_models SET epoch = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
-                            sqlx::query(update_cmd)
-                                .bind(epoch)
-                                .bind(&railway_model_id)
-                                .execute(&mut *self.executor)
-                                .await
-                                .map_err(DomainError::from)?;
-                        }
-
-                        if let Some(serde_json::Value::String(category)) = map.get("category") {
-                            let update_cmd = r#"UPDATE railway_models SET category = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
-                            sqlx::query(update_cmd)
-                                .bind(category)
-                                .bind(&railway_model_id)
-                                .execute(&mut *self.executor)
-                                .await
-                                .map_err(DomainError::from)?;
-                        }
-
-                        // delivery_date can be set to NULL (cleared) so we
-                        // check for the key's presence rather than matching
-                        // only on String.
-                        if map.contains_key("delivery_date") {
-                            let date_val = map.get("delivery_date");
-                            let date_str = match date_val {
-                                Some(serde_json::Value::String(s)) => Some(s.as_str()),
-                                _ => None,
-                            };
-                            let update_cmd = r#"UPDATE railway_models SET delivery_date = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
-                            sqlx::query(update_cmd)
-                                .bind(date_str)
-                                .bind(&railway_model_id)
-                                .execute(&mut *self.executor)
-                                .await
-                                .map_err(DomainError::from)?;
-                        }
-                    }
+                    self.apply_railway_model_updated(&railway_model_id, &changed)
+                        .await?;
                 }
                 RailwayModelEvent::TranslationUpserted {
                     railway_model_id,
@@ -1038,45 +1130,8 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     details,
                     ..
                 } => {
-                    // When both fields are None, delete the translation row.
-                    // Otherwise upsert using INSERT OR REPLACE.
-                    let lang_str = lang.to_string();
-                    let desc_empty = description.as_deref().map(|s| s.is_empty()).unwrap_or(true);
-                    let details_empty = details.as_deref().map(|s| s.is_empty()).unwrap_or(true);
-
-                    if description.is_none() && details.is_none() {
-                        // No-op: neither field was changed (only one side of upsert_translation fired)
-                    } else if desc_empty && details_empty {
-                        // Both cleared — delete the translation row
-                        sqlx::query(
-                            r#"DELETE FROM railway_model_translations
-                               WHERE railway_model_id = ?1 AND language_code = ?2"#,
-                        )
-                        .bind(&railway_model_id)
-                        .bind(&lang_str)
-                        .execute(&mut *self.executor)
-                        .await
-                        .map_err(DomainError::from)?;
-                    } else {
-                        // Upsert translation — INSERT OR REPLACE keeps FTS triggers firing
-                        sqlx::query(
-                            r#"INSERT INTO railway_model_translations
-                                   (railway_model_id, language_code, description, details, updated_at)
-                               VALUES (?1, ?2, ?3, ?4, CURRENT_TIMESTAMP)
-                               ON CONFLICT(railway_model_id, language_code)
-                               DO UPDATE SET
-                                   description = CASE WHEN ?3 IS NOT NULL THEN ?3 ELSE description END,
-                                   details     = CASE WHEN ?4 IS NOT NULL THEN ?4 ELSE details END,
-                                   updated_at  = CURRENT_TIMESTAMP"#,
-                        )
-                        .bind(&railway_model_id)
-                        .bind(&lang_str)
-                        .bind(&description)
-                        .bind(&details)
-                        .execute(&mut *self.executor)
-                        .await
-                        .map_err(DomainError::from)?;
-                    }
+                    self.apply_translation_upserted(&railway_model_id, lang, description, details)
+                        .await?;
                 }
                 RailwayModelEvent::RollingStockAdded {
                     railway_model_id,
@@ -1084,11 +1139,9 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     rolling_stock_params,
                     ..
                 } => {
-                    // Insert a new rolling stock for the given railway model using the
-                    // domain-assigned ID so callers can reference it after commit.
-                    self.insert_rolling_stock(
-                        &rolling_stock_id,
+                    self.apply_rolling_stock_added(
                         &railway_model_id,
+                        &rolling_stock_id,
                         &rolling_stock_params,
                     )
                     .await?;
@@ -1096,19 +1149,14 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 RailwayModelEvent::RollingStockRemoved {
                     rolling_stock_id, ..
                 } => {
-                    let delete_cmd = r#"DELETE FROM rolling_stocks WHERE id = ?1;"#;
-                    sqlx::query(delete_cmd)
-                        .bind(rolling_stock_id)
-                        .execute(&mut *self.executor)
-                        .await
-                        .map_err(DomainError::from)?;
+                    self.apply_rolling_stock_removed(&rolling_stock_id).await?;
                 }
                 RailwayModelEvent::RollingStockUpdated {
                     rolling_stock_id,
                     changed,
                     ..
                 } => {
-                    self.update_rolling_stock_from_patch(&rolling_stock_id, &changed)
+                    self.apply_rolling_stock_updated(&rolling_stock_id, &changed)
                         .await?;
                 }
             }
@@ -1215,7 +1263,11 @@ mod tests {
     use crate::catalog::domain::railway_model::AvailabilityStatus;
     use crate::catalog::domain::railway_model::Control;
     use crate::catalog::domain::railway_model::DccInterface;
-    use crate::catalog::domain::railway_model::RailwayModelId;
+    use crate::catalog::domain::railway_model::LocalizedField;
+    use crate::catalog::domain::railway_model::RailwayModel;
+    use crate::catalog::domain::railway_model::RailwayModelEvent;
+    use crate::catalog::domain::railway_model::RollingStockId;
+    use crate::catalog::domain::railway_model::RollingStockParams;
     use crate::catalog::domain::railway_model::{
         Category, DeliveryDate, Epoch, PowerMethod, ProductCode, ServiceLevel,
     };
@@ -1223,8 +1275,12 @@ mod tests {
         ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
     };
     use crate::catalog::domain::scale::Scale;
+    use crate::core::domain::Language;
+    use chrono::Utc;
     use pretty_assertions::assert_eq;
+    use serde_json::json;
     use sqlx::Row;
+    use uuid::Uuid;
 
     const TEST_RAILWAY_MODEL_ID: &str = "trn:railway-model:acme:1234";
     const RAILWAY_MODEL_QUERY: &str = r#"
@@ -1237,6 +1293,159 @@ mod tests {
                 FROM rolling_stocks
                 WHERE railway_model_id = ?1
             "#;
+
+    fn make_test_aggregate(id: &str) -> RailwayModel {
+        let manufacturer_id =
+            ManufacturerId::try_from("trn:manufacturer:acme").expect("manufacturer id");
+
+        RailwayModel {
+            id: RailwayModelId::try_from(id).expect("railway model id"),
+            manufacturer_id,
+            product_code: ProductCode::try_from("T-001").expect("product code"),
+            description: LocalizedField {
+                lang: Language::English,
+                value: "Test".to_string(),
+            },
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: Epoch::from("IV"),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+            pending_events: vec![],
+        }
+    }
+
+    fn make_locomotive_params(is_dummy: bool) -> RollingStockParams {
+        RollingStockParams::LocomotiveParams {
+            railway_company_id: RailwayCompanyId::try_from("trn:railway-company:fs").unwrap(),
+            livery: Some("Blue".to_string()),
+            length_over_buffers: None,
+            technical_specifications: None,
+            friendly_name: "Blue Loco".to_string(),
+            series_code: Some("SC".to_string()),
+            road_number: "RN100".to_string(),
+            series: Some("S1".to_string()),
+            depot: Some("Depot".to_string()),
+            locomotive_type: LocomotiveType::DieselLocomotive,
+            dcc_interface: Some(DccInterface::Nem652),
+            control: Some(Control::DccReady),
+            is_dummy,
+        }
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_updates_availability_status_from_event(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::RailwayModelUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            changed: json!({ "availability_status": "OUT_OF_STOCK" }),
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should process model update event");
+
+        let availability: Option<String> =
+            sqlx::query_scalar("SELECT availability_status FROM railway_models WHERE id = ?1")
+                .bind("trn:railway-model:acme:60100")
+                .fetch_one(&mut *conn)
+                .await
+                .expect("availability status should be queryable");
+
+        assert_eq!(availability.as_deref(), Some("OUT_OF_STOCK"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_upserts_translation_from_event(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        aggregate.push_event(RailwayModelEvent::TranslationUpserted {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            lang: Language::English,
+            description: Some("Updated translation".to_string()),
+            details: None,
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should process translation upsert event");
+
+        let description: Option<String> = sqlx::query_scalar(
+            "SELECT description FROM railway_model_translations WHERE railway_model_id = ?1 AND language_code = 'en'",
+        )
+        .bind("trn:railway-model:acme:60100")
+        .fetch_one(&mut *conn)
+        .await
+        .expect("translation should be queryable");
+
+        assert_eq!(description.as_deref(), Some("Updated translation"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn save_adds_rolling_stock_from_event(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let mut aggregate = make_test_aggregate("trn:railway-model:acme:60100");
+        let rolling_stock_id = RollingStockId::from_uuid(&Uuid::new_v4());
+        let params = RollingStockParams::LocomotiveParams {
+            railway_company_id: RailwayCompanyId::try_from("trn:railway-company:fs")
+                .expect("railway company id"),
+            livery: Some("Test Livery".to_string()),
+            length_over_buffers: None,
+            technical_specifications: None,
+            friendly_name: "Test Locomotive".to_string(),
+            series_code: Some("TST".to_string()),
+            road_number: "001".to_string(),
+            series: None,
+            depot: None,
+            locomotive_type: LocomotiveType::ElectricLocomotive,
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        };
+
+        aggregate.push_event(RailwayModelEvent::RollingStockAdded {
+            event_id: Uuid::new_v4(),
+            railway_model_id: aggregate.id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            rolling_stock_id: rolling_stock_id.clone(),
+            rolling_stock_params: params,
+        });
+
+        repo.save(&mut aggregate)
+            .await
+            .expect("save should process rolling stock added event");
+
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(1) FROM rolling_stocks WHERE id = ?1")
+            .bind(rolling_stock_id.to_string())
+            .fetch_one(&mut *conn)
+            .await
+            .expect("rolling stock count should be queryable");
+
+        assert_eq!(count, 1);
+    }
 
     #[sqlx::test(
         migrations = "./migrations",
@@ -1609,21 +1818,7 @@ mod tests {
         let mut conn = pool.acquire().await.expect("should acquire connection");
 
         let rs_id = RollingStockId::default();
-        let params = RollingStockParams::LocomotiveParams {
-            railway_company_id: RailwayCompanyId::try_from("trn:railway-company:fs").unwrap(),
-            livery: Some("Blue".to_string()),
-            length_over_buffers: None,
-            technical_specifications: None,
-            friendly_name: "Blue Loco".to_string(),
-            series_code: Some("SC".to_string()),
-            road_number: "RN100".to_string(),
-            series: Some("S1".to_string()),
-            depot: Some("Depot".to_string()),
-            locomotive_type: LocomotiveType::DieselLocomotive,
-            dcc_interface: Some(DccInterface::Nem652),
-            control: Some(Control::DccReady),
-            is_dummy: false,
-        };
+        let params = make_locomotive_params(false);
 
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
         repo.insert_rolling_stock(&rs_id, &railway_model_id, &params)
@@ -1649,6 +1844,298 @@ mod tests {
 
         let is_dummy: i64 = row.get("is_dummy");
         assert_eq!(is_dummy, 1, "is_dummy should be persisted as 1 (true)");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_view_by_id_maps_existing_model_and_rolling_stock(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        let id = RailwayModelId::try_from("trn:railway-model:acme:60100")
+            .expect("valid fixture railway model id");
+
+        let view = repo
+            .find_view_by_id(&id, Language::English)
+            .await
+            .expect("query should succeed")
+            .expect("fixture model should exist");
+
+        assert_eq!(view.id, id);
+        assert_eq!(view.manufacturer.display, "ACME");
+        assert_eq!(view.product_code.to_string(), "60100");
+        assert_eq!(view.description_lang, Language::English);
+        assert!(!view.rolling_stock.is_empty());
+
+        let first = &view.rolling_stock[0];
+        match first {
+            RollingStockView::Locomotive {
+                railway,
+                series_code,
+                locomotive_type,
+                ..
+            } => {
+                assert_eq!(railway.display, "FS");
+                assert!(!series_code.is_empty());
+                assert_eq!(*locomotive_type, LocomotiveType::ElectricLocomotive);
+            }
+            other => panic!("expected locomotive view in fixture, got: {other:?}"),
+        }
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn update_rolling_stock_from_patch_identification_branch(pool: sqlx::SqlitePool) {
+        let railway_model_id =
+            RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let rs_id = RollingStockId::default();
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        repo.insert_rolling_stock(&rs_id, &railway_model_id, &make_locomotive_params(false))
+            .await
+            .expect("should insert rolling stock");
+
+        let patch = serde_json::json!({
+            "series_code": "SC-IDENT",
+            "road_number": "RN200",
+            "livery": "Red",
+            "depot": "New Depot"
+        });
+
+        repo.update_rolling_stock_from_patch(&rs_id, &patch)
+            .await
+            .expect("should apply identification patch");
+
+        let row = sqlx::query(
+            "SELECT series_code, road_number, livery, depot, friendly_name FROM rolling_stocks WHERE id = ?1",
+        )
+        .bind(&rs_id)
+        .fetch_one(&mut *conn)
+        .await
+        .expect("should fetch updated row");
+
+        let series_code: Option<String> = row.get("series_code");
+        let road_number: Option<String> = row.get("road_number");
+        let livery: Option<String> = row.get("livery");
+        let depot: Option<String> = row.get("depot");
+        let friendly_name: String = row.get("friendly_name");
+
+        assert_eq!(series_code, Some("SC-IDENT".to_string()));
+        assert_eq!(road_number, Some("RN200".to_string()));
+        assert_eq!(livery, Some("Red".to_string()));
+        assert_eq!(depot, Some("New Depot".to_string()));
+        assert_eq!(friendly_name, "Blue Loco");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn update_rolling_stock_from_patch_dcc_and_length_branch(pool: sqlx::SqlitePool) {
+        let railway_model_id =
+            RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let rs_id = RollingStockId::default();
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        repo.insert_rolling_stock(&rs_id, &railway_model_id, &make_locomotive_params(false))
+            .await
+            .expect("should insert rolling stock");
+
+        let patch = serde_json::json!({
+            "dcc_control": "DCC_SOUND",
+            "dcc_interface": "PLUX22",
+            "dcc_length_mm": "254.0"
+        });
+
+        repo.update_rolling_stock_from_patch(&rs_id, &patch)
+            .await
+            .expect("should apply dcc patch");
+
+        let row = sqlx::query(
+            "SELECT control, dcc_interface, length_millimeters, length_inches FROM rolling_stocks WHERE id = ?1",
+        )
+        .bind(&rs_id)
+        .fetch_one(&mut *conn)
+        .await
+        .expect("should fetch updated row");
+
+        let control: Option<String> = row.get("control");
+        let dcc_interface: Option<String> = row.get("dcc_interface");
+        let length_mm: Option<String> = row.get("length_millimeters");
+        let length_inches: Option<String> = row.get("length_inches");
+
+        assert_eq!(control, Some("DCC_SOUND".to_string()));
+        assert_eq!(dcc_interface, Some("PLUX22".to_string()));
+        let parsed_mm = length_mm
+            .and_then(|v| v.parse::<f64>().ok())
+            .expect("length_millimeters should be parseable");
+        let parsed_inches = length_inches
+            .and_then(|v| v.parse::<f64>().ok())
+            .expect("length_inches should be parseable");
+
+        assert!((parsed_mm - 254.0).abs() < f64::EPSILON);
+        assert!((parsed_inches - 10.0).abs() < f64::EPSILON);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn update_rolling_stock_from_patch_single_field_routes(pool: sqlx::SqlitePool) {
+        let railway_model_id =
+            RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let rs_id = RollingStockId::default();
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        repo.insert_rolling_stock(&rs_id, &railway_model_id, &make_locomotive_params(false))
+            .await
+            .expect("should insert rolling stock");
+
+        repo.update_rolling_stock_from_patch(
+            &rs_id,
+            &serde_json::json!({ "service_level": "PREMIUM" }),
+        )
+        .await
+        .expect("should update service level");
+        repo.update_rolling_stock_from_patch(
+            &rs_id,
+            &serde_json::json!({ "locomotive_type": "ELECTRIC_LOCOMOTIVE" }),
+        )
+        .await
+        .expect("should update locomotive type");
+        repo.update_rolling_stock_from_patch(
+            &rs_id,
+            &serde_json::json!({ "rolling_stock_category": "FREIGHT_CARS" }),
+        )
+        .await
+        .expect("should update rolling stock category");
+
+        let row = sqlx::query(
+            "SELECT service_level, locomotive_type, category FROM rolling_stocks WHERE id = ?1",
+        )
+        .bind(&rs_id)
+        .fetch_one(&mut *conn)
+        .await
+        .expect("should fetch updated row");
+
+        let service_level: Option<String> = row.get("service_level");
+        let locomotive_type: Option<String> = row.get("locomotive_type");
+        let category: String = row.get("category");
+
+        assert_eq!(service_level, Some("PREMIUM".to_string()));
+        assert_eq!(locomotive_type, Some("ELECTRIC_LOCOMOTIVE".to_string()));
+        assert_eq!(category, "FREIGHT_CARS");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn update_rolling_stock_from_patch_ignores_non_object(pool: sqlx::SqlitePool) {
+        let railway_model_id =
+            RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let rs_id = RollingStockId::default();
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        repo.insert_rolling_stock(&rs_id, &railway_model_id, &make_locomotive_params(false))
+            .await
+            .expect("should insert rolling stock");
+
+        repo.update_rolling_stock_from_patch(&rs_id, &serde_json::json!("not-an-object"))
+            .await
+            .expect("non-object patch should be ignored");
+
+        let row = sqlx::query("SELECT series_code FROM rolling_stocks WHERE id = ?1")
+            .bind(&rs_id)
+            .fetch_one(&mut *conn)
+            .await
+            .expect("should fetch unchanged row");
+
+        let series_code: Option<String> = row.get("series_code");
+        assert_eq!(series_code, Some("SC".to_string()));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_translations_returns_none_when_model_does_not_exist(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let id =
+            RailwayModelId::try_from("trn:railway-model:acme:missing").expect("valid model id");
+
+        let result = repo
+            .find_translations(&id)
+            .await
+            .expect("query should not fail");
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_translations_returns_en_entry_and_missing_it(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+
+        let id = RailwayModelId::try_from("trn:railway-model:acme:60100").expect("valid id");
+
+        let translations = repo
+            .find_translations(&id)
+            .await
+            .expect("query should not fail")
+            .expect("model exists so translations envelope should exist");
+
+        assert_eq!(translations.railway_model_id, id);
+        assert_eq!(
+            translations.en.and_then(|entry| entry.description),
+            Some("Locomotiva elettrica E.444.005 Tartaruga".to_string())
+        );
+        assert!(translations.it.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn find_translations_ignores_non_supported_languages(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        sqlx::query(
+            "INSERT INTO railway_model_translations (railway_model_id, language_code, description, details) \
+             VALUES (?1, 'de', 'Deutsche Beschreibung', 'Zusatz')",
+        )
+        .bind("trn:railway-model:acme:60100")
+        .execute(&mut *conn)
+        .await
+        .expect("should insert non-supported translation");
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        let id = RailwayModelId::try_from("trn:railway-model:acme:60100").expect("valid id");
+
+        let translations = repo
+            .find_translations(&id)
+            .await
+            .expect("query should not fail")
+            .expect("model exists");
+
+        assert!(translations.it.is_none());
+        assert_eq!(
+            translations.en.and_then(|entry| entry.details),
+            None,
+            "unexpected language rows must not leak into supported entries"
+        );
     }
 }
 

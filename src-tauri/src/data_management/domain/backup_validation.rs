@@ -88,6 +88,8 @@ pub fn validate_confirmation(confirmation: &str) -> Result<(), DatabaseBackupErr
 mod tests {
     use super::*;
     use std::path::Path;
+    use tempfile::tempdir;
+    use tokio::fs;
 
     #[test]
     fn validate_confirmation_with_restore_succeeds() {
@@ -105,5 +107,70 @@ mod tests {
         let path = Path::new("/nonexistent_directory_abc123/output.sqlite");
         let err = validate_export_destination(path).unwrap_err();
         assert!(matches!(err, DatabaseBackupError::InvalidPath(_)));
+    }
+
+    #[tokio::test]
+    async fn validate_sqlite_file_with_missing_path_fails() {
+        let dir = tempdir().expect("tempdir");
+        let missing = dir.path().join("missing.sqlite");
+
+        let err = validate_sqlite_file(&missing)
+            .await
+            .expect_err("missing path should fail");
+
+        assert!(matches!(err, DatabaseBackupError::InvalidPath(_)));
+    }
+
+    #[tokio::test]
+    async fn validate_sqlite_file_with_directory_path_fails() {
+        let dir = tempdir().expect("tempdir");
+
+        let err = validate_sqlite_file(dir.path())
+            .await
+            .expect_err("directory path should fail");
+
+        assert!(matches!(err, DatabaseBackupError::InvalidPath(_)));
+    }
+
+    #[tokio::test]
+    async fn validate_sqlite_file_with_short_file_fails() {
+        let dir = tempdir().expect("tempdir");
+        let file_path = dir.path().join("short.sqlite");
+        fs::write(&file_path, b"SQLite").await.expect("write file");
+
+        let err = validate_sqlite_file(&file_path)
+            .await
+            .expect_err("short file should fail");
+
+        assert!(matches!(err, DatabaseBackupError::InvalidDatabase(_)));
+    }
+
+    #[tokio::test]
+    async fn validate_sqlite_file_with_wrong_magic_fails() {
+        let dir = tempdir().expect("tempdir");
+        let file_path = dir.path().join("invalid.sqlite");
+
+        let mut bytes = [0u8; 16];
+        bytes.copy_from_slice(b"NotSql format 0\0");
+        fs::write(&file_path, bytes).await.expect("write file");
+
+        let err = validate_sqlite_file(&file_path)
+            .await
+            .expect_err("invalid magic should fail");
+
+        assert!(matches!(err, DatabaseBackupError::InvalidDatabase(_)));
+    }
+
+    #[tokio::test]
+    async fn validate_sqlite_file_with_valid_magic_succeeds() {
+        let dir = tempdir().expect("tempdir");
+        let file_path = dir.path().join("valid.sqlite");
+
+        fs::write(&file_path, b"SQLite format 3\x00")
+            .await
+            .expect("write file");
+
+        let result = validate_sqlite_file(&file_path).await;
+        assert!(result.is_ok());
     }
 }

@@ -159,50 +159,61 @@ impl PreviewImportUseCase {
                 PreviewImportError::Archive(format!("Failed to list archive files: {}", e))
             })?;
 
-        // Collect all image filenames referenced in the manifest (deduplicated)
-        let mut referenced_images: HashSet<String> = HashSet::new();
-
-        for model in &manifest.data.railway_models {
-            if let Some(ref image) = model.image
-                && !image.is_empty()
-            {
-                referenced_images.insert(image.clone());
-            }
-        }
-
-        for item in &manifest.data.collection_items {
-            if let Some(ref image) = item.image
-                && !image.is_empty()
-            {
-                referenced_images.insert(image.clone());
-            }
-        }
+        let referenced_images = collect_referenced_images(manifest);
 
         // Build a set of archive file paths for O(1) lookup
         let archive_file_set: HashSet<String> = archive_files.into_iter().collect();
 
-        let mut warnings = Vec::new();
-        for image_filename in referenced_images {
-            let expected_path = format!("images/{}", image_filename);
+        Ok(build_image_warnings(&archive_file_set, referenced_images))
+    }
+}
+
+fn collect_referenced_images(
+    manifest: &crate::data_management::domain::ManifestDto,
+) -> HashSet<String> {
+    manifest
+        .data
+        .railway_models
+        .iter()
+        .filter_map(|model| model.image.as_deref())
+        .chain(
+            manifest
+                .data
+                .collection_items
+                .iter()
+                .filter_map(|item| item.image.as_deref()),
+        )
+        .filter(|image| !image.is_empty())
+        .map(ToString::to_string)
+        .collect()
+}
+
+fn build_image_warnings(
+    archive_file_set: &HashSet<String>,
+    referenced_images: HashSet<String>,
+) -> Vec<ImportWarning> {
+    referenced_images
+        .into_iter()
+        .filter_map(|image_filename| {
+            let expected_path = format!("images/{image_filename}");
             let found = archive_file_set.contains(&expected_path)
                 || archive_file_set.contains(&image_filename);
 
             if !found {
-                warnings.push(ImportWarning::missing_image(&image_filename));
+                Some(ImportWarning::missing_image(&image_filename))
             } else if !ArchiveExtractor::is_valid_image_extension(&image_filename) {
-                warnings.push(ImportWarning {
+                Some(ImportWarning {
                     code: "invalid_image_extension".to_string(),
                     message: format!(
-                        "Image has invalid extension (only .png, .jpg, .jpeg allowed): {}",
-                        image_filename
+                        "Image has invalid extension (only .png, .jpg, .jpeg allowed): {image_filename}"
                     ),
                     context: Some(image_filename),
-                });
+                })
+            } else {
+                None
             }
-        }
-
-        Ok(warnings)
-    }
+        })
+        .collect()
 }
 
 /// Errors that can occur during preview generation
@@ -224,6 +235,158 @@ pub enum PreviewImportError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data_management::application::ports::{
+        AllDuplicates, ImportRepository, PersistResult,
+    };
+    use crate::data_management::domain::DataManagementError;
+    use crate::data_management::domain::{
+        CollectionItemRecord, DataContainerDto, LocalizedTextRecord, ManifestDto,
+        RailwayModelRecord,
+    };
+    use crate::data_management::infrastructure::DuplicateCheckResult;
+    use std::io::Write;
+    use std::path::Path;
+    use tempfile::{Builder, NamedTempFile};
+    use zip::write::SimpleFileOptions;
+
+    struct FakeImportRepository {
+        duplicates: AllDuplicates,
+        fail_duplicates: bool,
+    }
+
+    #[async_trait::async_trait]
+    impl ImportRepository for FakeImportRepository {
+        async fn check_duplicates(
+            &self,
+            _data: &DataContainerDto,
+        ) -> Result<AllDuplicates, DataManagementError> {
+            if self.fail_duplicates {
+                return Err(DataManagementError::DatabaseError(
+                    "forced duplicate check failure".to_string(),
+                ));
+            }
+
+            Ok(AllDuplicates {
+                manufacturer_dupes: self.duplicates.manufacturer_dupes.clone(),
+                railway_model_dupes: self.duplicates.railway_model_dupes.clone(),
+                collection_item_dupes: self.duplicates.collection_item_dupes.clone(),
+                seller_dupes: self.duplicates.seller_dupes.clone(),
+                track_product_dupes: self.duplicates.track_product_dupes.clone(),
+                track_inventory_dupes: self.duplicates.track_inventory_dupes.clone(),
+                formation_category_dupes: self.duplicates.formation_category_dupes.clone(),
+                train_formation_dupes: self.duplicates.train_formation_dupes.clone(),
+                prototype_dupes: self.duplicates.prototype_dupes.clone(),
+                wishlist_dupes: self.duplicates.wishlist_dupes.clone(),
+                decoder_dupes: self.duplicates.decoder_dupes.clone(),
+                digital_roster_dupes: self.duplicates.digital_roster_dupes.clone(),
+            })
+        }
+
+        async fn persist(
+            &self,
+            _data: &DataContainerDto,
+            _duplicates: &AllDuplicates,
+            _archive_path: &Path,
+            _media_dir: &Path,
+        ) -> Result<PersistResult, DataManagementError> {
+            unreachable!("persist is not used by PreviewImportUseCase")
+        }
+    }
+
+    fn empty_duplicates() -> AllDuplicates {
+        let empty = DuplicateCheckResult::default();
+        AllDuplicates {
+            manufacturer_dupes: empty.clone(),
+            railway_model_dupes: empty.clone(),
+            collection_item_dupes: empty.clone(),
+            seller_dupes: empty.clone(),
+            track_product_dupes: empty.clone(),
+            track_inventory_dupes: empty.clone(),
+            formation_category_dupes: empty.clone(),
+            train_formation_dupes: empty.clone(),
+            prototype_dupes: empty.clone(),
+            wishlist_dupes: empty.clone(),
+            decoder_dupes: empty.clone(),
+            digital_roster_dupes: empty,
+        }
+    }
+
+    fn make_manifest(
+        railway_model_images: Vec<Option<&str>>,
+        collection_item_images: Vec<Option<&str>>,
+    ) -> ManifestDto {
+        let railway_models = railway_model_images
+            .into_iter()
+            .enumerate()
+            .map(|(idx, image)| RailwayModelRecord {
+                id: format!("model-{idx}"),
+                manufacturer_id: "man-1".to_string(),
+                product_code: format!("P{idx}"),
+                description: LocalizedTextRecord {
+                    en: Some("desc".to_string()),
+                    it: None,
+                },
+                scale: "HO".to_string(),
+                epoch: "IV".to_string(),
+                category: "LOCOMOTIVES".to_string(),
+                power_method: "DC".to_string(),
+                image: image.map(ToString::to_string),
+                ..RailwayModelRecord::default()
+            })
+            .collect::<Vec<_>>();
+
+        let collection_items = collection_item_images
+            .into_iter()
+            .enumerate()
+            .map(|(idx, image)| CollectionItemRecord {
+                id: format!("item-{idx}"),
+                railway_model_id: "model-0".to_string(),
+                added_date: "2026-01-01".to_string(),
+                removed_date: None,
+                purchase_condition: None,
+                model_condition: None,
+                box_condition: None,
+                notes: None,
+                image: image.map(ToString::to_string),
+                purchase: None,
+            })
+            .collect::<Vec<_>>();
+
+        ManifestDto {
+            schema: None,
+            version: "1.0.0".to_string(),
+            exported_at: None,
+            source: None,
+            data: DataContainerDto {
+                railway_models,
+                collection_items,
+                ..DataContainerDto::default()
+            },
+        }
+    }
+
+    fn create_zip_archive(files: &[(&str, &[u8])]) -> NamedTempFile {
+        let mut temp_file = Builder::new()
+            .suffix(".zip")
+            .tempfile()
+            .expect("temp zip file should be created");
+        {
+            let writer = temp_file.as_file_mut();
+            let mut zip = zip::ZipWriter::new(writer);
+            let options = SimpleFileOptions::default();
+
+            for (name, contents) in files {
+                zip.start_file(name, options)
+                    .expect("zip file entry should be created");
+                zip.write_all(contents)
+                    .expect("zip entry should be writable");
+            }
+
+            zip.finish().expect("zip archive should be finalized");
+        }
+
+        temp_file
+    }
 
     #[test]
     fn test_preview_error_display() {
@@ -235,5 +398,141 @@ mod tests {
 
         let err = PreviewImportError::Database("connection failed".to_string());
         assert_eq!(err.to_string(), "Database error: connection failed");
+    }
+
+    #[test]
+    fn test_collect_referenced_images_filters_empty_and_deduplicates() {
+        let manifest = make_manifest(
+            vec![Some("same.png"), Some(""), None, Some("same.png")],
+            vec![Some("other.jpg"), Some("same.png"), None],
+        );
+
+        let images = collect_referenced_images(&manifest);
+        assert_eq!(images.len(), 2);
+        assert!(images.contains("same.png"));
+        assert!(images.contains("other.jpg"));
+    }
+
+    #[tokio::test]
+    async fn test_check_missing_images_warns_for_missing_file() {
+        let archive = create_zip_archive(&[("manifest.json", b"{}")]);
+        let manifest = make_manifest(vec![Some("missing.png")], vec![]);
+
+        let warnings = PreviewImportUseCase::check_missing_images(archive.path(), &manifest)
+            .await
+            .expect("missing image check should complete");
+
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0].code, "missing_image");
+        assert_eq!(warnings[0].context.as_deref(), Some("missing.png"));
+    }
+
+    #[tokio::test]
+    async fn test_check_missing_images_accepts_images_folder_or_root_path() {
+        let archive = create_zip_archive(&[
+            ("images/found-in-folder.jpg", b"image"),
+            ("found-at-root.png", b"image"),
+        ]);
+        let manifest = make_manifest(
+            vec![Some("found-in-folder.jpg")],
+            vec![Some("found-at-root.png")],
+        );
+
+        let warnings = PreviewImportUseCase::check_missing_images(archive.path(), &manifest)
+            .await
+            .expect("image check should succeed");
+
+        assert!(warnings.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_check_missing_images_warns_for_invalid_extension() {
+        let archive = create_zip_archive(&[("images/photo.gif", b"gif")]);
+        let manifest = make_manifest(vec![Some("photo.gif")], vec![]);
+
+        let warnings = PreviewImportUseCase::check_missing_images(archive.path(), &manifest)
+            .await
+            .expect("image check should succeed");
+
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0].code, "invalid_image_extension");
+        assert_eq!(warnings[0].context.as_deref(), Some("photo.gif"));
+    }
+
+    #[tokio::test]
+    async fn test_check_missing_images_maps_archive_listing_error() {
+        let manifest = make_manifest(vec![Some("photo.png")], vec![]);
+        let invalid_path = std::path::PathBuf::from("/tmp/not-an-archive.txt");
+
+        let error = PreviewImportUseCase::check_missing_images(&invalid_path, &manifest)
+            .await
+            .expect_err("invalid archive should error");
+
+        match error {
+            PreviewImportError::Archive(msg) => assert!(msg.contains("Failed to list archive")),
+            other => panic!("expected Archive error, got: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_execute_returns_validation_errors_without_repository_call() {
+        let repo = Arc::new(FakeImportRepository {
+            duplicates: empty_duplicates(),
+            fail_duplicates: true,
+        });
+        let use_case = PreviewImportUseCase::new(repo).expect("use case should initialize");
+
+        // Not a valid manifest schema payload, so execute must return early with errors.
+        let preview = use_case
+            .execute(serde_json::json!({"invalid": true}), None)
+            .await
+            .expect("validation failure should still return ImportPreview");
+
+        assert!(!preview.errors.is_empty());
+        assert!(!preview.can_import());
+    }
+
+    #[tokio::test]
+    async fn test_execute_with_valid_manifest_returns_counts() {
+        let repo = Arc::new(FakeImportRepository {
+            duplicates: empty_duplicates(),
+            fail_duplicates: false,
+        });
+        let use_case = PreviewImportUseCase::new(repo).expect("use case should initialize");
+
+        let mut manifest_json: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/test_import_manifest.json"))
+                .expect("fixture manifest should parse");
+
+        // Fixture uses legacy category payload shape; normalize to current schema.
+        if let Some(models) = manifest_json
+            .pointer_mut("/data/railwayModels")
+            .and_then(|v| v.as_array_mut())
+        {
+            for model in models {
+                if let Some(category_kind) = model
+                    .get("category")
+                    .and_then(|v| v.get("type"))
+                    .and_then(|v| v.as_str())
+                {
+                    model["category"] = serde_json::Value::String(category_kind.to_string());
+                }
+            }
+        }
+
+        let preview = use_case
+            .execute(manifest_json, None)
+            .await
+            .expect("execute should succeed");
+
+        assert!(preview.errors.is_empty());
+        assert!(preview.warnings.is_empty());
+        assert!(preview.can_import());
+        assert_eq!(preview.total_records.railway_models, 2);
+        assert_eq!(preview.total_records.collection_items, 2);
+        assert_eq!(preview.duplicate_records.railway_models, 0);
+        assert_eq!(preview.duplicate_records.collection_items, 0);
+        assert_eq!(preview.new_records.railway_models, 0);
+        assert_eq!(preview.new_records.collection_items, 0);
     }
 }

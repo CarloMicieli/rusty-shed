@@ -245,4 +245,18 @@ mod tests {
         let result = get_decoders_inner(&state).await;
         assert!(result.is_err());
     }
+
+    #[sqlx::test]
+    async fn check_dcc_address_duplicate_invalid_exclude_id_returns_unknown_error(
+        pool: SqlitePool,
+    ) {
+        let state = AppState::for_test(pool);
+        let args = CheckDccAddressDuplicateArgs {
+            dcc_address: 3,
+            exclude_id: Some("not-a-digital-rolling-stock-id".to_string()),
+        };
+
+        let result = check_dcc_address_duplicate_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::Unknown { .. })));
+    }
 }

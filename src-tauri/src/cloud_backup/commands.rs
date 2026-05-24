@@ -162,27 +162,11 @@ pub async fn cloud_backup_sync_now_inner(
     app: &tauri::AppHandle,
     state: &AppState,
 ) -> std::result::Result<BackupListItem, CommandError> {
-    // Check if online
-    if !crate::cloud_backup::infrastructure::is_online().await {
-        return Err(CommandError::from(CloudBackupError::OfflineError));
-    }
+    ensure_online_for_sync(crate::cloud_backup::infrastructure::is_online().await)?;
 
-    let user_email = state
-        .connected_email()
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
-
-    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
-    let tokens = storage
-        .retrieve_tokens(&user_email)
-        .await
-        .map_err(CommandError::from)?
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
-
-    // Create Google Drive client wrapped in Arc<dyn DriveClient>
-    let client: Arc<dyn DriveClient + Send + Sync> = Arc::new(GoogleDriveClient::new(
-        GOOGLE_CLIENT_ID.to_string(),
-        tokens.access_token_str().to_string(),
-    ));
+    let user_email = resolve_connected_user_email(state.connected_email())?;
+    let access_token = load_connected_access_token(&user_email).await?;
+    let client = build_google_drive_client(access_token);
 
     let db_pool = state.db_pool();
     let db_path = state.db_path();
@@ -194,7 +178,50 @@ pub async fn cloud_backup_sync_now_inner(
     let result =
         application::sync_backup(app, &db_pool, db_path, client, &state.import_session_store).await;
 
-    match &result {
+    finalize_sync_state(state, &result);
+
+    result.map_err(CommandError::from)
+}
+
+fn ensure_online_for_sync(is_online: bool) -> std::result::Result<(), CommandError> {
+    if !is_online {
+        return Err(CommandError::from(CloudBackupError::OfflineError));
+    }
+
+    Ok(())
+}
+
+fn resolve_connected_user_email(
+    connected_email: Option<String>,
+) -> std::result::Result<String, CommandError> {
+    connected_email.ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))
+}
+
+async fn load_connected_access_token(
+    user_email: &str,
+) -> std::result::Result<String, CommandError> {
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
+    let tokens = storage
+        .retrieve_tokens(user_email)
+        .await
+        .map_err(CommandError::from)?
+        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
+
+    Ok(tokens.access_token_str().to_string())
+}
+
+fn build_google_drive_client(access_token: String) -> Arc<dyn DriveClient + Send + Sync> {
+    Arc::new(GoogleDriveClient::new(
+        GOOGLE_CLIENT_ID.to_string(),
+        access_token,
+    ))
+}
+
+fn finalize_sync_state(
+    state: &AppState,
+    result: &std::result::Result<BackupListItem, CloudBackupError>,
+) {
+    match result {
         Ok(item) => {
             state.set_sync_state(None, false, 100.0, "Backup complete");
             state.set_last_sync_at(Some(item.created_at.clone()));
@@ -203,8 +230,6 @@ pub async fn cloud_backup_sync_now_inner(
             state.set_sync_state(None, false, 0.0, "Backup failed");
         }
     }
-
-    result.map_err(CommandError::from)
 }
 
 /// Sync (backup) to Google Drive
@@ -271,14 +296,9 @@ pub async fn cloud_backup_get_sync_status(
     cloud_backup_get_sync_status_inner(&state).await
 }
 
-/// Inner implementation for `cloud_backup_restore`
-pub async fn cloud_backup_restore_inner(
-    app: tauri::AppHandle,
-    state: &AppState,
-    args: RestoreBackupArgs,
-    db_path: std::path::PathBuf,
+fn validate_restore_confirmation(
+    args: &RestoreBackupArgs,
 ) -> std::result::Result<(), CommandError> {
-    // Validate confirmation
     if args.confirmation != "RESTORE" {
         return Err(CommandError::validation_field(
             "confirmation",
@@ -286,43 +306,67 @@ pub async fn cloud_backup_restore_inner(
         ));
     }
 
-    // Check if online
-    if !crate::cloud_backup::infrastructure::is_online().await {
+    Ok(())
+}
+
+fn ensure_online_for_restore(is_online: bool) -> std::result::Result<(), CommandError> {
+    if !is_online {
         return Err(CommandError::from(CloudBackupError::OfflineError));
     }
 
-    let user_email = state
-        .connected_email()
-        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
+    Ok(())
+}
 
+fn resolve_restore_user_email(
+    connected_email: Option<String>,
+) -> std::result::Result<String, CommandError> {
+    resolve_connected_user_email(connected_email)
+}
+
+async fn resolve_restore_access_token(
+    oauth_service: &OAuthService,
+    user_email: &str,
+) -> std::result::Result<String, CommandError> {
     let storage = create_platform_storage(STORAGE_SERVICE.to_string());
-    let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
 
-    // Retrieve tokens, refreshing if expired, then build the Drive client
     let tokens = storage
-        .retrieve_tokens(&user_email)
+        .retrieve_tokens(user_email)
         .await
         .map_err(CommandError::from)?
         .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
 
-    let access_token = if tokens.is_expired() {
+    if tokens.is_expired() {
         let refreshed = oauth_service
-            .refresh_token(&user_email)
+            .refresh_token(user_email)
             .await
             .map_err(CommandError::from)?;
         storage
-            .store_tokens(&user_email, &refreshed)
+            .store_tokens(user_email, &refreshed)
             .await
             .map_err(CommandError::from)?;
-        refreshed.access_token_str().to_string()
-    } else {
-        tokens.access_token_str().to_string()
-    };
+        return Ok(refreshed.access_token_str().to_string());
+    }
 
-    let drive_client: Arc<dyn DriveClient + Send + Sync> = Arc::new(GoogleDriveClient::new(
-        GOOGLE_CLIENT_ID.to_string(),
-        access_token,
-    ));
+    Ok(tokens.access_token_str().to_string())
+}
+
+/// Inner implementation for `cloud_backup_restore`
+pub async fn cloud_backup_restore_inner(
+    app: tauri::AppHandle,
+    state: &AppState,
+    args: RestoreBackupArgs,
+    db_path: std::path::PathBuf,
+) -> std::result::Result<(), CommandError> {
+    validate_restore_confirmation(&args)?;
+
+    ensure_online_for_restore(crate::cloud_backup::infrastructure::is_online().await)?;
+
+    let user_email = resolve_restore_user_email(state.connected_email())?;
+
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
+    let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
+    let access_token = resolve_restore_access_token(&oauth_service, &user_email).await?;
+    let drive_client = build_google_drive_client(access_token);
 
     // Close the pool before replacing the database file to prevent corruption.
     // The frontend will reload the app via the restore-complete event.
@@ -354,6 +398,13 @@ pub async fn cloud_backup_restore(
 mod tests {
     use super::*;
 
+    fn restore_args_with_confirmation(confirmation: &str) -> RestoreBackupArgs {
+        RestoreBackupArgs {
+            backup_id: "backup-1".to_string(),
+            confirmation: confirmation.to_string(),
+        }
+    }
+
     #[test]
     fn test_command_signatures() {
         assert_eq!(STORAGE_SERVICE, "com.rusty-shed.oauth.google");
@@ -378,6 +429,128 @@ mod tests {
         match cmd_err {
             CommandError::ValidationError(_) => {}
             _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_offline_error() {
+        let err = CloudBackupError::OfflineError;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("OFFLINE_ERROR")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_oauth_cancelled() {
+        let err = CloudBackupError::OAuthCancelled;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("OAUTH_CANCELLED")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_oauth_timeout() {
+        let err = CloudBackupError::OAuthTimeout;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("OAUTH_TIMEOUT")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_token_expired() {
+        let err = CloudBackupError::TokenExpired;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("TOKEN_EXPIRED")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_import_in_progress() {
+        let err = CloudBackupError::ImportInProgress;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("IMPORT_IN_PROGRESS")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_backup_not_found() {
+        let err = CloudBackupError::BackupNotFound("bkp-123".to_string());
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::NotFound(msg) => assert_eq!(msg, "Backup not found: bkp-123"),
+            _ => panic!("Expected NotFound"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_integrity_check_failed() {
+        let err = CloudBackupError::IntegrityCheckFailed("hash mismatch".to_string());
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => {
+                assert!(msg.contains("INTEGRITY_ERROR"));
+                assert!(msg.contains("hash mismatch"));
+            }
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_not_implemented() {
+        let err = CloudBackupError::NotImplemented;
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::BusinessRule(msg) => assert!(msg.contains("NOT_IMPLEMENTED")),
+            _ => panic!("Expected BusinessRule"),
+        }
+    }
+
+    #[test]
+    fn test_error_mapping_fallback_to_unknown() {
+        let err = CloudBackupError::UnexpectedError("boom".to_string());
+        let cmd_err = CommandError::from(err);
+        match cmd_err {
+            CommandError::Unknown { message, .. } => assert!(message.contains("boom")),
+            _ => panic!("Expected Unknown"),
+        }
+    }
+
+    #[test]
+    fn restore_validation_rejects_wrong_confirmation() {
+        let args = restore_args_with_confirmation("WRONG");
+        let result = validate_restore_confirmation(&args);
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[test]
+    fn restore_validation_rejects_offline_mode() {
+        let result = ensure_online_for_restore(false);
+        match result {
+            Err(CommandError::BusinessRule(msg)) => {
+                assert!(msg.contains("OFFLINE_ERROR"), "unexpected message: {msg}");
+            }
+            other => panic!("Expected offline business-rule error, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn restore_validation_rejects_when_not_connected() {
+        let result = resolve_restore_user_email(None);
+        match result {
+            Err(CommandError::BusinessRule(msg)) => {
+                assert!(msg.contains("NOT_CONNECTED"), "unexpected message: {msg}");
+            }
+            other => panic!("Expected not-connected business-rule error, got: {other:?}"),
         }
     }
 }

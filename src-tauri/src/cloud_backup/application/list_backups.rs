@@ -112,6 +112,10 @@ fn format_bytes(bytes: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cloud_backup::domain::CloudBackupError;
+    use crate::cloud_backup::infrastructure::{OAuthTokens, SecureStorage};
+    use async_trait::async_trait;
+    use std::sync::Arc;
 
     #[test]
     fn test_format_bytes() {
@@ -120,5 +124,75 @@ mod tests {
         assert_eq!(format_bytes(1024), "1.0 KB");
         assert_eq!(format_bytes(1_048_576), "1.0 MB");
         assert_eq!(format_bytes(1_073_741_824), "1.0 GB");
+    }
+
+    struct TestStorage {
+        tokens: Option<OAuthTokens>,
+    }
+
+    impl TestStorage {
+        fn new(tokens: Option<OAuthTokens>) -> Self {
+            Self { tokens }
+        }
+    }
+
+    #[async_trait]
+    impl SecureStorage for TestStorage {
+        async fn store_tokens(&self, _user_id: &str, _tokens: &OAuthTokens) -> Result<()> {
+            Ok(())
+        }
+
+        async fn retrieve_tokens(&self, _user_id: &str) -> Result<Option<OAuthTokens>> {
+            Ok(self.tokens.clone())
+        }
+
+        async fn delete_tokens(&self, _user_id: &str) -> Result<()> {
+            Ok(())
+        }
+
+        async fn has_tokens(&self, _user_id: &str) -> Result<bool> {
+            Ok(self.tokens.is_some())
+        }
+    }
+
+    #[tokio::test]
+    async fn list_backups_returns_not_connected_when_no_tokens() {
+        let storage = Arc::new(TestStorage::new(None));
+        let oauth_service = OAuthService::new("test-client".to_string(), storage.clone());
+
+        let err = list_backups(
+            ListBackupsArgs {},
+            &oauth_service,
+            storage.as_ref(),
+            "user@test",
+        )
+        .await
+        .expect_err("missing tokens should fail");
+
+        assert!(matches!(err, CloudBackupError::NotConnected));
+    }
+
+    #[tokio::test]
+    async fn list_backups_returns_token_expired_when_refresh_token_missing() {
+        let expired_tokens = OAuthTokens::new(
+            "expired-access".to_string(),
+            None,
+            chrono::Utc::now().timestamp() - 60,
+            "Bearer".to_string(),
+        );
+
+        let storage = Arc::new(TestStorage::new(Some(expired_tokens)));
+        let oauth_service = OAuthService::new("test-client".to_string(), storage.clone());
+
+        let err = list_backups(
+            ListBackupsArgs {},
+            &oauth_service,
+            storage.as_ref(),
+            "user@test",
+        )
+        .await
+        .expect_err("expired token without refresh token should fail");
+
+        assert!(matches!(err, CloudBackupError::TokenExpired));
     }
 }

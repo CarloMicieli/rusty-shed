@@ -14,13 +14,11 @@ pub enum BudgetEvent {
     /// Budget configuration was created or updated.
     BudgetConfigured {
         config_id: BudgetConfigId,
-        /// Domain enum, not DB-compatible string.
         mode: BudgetMode,
         base_amount: MonetaryAmount,
         last_reset_year: crate::core::domain::calendar::Year,
         created_at: DateTime<Utc>,
         version: u8,
-        /// Equals `updated_at` for the config row.
         timestamp: DateTime<Utc>,
     },
     /// An extra budget was added to a specific month.
