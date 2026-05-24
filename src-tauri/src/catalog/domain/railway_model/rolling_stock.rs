@@ -217,6 +217,26 @@ pub enum RollingStock {
     },
 }
 
+#[derive(Debug, Clone)]
+struct SharedCategoryFields {
+    id: RollingStockId,
+    railway_id: RailwayCompanyId,
+    livery: Option<String>,
+    length_over_buffer: Option<LengthOverBuffers>,
+    technical_specifications: Option<TechnicalSpecifications>,
+    friendly_name: Option<String>,
+    series_code: String,
+    road_number: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct PoweredVariantFields {
+    series: Option<String>,
+    depot: Option<String>,
+    dcc_interface: Option<DccInterface>,
+    control: Option<Control>,
+    is_dummy: bool,
+}
 #[cfg(test)]
 impl fake::Dummy<fake::Faker> for RollingStock {
     fn dummy_with_rng<R: rand::Rng + ?Sized>(_: &fake::Faker, rng: &mut R) -> Self {
@@ -247,6 +267,117 @@ impl fake::Dummy<fake::Faker> for RollingStock {
 }
 
 impl RollingStock {
+    fn shared_category_fields(&self) -> SharedCategoryFields {
+        match self.clone() {
+            RollingStock::Locomotive {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::ElectricMultipleUnit {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::FreightCar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::PassengerCar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::Railcar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            } => SharedCategoryFields {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+            },
+        }
+    }
+
+    fn powered_variant_fields(&self) -> PoweredVariantFields {
+        match self.clone() {
+            RollingStock::Locomotive {
+                series,
+                depot,
+                dcc_interface,
+                control,
+                is_dummy,
+                ..
+            }
+            | RollingStock::ElectricMultipleUnit {
+                series,
+                depot,
+                dcc_interface,
+                control,
+                is_dummy,
+                ..
+            }
+            | RollingStock::Railcar {
+                series,
+                depot,
+                dcc_interface,
+                control,
+                is_dummy,
+                ..
+            } => PoweredVariantFields {
+                series,
+                depot,
+                dcc_interface,
+                control,
+                is_dummy,
+            },
+            _ => PoweredVariantFields {
+                series: None,
+                depot: None,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            },
+        }
+    }
+
     /// The category for this rolling stock
     pub fn category(&self) -> RollingStockCategory {
         match self {
@@ -695,186 +826,83 @@ impl RollingStock {
     /// and applying sensible defaults for type-specific fields.  Returns a JSON patch suitable
     /// for the repository's `update_rolling_stock_from_patch`.
     pub fn apply_category(&mut self, new_category: RollingStockCategory) -> serde_json::Value {
-        // Extract shared fields from the current variant.
-        let (
-            id,
-            railway_id,
-            livery,
-            length_over_buffer,
-            technical_specifications,
-            friendly_name,
-            series_code,
-            road_number,
-        ) = match self.clone() {
-            RollingStock::Locomotive {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                ..
-            }
-            | RollingStock::ElectricMultipleUnit {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                ..
-            }
-            | RollingStock::FreightCar {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                ..
-            }
-            | RollingStock::PassengerCar {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                ..
-            }
-            | RollingStock::Railcar {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                ..
-            } => (
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-            ),
-        };
-
-        // Extract powered-variant-only fields (None when coming from FreightCar/PassengerCar).
-        let (series, depot, dcc_interface, control, is_dummy) = match self.clone() {
-            RollingStock::Locomotive {
-                series,
-                depot,
-                dcc_interface,
-                control,
-                is_dummy,
-                ..
-            }
-            | RollingStock::ElectricMultipleUnit {
-                series,
-                depot,
-                dcc_interface,
-                control,
-                is_dummy,
-                ..
-            }
-            | RollingStock::Railcar {
-                series,
-                depot,
-                dcc_interface,
-                control,
-                is_dummy,
-                ..
-            } => (series, depot, dcc_interface, control, is_dummy),
-            _ => (None, None, None, None, false),
-        };
+        let shared = self.shared_category_fields();
+        let powered = self.powered_variant_fields();
 
         let category_str = new_category.to_string();
 
         *self = match new_category {
             RollingStockCategory::Locomotive => RollingStock::Locomotive {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                series,
-                depot,
+                id: shared.id,
+                railway_id: shared.railway_id,
+                livery: shared.livery,
+                length_over_buffer: shared.length_over_buffer,
+                technical_specifications: shared.technical_specifications,
+                friendly_name: shared.friendly_name,
+                series_code: shared.series_code,
+                road_number: shared.road_number,
+                series: powered.series,
+                depot: powered.depot,
                 locomotive_type: LocomotiveType::ElectricLocomotive,
-                dcc_interface,
-                control,
-                is_dummy,
+                dcc_interface: powered.dcc_interface,
+                control: powered.control,
+                is_dummy: powered.is_dummy,
             },
             RollingStockCategory::ElectricMultipleUnit => RollingStock::ElectricMultipleUnit {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                series,
-                depot,
+                id: shared.id,
+                railway_id: shared.railway_id,
+                livery: shared.livery,
+                length_over_buffer: shared.length_over_buffer,
+                technical_specifications: shared.technical_specifications,
+                friendly_name: shared.friendly_name,
+                series_code: shared.series_code,
+                road_number: shared.road_number,
+                series: powered.series,
+                depot: powered.depot,
                 electric_multiple_unit_type: ElectricMultipleUnitType::MotorCar,
-                dcc_interface,
-                control,
-                is_dummy,
+                dcc_interface: powered.dcc_interface,
+                control: powered.control,
+                is_dummy: powered.is_dummy,
             },
             RollingStockCategory::FreightCar => RollingStock::FreightCar {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
+                id: shared.id,
+                railway_id: shared.railway_id,
+                livery: shared.livery,
+                length_over_buffer: shared.length_over_buffer,
+                technical_specifications: shared.technical_specifications,
+                friendly_name: shared.friendly_name,
+                series_code: shared.series_code,
+                road_number: shared.road_number,
                 freight_car_type: None,
             },
             RollingStockCategory::PassengerCar => RollingStock::PassengerCar {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                series,
+                id: shared.id,
+                railway_id: shared.railway_id,
+                livery: shared.livery,
+                length_over_buffer: shared.length_over_buffer,
+                technical_specifications: shared.technical_specifications,
+                friendly_name: shared.friendly_name,
+                series_code: shared.series_code,
+                road_number: shared.road_number,
+                series: powered.series,
                 passenger_car_type: None,
                 service_level: None,
             },
             RollingStockCategory::Railcar => RollingStock::Railcar {
-                id,
-                railway_id,
-                livery,
-                length_over_buffer,
-                technical_specifications,
-                friendly_name,
-                series_code,
-                road_number,
-                series,
-                depot,
+                id: shared.id,
+                railway_id: shared.railway_id,
+                livery: shared.livery,
+                length_over_buffer: shared.length_over_buffer,
+                technical_specifications: shared.technical_specifications,
+                friendly_name: shared.friendly_name,
+                series_code: shared.series_code,
+                road_number: shared.road_number,
+                series: powered.series,
+                depot: powered.depot,
                 railcar_type: RailcarType::PowerCar,
-                dcc_interface,
-                control,
-                is_dummy,
+                dcc_interface: powered.dcc_interface,
+                control: powered.control,
+                is_dummy: powered.is_dummy,
             },
         };
 
@@ -889,56 +917,104 @@ impl RollingStock {
         &mut self,
         subcategory: String,
     ) -> Result<serde_json::Value, DomainError> {
+        self.apply_subcategory_inner(subcategory)
+    }
+
+    fn apply_subcategory_inner(
+        &mut self,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
+        if let RollingStock::Locomotive {
+            locomotive_type, ..
+        } = self
+        {
+            return Self::apply_locomotive_subcategory(locomotive_type, subcategory);
+        }
+
+        self.apply_non_locomotive_subcategory(subcategory)
+    }
+
+    fn apply_non_locomotive_subcategory(
+        &mut self,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
         match self {
-            RollingStock::Locomotive {
-                locomotive_type, ..
-            } => {
-                let t = subcategory.parse::<LocomotiveType>().map_err(|_| {
-                    DomainError::Validation(format!("invalid locomotive type: {subcategory}"))
-                })?;
-                *locomotive_type = t;
-                Ok(serde_json::json!({ "locomotive_type": subcategory }))
-            }
             RollingStock::FreightCar {
                 freight_car_type, ..
-            } => {
-                let t = subcategory.parse::<FreightCarType>().map_err(|_| {
-                    DomainError::Validation(format!("invalid freight car type: {subcategory}"))
-                })?;
-                *freight_car_type = Some(t);
-                Ok(serde_json::json!({ "freight_car_type": subcategory }))
-            }
+            } => Self::apply_freight_subcategory(freight_car_type, subcategory),
             RollingStock::PassengerCar {
                 passenger_car_type, ..
-            } => {
-                let t = subcategory.parse::<PassengerCarType>().map_err(|_| {
-                    DomainError::Validation(format!("invalid passenger car type: {subcategory}"))
-                })?;
-                *passenger_car_type = Some(t);
-                Ok(serde_json::json!({ "passenger_car_type": subcategory }))
-            }
+            } => Self::apply_passenger_subcategory(passenger_car_type, subcategory),
             RollingStock::ElectricMultipleUnit {
                 electric_multiple_unit_type,
                 ..
-            } => {
-                let t = subcategory
-                    .parse::<ElectricMultipleUnitType>()
-                    .map_err(|_| {
-                        DomainError::Validation(format!(
-                            "invalid electric multiple unit type: {subcategory}"
-                        ))
-                    })?;
-                *electric_multiple_unit_type = t;
-                Ok(serde_json::json!({ "electric_multiple_unit_type": subcategory }))
-            }
+            } => Self::apply_emu_subcategory(electric_multiple_unit_type, subcategory),
             RollingStock::Railcar { railcar_type, .. } => {
-                let t = subcategory.parse::<RailcarType>().map_err(|_| {
-                    DomainError::Validation(format!("invalid railcar type: {subcategory}"))
-                })?;
-                *railcar_type = t;
-                Ok(serde_json::json!({ "railcar_type": subcategory }))
+                Self::apply_railcar_subcategory(railcar_type, subcategory)
             }
+            RollingStock::Locomotive { .. } => Err(DomainError::Validation(
+                "error_invalid_locomotive_subcategory".to_string(),
+            )),
         }
+    }
+
+    fn apply_locomotive_subcategory(
+        locomotive_type: &mut LocomotiveType,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
+        let t = subcategory.parse::<LocomotiveType>().map_err(|_| {
+            DomainError::Validation(format!("invalid locomotive type: {subcategory}"))
+        })?;
+        *locomotive_type = t;
+        Ok(serde_json::json!({ "locomotive_type": subcategory }))
+    }
+
+    fn apply_freight_subcategory(
+        freight_car_type: &mut Option<FreightCarType>,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
+        let t = subcategory.parse::<FreightCarType>().map_err(|_| {
+            DomainError::Validation(format!("invalid freight car type: {subcategory}"))
+        })?;
+        *freight_car_type = Some(t);
+        Ok(serde_json::json!({ "freight_car_type": subcategory }))
+    }
+
+    fn apply_passenger_subcategory(
+        passenger_car_type: &mut Option<PassengerCarType>,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
+        let t = subcategory.parse::<PassengerCarType>().map_err(|_| {
+            DomainError::Validation(format!("invalid passenger car type: {subcategory}"))
+        })?;
+        *passenger_car_type = Some(t);
+        Ok(serde_json::json!({ "passenger_car_type": subcategory }))
+    }
+
+    fn apply_emu_subcategory(
+        electric_multiple_unit_type: &mut ElectricMultipleUnitType,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
+        let t = subcategory
+            .parse::<ElectricMultipleUnitType>()
+            .map_err(|_| {
+                DomainError::Validation(format!(
+                    "invalid electric multiple unit type: {subcategory}"
+                ))
+            })?;
+        *electric_multiple_unit_type = t;
+        Ok(serde_json::json!({ "electric_multiple_unit_type": subcategory }))
+    }
+
+    fn apply_railcar_subcategory(
+        railcar_type: &mut RailcarType,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
+        let t = subcategory
+            .parse::<RailcarType>()
+            .map_err(|_| DomainError::Validation(format!("invalid railcar type: {subcategory}")))?;
+        *railcar_type = t;
+        Ok(serde_json::json!({ "railcar_type": subcategory }))
     }
 
     /// Change the service level of this rolling stock and return a JSON patch.
@@ -1225,5 +1301,149 @@ mod tests {
                 Some(&technical_specifications)
             );
         }
+    }
+
+    fn sample_ids() -> (RollingStockId, RailwayCompanyId) {
+        (
+            RollingStockId::from_uuid(&Uuid::new_v4()),
+            RailwayCompanyId::try_from("trn:railway-company:fs").unwrap(),
+        )
+    }
+
+    #[test]
+    fn apply_subcategory_locomotive_valid_and_invalid() {
+        let (id, railway_id) = sample_ids();
+        let mut stock = RollingStock::Locomotive {
+            id,
+            railway_id,
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "L-1".to_string(),
+            road_number: None,
+            series: None,
+            depot: None,
+            locomotive_type: LocomotiveType::DieselLocomotive,
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        };
+
+        let valid = LocomotiveType::ElectricLocomotive.to_string();
+        let patch = stock
+            .apply_subcategory(valid.clone())
+            .expect("valid locomotive subcategory");
+        assert_eq!(patch["locomotive_type"], valid);
+
+        assert!(stock.apply_subcategory("INVALID".to_string()).is_err());
+    }
+
+    #[test]
+    fn apply_subcategory_freight_valid_and_invalid() {
+        let (id, railway_id) = sample_ids();
+        let mut stock = RollingStock::FreightCar {
+            id,
+            railway_id,
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "F-1".to_string(),
+            road_number: None,
+            freight_car_type: None,
+        };
+
+        let valid = FreightCarType::FlatWagon.to_string();
+        let patch = stock
+            .apply_subcategory(valid.clone())
+            .expect("valid freight subcategory");
+        assert_eq!(patch["freight_car_type"], valid);
+
+        assert!(stock.apply_subcategory("INVALID".to_string()).is_err());
+    }
+
+    #[test]
+    fn apply_subcategory_passenger_valid_and_invalid() {
+        let (id, railway_id) = sample_ids();
+        let mut stock = RollingStock::PassengerCar {
+            id,
+            railway_id,
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "P-1".to_string(),
+            road_number: None,
+            series: None,
+            passenger_car_type: None,
+            service_level: None,
+        };
+
+        let valid = PassengerCarType::OpenCoach.to_string();
+        let patch = stock
+            .apply_subcategory(valid.clone())
+            .expect("valid passenger subcategory");
+        assert_eq!(patch["passenger_car_type"], valid);
+
+        assert!(stock.apply_subcategory("INVALID".to_string()).is_err());
+    }
+
+    #[test]
+    fn apply_subcategory_emu_valid_and_invalid() {
+        let (id, railway_id) = sample_ids();
+        let mut stock = RollingStock::ElectricMultipleUnit {
+            id,
+            railway_id,
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "E-1".to_string(),
+            road_number: None,
+            series: None,
+            depot: None,
+            electric_multiple_unit_type: ElectricMultipleUnitType::MotorCar,
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        };
+
+        let valid = ElectricMultipleUnitType::DrivingCar.to_string();
+        let patch = stock
+            .apply_subcategory(valid.clone())
+            .expect("valid emu subcategory");
+        assert_eq!(patch["electric_multiple_unit_type"], valid);
+
+        assert!(stock.apply_subcategory("INVALID".to_string()).is_err());
+    }
+
+    #[test]
+    fn apply_subcategory_railcar_valid_and_invalid() {
+        let (id, railway_id) = sample_ids();
+        let mut stock = RollingStock::Railcar {
+            id,
+            railway_id,
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "R-1".to_string(),
+            road_number: None,
+            series: None,
+            depot: None,
+            railcar_type: RailcarType::PowerCar,
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        };
+
+        let valid = RailcarType::TrailerCar.to_string();
+        let patch = stock
+            .apply_subcategory(valid.clone())
+            .expect("valid railcar subcategory");
+        assert_eq!(patch["railcar_type"], valid);
+
+        assert!(stock.apply_subcategory("INVALID".to_string()).is_err());
     }
 }

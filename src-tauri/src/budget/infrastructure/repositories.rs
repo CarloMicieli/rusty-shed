@@ -20,6 +20,91 @@ impl<'conn> SqliteBudgetRepository<'conn> {
         Self { executor }
     }
 
+    async fn handle_budget_configured_event(
+        &mut self,
+        event: &BudgetEvent,
+    ) -> Result<(), DomainError> {
+        let BudgetEvent::BudgetConfigured {
+            config_id,
+            mode,
+            base_amount,
+            last_reset_year,
+            created_at,
+            version,
+            timestamp,
+        } = event
+        else {
+            return Ok(());
+        };
+
+        let mode_str = match mode {
+            crate::budget::domain::BudgetMode::Yearly => "YEARLY",
+            crate::budget::domain::BudgetMode::Monthly => "MONTHLY",
+        };
+
+        database::save_budget_config(
+            self.executor,
+            config_id.value(),
+            mode_str,
+            base_amount.amount,
+            base_amount.currency.to_code(),
+            last_reset_year.value(),
+            &created_at.to_rfc3339(),
+            &timestamp.to_rfc3339(),
+            i32::from(*version),
+        )
+        .await
+    }
+
+    async fn handle_extra_budget_added(
+        &mut self,
+        extra_budget_id: &ExtraBudgetId,
+        year: i32,
+        month: u8,
+        amount: &crate::core::domain::MonetaryAmount,
+        reason: &Option<String>,
+        timestamp: &chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), DomainError> {
+        database::add_extra_budget(
+            self.executor,
+            extra_budget_id.as_ref(),
+            year,
+            month as i32,
+            amount.amount,
+            amount.currency.to_code(),
+            reason.as_deref(),
+            &timestamp.to_rfc3339(),
+            0,
+        )
+        .await
+    }
+
+    async fn handle_extra_budget_removed(
+        &mut self,
+        extra_budget_id: &ExtraBudgetId,
+    ) -> Result<(), DomainError> {
+        database::remove_extra_budget(self.executor, extra_budget_id.as_ref()).await
+    }
+
+    async fn handle_annual_reset(
+        &mut self,
+        year: i32,
+        timestamp: &chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), DomainError> {
+        let sql = r#"
+            UPDATE budget_config
+            SET last_reset_year = ?1, updated_at = ?2
+            WHERE id = 1
+        "#;
+        sqlx::query(sql)
+            .bind(year)
+            .bind(timestamp.to_rfc3339())
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+        Ok(())
+    }
+
     /// Route a single domain event to the correct SQL operation.
     ///
     /// The match is exhaustive: adding a new `BudgetEvent` variant forces the
@@ -30,33 +115,8 @@ impl<'conn> SqliteBudgetRepository<'conn> {
     /// here, not in the domain layer.
     async fn handle_event(&mut self, event: &BudgetEvent) -> Result<(), DomainError> {
         match event {
-            BudgetEvent::BudgetConfigured {
-                config_id,
-                mode,
-                base_amount,
-                last_reset_year,
-                created_at,
-                version,
-                timestamp,
-            } => {
-                // Convert domain enum to DB string only in infrastructure layer
-                let mode_str = match mode {
-                    crate::budget::domain::BudgetMode::Yearly => "YEARLY",
-                    crate::budget::domain::BudgetMode::Monthly => "MONTHLY",
-                };
-
-                database::save_budget_config(
-                    self.executor,
-                    config_id.value(),
-                    mode_str,
-                    base_amount.amount,
-                    base_amount.currency.to_code(),
-                    last_reset_year.value(),
-                    &created_at.to_rfc3339(),
-                    &timestamp.to_rfc3339(),
-                    *version as i32,
-                )
-                .await?;
+            BudgetEvent::BudgetConfigured { .. } => {
+                self.handle_budget_configured_event(event).await?;
             }
             BudgetEvent::ExtraBudgetAdded {
                 extra_budget_id,
@@ -66,35 +126,23 @@ impl<'conn> SqliteBudgetRepository<'conn> {
                 reason,
                 timestamp,
             } => {
-                database::add_extra_budget(
-                    self.executor,
-                    extra_budget_id.as_ref(),
+                self.handle_extra_budget_added(
+                    extra_budget_id,
                     *year,
-                    *month as i32,
-                    amount.amount,
-                    amount.currency.to_code(),
-                    reason.as_deref(),
-                    &timestamp.to_rfc3339(),
-                    0, // initial version for new entries
+                    *month,
+                    amount,
+                    reason,
+                    timestamp,
                 )
                 .await?;
             }
             BudgetEvent::ExtraBudgetRemoved {
                 extra_budget_id, ..
             } => {
-                database::remove_extra_budget(self.executor, extra_budget_id.as_ref()).await?;
+                self.handle_extra_budget_removed(extra_budget_id).await?;
             }
             BudgetEvent::AnnualResetPerformed { year, timestamp } => {
-                let sql = r#"
-                    UPDATE budget_config
-                    SET last_reset_year = ?1, updated_at = ?2
-                    WHERE id = 1
-                "#;
-                sqlx::query(sql)
-                    .bind(year)
-                    .bind(timestamp.to_rfc3339())
-                    .execute(&mut *self.executor)
-                    .await?;
+                self.handle_annual_reset(*year, timestamp).await?;
             }
         }
         Ok(())

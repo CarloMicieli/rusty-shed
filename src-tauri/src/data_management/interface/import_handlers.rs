@@ -215,55 +215,52 @@ pub async fn get_import_preview(
     get_import_preview_inner(&state, args).await
 }
 
-pub async fn execute_import_inner(
+async fn get_import_session_or_error(
     state: &AppState,
-    args: ExecuteImportArgs,
-) -> Result<ImportResultResponse, CommandError> {
-    info!("execute_import: session_id={}", args.session_id);
+    session_id: &str,
+) -> Result<ImportSession, CommandError> {
+    state
+        .import_session_store
+        .get(session_id)
+        .await
+        .ok_or_else(|| CommandError::unknown("Session not found".to_string()))
+}
 
-    // Guard against concurrent imports
-    if is_import_in_progress(&state.import_session_store).await {
-        return Err(CommandError::unknown(
-            "Another import is already in progress".to_string(),
-        ));
+async fn resolve_manifest_for_session(
+    session: &ImportSession,
+) -> Result<ManifestDto, CommandError> {
+    if let Some(manifest) = session.validated_manifest.clone() {
+        return Ok(manifest);
     }
 
-    // Get session
-    let session = state
-        .import_session_store
-        .get(&args.session_id)
+    let manifest_bytes = ArchiveExtractor::extract_manifest_async(session.source_path.clone())
         .await
-        .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?;
+        .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
+    let manifest_content = String::from_utf8(manifest_bytes)
+        .map_err(|e| CommandError::unknown(format!("Invalid UTF-8 in manifest: {}", e)))?;
+    serde_json::from_str(&manifest_content)
+        .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))
+}
 
-    // Use cached manifest if available, otherwise fall back to archive extraction
-    let manifest: ManifestDto = if let Some(manifest) = session.validated_manifest.clone() {
-        manifest
-    } else {
-        let manifest_bytes = ArchiveExtractor::extract_manifest_async(session.source_path.clone())
-            .await
-            .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
-        let manifest_content = String::from_utf8(manifest_bytes)
-            .map_err(|e| CommandError::unknown(format!("Invalid UTF-8 in manifest: {}", e)))?;
-        serde_json::from_str(&manifest_content)
-            .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?
-    };
-
-    // Execute import
+async fn run_execute_import_use_case(
+    state: &AppState,
+    session: &ImportSession,
+    manifest: &ManifestDto,
+) -> Result<crate::data_management::domain::ImportResult, CommandError> {
     let repo = Arc::new(SqliteImportRepository::new(state.db_pool()));
     let use_case = ExecuteImportUseCase::new(repo);
     let media_dir = state.models_dir();
-    let result = use_case
-        .execute(&session, &manifest, &session.source_path, media_dir)
+
+    use_case
+        .execute(session, manifest, &session.source_path, media_dir)
         .await
-        .map_err(CommandError::from)?;
+        .map_err(CommandError::from)
+}
 
-    // Update session state
-    state
-        .import_session_store
-        .update(&args.session_id, |s| s.transition(ImportState::Completed))
-        .await;
-
-    Ok(ImportResultResponse {
+fn map_import_result_response(
+    result: crate::data_management::domain::ImportResult,
+) -> ImportResultResponse {
+    ImportResultResponse {
         session_id: result.session_id,
         status: ImportOutcome::Success,
         added: result.added,
@@ -279,7 +276,33 @@ pub async fn execute_import_inner(
             .collect(),
         duration_ms: result.duration_ms,
         warnings: result.warnings,
-    })
+    }
+}
+
+pub async fn execute_import_inner(
+    state: &AppState,
+    args: ExecuteImportArgs,
+) -> Result<ImportResultResponse, CommandError> {
+    info!("execute_import: session_id={}", args.session_id);
+
+    // Guard against concurrent imports
+    if is_import_in_progress(&state.import_session_store).await {
+        return Err(CommandError::unknown(
+            "Another import is already in progress".to_string(),
+        ));
+    }
+
+    let session = get_import_session_or_error(state, &args.session_id).await?;
+    let manifest = resolve_manifest_for_session(&session).await?;
+    let result = run_execute_import_use_case(state, &session, &manifest).await?;
+
+    // Update session state
+    state
+        .import_session_store
+        .update(&args.session_id, |s| s.transition(ImportState::Completed))
+        .await;
+
+    Ok(map_import_result_response(result))
 }
 
 /// Execute the import operation.

@@ -320,7 +320,9 @@ impl TryFrom<CreateRollingStockArgs> for CreateRollingStockInput {
         fn map_technical_specifications(
             value: Option<TechnicalSpecificationsArgs>,
         ) -> Result<Option<TechnicalSpecificationsInput>, DomainError> {
-            value.map(TechnicalSpecificationsInput::try_from).transpose()
+            value
+                .map(TechnicalSpecificationsInput::try_from)
+                .transpose()
         }
 
         match args {

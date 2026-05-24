@@ -31,8 +31,8 @@ pub async fn restore_backup(
     drive_client: Arc<dyn DriveClient + Send + Sync>,
     app: AppHandle,
 ) -> Result<()> {
-    let event = restore_backup_inner(args, db_path, drive_client, || async { is_online().await })
-        .await?;
+    let event =
+        restore_backup_inner(args, db_path, drive_client, || async { is_online().await }).await?;
 
     // Emit restore-complete event so the frontend can reload
     emit_restore_complete(&app, event);

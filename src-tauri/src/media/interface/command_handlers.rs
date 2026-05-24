@@ -406,20 +406,28 @@ fn map_delete_error(err: DeleteError) -> CommandError {
 
 /// Map ValidationError to CommandError
 fn map_validation_error(err: ValidationError) -> CommandError {
+    if let ValidationError::IoError(msg) = err {
+        return CommandError::unknown(msg);
+    }
+
+    CommandError::BusinessRule(map_validation_error_message(&err))
+}
+
+fn map_validation_error_message(err: &ValidationError) -> String {
     match err {
-        ValidationError::FileNotFound => CommandError::BusinessRule("File not found".to_string()),
-        ValidationError::FileTooLarge { size_mb, max_mb } => CommandError::BusinessRule(format!(
+        ValidationError::FileNotFound => "File not found".to_string(),
+        ValidationError::FileTooLarge { size_mb, max_mb } => format!(
             "File size ({} MB) exceeds maximum allowed size ({} MB)",
             size_mb, max_mb
-        )),
-        ValidationError::UnsupportedFormat { format } => CommandError::BusinessRule(format!(
+        ),
+        ValidationError::UnsupportedFormat { format } => format!(
             "Unsupported format: {}. Supported formats: JPEG, PNG, WebP",
             format
-        )),
-        ValidationError::CorruptedImage => {
-            CommandError::BusinessRule("Image file is corrupted or invalid".to_string())
+        ),
+        ValidationError::CorruptedImage => "Image file is corrupted or invalid".to_string(),
+        ValidationError::IoError(_) => {
+            unreachable!("io errors are handled in map_validation_error")
         }
-        ValidationError::IoError(msg) => CommandError::unknown(msg),
     }
 }
 

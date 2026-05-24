@@ -35,7 +35,10 @@ enum PatchRoute {
     RailwayCompany,
     FullSpecifications,
     DccAndLength,
-    SingleField { column: &'static str, key: &'static str },
+    SingleField {
+        column: &'static str,
+        key: &'static str,
+    },
     Category,
     Identification,
     Ignore,
@@ -176,9 +179,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         Ok(())
     }
 
-    fn detect_patch_route(
-        map: &serde_json::Map<String, serde_json::Value>,
-    ) -> PatchRoute {
+    fn detect_patch_route(map: &serde_json::Map<String, serde_json::Value>) -> PatchRoute {
         if map.contains_key("railway_company_id") {
             PatchRoute::RailwayCompany
         } else if map.contains_key("series_code") && map.contains_key("flywheel_fitted") {
@@ -431,7 +432,8 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
 
         match Self::detect_patch_route(map) {
             PatchRoute::RailwayCompany => {
-                self.apply_railway_company_patch(rolling_stock_id, map).await?;
+                self.apply_railway_company_patch(rolling_stock_id, map)
+                    .await?;
             }
             PatchRoute::FullSpecifications => {
                 self.apply_full_specifications_patch(rolling_stock_id, map)
@@ -450,7 +452,8 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                 self.apply_category_patch(rolling_stock_id, map).await?;
             }
             PatchRoute::Identification => {
-                self.apply_identification_patch(rolling_stock_id, map).await?;
+                self.apply_identification_patch(rolling_stock_id, map)
+                    .await?;
             }
             PatchRoute::Ignore => {}
         }

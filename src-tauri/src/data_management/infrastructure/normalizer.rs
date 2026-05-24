@@ -130,13 +130,14 @@ fn normalize_railway_company_status(s: &str) -> Option<&'static str> {
 }
 
 fn normalize_availability_status(s: &str) -> Option<&'static str> {
-    match s {
-        "available" => Some("AVAILABLE"),
-        "announced" => Some("ANNOUNCED"),
-        "cancelled" => Some("CANCELLED"),
-        "discontinued" => Some("DISCONTINUED"),
-        _ => None,
-    }
+    [
+        ("available", "AVAILABLE"),
+        ("announced", "ANNOUNCED"),
+        ("cancelled", "CANCELLED"),
+        ("discontinued", "DISCONTINUED"),
+    ]
+    .into_iter()
+    .find_map(|(legacy, canonical)| (legacy == s).then_some(canonical))
 }
 
 fn normalize_power_method(s: &str) -> Option<&'static str> {

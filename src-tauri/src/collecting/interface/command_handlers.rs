@@ -151,12 +151,9 @@ pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, C
     get_depot_inner(&state).await
 }
 
-pub async fn remove_collection_item_inner(
-    state: &AppState,
+fn parse_remove_collection_item_input(
     args: RemoveCollectionItemArgs,
-) -> Result<CollectionItemId, CommandError> {
-    info!("Removing collection item: {:?}", args);
-
+) -> Result<DomainRemoveCollectionItemInput, CommandError> {
     args.validate().map_err(CommandError::from)?;
 
     let collection_item_id = CollectionItemId::try_from(args.collection_item_id)
@@ -170,11 +167,19 @@ pub async fn remove_collection_item_inner(
     let removed_date = NaiveDate::parse_from_str(&args.removed_date, "%Y-%m-%d")
         .map_err(|_| CommandError::validation_field("removed_date", "invalid"))?;
 
-    let domain_cmd = DomainRemoveCollectionItemInput {
+    Ok(DomainRemoveCollectionItemInput {
         collection_item_id,
         category,
         removed_date,
-    };
+    })
+}
+
+pub async fn remove_collection_item_inner(
+    state: &AppState,
+    args: RemoveCollectionItemArgs,
+) -> Result<CollectionItemId, CommandError> {
+    info!("Removing collection item: {:?}", args);
+    let domain_cmd = parse_remove_collection_item_input(args)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 

@@ -123,6 +123,29 @@ impl KeyringStorage {
     fn key_name(&self, user_id: &str) -> String {
         format!("{}.{}", self.service, user_id)
     }
+
+    fn entry_for_user(&self, user_id: &str) -> Result<keyring::Entry> {
+        let key = self.key_name(user_id);
+        keyring::Entry::new(&self.service, &key)
+            .map_err(|e| CloudBackupError::StorageReadError(format!("Keyring entry failed: {}", e)))
+    }
+
+    fn decode_stored_tokens(json: &str) -> Result<OAuthTokens> {
+        serde_json::from_str(json).map_err(|e| {
+            CloudBackupError::StorageReadError(format!("Deserialization failed: {}", e))
+        })
+    }
+
+    fn read_tokens_from_entry(entry: &keyring::Entry) -> Result<Option<OAuthTokens>> {
+        match entry.get_password() {
+            Ok(json) => Ok(Some(Self::decode_stored_tokens(&json)?)),
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(e) => Err(CloudBackupError::StorageReadError(format!(
+                "Failed to retrieve: {}",
+                e
+            ))),
+        }
+    }
 }
 
 #[cfg(not(target_os = "android"))]
@@ -144,24 +167,8 @@ impl SecureStorage for KeyringStorage {
     }
 
     async fn retrieve_tokens(&self, user_id: &str) -> Result<Option<OAuthTokens>> {
-        let key = self.key_name(user_id);
-        let entry = keyring::Entry::new(&self.service, &key).map_err(|e| {
-            CloudBackupError::StorageReadError(format!("Keyring entry failed: {}", e))
-        })?;
-
-        match entry.get_password() {
-            Ok(json) => {
-                let tokens: OAuthTokens = serde_json::from_str(&json).map_err(|e| {
-                    CloudBackupError::StorageReadError(format!("Deserialization failed: {}", e))
-                })?;
-                Ok(Some(tokens))
-            }
-            Err(keyring::Error::NoEntry) => Ok(None),
-            Err(e) => Err(CloudBackupError::StorageReadError(format!(
-                "Failed to retrieve: {}",
-                e
-            ))),
-        }
+        let entry = self.entry_for_user(user_id)?;
+        Self::read_tokens_from_entry(&entry)
     }
 
     async fn delete_tokens(&self, user_id: &str) -> Result<()> {
@@ -257,5 +264,30 @@ mod tests {
 
         assert_eq!(tokens.access_token_str(), "my_access_token");
         assert_eq!(tokens.refresh_token_str(), Some("my_refresh_token"));
+    }
+
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn test_decode_stored_tokens_success() {
+        let json = r#"{"access_token":"abc","refresh_token":"ref","expires_at":123,"token_type":"Bearer"}"#;
+        let parsed = KeyringStorage::decode_stored_tokens(json).expect("decode should succeed");
+
+        assert_eq!(parsed.access_token_str(), "abc");
+        assert_eq!(parsed.refresh_token_str(), Some("ref"));
+        assert_eq!(parsed.expires_at, 123);
+        assert_eq!(parsed.token_type, "Bearer");
+    }
+
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn test_decode_stored_tokens_invalid_json() {
+        let err = KeyringStorage::decode_stored_tokens("not-json").expect_err("should fail");
+
+        match err {
+            CloudBackupError::StorageReadError(msg) => {
+                assert!(msg.contains("Deserialization failed"));
+            }
+            other => panic!("unexpected error variant: {other:?}"),
+        }
     }
 }

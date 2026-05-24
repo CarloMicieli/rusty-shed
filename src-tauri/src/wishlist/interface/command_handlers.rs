@@ -140,23 +140,39 @@ pub async fn move_item_to_list_inner(
     Ok(())
 }
 
+fn build_purchase_wishlist_command(
+    input: PurchaseWishlistArgs,
+) -> Result<PurchaseWishlistItemCommand, CommandError> {
+    input.validate().map_err(CommandError::from)?;
+    PurchaseWishlistItemCommand::try_from(input).map_err(CommandError::from)
+}
+
+async fn execute_purchase_wishlist_command(
+    unit_of_work: &mut Box<dyn crate::app_uow::AppUnitOfWork>,
+    cmd: PurchaseWishlistItemCommand,
+) -> Result<(), CommandError> {
+    let collection_item_id_provider = RuntimeIdProvider::new();
+    let purchase_info_id_provider = RuntimeIdProvider::new();
+
+    PurchaseWishlistItemService::execute(
+        unit_of_work,
+        collection_item_id_provider,
+        purchase_info_id_provider,
+        cmd,
+    )
+    .await
+    .map_err(CommandError::from)
+}
+
 pub async fn purchase_wishlist_item_inner(
     state: &AppState,
     input: PurchaseWishlistArgs,
 ) -> Result<(), CommandError> {
     info!("Purchasing wishlist item: {:?}", input);
-    input.validate().map_err(CommandError::from)?;
+
+    let cmd = build_purchase_wishlist_command(input)?;
     let mut unit_of_work = state.unit_of_work().await?;
-    let collection_item_id_provider = RuntimeIdProvider::new();
-    let purchase_info_id_provider = RuntimeIdProvider::new();
-    let cmd = PurchaseWishlistItemCommand::try_from(input).map_err(CommandError::from)?;
-    PurchaseWishlistItemService::execute(
-        &mut unit_of_work,
-        collection_item_id_provider,
-        purchase_info_id_provider,
-        cmd,
-    )
-    .await?;
+    execute_purchase_wishlist_command(&mut unit_of_work, cmd).await?;
     unit_of_work.commit().await?;
     Ok(())
 }
