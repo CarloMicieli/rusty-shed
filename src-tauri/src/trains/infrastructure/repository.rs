@@ -1228,6 +1228,78 @@ mod tests {
         );
     }
 
+    /// Removing a middle element must close the gap by shifting later elements left.
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_remove_element_and_shift_compacts_positions(pool: SqlitePool) {
+        insert_test_companies(&pool).await;
+        insert_locomotive(&pool, "proto-shift-loco", "trn:railway-company:fs", "E.646").await;
+
+        let mut uow = SqliteUnitOfWork::new(&pool).await.expect("create uow");
+        {
+            let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);
+
+            let formation = TrainFormation::create("tf-shift-1".into(), "Shift Test".into())
+                .expect("create");
+            repo.save(&formation).await.expect("save formation");
+
+            for (eid, pos) in [
+                ("el-shift-1", 0i32),
+                ("el-shift-2", 1i32),
+                ("el-shift-3", 2i32),
+            ] {
+                let element = FormationElement {
+                    id: eid.to_string(),
+                    prototype_id: "proto-shift-loco".into(),
+                    owned_rolling_stock_id: None,
+                    position_order: pos,
+                    traction_override: 0,
+                };
+                repo.add_element("tf-shift-1", &element)
+                    .await
+                    .expect("add element");
+            }
+
+            repo.remove_element_and_shift("el-shift-2")
+                .await
+                .expect("remove middle element");
+        }
+        uow.commit().await.expect("commit");
+
+        let positions: Vec<(String, i32)> = sqlx::query_as(
+            "SELECT id, position_order FROM formation_elements WHERE formation_id = ? ORDER BY position_order ASC",
+        )
+        .bind("tf-shift-1")
+        .fetch_all(&pool)
+        .await
+        .expect("load positions");
+
+        assert_eq!(positions, vec![("el-shift-1".to_string(), 0), ("el-shift-3".to_string(), 1)]);
+
+        let missing: Option<i32> = sqlx::query_scalar(
+            "SELECT position_order FROM formation_elements WHERE id = ?",
+        )
+        .bind("el-shift-2")
+        .fetch_optional(&pool)
+        .await
+        .expect("query removed element");
+        assert!(missing.is_none());
+    }
+
+    /// Removing a missing element must return a `NotFound` error.
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_remove_element_and_shift_missing_element_returns_not_found(pool: SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&pool).await.expect("create uow");
+        let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);
+
+        let result = repo.remove_element_and_shift("el-missing").await;
+
+        assert!(result.is_err(), "missing element must fail");
+        assert!(
+            matches!(result.unwrap_err(), DomainError::NotFound { .. }),
+            "expected NotFound error"
+        );
+    }
+
     // ── prototype_repo tests ──────────────────────────────────────────────────
 
     /// Running the prototype seed twice must not change the row count (`INSERT OR IGNORE`).
