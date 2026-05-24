@@ -362,5 +362,4 @@ mod tests {
         let restored = std::fs::read(&db_path).expect("restored db should be readable");
         assert_eq!(restored, sqlite_bytes);
     }
-
 }
