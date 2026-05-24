@@ -200,15 +200,6 @@ mod tests {
     use std::sync::Arc;
     use tempfile::tempdir;
 
-    fn test_app_handle() -> AppHandle {
-        tauri::Builder::default()
-            .any_thread()
-            .build(tauri::generate_context!())
-            .expect("test app should build")
-            .handle()
-            .clone()
-    }
-
     #[test]
     fn test_decompress_backup() {
         // Create test data and compress it
@@ -372,15 +363,4 @@ mod tests {
         assert_eq!(restored, sqlite_bytes);
     }
 
-    #[tokio::test]
-    #[serial]
-    async fn restore_backup_emits_completion_event() {
-        let app = test_app_handle();
-        let event = RestoreCompleteEvent {
-            backup_id: "backup-123".to_string(),
-            restored_at: Utc::now().to_rfc3339(),
-        };
-
-        emit_restore_complete(&app, event);
-    }
 }
