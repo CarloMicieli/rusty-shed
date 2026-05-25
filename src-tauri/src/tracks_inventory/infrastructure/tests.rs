@@ -295,8 +295,8 @@ mod get_track_inventories {
 
 #[cfg(test)]
 mod get_track_products {
-    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
     use crate::core::domain::Language;
+    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
     use crate::tracks_inventory::application::GetTrackProductsQuery;
 
     #[sqlx::test(migrations = "./migrations")]

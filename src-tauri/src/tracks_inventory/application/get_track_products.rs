@@ -25,7 +25,10 @@ impl GetTrackProductsQuery {
     where
         U: TrackProductUowExt,
     {
-        unit_of_work.track_products_repo().find_all_views(lang).await
+        unit_of_work
+            .track_products_repo()
+            .find_all_views(lang)
+            .await
     }
 }
 

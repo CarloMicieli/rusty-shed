@@ -13,8 +13,13 @@ impl UpsertTrackProductTranslationUseCase {
     ) -> Result<(), CommandError> {
         let mut repo = uow.track_products_repo();
 
-        repo.upsert_translation(&input.track_id, input.lang, input.description, input.details)
-            .await?;
+        repo.upsert_translation(
+            &input.track_id,
+            input.lang,
+            input.description,
+            input.details,
+        )
+        .await?;
 
         Ok(())
     }

@@ -43,13 +43,8 @@ impl CreateTrackProductUseCase {
         {
             let mut repo = uow.track_products_repo();
             repo.insert_track(&track_product).await?;
-            repo.upsert_translation(
-                &track_id,
-                input.lang,
-                input.description,
-                input.details,
-            )
-            .await?;
+            repo.upsert_translation(&track_id, input.lang, input.description, input.details)
+                .await?;
         }
 
         Ok(track_id)

@@ -1,6 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::error::CommandError;
 use crate::core::domain::metadata::Metadata;
+use crate::core::infrastructure::error::CommandError;
 use crate::tracks_inventory::application::UpdateTrackProductInput;
 use crate::tracks_inventory::domain::{TrackProduct, TrackProductUowExt};
 

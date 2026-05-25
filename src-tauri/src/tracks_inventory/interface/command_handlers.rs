@@ -4,18 +4,19 @@ use crate::state::AppState;
 use crate::tracks_inventory::application::{
     AddTrackPurchaseInput, AddTrackPurchaseUseCase, CreateTrackInventoryUseCase,
     CreateTrackProductInput, CreateTrackProductUseCase, DeleteTrackInventoryUseCase,
-    DeleteTrackProductInput, DeleteTrackProductTranslationInput, DeleteTrackProductUseCase,
-    DeleteTrackProductTranslationUseCase, NewTrackInventoryInput, RenameTrackInventoryInput,
-    RenameTrackInventoryUseCase, SetTrackItemQuantityInput, SetTrackItemQuantityUseCase,
-    UpdateTrackProductInput, UpdateTrackProductUseCase, UpsertTrackProductTranslationInput,
-    UpsertTrackProductTranslationUseCase,
+    DeleteTrackProductInput, DeleteTrackProductTranslationInput,
+    DeleteTrackProductTranslationUseCase, DeleteTrackProductUseCase, NewTrackInventoryInput,
+    RenameTrackInventoryInput, RenameTrackInventoryUseCase, SetTrackItemQuantityInput,
+    SetTrackItemQuantityUseCase, UpdateTrackProductInput, UpdateTrackProductUseCase,
+    UpsertTrackProductTranslationInput, UpsertTrackProductTranslationUseCase,
 };
 use crate::tracks_inventory::domain::TracksInventoryUowExt;
 use crate::tracks_inventory::domain::{TrackId, TrackInventoryId, TrackPurchaseId};
 use crate::tracks_inventory::interface::command_args::{
-    AddTrackPurchaseArgs, CreateTrackProductArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs,
+    AddTrackPurchaseArgs, CreateTrackProductArgs, DeleteTrackProductArgs,
+    DeleteTrackProductTranslationArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs,
     SetItemRequiredArgs, SetTrackItemQuantityArgs, UpdateTrackProductArgs,
-    DeleteTrackProductArgs, UpsertTrackProductTranslationArgs, DeleteTrackProductTranslationArgs,
+    UpsertTrackProductTranslationArgs,
 };
 use std::convert::TryInto;
 use tracing::info;

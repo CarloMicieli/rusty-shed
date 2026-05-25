@@ -46,7 +46,10 @@ pub trait TrackProductRepository: Send + Sync {
     ) -> Result<(), DomainError>;
 
     /// Return all track products as display views (joined with manufacturer name).
-    async fn find_all_views(&mut self, lang: Language) -> Result<Vec<TrackProductView>, DomainError>;
+    async fn find_all_views(
+        &mut self,
+        lang: Language,
+    ) -> Result<Vec<TrackProductView>, DomainError>;
 }
 
 /// Repository trait for accessing and persisting track inventories.

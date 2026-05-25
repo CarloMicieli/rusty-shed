@@ -279,7 +279,10 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
     }
 
     /// Returns all track products as display views joined with manufacturer names.
-    async fn find_all_views(&mut self, lang: Language) -> Result<Vec<TrackProductView>, DomainError> {
+    async fn find_all_views(
+        &mut self,
+        lang: Language,
+    ) -> Result<Vec<TrackProductView>, DomainError> {
         let rows = database::find_all_product_views(&mut *self.executor, lang)
             .await
             .map_err(DomainError::from)?;
@@ -377,9 +380,13 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
         track_id: &TrackId,
         lang: Language,
     ) -> Result<(), DomainError> {
-        database::delete_track_product_translation(&mut *self.executor, track_id, &lang.to_string())
-            .await
-            .map_err(DomainError::from)?;
+        database::delete_track_product_translation(
+            &mut *self.executor,
+            track_id,
+            &lang.to_string(),
+        )
+        .await
+        .map_err(DomainError::from)?;
 
         database::rebuild_track_product_search_index(&mut *self.executor, track_id)
             .await
