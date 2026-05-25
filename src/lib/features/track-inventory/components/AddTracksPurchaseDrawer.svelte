@@ -11,6 +11,7 @@
   import { superForm } from 'sveltekit-superforms';
   import { zod4 as zod } from 'sveltekit-superforms/adapters';
   import { trackPurchaseSchema } from '$lib/schemas/track-purchase-form';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   interface Props {
     open?: boolean;
@@ -112,7 +113,7 @@
     try {
       loadingData = true;
       const [productsResult, sellersResult, manufacturersResult] = await Promise.all([
-        commands.getTrackProducts(),
+        commands.getTrackProducts(localeState.activeLocale),
         commands.getSellers(),
         commands.getManufacturers()
       ]);

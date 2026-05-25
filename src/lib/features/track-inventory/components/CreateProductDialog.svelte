@@ -4,6 +4,7 @@
   import ProductFormFields from './ProductFormFields.svelte';
   import ProductDialogHeader from './ProductDialogHeader.svelte';
   import ProductActionFooter from './ProductActionFooter.svelte';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   interface Props {
     open?: boolean;
@@ -67,9 +68,11 @@
       error = null;
 
       const productId = await service.createProduct({
+        lang: localeState.activeLocale,
         manufacturerId: manufacturerId as ManufacturerId,
         productCode: productCode.trim(),
         description: description.trim(),
+        details: null,
         trackType,
         trackCode,
         withRoadbed,

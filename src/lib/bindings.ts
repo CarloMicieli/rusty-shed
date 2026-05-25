@@ -526,6 +526,14 @@ export const commands = {
 	 *  the ID of the newly created track product.
 	 */
 	createTrackProduct: (input: CreateTrackProductArgs) => typedError<TrackId, CommandError>(__TAURI_INVOKE("create_track_product", { input })),
+	/**  Command handler to update an existing track product. */
+	updateTrackProduct: (input: UpdateTrackProductArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_track_product", { input })),
+	/**  Command handler to delete an existing track product. */
+	deleteTrackProduct: (input: DeleteTrackProductArgs) => typedError<null, CommandError>(__TAURI_INVOKE("delete_track_product", { input })),
+	/**  Command handler to upsert one translation for a track product. */
+	upsertTrackProductTranslation: (input: UpsertTrackProductTranslationArgs) => typedError<null, CommandError>(__TAURI_INVOKE("upsert_track_product_translation", { input })),
+	/**  Command handler to delete one translation for a track product. */
+	deleteTrackProductTranslation: (input: DeleteTrackProductTranslationArgs) => typedError<null, CommandError>(__TAURI_INVOKE("delete_track_product_translation", { input })),
 	/**
 	 *  Query handler to fetch all track inventories with summary information.
 	 * 
@@ -556,7 +564,7 @@ export const commands = {
 	 *  # Returns
 	 *  A list of all track products available.
 	 */
-	getTrackProducts: () => typedError<TrackProductView[], CommandError>(__TAURI_INVOKE("get_track_products")),
+	getTrackProducts: (lang: Language) => typedError<TrackProductView[], CommandError>(__TAURI_INVOKE("get_track_products", { lang })),
 	/**  A command handler to create a new digital rolling stock. */
 	newDigitalRollingStock: (args: NewDigitalRollingStockArgs) => typedError<ResponseNewDigitalRollingStock, CommandError>(__TAURI_INVOKE("new_digital_rolling_stock", { args })),
 	/**  A command handler to change the DCC address of a digital rolling stock. */
@@ -1870,12 +1878,16 @@ export type CreateSellerPayload = {
 
 /**  Command argument to create a new track product */
 export type CreateTrackProductArgs = {
+	/**  Language code for the initial translation. */
+	lang: Language,
 	/**  Manufacturer that produces this track product */
 	manufacturerId: ManufacturerId,
 	/**  Manufacturer's product code or name */
 	productCode: string,
 	/**  Human-readable description of the track piece */
-	description: string,
+	description: string | null,
+	/**  Optional details text for the track piece. */
+	details: string | null,
 	/**  Geometric type of the track piece */
 	trackType: TrackType,
 	/**  Rail profile code describing the rail height */
@@ -2060,6 +2072,20 @@ export type DeleteRollingStockArgs = {
 	railwayModelId: RailwayModelId,
 	/**  The rolling stock unit to delete. */
 	rollingStockId: RollingStockId,
+};
+
+/**  Command argument to delete an existing track product. */
+export type DeleteTrackProductArgs = {
+	/**  Track product id to delete. */
+	trackId: TrackId,
+};
+
+/**  Command argument to delete one track product translation. */
+export type DeleteTrackProductTranslationArgs = {
+	/**  Track product id to update. */
+	trackId: TrackId,
+	/**  Language code to delete. */
+	lang: Language,
 };
 
 /**
@@ -4845,6 +4871,26 @@ export type UpdateSettingsInput = {
 	hasCompletedOnboarding?: boolean | null,
 };
 
+/**  Command argument to update an existing track product */
+export type UpdateTrackProductArgs = {
+	/**  Track product id to update. */
+	trackId: TrackId,
+	/**  Manufacturer that produces this track product */
+	manufacturerId: ManufacturerId,
+	/**  Manufacturer's product code or name */
+	productCode: string,
+	/**  Geometric type of the track piece */
+	trackType: TrackType,
+	/**  Rail profile code describing the rail height */
+	trackCode: TrackCode,
+	/**  Whether this track piece includes an integrated roadbed */
+	withRoadbed: boolean,
+	/**  Length for straight track pieces, when applicable */
+	length: Length | null,
+	/**  Radius for curved track elements, when applicable */
+	radius: Length | null,
+};
+
 /**  Arguments for `update_train_formation`. */
 export type UpdateTrainFormationArgs = {
 	/**  New name for the formation. `None` = keep existing name. */
@@ -4932,6 +4978,18 @@ export type UpsertRailwayModelTranslationArgs = {
 	/**  Description text. Required non-empty for "en"; optional for "it". */
 	description: string | null,
 	/**  Details text. Optional for all languages. */
+	details: string | null,
+};
+
+/**  Command argument to upsert one track product translation. */
+export type UpsertTrackProductTranslationArgs = {
+	/**  Track product id to update. */
+	trackId: TrackId,
+	/**  Language code. */
+	lang: Language,
+	/**  Human-readable description. */
+	description: string | null,
+	/**  Optional details. */
 	details: string | null,
 };
 

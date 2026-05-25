@@ -134,7 +134,7 @@ describe('TrackInventoryService', () => {
       const result = await service.fetchProducts();
 
       expect(result).toEqual(mockProducts);
-      expect(mockInvoke).toHaveBeenCalledWith('get_track_products');
+      expect(mockInvoke).toHaveBeenCalledWith('get_track_products', { lang: 'en' });
     });
 
     it('should handle empty product list', async () => {
@@ -396,7 +396,7 @@ describe('TrackInventoryService', () => {
       expect(mockInvoke).toHaveBeenCalledWith('get_track_inventory', { id: 'id' });
 
       await service.fetchProducts();
-      expect(mockInvoke).toHaveBeenCalledWith('get_track_products');
+      expect(mockInvoke).toHaveBeenCalledWith('get_track_products', { lang: 'en' });
 
       await service.deleteInventory('id');
       expect(mockInvoke).toHaveBeenCalledWith('delete_track_inventory', { id: 'id' });

@@ -9,6 +9,9 @@ VALUES ('trn:seller:model-train-shop', 'Model Train Shop', 'SHOP', 'https://www.
 INSERT INTO track_products (id, track_id, manufacturer_id, product_code, with_roadbed, created_at, updated_at)
 VALUES ('trn:track-product:acme:60100', 'trn:track:acme:60100', 'trn:manufacturer:acme', '60100', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
+INSERT INTO track_product_translations (track_id, language_code, description, details, created_at, updated_at)
+VALUES ('trn:track:acme:60100', 'en', 'Straight track', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 INSERT INTO track_inventories (id, name, description, created_at, updated_at)
 VALUES ('trn:track-inventory:00000000-0000-0000-0000-000000000001', 'Test Inventory', 'Created for add_purchase tests', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 

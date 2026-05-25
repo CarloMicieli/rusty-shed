@@ -297,8 +297,8 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
             if track.with_roadbed { 1 } else { 0 },
             track.length.map(|l| l.quantity().to_i32().unwrap_or(0)),
             track.radius.map(|r| r.quantity().to_i32().unwrap_or(0)),
-            track.track_code,
-            track.track_type,
+            track.track_code.clone(),
+            track.track_type.clone(),
         )
         .await
         .map_err(DomainError::from)?;
@@ -320,8 +320,8 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
             if track.with_roadbed { 1 } else { 0 },
             track.length.map(|l| l.quantity().to_i32().unwrap_or(0)),
             track.radius.map(|r| r.quantity().to_i32().unwrap_or(0)),
-            track.track_code,
-            track.track_type,
+            track.track_code.clone(),
+            track.track_type.clone(),
         )
         .await
         .map_err(DomainError::from)?;

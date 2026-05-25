@@ -7,7 +7,8 @@ import type {
   TrackInventoryListItem,
   TrackInventoryView,
   TrackProductView,
-  Currency
+  Currency,
+  Language
 } from '$lib/bindings';
 import { getContext, setContext } from 'svelte';
 
@@ -34,8 +35,8 @@ export class TrackInventoryService {
   /**
    * Fetch all track products
    */
-  async fetchProducts(): Promise<TrackProductView[]> {
-    return await invoke<TrackProductView[]>('get_track_products');
+  async fetchProducts(lang: Language = 'en'): Promise<TrackProductView[]> {
+    return await invoke<TrackProductView[]>('get_track_products', { lang });
   }
 
   /**
