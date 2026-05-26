@@ -15,12 +15,13 @@ CREATE TABLE IF NOT EXISTS manufacturers
     postal_code                          TEXT,
     country_code                         TEXT,
     website_url                          TEXT,
+    is_system_seeded                     INTEGER NOT NULL DEFAULT 0 CHECK (is_system_seeded IN (0, 1)),
     created_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version                              INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_manufacturers_name ON manufacturers (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_manufacturers_name ON manufacturers (LOWER(name));
 
 CREATE TABLE IF NOT EXISTS railway_companies
 (
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS railway_companies
     version                              INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_railway_companies_name ON railway_companies (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_railway_companies_name ON railway_companies (LOWER(name));
 
 CREATE TABLE IF NOT EXISTS railway_models
 (
@@ -106,9 +107,9 @@ CREATE TABLE IF NOT EXISTS rolling_stocks
     passenger_car_type                   TEXT,
     railcar_type                         TEXT,
     service_level                        TEXT,
-    length_inches                        TEXT, --no support for decimal in sqlite, so using TEXT
-    length_millimeters                   TEXT, --no support for decimal in sqlite, so using TEXT
-    technical_minimum_radius_mm          TEXT, --no support for decimal in sqlite, so using TEXT
+    length_inches                        REAL,
+    length_millimeters                   REAL,
+    technical_minimum_radius_mm          REAL,
     technical_coupling_socket            TEXT,
     technical_coupling_close_couplers    TEXT,
     technical_coupling_digital_shunting  TEXT,

@@ -85,9 +85,14 @@ mod tests {
     }
 
     async fn make_pool() -> SqlitePool {
-        SqlitePool::connect(":memory:")
+        let pool = SqlitePool::connect(":memory:")
             .await
-            .expect("in-memory pool")
+            .expect("in-memory pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
+        pool
     }
 
     #[tokio::test]

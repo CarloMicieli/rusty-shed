@@ -1,6 +1,6 @@
 -- Fixtures for dcc_inventory integration tests
 
-PRAGMA foreign_keys = OFF;
+PRAGMA foreign_keys = ON;
 BEGIN TRANSACTION;
 
 CREATE TABLE IF NOT EXISTS decoders (
@@ -61,13 +61,6 @@ CREATE TABLE IF NOT EXISTS railway_model_translations (
   PRIMARY KEY (railway_model_id, language_code)
 );
 
-CREATE TABLE IF NOT EXISTS digital_rolling_stocks (
-  id TEXT PRIMARY KEY,
-  owned_rolling_stock_id TEXT NOT NULL,
-  dcc_address INTEGER NOT NULL,
-  installed_decoder_id TEXT
-);
-
 -- sample manufacturer
 INSERT INTO manufacturers (id, name)
 VALUES ('trn:manufacturer:acme', 'ACME');
@@ -87,16 +80,19 @@ VALUES ('trn:railway-model:test', 'trn:manufacturer:acme', 'TEST-001', 'III', 'S
 INSERT INTO railway_model_translations (railway_model_id, language_code, description)
 VALUES ('trn:railway-model:test', 'en', 'Test Model');
 
+-- sample collection and collection item referenced by owned rolling stock
+INSERT INTO collections (id, name)
+VALUES ('trn:collection:test', 'Test Collection');
+
+INSERT INTO collection_items (id, collection_id, railway_model_id, added_date)
+VALUES ('trn:collection-item:test', 'trn:collection:test', 'trn:railway-model:test', '2026-01-01');
+
 -- sample rolling stock
 INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, series_code, series, road_number, control, is_dummy)
 VALUES ('trn:rolling-stock:test', 'trn:railway-model:test', 'LOCOMOTIVE', 'trn:railway-company:test', 'E.428', 'E.428 Series', '001', 'DCC_READY', 0);
 
 -- sample owned rolling stock
-INSERT INTO owned_rolling_stocks (id, rolling_stock_id, collection_item_id)
-VALUES ('trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111', 'trn:rolling-stock:test', 'trn:collection-item:test');
-
--- sample digital rolling stock referencing decoder
-INSERT INTO digital_rolling_stocks (id, owned_rolling_stock_id, dcc_address, installed_decoder_id)
-VALUES ('trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001', 'trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111', 500, 'trn:decoder:acme:d-100');
+INSERT INTO owned_rolling_stocks (id, rolling_stock_id, collection_item_id, dcc_address, installed_decoder_id)
+VALUES ('trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111', 'trn:rolling-stock:test', 'trn:collection-item:test', 500, 'trn:decoder:acme:d-100');
 
 COMMIT;

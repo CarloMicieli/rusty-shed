@@ -4,6 +4,7 @@ use crate::core::domain::domain_error::DomainError;
 use crate::dcc_inventory::domain::{
     DccAddress, DccInventoryUowExt, DecoderId, DigitalRollingStock, DigitalRollingStockId,
 };
+use uuid::Uuid;
 
 /// Use case to create a new DigitalRollingStock aggregate.
 pub struct NewDigitalRollingStockUseCase;
@@ -42,7 +43,14 @@ impl NewDigitalRollingStockUseCase {
             )));
         }
 
-        let id = id_provider.next_id();
+        let id = input
+            .owned_rolling_stock_id
+            .as_ref()
+            .rsplit(':')
+            .next()
+            .and_then(|tail| Uuid::parse_str(tail).ok())
+            .map(DigitalRollingStockId::from_uuid)
+            .unwrap_or_else(|| id_provider.next_id());
 
         let drs = DigitalRollingStock::new(
             id.clone(),
@@ -101,9 +109,11 @@ mod tests {
 
         let fixed_id = DigitalRollingStockId::from_uuid(Uuid::new_v4());
         let id_provider = MockIdProvider::new(fixed_id.clone());
+        let owned_uuid = Uuid::new_v4();
+        let expected_id = DigitalRollingStockId::from_uuid(owned_uuid);
 
         let input = NewDigitalRollingStockInput {
-            owned_rolling_stock_id: OwnedRollingStockId::from(Uuid::new_v4()),
+            owned_rolling_stock_id: OwnedRollingStockId::from(owned_uuid),
             dcc_address: DccAddress::new(123).unwrap(),
             decoder_id: DecoderId::try_from("trn:decoder:acme:d-100").unwrap(),
         };
@@ -112,7 +122,7 @@ mod tests {
             .await
             .expect("execute should succeed");
 
-        assert_eq!(returned, fixed_id);
+        assert_eq!(returned, expected_id);
     }
 
     #[tokio::test]

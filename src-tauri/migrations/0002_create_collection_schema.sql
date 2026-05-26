@@ -36,11 +36,12 @@ CREATE TABLE IF NOT EXISTS sellers
   state_region                          TEXT,
   postal_code                           TEXT,
   country_code                          TEXT,
+  is_system_seeded                      INTEGER NOT NULL DEFAULT 0 CHECK (is_system_seeded IN (0, 1)),
   created_at                            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at                            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   version                               INTEGER NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_sellers_name ON sellers(name);
+CREATE INDEX IF NOT EXISTS idx_sellers_name ON sellers (LOWER(name));
 
 CREATE TABLE IF NOT EXISTS collections
 (

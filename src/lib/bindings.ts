@@ -2158,7 +2158,7 @@ export type DigitalProtocol = "DCC" | "MFX" | "SELECTRIX" | "MOTOROLA" | "FMZ" |
 /**
  *  Strongly-typed identifier for a digital rolling stock entry.
  * 
- *  URNs are of the form `trn:digital-rolling-stock:{UUID}` where the UUID
+ *  URNs are of the form `trn:owned-rolling-stock:{UUID}` where the UUID
  *  portion is a valid RFC4122 UUID (v4 typically).
  */
 export type DigitalRollingStockId = string;

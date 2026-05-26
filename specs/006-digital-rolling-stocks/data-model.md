@@ -17,7 +17,7 @@ This feature leverages existing database tables with no schema changes required.
 
 | Field                  | Type      | Description                                    |
 | ---------------------- | --------- | ---------------------------------------------- |
-| id                     | TEXT (PK) | URN format: `trn:digital-rolling-stock:{uuid}` |
+| id                     | TEXT (PK) | URN format: `trn:owned-rolling-stock:{uuid}` |
 | owned_rolling_stock_id | TEXT (FK) | References `owned_rolling_stocks.id`           |
 | dcc_address            | INTEGER   | DCC address (1-9999)                           |
 | installed_decoder_id   | TEXT (FK) | References `decoders.id`                       |

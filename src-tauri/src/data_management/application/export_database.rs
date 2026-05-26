@@ -60,6 +60,10 @@ mod tests {
         let pool = SqlitePool::connect("sqlite::memory:")
             .await
             .expect("in-memory sqlite should connect");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
         let destination = std::path::PathBuf::from("/definitely-not-existing-rusty-shed/export.db");
 
         let result = export_database(&pool, &destination).await;
