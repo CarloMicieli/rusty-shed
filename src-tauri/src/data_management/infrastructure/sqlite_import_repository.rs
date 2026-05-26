@@ -1495,7 +1495,7 @@ mod tests {
         let mut data = DataContainerDto::default();
         data.digital_rolling_stocks.push(
             crate::data_management::domain::DigitalRollingStockRecord {
-                id: "trn:digital-rolling-stock:1".to_string(),
+                id: "trn:owned-rolling-stock:1".to_string(),
                 owned_rolling_stock_id: "trn:owned-rolling-stock:missing".to_string(),
                 dcc_address: 3,
                 decoder_id: None,
@@ -1503,7 +1503,7 @@ mod tests {
         );
 
         let mut duplicates = empty_duplicates();
-        duplicates.digital_roster_dupes.new_ids = vec!["trn:digital-rolling-stock:1".to_string()];
+        duplicates.digital_roster_dupes.new_ids = vec!["trn:owned-rolling-stock:1".to_string()];
 
         let media_dir = tempfile::tempdir().expect("temp dir should be created");
 
@@ -2192,7 +2192,7 @@ mod tests {
 
         data.digital_rolling_stocks.push(
             crate::data_management::domain::DigitalRollingStockRecord {
-                id: "trn:digital-rolling-stock:e2e:001".to_string(),
+                id: "trn:owned-rolling-stock:e2e:001".to_string(),
                 owned_rolling_stock_id: "trn:ors:e2e:001".to_string(),
                 dcc_address: 7,
                 decoder_id: Some("trn:decoder:e2e:001".to_string()),
@@ -2213,7 +2213,7 @@ mod tests {
         duplicates.wishlist_dupes.new_ids = vec!["trn:wishlist:e2e:001".to_string()];
         duplicates.decoder_dupes.new_ids = vec!["trn:decoder:e2e:001".to_string()];
         duplicates.digital_roster_dupes.new_ids =
-            vec!["trn:digital-rolling-stock:e2e:001".to_string()];
+            vec!["trn:owned-rolling-stock:e2e:001".to_string()];
 
         let media_dir = tempfile::tempdir().expect("temp dir should be created");
         let result = repo

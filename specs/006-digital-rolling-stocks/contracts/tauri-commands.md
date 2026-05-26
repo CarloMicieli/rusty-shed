@@ -284,7 +284,7 @@ interface CommandError {
 
 ```typescript
 // Strongly-typed ID strings (URN format)
-type DigitalRollingStockId = string; // trn:digital-rolling-stock:{uuid}
+type DigitalRollingStockId = string; // trn:owned-rolling-stock:{uuid}
 type OwnedRollingStockId = string; // trn:owned-rolling-stock:{uuid}
 type DecoderId = string; // trn:decoder:{manufacturer}:{code}
 type ManufacturerId = string; // trn:manufacturer:{name}
