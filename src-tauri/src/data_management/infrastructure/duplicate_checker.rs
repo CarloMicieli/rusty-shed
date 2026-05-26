@@ -645,15 +645,6 @@ impl DuplicateChecker {
 mod tests {
     use super::*;
 
-    async fn test_pool() -> sqlx::SqlitePool {
-        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
-        sqlx::query("PRAGMA foreign_keys = ON")
-            .execute(&pool)
-            .await
-            .expect("enable foreign keys");
-        pool
-    }
-
     #[test]
     fn test_duplicate_check_result_counts() {
         let result = DuplicateCheckResult {
@@ -675,16 +666,8 @@ mod tests {
         assert_eq!(result.total_count(), 0);
     }
 
-    #[tokio::test]
-    async fn test_check_formation_categories_empty_input() {
-        let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE formation_categories (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, is_custom INTEGER NOT NULL DEFAULT 0)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
-
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_formation_categories_empty_input(pool: sqlx::SqlitePool) {
         let checker = DuplicateChecker::new(pool);
         let result = checker
             .check_formation_categories(&[])
@@ -693,15 +676,8 @@ mod tests {
         assert_eq!(result.total_count(), 0);
     }
 
-    #[tokio::test]
-    async fn test_check_train_formations_detects_duplicate_name() {
-        let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE train_formations (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_train_formations_detects_duplicate_name(pool: sqlx::SqlitePool) {
         sqlx::query("INSERT INTO train_formations (id, name) VALUES ('existing-id', 'Express')")
             .execute(&pool)
             .await
@@ -732,17 +708,8 @@ mod tests {
         assert!(result.new_ids.contains(&"new-id".to_string()));
     }
 
-    #[tokio::test]
-    async fn test_check_wishlists_detects_duplicate_name() {
-        let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE wishlists (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, \
-             notes TEXT, is_default INTEGER NOT NULL DEFAULT 0, version INTEGER NOT NULL DEFAULT 0, \
-             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_wishlists_detects_duplicate_name(pool: sqlx::SqlitePool) {
         sqlx::query("INSERT INTO wishlists (id, name) VALUES ('w1', 'My Wishlist')")
             .execute(&pool)
             .await
@@ -770,15 +737,12 @@ mod tests {
         assert!(result.new_ids.contains(&"w2".to_string()));
     }
 
-    #[tokio::test]
-    async fn test_check_prototypes_uses_composite_key() {
-        let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE prototypes (id TEXT PRIMARY KEY, railway_company_id TEXT NOT NULL, series_code TEXT NOT NULL, specification_type TEXT NOT NULL, is_custom INTEGER NOT NULL DEFAULT 0)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_prototypes_uses_composite_key(pool: sqlx::SqlitePool) {
+        sqlx::query("INSERT INTO railway_companies (id, name) VALUES ('rc1', 'Railway Co')")
+            .execute(&pool)
+            .await
+            .expect("insert railway company");
         sqlx::query(
             "INSERT INTO prototypes (id, railway_company_id, series_code, specification_type, is_custom) VALUES ('p1', 'rc1', 'BR 01', 'LOCOMOTIVE', 0)",
         )
@@ -812,34 +776,19 @@ mod tests {
         assert!(result.new_ids.contains(&"p2".to_string()));
     }
 
-    #[tokio::test]
-    async fn test_check_decoders_empty_input() {
-        let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE decoders (id TEXT PRIMARY KEY, manufacturer_id TEXT NOT NULL, \
-             product_code TEXT, decoder_type TEXT NOT NULL, protocol TEXT NOT NULL, \
-             decoder_interface TEXT NOT NULL)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
-
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_decoders_empty_input(pool: sqlx::SqlitePool) {
         let checker = DuplicateChecker::new(pool);
         let result = checker.check_decoders(&[]).await.expect("check");
         assert_eq!(result.total_count(), 0);
     }
 
-    #[tokio::test]
-    async fn test_check_decoders_detects_duplicate_id() {
-        let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE decoders (id TEXT PRIMARY KEY, manufacturer_id TEXT NOT NULL, \
-             product_code TEXT, decoder_type TEXT NOT NULL, protocol TEXT NOT NULL, \
-             decoder_interface TEXT NOT NULL)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_decoders_detects_duplicate_id(pool: sqlx::SqlitePool) {
+        sqlx::query("INSERT INTO manufacturers (id, name) VALUES ('marklin', 'Marklin')")
+            .execute(&pool)
+            .await
+            .expect("insert manufacturer");
         sqlx::query(
             "INSERT INTO decoders (id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface) \
              VALUES ('trn:decoder:marklin:d100', 'marklin', 'D-100', 'PLAIN', 'DCC', 'NEM651')",
@@ -884,36 +833,44 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn test_check_digital_roster_empty_input() {
-        let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE digital_rolling_stocks (id TEXT PRIMARY KEY, \
-             owned_rolling_stock_id TEXT NOT NULL, dcc_address INTEGER NOT NULL, \
-             installed_decoder_id TEXT)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
-
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_digital_roster_empty_input(pool: sqlx::SqlitePool) {
         let checker = DuplicateChecker::new(pool);
         let result = checker.check_digital_roster(&[]).await.expect("check");
         assert_eq!(result.total_count(), 0);
     }
 
-    #[tokio::test]
-    async fn test_check_digital_roster_detects_duplicate_by_owned_id() {
-        let pool = test_pool().await;
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_check_digital_roster_detects_duplicate_by_owned_id(pool: sqlx::SqlitePool) {
+        sqlx::query("INSERT INTO manufacturers (id, name) VALUES ('manu-1', 'Manufacturer 1')")
+            .execute(&pool)
+            .await
+            .expect("insert manufacturer");
         sqlx::query(
-            "CREATE TABLE owned_rolling_stocks (id TEXT PRIMARY KEY, dcc_address INTEGER, installed_decoder_id TEXT)",
+            "INSERT INTO railway_models (id, manufacturer_id, product_code, power_method, scale, epoch, category) \
+             VALUES ('model-1', 'manu-1', 'P-001', 'DC', 'HO', 'IV', 'LOCOMOTIVE')",
         )
         .execute(&pool)
         .await
-        .expect("create table");
-        sqlx::query("INSERT INTO owned_rolling_stocks (id, dcc_address) VALUES ('ors-abc', 3)")
+        .expect("insert railway model");
+        sqlx::query("INSERT INTO collections (id, name) VALUES ('collection-1', 'Main')")
             .execute(&pool)
             .await
-            .expect("insert");
+            .expect("insert collection");
+        sqlx::query(
+            "INSERT INTO collection_items (id, collection_id, railway_model_id, added_date) \
+             VALUES ('item-1', 'collection-1', 'model-1', '2024-01-01')",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert collection item");
+        sqlx::query(
+            "INSERT INTO owned_rolling_stocks (id, collection_item_id, dcc_address) \
+             VALUES ('ors-abc', 'item-1', 3)",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
 
         let checker = DuplicateChecker::new(pool);
         let items = vec![
