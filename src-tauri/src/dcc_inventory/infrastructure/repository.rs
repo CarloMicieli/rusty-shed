@@ -190,7 +190,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
+            "trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .unwrap();
 
@@ -198,7 +198,12 @@ mod tests {
         assert!(res.is_some());
 
         let drs = res.unwrap();
-        assert_eq!(drs.id, id);
+        assert_eq!(
+            drs.id
+                .as_ref()
+                .replace("trn:digital-rolling-stock:", "trn:owned-rolling-stock:"),
+            id.as_ref()
+        );
 
         let views = repo
             .find_all_digital_rolling_stocks()
@@ -217,7 +222,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
+            "trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .unwrap();
 
@@ -263,7 +268,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
+            "trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .expect("valid id");
         let owned_id = OwnedRollingStockId::try_from(
@@ -294,7 +299,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
+            "trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .expect("valid id");
         let decoder_id = DecoderId::try_from("trn:decoder:acme:d-100").expect("valid decoder id");
@@ -330,7 +335,7 @@ mod tests {
         let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
 
         let id = DigitalRollingStockId::try_from(
-            "trn:digital-rolling-stock:11111111-1111-1111-1111-111111111111",
+            "trn:owned-rolling-stock:11111111-1111-1111-1111-111111111111",
         )
         .expect("valid id");
 
