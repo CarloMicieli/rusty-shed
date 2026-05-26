@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn change_dcc_address_args_try_from_ok() {
         let args = ChangeDccAddressArgs {
-            id: format!("trn:digital-rolling-stock:{}", Uuid::new_v4()),
+            id: format!("trn:owned-rolling-stock:{}", Uuid::new_v4()),
             new_dcc_address: 500,
         };
 
@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn change_decoder_args_try_from_ok() {
         let args = ChangeDecoderArgs {
-            id: format!("trn:digital-rolling-stock:{}", Uuid::new_v4()),
+            id: format!("trn:owned-rolling-stock:{}", Uuid::new_v4()),
             decoder_id: "trn:decoder:acme:d-100".to_string(),
         };
 

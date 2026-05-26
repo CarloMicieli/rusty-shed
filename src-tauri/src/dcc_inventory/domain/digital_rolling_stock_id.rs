@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 /// Strongly-typed identifier for a digital rolling stock entry.
 ///
-/// URNs are of the form `trn:digital-rolling-stock:{UUID}` where the UUID
+/// URNs are of the form `trn:owned-rolling-stock:{UUID}` where the UUID
 /// portion is a valid RFC4122 UUID (v4 typically).
 #[repr(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, specta::Type, sqlx::Type)]
@@ -23,7 +23,7 @@ impl AsRef<str> for DigitalRollingStockId {
 }
 
 impl Identifier for DigitalRollingStockId {
-    const PREFIX: &'static str = "trn:digital-rolling-stock";
+    const PREFIX: &'static str = "trn:owned-rolling-stock";
 
     fn from_string_unchecked(s: String) -> Self {
         DigitalRollingStockId(s)
