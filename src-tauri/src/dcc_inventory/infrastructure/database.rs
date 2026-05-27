@@ -16,12 +16,12 @@ pub async fn find_digital_rolling_stock_by_id(
 ) -> Result<Option<DigitalRollingStockRow>, sqlx::Error> {
     let sql = r#"
         SELECT
-            ors.id AS id,
+            REPLACE(ors.id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id,
             ors.id AS owned_rolling_stock_id,
             ors.dcc_address,
             ors.installed_decoder_id
         FROM owned_rolling_stocks ors
-        WHERE ors.id = ?1
+        WHERE ors.id = REPLACE(?1, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')
           AND ors.dcc_address IS NOT NULL
         LIMIT 1
     "#;
@@ -72,7 +72,7 @@ pub async fn update_digital_rolling_stock_decoder(
     let sql = r#"
         UPDATE owned_rolling_stocks
         SET installed_decoder_id = ?1
-        WHERE id = ?2
+        WHERE id = REPLACE(?2, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')
     "#;
 
     sqlx::query(sql)
@@ -96,7 +96,7 @@ pub async fn update_digital_rolling_stock_address(
     let sql = r#"
         UPDATE owned_rolling_stocks
         SET dcc_address = ?1
-        WHERE id = ?2
+        WHERE id = REPLACE(?2, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')
     "#;
 
     sqlx::query(sql)
@@ -119,7 +119,7 @@ pub async fn find_all_digital_rolling_stocks_view(
 ) -> Result<Vec<EnrichedRow>, sqlx::Error> {
     let sql = r#"
         SELECT
-            ors.id AS id,
+            REPLACE(ors.id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id,
             ors.id AS owned_rolling_stock_id,
             ors.dcc_address,
             d.id AS decoder_id,
@@ -197,10 +197,10 @@ pub async fn check_address_exists(
     exclude_id: Option<&DigitalRollingStockId>,
 ) -> Result<Option<DigitalRollingStockId>, sqlx::Error> {
     let sql = r#"
-        SELECT id
+        SELECT REPLACE(id, 'trn:owned-rolling-stock:', 'trn:digital-rolling-stock:') AS id
         FROM owned_rolling_stocks
         WHERE dcc_address = ?1
-        AND id != COALESCE(?2, '')
+        AND id != COALESCE(REPLACE(?2, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:'), '')
         LIMIT 1
     "#;
 

@@ -198,7 +198,12 @@ mod tests {
         assert!(res.is_some());
 
         let drs = res.unwrap();
-        assert_eq!(drs.id, id);
+        assert_eq!(
+            drs.id
+                .as_ref()
+                .replace("trn:digital-rolling-stock:", "trn:owned-rolling-stock:"),
+            id.as_ref()
+        );
 
         let views = repo
             .find_all_digital_rolling_stocks()
@@ -311,7 +316,7 @@ mod tests {
             .expect("save should persist decoder change");
 
         let installed_decoder: Option<String> = sqlx::query_scalar(
-            "SELECT installed_decoder_id FROM owned_rolling_stocks WHERE id = ?1",
+            "SELECT installed_decoder_id FROM owned_rolling_stocks WHERE id = REPLACE(?1, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')",
         )
         .bind(id.as_ref())
         .fetch_one(&pool)
@@ -345,12 +350,13 @@ mod tests {
             .await
             .expect("save should persist dcc address change");
 
-        let updated_address: i64 =
-            sqlx::query_scalar("SELECT dcc_address FROM owned_rolling_stocks WHERE id = ?1")
-                .bind(id.as_ref())
-                .fetch_one(&pool)
-                .await
-                .expect("row should be queryable");
+        let updated_address: i64 = sqlx::query_scalar(
+            "SELECT dcc_address FROM owned_rolling_stocks WHERE id = REPLACE(?1, 'trn:digital-rolling-stock:', 'trn:owned-rolling-stock:')",
+        )
+        .bind(id.as_ref())
+        .fetch_one(&pool)
+        .await
+        .expect("row should be queryable");
 
         assert_eq!(updated_address, 501);
     }

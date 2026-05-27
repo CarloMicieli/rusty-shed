@@ -1,4 +1,5 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::tracks_inventory::domain::views::{
     TrackInventoryListItem, TrackInventoryView, TrackProductView,
@@ -19,11 +20,36 @@ pub trait TrackProductRepository: Send + Sync {
         product_code: &str,
     ) -> Result<Option<TrackProduct>, DomainError>;
 
-    /// Persist a `TrackProduct` master record.
-    async fn save(&mut self, track: TrackProduct) -> Result<(), DomainError>;
+    /// Insert a `TrackProduct` master record.
+    async fn insert_track(&mut self, track: &TrackProduct) -> Result<(), DomainError>;
+
+    /// Update a `TrackProduct` master record.
+    async fn update_track(&mut self, track: &TrackProduct) -> Result<(), DomainError>;
+
+    /// Delete a `TrackProduct` master record.
+    async fn delete_track(&mut self, track_id: &TrackId) -> Result<(), DomainError>;
+
+    /// Create or update a translation row for the given product language.
+    async fn upsert_translation(
+        &mut self,
+        track_id: &TrackId,
+        lang: Language,
+        description: Option<String>,
+        details: Option<String>,
+    ) -> Result<(), DomainError>;
+
+    /// Delete one translation row for the given product language.
+    async fn delete_translation(
+        &mut self,
+        track_id: &TrackId,
+        lang: Language,
+    ) -> Result<(), DomainError>;
 
     /// Return all track products as display views (joined with manufacturer name).
-    async fn find_all_views(&mut self) -> Result<Vec<TrackProductView>, DomainError>;
+    async fn find_all_views(
+        &mut self,
+        lang: Language,
+    ) -> Result<Vec<TrackProductView>, DomainError>;
 }
 
 /// Repository trait for accessing and persisting track inventories.

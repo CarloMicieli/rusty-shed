@@ -1,3 +1,4 @@
+use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
@@ -73,6 +74,7 @@ pub async fn get_track_inventory(
 
 pub async fn get_track_products_inner(
     state: &AppState,
+    lang: Language,
 ) -> Result<Vec<TrackProductView>, CommandError> {
     info!("Fetching all track products");
 
@@ -81,7 +83,7 @@ pub async fn get_track_products_inner(
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    let products = GetTrackProductsQuery::execute(&mut uow).await?;
+    let products = GetTrackProductsQuery::execute(&mut uow, lang).await?;
 
     Ok(products)
 }
@@ -97,6 +99,7 @@ pub async fn get_track_products_inner(
 #[specta::specta]
 pub async fn get_track_products(
     state: tauri::State<'_, AppState>,
+    lang: Language,
 ) -> Result<Vec<TrackProductView>, CommandError> {
-    get_track_products_inner(&state).await
+    get_track_products_inner(&state, lang).await
 }

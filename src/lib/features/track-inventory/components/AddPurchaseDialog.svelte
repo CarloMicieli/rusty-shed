@@ -9,6 +9,7 @@
   import PurchaseLoadingState from './PurchaseLoadingState.svelte';
   import { Loader2 } from 'lucide-svelte';
   import { Button } from '$lib/components';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   interface Props {
     open?: boolean;
@@ -42,7 +43,7 @@
     try {
       loadingData = true;
       const [productsResult, sellersResult, manufacturersResult] = await Promise.all([
-        commands.getTrackProducts(),
+        commands.getTrackProducts(localeState.activeLocale),
         commands.getSellers(),
         commands.getManufacturers()
       ]);

@@ -4,14 +4,19 @@ use crate::state::AppState;
 use crate::tracks_inventory::application::{
     AddTrackPurchaseInput, AddTrackPurchaseUseCase, CreateTrackInventoryUseCase,
     CreateTrackProductInput, CreateTrackProductUseCase, DeleteTrackInventoryUseCase,
-    NewTrackInventoryInput, RenameTrackInventoryInput, RenameTrackInventoryUseCase,
-    SetTrackItemQuantityInput, SetTrackItemQuantityUseCase,
+    DeleteTrackProductInput, DeleteTrackProductTranslationInput,
+    DeleteTrackProductTranslationUseCase, DeleteTrackProductUseCase, NewTrackInventoryInput,
+    RenameTrackInventoryInput, RenameTrackInventoryUseCase, SetTrackItemQuantityInput,
+    SetTrackItemQuantityUseCase, UpdateTrackProductInput, UpdateTrackProductUseCase,
+    UpsertTrackProductTranslationInput, UpsertTrackProductTranslationUseCase,
 };
 use crate::tracks_inventory::domain::TracksInventoryUowExt;
 use crate::tracks_inventory::domain::{TrackId, TrackInventoryId, TrackPurchaseId};
 use crate::tracks_inventory::interface::command_args::{
-    AddTrackPurchaseArgs, CreateTrackProductArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs,
-    SetItemRequiredArgs, SetTrackItemQuantityArgs,
+    AddTrackPurchaseArgs, CreateTrackProductArgs, DeleteTrackProductArgs,
+    DeleteTrackProductTranslationArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs,
+    SetItemRequiredArgs, SetTrackItemQuantityArgs, UpdateTrackProductArgs,
+    UpsertTrackProductTranslationArgs,
 };
 use std::convert::TryInto;
 use tracing::info;
@@ -219,6 +224,114 @@ pub async fn create_track_product(
     input: CreateTrackProductArgs,
 ) -> Result<TrackId, CommandError> {
     create_track_product_inner(&state, input).await
+}
+
+pub async fn update_track_product_inner(
+    state: &AppState,
+    input: UpdateTrackProductArgs,
+) -> Result<(), CommandError> {
+    info!("Updating track product: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let input: UpdateTrackProductInput = input.try_into()?;
+
+    UpdateTrackProductUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Command handler to update an existing track product.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_track_product(
+    state: tauri::State<'_, AppState>,
+    input: UpdateTrackProductArgs,
+) -> Result<(), CommandError> {
+    update_track_product_inner(&state, input).await
+}
+
+pub async fn delete_track_product_inner(
+    state: &AppState,
+    input: DeleteTrackProductArgs,
+) -> Result<(), CommandError> {
+    info!("Deleting track product: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let input: DeleteTrackProductInput = input.into();
+
+    DeleteTrackProductUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Command handler to delete an existing track product.
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_track_product(
+    state: tauri::State<'_, AppState>,
+    input: DeleteTrackProductArgs,
+) -> Result<(), CommandError> {
+    delete_track_product_inner(&state, input).await
+}
+
+pub async fn upsert_track_product_translation_inner(
+    state: &AppState,
+    input: UpsertTrackProductTranslationArgs,
+) -> Result<(), CommandError> {
+    info!("Upserting track product translation: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let input: UpsertTrackProductTranslationInput = input.into();
+
+    UpsertTrackProductTranslationUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Command handler to upsert one translation for a track product.
+#[tauri::command]
+#[specta::specta]
+pub async fn upsert_track_product_translation(
+    state: tauri::State<'_, AppState>,
+    input: UpsertTrackProductTranslationArgs,
+) -> Result<(), CommandError> {
+    upsert_track_product_translation_inner(&state, input).await
+}
+
+pub async fn delete_track_product_translation_inner(
+    state: &AppState,
+    input: DeleteTrackProductTranslationArgs,
+) -> Result<(), CommandError> {
+    info!("Deleting track product translation: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let input: DeleteTrackProductTranslationInput = input.into();
+
+    DeleteTrackProductTranslationUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Command handler to delete one translation for a track product.
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_track_product_translation(
+    state: tauri::State<'_, AppState>,
+    input: DeleteTrackProductTranslationArgs,
+) -> Result<(), CommandError> {
+    delete_track_product_translation_inner(&state, input).await
 }
 
 pub async fn set_item_required_inner(

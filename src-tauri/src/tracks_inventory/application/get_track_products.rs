@@ -1,3 +1,4 @@
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::tracks_inventory::domain::TrackProductUowExt;
 use crate::tracks_inventory::domain::views::TrackProductView;
@@ -17,11 +18,17 @@ impl GetTrackProductsQuery {
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `TrackProductUowExt`.
-    pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<TrackProductView>, DomainError>
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
+        lang: Language,
+    ) -> Result<Vec<TrackProductView>, DomainError>
     where
         U: TrackProductUowExt,
     {
-        unit_of_work.track_products_repo().find_all_views().await
+        unit_of_work
+            .track_products_repo()
+            .find_all_views(lang)
+            .await
     }
 }
 
@@ -30,6 +37,7 @@ mod tests {
     use super::*;
     use crate::app_uow::testing::{MockAppUow, OneShotFactory};
     use crate::app_uow::{AppUnitOfWork, AppUowFactory};
+    use crate::core::domain::Language;
     use crate::tracks_inventory::domain::views::TrackProductView;
     use crate::tracks_inventory::domain::{
         MockTrackProductRepository, TrackCode, TrackId, TrackType,
@@ -58,13 +66,13 @@ mod tests {
         let mut repo = MockTrackProductRepository::new();
         repo.expect_find_all_views()
             .times(1)
-            .returning(move || Ok(vec![view_clone.clone()]));
+            .returning(move |_| Ok(vec![view_clone.clone()]));
 
         let uow = MockAppUow::new().with_track_product(repo);
         let factory = OneShotFactory::new(uow);
         let mut uow_box: Box<dyn AppUnitOfWork> = factory.create_uow().await.unwrap();
 
-        let result = GetTrackProductsQuery::execute(&mut uow_box).await;
+        let result = GetTrackProductsQuery::execute(&mut uow_box, Language::English).await;
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 1);
@@ -75,13 +83,13 @@ mod tests {
         let mut repo = MockTrackProductRepository::new();
         repo.expect_find_all_views()
             .times(1)
-            .returning(|| Ok(vec![]));
+            .returning(|_| Ok(vec![]));
 
         let uow = MockAppUow::new().with_track_product(repo);
         let factory = OneShotFactory::new(uow);
         let mut uow_box: Box<dyn AppUnitOfWork> = factory.create_uow().await.unwrap();
 
-        let result = GetTrackProductsQuery::execute(&mut uow_box).await;
+        let result = GetTrackProductsQuery::execute(&mut uow_box, Language::English).await;
 
         assert!(result.is_ok());
         assert!(result.unwrap().is_empty());

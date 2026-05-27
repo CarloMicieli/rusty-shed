@@ -1,4 +1,5 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::tracks_inventory::domain::views::{
@@ -278,19 +279,19 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
     }
 
     /// Returns all track products as display views joined with manufacturer names.
-    async fn find_all_views(&mut self) -> Result<Vec<TrackProductView>, DomainError> {
-        let rows = database::find_all_product_views(&mut *self.executor)
+    async fn find_all_views(
+        &mut self,
+        lang: Language,
+    ) -> Result<Vec<TrackProductView>, DomainError> {
+        let rows = database::find_all_product_views(&mut *self.executor, lang)
             .await
             .map_err(DomainError::from)?;
 
         Ok(rows.into_iter().map(TrackProductView::from).collect())
     }
 
-    /// Persists a [`TrackProduct`] master record.
-    ///
-    /// Uses an upsert strategy (`INSERT OR REPLACE`) so the method is safe
-    /// to call for both new and existing products.
-    async fn save(&mut self, track: TrackProduct) -> Result<(), DomainError> {
+    /// Inserts a [`TrackProduct`] master record.
+    async fn insert_track(&mut self, track: &TrackProduct) -> Result<(), DomainError> {
         database::upsert_track_product(
             &mut *self.executor,
             &track.track_id,
@@ -299,11 +300,99 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
             if track.with_roadbed { 1 } else { 0 },
             track.length.map(|l| l.quantity().to_i32().unwrap_or(0)),
             track.radius.map(|r| r.quantity().to_i32().unwrap_or(0)),
-            track.track_code,
-            track.track_type,
+            track.track_code.clone(),
+            track.track_type.clone(),
         )
         .await
-        .map_err(DomainError::from)
+        .map_err(DomainError::from)?;
+
+        database::rebuild_track_product_search_index(&mut *self.executor, &track.track_id)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    /// Updates an existing [`TrackProduct`] master record.
+    async fn update_track(&mut self, track: &TrackProduct) -> Result<(), DomainError> {
+        database::update_track_product(
+            &mut *self.executor,
+            &track.track_id,
+            track.manufacturer_id.as_ref(),
+            &track.product_code,
+            if track.with_roadbed { 1 } else { 0 },
+            track.length.map(|l| l.quantity().to_i32().unwrap_or(0)),
+            track.radius.map(|r| r.quantity().to_i32().unwrap_or(0)),
+            track.track_code.clone(),
+            track.track_type.clone(),
+        )
+        .await
+        .map_err(DomainError::from)?;
+
+        database::rebuild_track_product_search_index(&mut *self.executor, &track.track_id)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    /// Deletes a [`TrackProduct`] master record.
+    async fn delete_track(&mut self, track_id: &TrackId) -> Result<(), DomainError> {
+        database::delete_track_product(&mut *self.executor, track_id)
+            .await
+            .map_err(DomainError::from)?;
+
+        database::rebuild_track_product_search_index(&mut *self.executor, track_id)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    /// Creates or replaces one translation row and refreshes FTS index rows.
+    async fn upsert_translation(
+        &mut self,
+        track_id: &TrackId,
+        lang: Language,
+        description: Option<String>,
+        details: Option<String>,
+    ) -> Result<(), DomainError> {
+        database::upsert_track_product_translation(
+            &mut *self.executor,
+            track_id,
+            &lang.to_string(),
+            description,
+            details,
+        )
+        .await
+        .map_err(DomainError::from)?;
+
+        database::rebuild_track_product_search_index(&mut *self.executor, track_id)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    /// Deletes one translation row and refreshes FTS index rows.
+    async fn delete_translation(
+        &mut self,
+        track_id: &TrackId,
+        lang: Language,
+    ) -> Result<(), DomainError> {
+        database::delete_track_product_translation(
+            &mut *self.executor,
+            track_id,
+            &lang.to_string(),
+        )
+        .await
+        .map_err(DomainError::from)?;
+
+        database::rebuild_track_product_search_index(&mut *self.executor, track_id)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
     }
 }
 

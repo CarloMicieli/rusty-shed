@@ -70,7 +70,6 @@ impl TryFrom<TrackProductRow> for TrackProduct {
             track_id: row.track_id,
             product_code: row.product_code,
             manufacturer_id,
-            description: row.description.unwrap_or_default(),
             with_roadbed: row.with_roadbed == 1,
             length,
             radius,

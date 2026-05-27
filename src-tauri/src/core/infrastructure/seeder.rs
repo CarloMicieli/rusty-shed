@@ -422,7 +422,7 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
     let insert_cmd = r#"
         INSERT INTO track_products (
             id, track_id, manufacturer_id, product_code, with_roadbed,
-            length_mm, radius_mm, track_code, track_type, description,
+            length_mm, radius_mm, track_code, track_type,
             created_at, updated_at, version
         )
     "#;
@@ -466,11 +466,6 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
                     _ => None,
                 };
 
-            let description: Option<String> = record
-                .get(9)
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string());
-
             b.push_bind(track_id.clone())
                 .push_bind(track_id)
                 .push_bind(manufacturer_id)
@@ -480,7 +475,6 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
                 .push_bind(radius_mm)
                 .push_bind(track_code)
                 .push_bind(track_type)
-                .push_bind(description)
                 .push_bind(&now)
                 .push_bind(&now)
                 .push_bind(0i32);
@@ -494,13 +488,37 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
         qb.push("radius_mm = EXCLUDED.radius_mm, ");
         qb.push("track_code = EXCLUDED.track_code, ");
         qb.push("track_type = EXCLUDED.track_type, ");
-        qb.push("description = EXCLUDED.description, ");
         qb.push("updated_at = EXCLUDED.updated_at");
 
         qb.build()
             .execute(&mut *tx)
             .await
             .context("Failed to execute track_products upsert chunk")?;
+
+        for record in chunk {
+            let manufacturer = record.get(2).unwrap_or_default();
+            let product_code = record.get(3).unwrap_or_default();
+            let track_id = TrackId::new_from_parts(&[manufacturer, product_code]).to_string();
+            let description = record
+                .get(9)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            if description.is_some() {
+                sqlx::query(
+                    "INSERT INTO track_product_translations \
+                     (track_id, language_code, description, details, created_at, updated_at) \
+                     VALUES (?1, 'en', ?2, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) \
+                     ON CONFLICT(track_id, language_code) \
+                     DO UPDATE SET description = excluded.description, updated_at = CURRENT_TIMESTAMP",
+                )
+                .bind(track_id)
+                .bind(description)
+                .execute(&mut *tx)
+                .await
+                .context("Failed to execute track_product_translations upsert row")?;
+            }
+        }
     }
 
     tx.commit().await.context("Failed to commit transaction")?;

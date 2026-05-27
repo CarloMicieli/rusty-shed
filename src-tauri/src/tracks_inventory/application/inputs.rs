@@ -1,4 +1,5 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::core::domain::Language;
 use crate::core::domain::length::Length;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::sellers::domain::seller_id::SellerId;
@@ -62,10 +63,15 @@ pub struct SetTrackItemQuantityInput {
 pub struct CreateTrackProductInput {
     /// Manufacturer that produces this track product.
     pub manufacturer_id: ManufacturerId,
+    /// Language for the translation payload.
+    pub lang: Language,
+
     /// Manufacturer's product code or name.
     pub product_code: String,
     /// Human-readable description of the track piece.
-    pub description: String,
+    pub description: Option<String>,
+    /// Optional long details for the track piece.
+    pub details: Option<String>,
     /// Geometric type of the track piece.
     pub track_type: TrackType,
     /// Rail profile code describing the rail height.
@@ -76,4 +82,54 @@ pub struct CreateTrackProductInput {
     pub length: Option<Length>,
     /// Radius for curved track elements, when applicable.
     pub radius: Option<Length>,
+}
+
+/// Input used to update an existing track product.
+#[derive(Debug, Clone)]
+pub struct UpdateTrackProductInput {
+    /// Existing track identifier.
+    pub track_id: TrackId,
+    /// Manufacturer that produces this track product.
+    pub manufacturer_id: ManufacturerId,
+    /// Manufacturer's product code or name.
+    pub product_code: String,
+    /// Geometric type of the track piece.
+    pub track_type: TrackType,
+    /// Rail profile code describing the rail height.
+    pub track_code: TrackCode,
+    /// Whether this track piece includes an integrated roadbed.
+    pub with_roadbed: bool,
+    /// Length for straight track pieces, when applicable.
+    pub length: Option<Length>,
+    /// Radius for curved track elements, when applicable.
+    pub radius: Option<Length>,
+}
+
+/// Input used to upsert one translation for a track product.
+#[derive(Debug, Clone)]
+pub struct UpsertTrackProductTranslationInput {
+    /// Existing track identifier.
+    pub track_id: TrackId,
+    /// Language for the translation payload.
+    pub lang: Language,
+    /// Human-readable description of the track piece.
+    pub description: Option<String>,
+    /// Optional long details for the track piece.
+    pub details: Option<String>,
+}
+
+/// Input used to delete one translation row for a track product.
+#[derive(Debug, Clone)]
+pub struct DeleteTrackProductTranslationInput {
+    /// Existing track identifier.
+    pub track_id: TrackId,
+    /// Language to remove.
+    pub lang: Language,
+}
+
+/// Input used to delete an existing track product.
+#[derive(Debug, Clone)]
+pub struct DeleteTrackProductInput {
+    /// Existing track identifier.
+    pub track_id: TrackId,
 }

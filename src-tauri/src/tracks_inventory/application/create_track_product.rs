@@ -32,7 +32,6 @@ impl CreateTrackProductUseCase {
             track_id: track_id.clone(),
             product_code: input.product_code,
             manufacturer_id: input.manufacturer_id,
-            description: input.description,
             with_roadbed: input.with_roadbed,
             length: input.length,
             radius: input.radius,
@@ -41,7 +40,12 @@ impl CreateTrackProductUseCase {
             metadata: Metadata::default(),
         };
 
-        uow.track_products_repo().save(track_product).await?;
+        {
+            let mut repo = uow.track_products_repo();
+            repo.insert_track(&track_product).await?;
+            repo.upsert_translation(&track_id, input.lang, input.description, input.details)
+                .await?;
+        }
 
         Ok(track_id)
     }
@@ -63,7 +67,10 @@ mod tests {
         let expected_track_id = TrackId(raw_id.clone());
 
         let mut repo = MockTrackProductRepository::new();
-        repo.expect_save().times(1).returning(|_| Ok(()));
+        repo.expect_insert_track().times(1).returning(|_| Ok(()));
+        repo.expect_upsert_translation()
+            .times(1)
+            .returning(|_, _, _, _| Ok(()));
 
         let uow = MockAppUow::new().with_track_product(repo);
         let factory = OneShotFactory::new(uow);
@@ -72,8 +79,10 @@ mod tests {
         let id_provider = MockIdProvider::new(raw_id);
         let input = CreateTrackProductInput {
             manufacturer_id: ManufacturerId::new_from_parts(&["acme"]),
+            lang: crate::core::domain::Language::English,
             product_code: "R1".to_string(),
-            description: "Standard straight track".to_string(),
+            description: Some("Standard straight track".to_string()),
+            details: None,
             track_type: TrackType::Straight,
             track_code: TrackCode::Code100,
             with_roadbed: false,
