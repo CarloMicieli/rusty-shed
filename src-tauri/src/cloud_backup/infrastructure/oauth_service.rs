@@ -20,6 +20,33 @@ pub struct OAuthService {
     storage: Arc<dyn SecureStorage>,
 }
 
+#[derive(Debug, Clone)]
+struct AuthorizationCodeResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait AuthorizationCodeTransport {
+    async fn exchange_authorization_code(
+        &self,
+        auth_code: &str,
+        pkce_verifier: &PkceCodeVerifier,
+        redirect_uri: &str,
+    ) -> Result<AuthorizationCodeResponse>;
+}
+
+#[derive(Debug, Clone)]
+struct UserInfoResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait UserInfoTransport {
+    async fn fetch_user_email(&self, access_token: &str) -> Result<UserInfoResponse>;
+}
+
 impl OAuthService {
     /// Create new OAuth service
     pub fn new(client_id: String, storage: Arc<dyn SecureStorage>) -> Self {
@@ -65,57 +92,47 @@ impl OAuthService {
         pkce_verifier: PkceCodeVerifier,
         redirect_uri: &str,
     ) -> Result<GoogleConnection> {
-        let token_data = self
+        let transport = OAuthHttpTransport {
+            client_id: self.client_id.clone(),
+        };
+
+        self.complete_oauth_flow_with_transport(auth_code, pkce_verifier, redirect_uri, &transport)
+            .await
+    }
+
+    async fn complete_oauth_flow_with_transport<
+        T: AuthorizationCodeTransport + UserInfoTransport + Sync,
+    >(
+        &self,
+        auth_code: String,
+        pkce_verifier: PkceCodeVerifier,
+        redirect_uri: &str,
+        transport: &T,
+    ) -> Result<GoogleConnection> {
+        let token_response = transport
             .exchange_authorization_code(&auth_code, &pkce_verifier, redirect_uri)
             .await?;
-        let tokens = Self::parse_token_payload(&token_data)?;
+        if token_response.status != 200 {
+            return Err(CloudBackupError::TokenExchangeFailed(format!(
+                "Token exchange failed: {}",
+                token_response.body
+            )));
+        }
 
-        // Fetch user email
-        let email = self.fetch_user_email(tokens.access_token_str()).await?;
+        let token_data: serde_json::Value = serde_json::from_str(&token_response.body)
+            .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))?;
+        let tokens = Self::parse_token_payload_from_response(&token_data)?;
 
-        // Store tokens securely
+        let email = self
+            .fetch_user_email_with_transport(tokens.access_token_str(), transport)
+            .await?;
+
         self.storage.store_tokens(&email, &tokens).await?;
 
         Ok(GoogleConnection::new(email))
     }
 
-    async fn exchange_authorization_code(
-        &self,
-        auth_code: &str,
-        pkce_verifier: &PkceCodeVerifier,
-        redirect_uri: &str,
-    ) -> Result<serde_json::Value> {
-        let http_client = reqwest::Client::new();
-        let params = [
-            ("code", auth_code),
-            ("client_id", self.client_id.as_str()),
-            ("code_verifier", pkce_verifier.secret()),
-            ("grant_type", "authorization_code"),
-            ("redirect_uri", redirect_uri),
-        ];
-
-        let response = http_client
-            .post(GOOGLE_TOKEN_URL)
-            .form(&params)
-            .send()
-            .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-
-        if !response.status().is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(CloudBackupError::TokenExchangeFailed(format!(
-                "Token exchange failed: {}",
-                error_text
-            )));
-        }
-
-        response
-            .json()
-            .await
-            .map_err(|e| CloudBackupError::TokenExchangeFailed(e.to_string()))
-    }
-
-    fn parse_token_payload(token_data: &serde_json::Value) -> Result<OAuthTokens> {
+    fn parse_token_payload_from_response(token_data: &serde_json::Value) -> Result<OAuthTokens> {
         let access_token = token_data["access_token"]
             .as_str()
             .ok_or_else(|| CloudBackupError::TokenExchangeFailed("No access token".to_string()))?
@@ -189,7 +206,72 @@ impl OAuthService {
     }
 
     /// Fetch user email from Google API
-    async fn fetch_user_email(&self, access_token: &str) -> Result<String> {
+    async fn fetch_user_email_with_transport<T: UserInfoTransport + Sync>(
+        &self,
+        access_token: &str,
+        transport: &T,
+    ) -> Result<String> {
+        let user_info = transport.fetch_user_email(access_token).await?;
+
+        if user_info.status != 200 {
+            return Err(CloudBackupError::OAuthFailed(format!(
+                "Failed to fetch user info: {}",
+                user_info.status
+            )));
+        }
+
+        let user_info: serde_json::Value = serde_json::from_str(&user_info.body)
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        user_info
+            .get("email")
+            .and_then(|e| e.as_str())
+            .map(|s| s.to_string())
+            .ok_or_else(|| CloudBackupError::OAuthFailed("No email in user info".to_string()))
+    }
+}
+
+struct OAuthHttpTransport {
+    client_id: String,
+}
+
+#[async_trait]
+impl AuthorizationCodeTransport for OAuthHttpTransport {
+    async fn exchange_authorization_code(
+        &self,
+        auth_code: &str,
+        pkce_verifier: &PkceCodeVerifier,
+        redirect_uri: &str,
+    ) -> Result<AuthorizationCodeResponse> {
+        let http_client = reqwest::Client::new();
+        let params = [
+            ("code", auth_code),
+            ("client_id", self.client_id.as_str()),
+            ("code_verifier", pkce_verifier.secret()),
+            ("grant_type", "authorization_code"),
+            ("redirect_uri", redirect_uri),
+        ];
+
+        let response = http_client
+            .post(GOOGLE_TOKEN_URL)
+            .form(&params)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(AuthorizationCodeResponse { status, body })
+    }
+}
+
+#[async_trait]
+impl UserInfoTransport for OAuthHttpTransport {
+    async fn fetch_user_email(&self, access_token: &str) -> Result<UserInfoResponse> {
         let client = reqwest::Client::new();
         let response = client
             .get(GOOGLE_USERINFO_URL)
@@ -198,23 +280,13 @@ impl OAuthService {
             .await
             .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
 
-        if !response.status().is_success() {
-            return Err(CloudBackupError::OAuthFailed(format!(
-                "Failed to fetch user info: {}",
-                response.status()
-            )));
-        }
-
-        let user_info: serde_json::Value = response
-            .json()
+        let status = response.status().as_u16();
+        let body = response
+            .text()
             .await
             .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
 
-        user_info
-            .get("email")
-            .and_then(|e| e.as_str())
-            .map(|s| s.to_string())
-            .ok_or_else(|| CloudBackupError::OAuthFailed("No email in user info".to_string()))
+        Ok(UserInfoResponse { status, body })
     }
 }
 
@@ -342,10 +414,35 @@ mod tests {
         response: Result<RefreshTokenResponse>,
     }
 
+    #[derive(Clone)]
+    struct FakeOAuthTransport {
+        token_response: Result<AuthorizationCodeResponse>,
+        user_info_response: Result<UserInfoResponse>,
+    }
+
     #[async_trait]
     impl RefreshTokenTransport for FakeRefreshTransport {
         async fn refresh(&self, _refresh_token: &str) -> Result<RefreshTokenResponse> {
             self.response.clone()
+        }
+    }
+
+    #[async_trait]
+    impl AuthorizationCodeTransport for FakeOAuthTransport {
+        async fn exchange_authorization_code(
+            &self,
+            _auth_code: &str,
+            _pkce_verifier: &PkceCodeVerifier,
+            _redirect_uri: &str,
+        ) -> Result<AuthorizationCodeResponse> {
+            self.token_response.clone()
+        }
+    }
+
+    #[async_trait]
+    impl UserInfoTransport for FakeOAuthTransport {
+        async fn fetch_user_email(&self, _access_token: &str) -> Result<UserInfoResponse> {
+            self.user_info_response.clone()
         }
     }
 
@@ -496,5 +593,99 @@ mod tests {
             .expect_err("refresh should fail for non-success status");
 
         assert!(matches!(error, CloudBackupError::TokenExchangeFailed(_)));
+    }
+
+    #[tokio::test]
+    async fn test_complete_oauth_flow_with_transport_stores_tokens() {
+        let storage = Arc::new(TestStorage::new());
+        let service = OAuthService::new("client-id".to_string(), storage.clone());
+        let transport = FakeOAuthTransport {
+            token_response: Ok(AuthorizationCodeResponse {
+                status: 200,
+                body: r#"{"access_token":"new-access","refresh_token":"new-refresh","expires_in":120}"#.to_string(),
+            }),
+            user_info_response: Ok(UserInfoResponse {
+                status: 200,
+                body: r#"{"email":"alice@example.com"}"#.to_string(),
+            }),
+        };
+        let (_challenge, verifier) = PkceCodeChallenge::new_random_sha256();
+
+        let connection = service
+            .complete_oauth_flow_with_transport(
+                "auth-code".to_string(),
+                verifier,
+                REDIRECT_URI,
+                &transport,
+            )
+            .await
+            .expect("oauth flow should succeed");
+
+        assert_eq!(connection.email, "alice@example.com");
+
+        let stored = storage
+            .retrieve_tokens("alice@example.com")
+            .await
+            .expect("retrieve should succeed")
+            .expect("tokens should exist");
+        assert_eq!(stored.access_token_str(), "new-access");
+    }
+
+    #[tokio::test]
+    async fn test_complete_oauth_flow_with_transport_rejects_failed_token_exchange() {
+        let storage = Arc::new(TestStorage::new());
+        let service = OAuthService::new("client-id".to_string(), storage);
+        let transport = FakeOAuthTransport {
+            token_response: Ok(AuthorizationCodeResponse {
+                status: 400,
+                body: "bad request".to_string(),
+            }),
+            user_info_response: Ok(UserInfoResponse {
+                status: 200,
+                body: r#"{"email":"alice@example.com"}"#.to_string(),
+            }),
+        };
+        let (_challenge, verifier) = PkceCodeChallenge::new_random_sha256();
+
+        let error = service
+            .complete_oauth_flow_with_transport(
+                "auth-code".to_string(),
+                verifier,
+                REDIRECT_URI,
+                &transport,
+            )
+            .await
+            .expect_err("oauth flow should fail");
+
+        assert!(matches!(error, CloudBackupError::TokenExchangeFailed(_)));
+    }
+
+    #[tokio::test]
+    async fn test_complete_oauth_flow_with_transport_requires_email() {
+        let storage = Arc::new(TestStorage::new());
+        let service = OAuthService::new("client-id".to_string(), storage);
+        let transport = FakeOAuthTransport {
+            token_response: Ok(AuthorizationCodeResponse {
+                status: 200,
+                body: r#"{"access_token":"new-access"}"#.to_string(),
+            }),
+            user_info_response: Ok(UserInfoResponse {
+                status: 200,
+                body: r#"{"name":"Alice"}"#.to_string(),
+            }),
+        };
+        let (_challenge, verifier) = PkceCodeChallenge::new_random_sha256();
+
+        let error = service
+            .complete_oauth_flow_with_transport(
+                "auth-code".to_string(),
+                verifier,
+                REDIRECT_URI,
+                &transport,
+            )
+            .await
+            .expect_err("oauth flow should fail without an email");
+
+        assert!(matches!(error, CloudBackupError::OAuthFailed(_)));
     }
 }

@@ -499,4 +499,53 @@ mod tests {
             .expect("delete should succeed");
         assert_eq!(deleted, 1);
     }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_manufacturer.sql")
+    )]
+    async fn it_should_update_manufacturer_fields(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
+
+        let id = ManufacturerId::try_from("trn:manufacturer:acme").expect("valid id");
+        let updated = repository
+            .update(
+                &id,
+                "ACME Updated".to_string(),
+                Some("DE".to_string()),
+                Some("https://acme.example".to_string()),
+            )
+            .await
+            .expect("update should succeed");
+
+        assert_eq!(updated.id, id);
+        assert_eq!(updated.name, "ACME Updated");
+        assert_eq!(updated.country_code.as_deref(), Some("DE"));
+        assert_eq!(
+            updated.website_url,
+            Some(Url::parse("https://acme.example").expect("valid URL"))
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_manufacturer.sql")
+    )]
+    async fn it_should_return_conflict_when_updating_to_existing_name(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
+
+        let id = ManufacturerId::try_from("trn:manufacturer:acme").expect("valid id");
+        let result = repository
+            .update(
+                &id,
+                "Roco".to_string(),
+                Some("IT".to_string()),
+                Some("https://duplicate.example".to_string()),
+            )
+            .await;
+
+        assert!(matches!(result, Err(DomainError::Conflict(_))));
+    }
 }

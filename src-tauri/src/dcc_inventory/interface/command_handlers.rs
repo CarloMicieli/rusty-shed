@@ -201,9 +201,12 @@ pub async fn get_installable_rolling_stocks(
 mod tests {
     use super::*;
     use crate::app_uow::testing::{MockAppUow, OneShotFactory};
+    use crate::collecting::domain::OwnedRollingStockId;
     use crate::dcc_inventory::domain::MockDigitalRollingStockRepository;
+    use crate::dcc_inventory::domain::{DecoderId, DigitalRollingStock};
     use sqlx::SqlitePool;
     use std::sync::Arc;
+    use uuid::Uuid;
 
     /// Helper: build an `AppState` backed by an in-memory pool (not used for
     /// UoW) with the given pre-configured mock unit of work.
@@ -248,6 +251,120 @@ mod tests {
 
         let result = get_decoders_inner(&state).await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn new_digital_rolling_stock_inner_returns_created_id() {
+        let mut repo = MockDigitalRollingStockRepository::new();
+        repo.expect_check_address_exists()
+            .times(1)
+            .returning(|_, _| {
+                Ok(CheckDuplicateAddressResult {
+                    is_duplicate: false,
+                    existing_rolling_stock_id: None,
+                })
+            });
+        repo.expect_save().times(1).returning(|_| Ok(()));
+
+        let uow = MockAppUow::new().with_dcc_inventory(repo);
+        let state = state_with_uow(uow).await;
+
+        let owned_uuid = Uuid::new_v4();
+        let args = NewDigitalRollingStockArgs {
+            owned_rolling_stock_id: format!("trn:owned-rolling-stock:{owned_uuid}"),
+            dcc_address: 123,
+            decoder_id: "trn:decoder:acme:d-100".to_string(),
+        };
+
+        let result = new_digital_rolling_stock_inner(&state, args)
+            .await
+            .expect("create digital rolling stock should succeed");
+
+        assert_eq!(
+            result.id.to_string(),
+            format!("trn:owned-rolling-stock:{owned_uuid}")
+        );
+    }
+
+    #[tokio::test]
+    async fn change_dcc_address_inner_updates_existing_rolling_stock() {
+        let id = DigitalRollingStockId::from_uuid(Uuid::new_v4());
+        let existing = DigitalRollingStock::reconstitute(
+            id.clone(),
+            OwnedRollingStockId::from(Uuid::new_v4()),
+            DccAddress::new(10).expect("valid dcc address"),
+            DecoderId::try_from("trn:decoder:acme:d-100").expect("valid decoder id"),
+        );
+
+        let expected_id = id.clone();
+        let expected_new_addr = DccAddress::new(500).expect("valid dcc address");
+
+        let mut repo = MockDigitalRollingStockRepository::new();
+        repo.expect_check_address_exists()
+            .times(1)
+            .returning(|_, _| {
+                Ok(CheckDuplicateAddressResult {
+                    is_duplicate: false,
+                    existing_rolling_stock_id: None,
+                })
+            });
+        repo.expect_find_by_id()
+            .times(1)
+            .withf(move |input_id| *input_id == expected_id)
+            .returning(move |_| Ok(Some(existing.clone())));
+        repo.expect_save()
+            .times(1)
+            .withf(move |drs: &DigitalRollingStock| drs.dcc_address == expected_new_addr)
+            .returning(|_| Ok(()));
+
+        let uow = MockAppUow::new().with_dcc_inventory(repo);
+        let state = state_with_uow(uow).await;
+
+        let args = ChangeDccAddressArgs {
+            id: id.to_string(),
+            new_dcc_address: 500,
+        };
+
+        change_dcc_address_inner(&state, args)
+            .await
+            .expect("change dcc address should succeed");
+    }
+
+    #[tokio::test]
+    async fn change_decoder_inner_updates_existing_rolling_stock() {
+        let id = DigitalRollingStockId::from_uuid(Uuid::new_v4());
+        let existing = DigitalRollingStock::reconstitute(
+            id.clone(),
+            OwnedRollingStockId::from(Uuid::new_v4()),
+            DccAddress::new(10).expect("valid dcc address"),
+            DecoderId::try_from("trn:decoder:acme:d-100").expect("valid decoder id"),
+        );
+
+        let expected_id = id.clone();
+        let expected_decoder =
+            DecoderId::try_from("trn:decoder:acme:d-200").expect("valid decoder id");
+
+        let mut repo = MockDigitalRollingStockRepository::new();
+        repo.expect_find_by_id()
+            .times(1)
+            .withf(move |input_id| *input_id == expected_id)
+            .returning(move |_| Ok(Some(existing.clone())));
+        repo.expect_save()
+            .times(1)
+            .withf(move |drs: &DigitalRollingStock| drs.decoder_id == expected_decoder)
+            .returning(|_| Ok(()));
+
+        let uow = MockAppUow::new().with_dcc_inventory(repo);
+        let state = state_with_uow(uow).await;
+
+        let args = ChangeDecoderArgs {
+            id: id.to_string(),
+            decoder_id: "trn:decoder:acme:d-200".to_string(),
+        };
+
+        change_decoder_inner(&state, args)
+            .await
+            .expect("change decoder should succeed");
     }
 
     #[sqlx::test]

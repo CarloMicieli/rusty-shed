@@ -221,3 +221,95 @@ mod garde_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod update_seller_payload_conversion_tests {
+    use super::*;
+    use crate::core::infrastructure::error::CommandError;
+    use crate::sellers::domain::seller_type::SellerType;
+
+    fn valid_update() -> UpdateSellerPayload {
+        UpdateSellerPayload {
+            id: "trn:seller:test-shop".to_string(),
+            name: "Test Shop".to_string(),
+            seller_type: SellerType::Shop,
+            email: Some("shop@example.com".to_string()),
+            phone: Some("12345".to_string()),
+            website_url: Some("https://example.com".to_string()),
+            street_address: Some("Main St".to_string()),
+            extended_address: Some("Building A".to_string()),
+            city: Some("Turin".to_string()),
+            state_region: Some("TO".to_string()),
+            postal_code: Some("10100".to_string()),
+            country_code: Some("IT".to_string()),
+            created_at: None,
+        }
+    }
+
+    #[test]
+    fn update_payload_try_from_success_with_created_at_none() {
+        let payload = valid_update();
+
+        let converted = UpdateSellerInput::try_from(payload).expect("conversion should succeed");
+
+        assert_eq!(converted.id.as_ref(), "trn:seller:test-shop");
+        assert_eq!(converted.name, "Test Shop");
+        assert_eq!(converted.seller_type, SellerType::Shop);
+        assert_eq!(converted.email.as_deref(), Some("shop@example.com"));
+        assert_eq!(converted.phone.as_deref(), Some("12345"));
+        assert_eq!(
+            converted.website_url.as_deref(),
+            Some("https://example.com")
+        );
+        assert_eq!(converted.street_address.as_deref(), Some("Main St"));
+        assert_eq!(converted.extended_address.as_deref(), Some("Building A"));
+        assert_eq!(converted.city.as_deref(), Some("Turin"));
+        assert_eq!(converted.state_region.as_deref(), Some("TO"));
+        assert_eq!(converted.postal_code.as_deref(), Some("10100"));
+        assert_eq!(converted.country_code.as_deref(), Some("IT"));
+        assert!(converted.created_at.is_none());
+    }
+
+    #[test]
+    fn update_payload_try_from_success_with_valid_rfc3339_created_at() {
+        let mut payload = valid_update();
+        payload.created_at = Some("2024-05-28T14:30:00+00:00".to_string());
+
+        let converted = UpdateSellerInput::try_from(payload).expect("conversion should succeed");
+
+        assert_eq!(
+            converted.created_at.map(|dt| dt.to_rfc3339()),
+            Some("2024-05-28T14:30:00+00:00".to_string())
+        );
+    }
+
+    #[test]
+    fn update_payload_try_from_fails_on_invalid_id() {
+        let mut payload = valid_update();
+        payload.id = String::new();
+
+        let converted = UpdateSellerInput::try_from(payload);
+
+        match converted {
+            Err(CommandError::ValidationError(map)) => {
+                assert!(map.contains_key("id"), "{map:?}");
+            }
+            other => panic!("expected ValidationError for id, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn update_payload_try_from_fails_on_invalid_created_at() {
+        let mut payload = valid_update();
+        payload.created_at = Some("invalid-datetime".to_string());
+
+        let converted = UpdateSellerInput::try_from(payload);
+
+        match converted {
+            Err(CommandError::ValidationError(map)) => {
+                assert!(map.contains_key("createdAt"), "{map:?}");
+            }
+            other => panic!("expected ValidationError for createdAt, got {other:?}"),
+        }
+    }
+}

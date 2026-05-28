@@ -389,10 +389,217 @@ pub async fn set_item_required(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::core::domain::Language;
+    use crate::core::domain::currency::Currency;
+    use crate::core::domain::monetary_amount::MonetaryAmount;
+    use chrono::NaiveDate;
     use sqlx::SqlitePool;
 
     fn app_state(pool: SqlitePool) -> AppState {
         AppState::for_test(pool)
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_track_inventory_inner_persists_inventory_and_returns_id(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let input = NewTrackInventoryArgs {
+            name: "Command Handler Inventory".to_string(),
+            description: Some("Created from command handler test".to_string()),
+        };
+
+        let created_id = create_track_inventory_inner(&state, input)
+            .await
+            .expect("create should succeed");
+
+        let row = sqlx::query_as::<_, (String, Option<String>)>(
+            "SELECT name, description FROM track_inventories WHERE id = ?1",
+        )
+        .bind(created_id.to_string())
+        .fetch_one(&pool)
+        .await
+        .expect("created inventory should be persisted");
+
+        assert_eq!(row.0, "Command Handler Inventory");
+        assert_eq!(row.1.as_deref(), Some("Created from command handler test"));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn rename_track_inventory_inner_updates_persisted_name(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+
+        let created_id = create_track_inventory_inner(
+            &state,
+            NewTrackInventoryArgs {
+                name: "Initial Name".to_string(),
+                description: Some("Rename flow".to_string()),
+            },
+        )
+        .await
+        .expect("create should succeed");
+
+        rename_track_inventory_inner(
+            &state,
+            RenameTrackInventoryArgs {
+                id: created_id.clone(),
+                new_name: "Renamed By Handler".to_string(),
+            },
+        )
+        .await
+        .expect("rename should succeed");
+
+        let persisted_name: String =
+            sqlx::query_scalar("SELECT name FROM track_inventories WHERE id = ?1")
+                .bind(created_id.to_string())
+                .fetch_one(&pool)
+                .await
+                .expect("renamed inventory should be persisted");
+
+        assert_eq!(persisted_name, "Renamed By Handler");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn add_track_purchase_inner_persists_purchase_and_returns_id(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let input = AddTrackPurchaseArgs {
+            id: TrackInventoryId::try_from(
+                "trn:track-inventory:00000000-0000-0000-0000-000000000001",
+            )
+            .expect("valid inventory id"),
+            track_id: TrackId::try_from("trn:track:acme:60100").expect("valid track id"),
+            quantity: 2,
+            price: MonetaryAmount::new(1234, Currency::EUR),
+            seller_id: None,
+            purchase_date: NaiveDate::from_ymd_opt(2025, 1, 1).expect("valid date"),
+        };
+
+        let purchase_id = add_track_purchase_inner(&state, input)
+            .await
+            .expect("add purchase should succeed");
+
+        let row =
+            sqlx::query_as::<_, (String, i64, i64, String)>(
+                "SELECT track_id, quantity, price_amount, price_currency FROM track_purchases WHERE id = ?1",
+            )
+            .bind(purchase_id.to_string())
+            .fetch_one(&pool)
+            .await
+            .expect("created purchase should be persisted");
+
+        assert_eq!(row.0, "trn:track:acme:60100");
+        assert_eq!(row.1, 2);
+        assert_eq!(row.2, 1234);
+        assert_eq!(row.3, "EUR");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn set_track_item_quantity_inner_updates_quantity(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let inventory_id =
+            TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-000000000001")
+                .expect("valid inventory id");
+        let track_id = TrackId::try_from("trn:track:acme:60100").expect("valid track id");
+
+        set_track_item_quantity_inner(
+            &state,
+            SetTrackItemQuantityArgs {
+                inventory_id: inventory_id.clone(),
+                track_id: track_id.clone(),
+                quantity: 9,
+            },
+        )
+        .await
+        .expect("set quantity should succeed");
+
+        let quantity: i64 = sqlx::query_scalar(
+            "SELECT quantity FROM track_inventory_items WHERE inventory_id = ?1 AND track_id = ?2",
+        )
+        .bind(inventory_id.to_string())
+        .bind(track_id.to_string())
+        .fetch_one(&pool)
+        .await
+        .expect("updated quantity should be queryable");
+
+        assert_eq!(quantity, 9);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn create_track_product_inner_persists_track_and_returns_id(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+        let args = CreateTrackProductArgs {
+            lang: Language::English,
+            manufacturer_id: ManufacturerId::try_from("trn:manufacturer:acme")
+                .expect("valid manufacturer id"),
+            product_code: "60199".to_string(),
+            description: Some("Command handler track".to_string()),
+            details: Some("Created in command handler test".to_string()),
+            track_type: crate::tracks_inventory::domain::TrackType::Straight,
+            track_code: crate::tracks_inventory::domain::TrackCode::Code100,
+            with_roadbed: false,
+            length: None,
+            radius: None,
+        };
+
+        let track_id = create_track_product_inner(&state, args)
+            .await
+            .expect("create track product should succeed");
+
+        let row = sqlx::query_as::<_, (String, String, String)>(
+            "SELECT track_id, manufacturer_id, product_code FROM track_products WHERE track_id = ?1",
+        )
+        .bind(track_id.to_string())
+        .fetch_one(&pool)
+        .await
+        .expect("created track product should be persisted");
+
+        assert_eq!(row.0, track_id.to_string());
+        assert_eq!(row.1, "trn:manufacturer:acme");
+        assert_eq!(row.2, "60199");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn update_track_product_inner_updates_existing_track(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+
+        update_track_product_inner(
+            &state,
+            UpdateTrackProductArgs {
+                track_id: TrackId::try_from("trn:track:acme:60100").expect("valid track id"),
+                manufacturer_id: ManufacturerId::try_from("trn:manufacturer:acme")
+                    .expect("valid manufacturer id"),
+                product_code: "60100-UPDATED".to_string(),
+                track_type: crate::tracks_inventory::domain::TrackType::Curve,
+                track_code: crate::tracks_inventory::domain::TrackCode::Code83,
+                with_roadbed: true,
+                length: None,
+                radius: None,
+            },
+        )
+        .await
+        .expect("update track product should succeed");
+
+        let row = sqlx::query_as::<_, (String, i64)>(
+            "SELECT product_code, with_roadbed FROM track_products WHERE track_id = ?1",
+        )
+        .bind("trn:track:acme:60100")
+        .fetch_one(&pool)
+        .await
+        .expect("updated track product should be persisted");
+
+        assert_eq!(row.0, "60100-UPDATED");
+        assert_eq!(row.1, 1);
     }
 
     #[sqlx::test(migrations = "./migrations")]

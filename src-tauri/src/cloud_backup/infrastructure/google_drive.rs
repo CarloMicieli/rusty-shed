@@ -96,6 +96,183 @@ pub struct GoogleDriveClient {
     http_client: Client,
 }
 
+#[derive(Debug, Clone)]
+struct FolderQueryResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait FolderQueryTransport {
+    async fn find_folder(&self, query: &str) -> Result<FolderQueryResponse>;
+}
+
+#[derive(Debug, Clone)]
+struct FolderCreateResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait FolderCreateTransport {
+    async fn create_folder(&self, name: &str, parent_id: &str) -> Result<FolderCreateResponse>;
+}
+
+#[derive(Debug, Clone)]
+struct FolderListResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait FolderListTransport {
+    async fn list_files(&self, folder_id: &str) -> Result<FolderListResponse>;
+}
+
+#[derive(Debug, Clone)]
+struct DeleteResponse {
+    status: u16,
+    body: String,
+}
+
+#[async_trait]
+trait DeleteFileTransport {
+    async fn delete_file(&self, file_id: &str) -> Result<DeleteResponse>;
+}
+
+struct ReqwestFolderQueryTransport<'a> {
+    http_client: &'a Client,
+    access_token: &'a str,
+}
+
+#[async_trait]
+impl FolderQueryTransport for ReqwestFolderQueryTransport<'_> {
+    async fn find_folder(&self, query: &str) -> Result<FolderQueryResponse> {
+        let response = self
+            .http_client
+            .get("https://www.googleapis.com/drive/v3/files")
+            .bearer_auth(self.access_token)
+            .query(&[
+                ("q", query),
+                ("spaces", "appDataFolder"),
+                ("fields", "files(id, name)"),
+                ("pageSize", "1"),
+            ])
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(FolderQueryResponse { status, body })
+    }
+}
+
+struct ReqwestFolderCreateTransport<'a> {
+    http_client: &'a Client,
+    access_token: &'a str,
+}
+
+#[async_trait]
+impl FolderCreateTransport for ReqwestFolderCreateTransport<'_> {
+    async fn create_folder(&self, name: &str, parent_id: &str) -> Result<FolderCreateResponse> {
+        let body = json!({
+            "name": name,
+            "mimeType": "application/vnd.google-apps.folder",
+            "parents": [parent_id]
+        });
+
+        let response = self
+            .http_client
+            .post("https://www.googleapis.com/drive/v3/files")
+            .bearer_auth(self.access_token)
+            .json(&body)
+            .query(&[("fields", "id")])
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(FolderCreateResponse { status, body })
+    }
+}
+
+struct ReqwestFolderListTransport<'a> {
+    http_client: &'a Client,
+    access_token: &'a str,
+}
+
+#[async_trait]
+impl FolderListTransport for ReqwestFolderListTransport<'_> {
+    async fn list_files(&self, folder_id: &str) -> Result<FolderListResponse> {
+        let query = format!("'{}' in parents and trashed=false", folder_id);
+
+        let response = self
+            .http_client
+            .get("https://www.googleapis.com/drive/v3/files")
+            .bearer_auth(self.access_token)
+            .query(&[
+                ("q", &query),
+                ("spaces", &"drive".to_string()),
+                (
+                    "fields",
+                    &"files(id, name, size, modifiedTime, appProperties)".to_string(),
+                ),
+                ("pageSize", &"100".to_string()),
+                ("orderBy", &"modifiedTime desc".to_string()),
+            ])
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(FolderListResponse { status, body })
+    }
+}
+
+struct ReqwestDeleteFileTransport<'a> {
+    http_client: &'a Client,
+    access_token: &'a str,
+}
+
+#[async_trait]
+impl DeleteFileTransport for ReqwestDeleteFileTransport<'_> {
+    async fn delete_file(&self, file_id: &str) -> Result<DeleteResponse> {
+        let response = self
+            .http_client
+            .delete(format!(
+                "https://www.googleapis.com/drive/v3/files/{}",
+                file_id
+            ))
+            .bearer_auth(self.access_token)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        Ok(DeleteResponse { status, body })
+    }
+}
+
 impl GoogleDriveClient {
     /// Create new Google Drive client
     ///
@@ -138,30 +315,26 @@ impl GoogleDriveClient {
 
     /// Find a folder by query
     async fn find_folder_by_query(&self, query: &str) -> Result<Option<String>> {
-        let response = self
-            .http_client
-            .get("https://www.googleapis.com/drive/v3/files")
-            .bearer_auth(&self.access_token)
-            .query(&[
-                ("q", query),
-                ("spaces", "appDataFolder"),
-                ("fields", "files(id, name)"),
-                ("pageSize", "1"),
-            ])
-            .send()
+        let transport = ReqwestFolderQueryTransport {
+            http_client: &self.http_client,
+            access_token: &self.access_token,
+        };
+        self.find_folder_by_query_with_transport(query, &transport)
             .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+    }
 
-        if !response.status().is_success() {
-            let status = response.status().as_u16();
-            let error_text = response
-                .text()
-                .await
-                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-            return Err(extract_drive_error(status, &error_text));
+    async fn find_folder_by_query_with_transport<T: FolderQueryTransport + Sync>(
+        &self,
+        query: &str,
+        transport: &T,
+    ) -> Result<Option<String>> {
+        let response = transport.find_folder(query).await?;
+
+        if !is_success_status(response.status) {
+            return Err(extract_drive_error(response.status, &response.body));
         }
 
-        let data: serde_json::Value = response.json().await.map_err(|e| {
+        let data: serde_json::Value = serde_json::from_str(&response.body).map_err(|e| {
             CloudBackupError::DriveError(format!("Failed to parse response: {}", e))
         })?;
 
@@ -175,32 +348,27 @@ impl GoogleDriveClient {
 
     /// Create a folder in Google Drive
     async fn create_folder(&self, name: &str, parent_id: &str) -> Result<String> {
-        let body = json!({
-            "name": name,
-            "mimeType": "application/vnd.google-apps.folder",
-            "parents": [parent_id]
-        });
-
-        let response = self
-            .http_client
-            .post("https://www.googleapis.com/drive/v3/files")
-            .bearer_auth(&self.access_token)
-            .json(&body)
-            .query(&[("fields", "id")])
-            .send()
+        let transport = ReqwestFolderCreateTransport {
+            http_client: &self.http_client,
+            access_token: &self.access_token,
+        };
+        self.create_folder_with_transport(name, parent_id, &transport)
             .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+    }
 
-        if !response.status().is_success() {
-            let status = response.status().as_u16();
-            let error_text = response
-                .text()
-                .await
-                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-            return Err(extract_drive_error(status, &error_text));
+    async fn create_folder_with_transport<T: FolderCreateTransport + Sync>(
+        &self,
+        name: &str,
+        parent_id: &str,
+        transport: &T,
+    ) -> Result<String> {
+        let response = transport.create_folder(name, parent_id).await?;
+
+        if !is_success_status(response.status) {
+            return Err(extract_drive_error(response.status, &response.body));
         }
 
-        let data: serde_json::Value = response.json().await.map_err(|e| {
+        let data: serde_json::Value = serde_json::from_str(&response.body).map_err(|e| {
             CloudBackupError::DriveError(format!("Failed to parse response: {}", e))
         })?;
 
@@ -388,41 +556,25 @@ impl GoogleDriveClient {
     /// * `Ok(Vec<DriveFile>)` - List of files with metadata
     /// * `Err(CloudBackupError)` - If listing fails
     pub async fn list_files(&self, folder_id: &str) -> Result<Vec<DriveFile>> {
-        let query = format!("'{}' in parents and trashed=false", folder_id);
+        let transport = ReqwestFolderListTransport {
+            http_client: &self.http_client,
+            access_token: &self.access_token,
+        };
+        self.list_files_with_transport(folder_id, &transport).await
+    }
 
-        let response = self
-            .http_client
-            .get("https://www.googleapis.com/drive/v3/files")
-            .bearer_auth(&self.access_token)
-            .query(&[
-                ("q", &query),
-                ("spaces", &"drive".to_string()),
-                (
-                    "fields",
-                    &"files(id, name, size, modifiedTime, appProperties)".to_string(),
-                ),
-                ("pageSize", &"100".to_string()),
-                ("orderBy", &"modifiedTime desc".to_string()),
-            ])
-            .send()
-            .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+    async fn list_files_with_transport<T: FolderListTransport + Sync>(
+        &self,
+        folder_id: &str,
+        transport: &T,
+    ) -> Result<Vec<DriveFile>> {
+        let response = transport.list_files(folder_id).await?;
 
-        if !response.status().is_success() {
-            let status = response.status().as_u16();
-            let error_text = response
-                .text()
-                .await
-                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-            return Err(extract_drive_error(status, &error_text));
+        if !is_success_status(response.status) {
+            return Err(extract_drive_error(response.status, &response.body));
         }
 
-        let body = response
-            .text()
-            .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-
-        parse_drive_files_response(&body)
+        parse_drive_files_response(&response.body)
     }
 
     /// Delete a file from Google Drive
@@ -437,24 +589,22 @@ impl GoogleDriveClient {
     /// * `Ok(())` - File deleted successfully
     /// * `Err(CloudBackupError)` - If deletion fails
     pub async fn delete_file(&self, file_id: &str) -> Result<()> {
-        let response = self
-            .http_client
-            .delete(format!(
-                "https://www.googleapis.com/drive/v3/files/{}",
-                file_id
-            ))
-            .bearer_auth(&self.access_token)
-            .send()
-            .await
-            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+        let transport = ReqwestDeleteFileTransport {
+            http_client: &self.http_client,
+            access_token: &self.access_token,
+        };
+        self.delete_file_with_transport(file_id, &transport).await
+    }
 
-        if !response.status().is_success() && response.status().as_u16() != 404 {
-            let status = response.status().as_u16();
-            let error_text = response
-                .text()
-                .await
-                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
-            return Err(extract_drive_error(status, &error_text));
+    async fn delete_file_with_transport<T: DeleteFileTransport + Sync>(
+        &self,
+        file_id: &str,
+        transport: &T,
+    ) -> Result<()> {
+        let response = transport.delete_file(file_id).await?;
+
+        if !is_success_status(response.status) && response.status != 404 {
+            return Err(extract_drive_error(response.status, &response.body));
         }
 
         Ok(())
@@ -859,6 +1009,59 @@ mod tests {
     use super::*;
     use std::sync::{Arc, Mutex};
 
+    struct FakeFolderQueryTransport {
+        response: Result<FolderQueryResponse>,
+        observed_query: Arc<Mutex<Option<String>>>,
+    }
+
+    struct FakeFolderCreateTransport {
+        response: Result<FolderCreateResponse>,
+        observed_input: Arc<Mutex<Option<(String, String)>>>,
+    }
+
+    struct FakeFolderListTransport {
+        response: Result<FolderListResponse>,
+        observed_folder_id: Arc<Mutex<Option<String>>>,
+    }
+
+    struct FakeDeleteTransport {
+        response: Result<DeleteResponse>,
+        observed_file_id: Arc<Mutex<Option<String>>>,
+    }
+
+    #[async_trait]
+    impl FolderQueryTransport for FakeFolderQueryTransport {
+        async fn find_folder(&self, query: &str) -> Result<FolderQueryResponse> {
+            *self.observed_query.lock().expect("query lock") = Some(query.to_string());
+            self.response.clone()
+        }
+    }
+
+    #[async_trait]
+    impl FolderCreateTransport for FakeFolderCreateTransport {
+        async fn create_folder(&self, name: &str, parent_id: &str) -> Result<FolderCreateResponse> {
+            *self.observed_input.lock().expect("input lock") =
+                Some((name.to_string(), parent_id.to_string()));
+            self.response.clone()
+        }
+    }
+
+    #[async_trait]
+    impl FolderListTransport for FakeFolderListTransport {
+        async fn list_files(&self, folder_id: &str) -> Result<FolderListResponse> {
+            *self.observed_folder_id.lock().expect("folder lock") = Some(folder_id.to_string());
+            self.response.clone()
+        }
+    }
+
+    #[async_trait]
+    impl DeleteFileTransport for FakeDeleteTransport {
+        async fn delete_file(&self, file_id: &str) -> Result<DeleteResponse> {
+            *self.observed_file_id.lock().expect("file lock") = Some(file_id.to_string());
+            self.response.clone()
+        }
+    }
+
     #[derive(Debug, Clone)]
     struct FakeSimpleTransportState {
         boundary: Option<String>,
@@ -1132,6 +1335,203 @@ mod tests {
         let body = lock.body.clone().unwrap_or_default();
         let body_text = String::from_utf8_lossy(&body);
         assert!(body_text.contains("\"checksum\":\"abc\""));
+    }
+
+    #[tokio::test]
+    async fn test_find_folder_by_query_with_transport_returns_first_id() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let observed_query = Arc::new(Mutex::new(None));
+        let transport = FakeFolderQueryTransport {
+            response: Ok(FolderQueryResponse {
+                status: 200,
+                body: r#"{"files":[{"id":"folder-1","name":"RustyShedBackups"}]}"#.to_string(),
+            }),
+            observed_query: observed_query.clone(),
+        };
+
+        let result = client
+            .find_folder_by_query_with_transport("name='RustyShedBackups'", &transport)
+            .await
+            .expect("query should succeed");
+
+        assert_eq!(result.as_deref(), Some("folder-1"));
+        assert_eq!(
+            observed_query
+                .lock()
+                .expect("query lock")
+                .as_deref()
+                .unwrap_or_default(),
+            "name='RustyShedBackups'"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_find_folder_by_query_with_transport_returns_none_when_empty() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeFolderQueryTransport {
+            response: Ok(FolderQueryResponse {
+                status: 200,
+                body: r#"{"files":[]}"#.to_string(),
+            }),
+            observed_query: Arc::new(Mutex::new(None)),
+        };
+
+        let result = client
+            .find_folder_by_query_with_transport("name='missing'", &transport)
+            .await
+            .expect("query should succeed");
+
+        assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_find_folder_by_query_with_transport_maps_api_error() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeFolderQueryTransport {
+            response: Ok(FolderQueryResponse {
+                status: 401,
+                body: "expired".to_string(),
+            }),
+            observed_query: Arc::new(Mutex::new(None)),
+        };
+
+        let error = client
+            .find_folder_by_query_with_transport("name='RustyShedBackups'", &transport)
+            .await
+            .expect_err("expected auth error");
+
+        assert!(matches!(error, CloudBackupError::TokenExpired));
+    }
+
+    #[tokio::test]
+    async fn test_create_folder_with_transport_returns_created_id() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let observed_input = Arc::new(Mutex::new(None));
+        let transport = FakeFolderCreateTransport {
+            response: Ok(FolderCreateResponse {
+                status: 200,
+                body: r#"{"id":"folder-1"}"#.to_string(),
+            }),
+            observed_input: observed_input.clone(),
+        };
+
+        let folder_id = client
+            .create_folder_with_transport("RustyShedBackups", "appDataFolder", &transport)
+            .await
+            .expect("create folder should succeed");
+
+        assert_eq!(folder_id, "folder-1");
+        assert_eq!(
+            observed_input.lock().expect("input lock").clone(),
+            Some(("RustyShedBackups".to_string(), "appDataFolder".to_string()))
+        );
+    }
+
+    #[tokio::test]
+    async fn test_create_folder_with_transport_maps_http_error() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeFolderCreateTransport {
+            response: Ok(FolderCreateResponse {
+                status: 403,
+                body: r#"{"error":{"code":403,"message":"Forbidden: permission denied"}}"#
+                    .to_string(),
+            }),
+            observed_input: Arc::new(Mutex::new(None)),
+        };
+
+        let error = client
+            .create_folder_with_transport("RustyShedBackups", "appDataFolder", &transport)
+            .await
+            .expect_err("expected drive error");
+
+        assert!(matches!(error, CloudBackupError::DriveError(_)));
+    }
+
+    #[tokio::test]
+    async fn test_list_files_with_transport_returns_parsed_files() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let observed_folder_id = Arc::new(Mutex::new(None));
+        let transport = FakeFolderListTransport {
+            response: Ok(FolderListResponse {
+                status: 200,
+                body: r#"{"files":[{"id":"f1","name":"backup-1.gz","size":12}]}"#.to_string(),
+            }),
+            observed_folder_id: observed_folder_id.clone(),
+        };
+
+        let files = client
+            .list_files_with_transport("folder-1", &transport)
+            .await
+            .expect("list should succeed");
+
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].id, "f1");
+        assert_eq!(files[0].name, "backup-1.gz");
+        assert_eq!(
+            observed_folder_id.lock().expect("folder lock").as_deref(),
+            Some("folder-1")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_list_files_with_transport_maps_auth_error() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeFolderListTransport {
+            response: Ok(FolderListResponse {
+                status: 401,
+                body: "expired".to_string(),
+            }),
+            observed_folder_id: Arc::new(Mutex::new(None)),
+        };
+
+        let error = client
+            .list_files_with_transport("folder-1", &transport)
+            .await
+            .expect_err("expected auth error");
+
+        assert!(matches!(error, CloudBackupError::TokenExpired));
+    }
+
+    #[tokio::test]
+    async fn test_delete_file_with_transport_allows_missing_files() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let observed_file_id = Arc::new(Mutex::new(None));
+        let transport = FakeDeleteTransport {
+            response: Ok(DeleteResponse {
+                status: 404,
+                body: "not found".to_string(),
+            }),
+            observed_file_id: observed_file_id.clone(),
+        };
+
+        client
+            .delete_file_with_transport("file-1", &transport)
+            .await
+            .expect("404 should be treated as success");
+
+        assert_eq!(
+            observed_file_id.lock().expect("file lock").as_deref(),
+            Some("file-1")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_delete_file_with_transport_maps_forbidden_error() {
+        let client = GoogleDriveClient::new("id".to_string(), "token".to_string());
+        let transport = FakeDeleteTransport {
+            response: Ok(DeleteResponse {
+                status: 403,
+                body: r#"{"error":{"code":403,"message":"Forbidden"}}"#.to_string(),
+            }),
+            observed_file_id: Arc::new(Mutex::new(None)),
+        };
+
+        let error = client
+            .delete_file_with_transport("file-1", &transport)
+            .await
+            .expect_err("expected forbidden error");
+
+        assert!(matches!(error, CloudBackupError::DriveError(_)));
     }
 
     #[tokio::test]

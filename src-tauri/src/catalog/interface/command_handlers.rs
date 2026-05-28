@@ -508,10 +508,8 @@ pub async fn update_rolling_stock_service_level(
 /// # Returns
 /// - `Ok(Vec<CouplerType>)` on success.
 /// - `Err(CommandError::DatabaseError)` on persistence failure.
-#[tauri::command]
-#[specta::specta]
-pub async fn get_coupler_types(
-    state: tauri::State<'_, AppState>,
+pub async fn get_coupler_types_inner(
+    state: &AppState,
     socket: Option<String>,
 ) -> Result<Vec<CouplerType>, CommandError> {
     let socket_filter = socket
@@ -530,6 +528,18 @@ pub async fn get_coupler_types(
     .await?;
     unit_of_work.commit().await?;
     Ok(result)
+}
+
+/// # Returns
+/// - `Ok(Vec<CouplerType>)` on success.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_coupler_types(
+    state: tauri::State<'_, AppState>,
+    socket: Option<String>,
+) -> Result<Vec<CouplerType>, CommandError> {
+    get_coupler_types_inner(&state, socket).await
 }
 
 /// Set (or clear) the installed coupler on an owned rolling stock.
@@ -674,6 +684,168 @@ mod tests {
 
         let result = add_rolling_stock_to_model_inner(&state, args).await;
         assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_railway_model_text_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateRailwayModelTextArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            field: crate::catalog::application::RailwayModelTextField::Description,
+            value: "Updated description".to_string(),
+            lang: Language::English,
+        };
+
+        let result = update_railway_model_text_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_rolling_stock_identification_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateRollingStockIdentificationArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            rolling_stock_id: crate::catalog::domain::railway_model::RollingStockId::default(),
+            series_code: "E444".to_string(),
+            road_number: Some("001".to_string()),
+            livery: Some("XMPR".to_string()),
+            depot: Some("Roma".to_string()),
+        };
+
+        let result = update_rolling_stock_identification_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_railway_model_classification_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateRailwayModelClassificationArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            scale: Some(crate::catalog::domain::scale::Scale::H0),
+            epoch: None,
+            category: None,
+        };
+
+        let result = update_railway_model_classification_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_rolling_stock_railway_company_missing_model_returns_not_found(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = UpdateRollingStockRailwayCompanyArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            rolling_stock_id: crate::catalog::domain::railway_model::RollingStockId::default(),
+            railway_company_id:
+                crate::catalog::domain::railway_company::RailwayCompanyId::try_from(
+                    "trn:railway-company:fs",
+                )
+                .expect("valid railway company id"),
+        };
+
+        let result = update_rolling_stock_railway_company_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_rolling_stock_category_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateRollingStockCategoryArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            rolling_stock_id: crate::catalog::domain::railway_model::RollingStockId::default(),
+            category: crate::catalog::domain::railway_model::RollingStockCategory::Locomotive,
+        };
+
+        let result = update_rolling_stock_category_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn upsert_railway_model_translation_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpsertRailwayModelTranslationArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            lang: Language::English,
+            description: Some("Translated description".to_string()),
+            details: Some("Translated details".to_string()),
+        };
+
+        let result = upsert_railway_model_translation_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn search_railway_models_query_too_short_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = SearchRailwayModelsArgs {
+            query: "x".to_string(),
+        };
+
+        let result = search_railway_models_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn delete_rolling_stock_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = DeleteRollingStockArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            rolling_stock_id: crate::catalog::domain::railway_model::RollingStockId::default(),
+        };
+
+        let result = delete_rolling_stock_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_rolling_stock_subcategory_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateRollingStockSubcategoryArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            rolling_stock_id: crate::catalog::domain::railway_model::RollingStockId::default(),
+            subcategory: "ELECTRIC_LOCOMOTIVE".to_string(),
+        };
+
+        let result = update_rolling_stock_subcategory_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_rolling_stock_service_level_missing_model_returns_not_found(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateRollingStockServiceLevelArgs {
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:missing")
+                .expect("valid railway model id"),
+            rolling_stock_id: crate::catalog::domain::railway_model::RollingStockId::default(),
+            service_level: None,
+        };
+
+        let result = update_rolling_stock_service_level_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_coupler_types_inner_invalid_socket_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let result = get_coupler_types_inner(&state, Some("not-a-socket".to_string())).await;
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_coupler_types_inner_without_filter_succeeds(pool: SqlitePool) {
+        let state = app_state(pool);
+        let result = get_coupler_types_inner(&state, None).await;
+        assert!(result.is_ok());
     }
 
     #[sqlx::test(migrations = "./migrations")]
