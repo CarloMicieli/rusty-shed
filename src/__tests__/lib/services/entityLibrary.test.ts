@@ -3,8 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { mockCommands } = vi.hoisted(() => ({
   mockCommands: {
     getManufacturers: vi.fn(),
-    getSellers: vi.fn(),
-    getBuyers: vi.fn()
+    getSellers: vi.fn()
   }
 }));
 
@@ -78,13 +77,13 @@ describe('entityLibrary service', () => {
     };
 
     mockCommands.getSellers.mockResolvedValue(payload);
-    mockCommands.getBuyers.mockResolvedValue(payload);
 
     const sellers = await getSellers();
     const buyers = await getBuyers();
 
     expect(sellers.status).toBe('ok');
     expect(buyers.status).toBe('ok');
+    expect(mockCommands.getSellers).toHaveBeenCalledTimes(2);
     expect(sellers.status === 'ok' && sellers.data[0]).toEqual({
       id: 'trn:seller:model-shop',
       name: 'Model Shop',

@@ -49,7 +49,7 @@ export async function getSellers(): Promise<CmdResult<LibraryEntityRow[], Comman
 }
 
 export async function getBuyers(): Promise<CmdResult<LibraryEntityRow[], CommandError>> {
-  const result = await commands.getBuyers();
+  const result = await commands.getSellers();
   if (result.status === 'ok') {
     const rows = Array.isArray(result.data) ? result.data : [];
     return { status: 'ok', data: rows.map(mapSeller) };

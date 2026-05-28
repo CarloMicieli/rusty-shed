@@ -131,7 +131,7 @@
           return;
         }
       } else {
-        const result = await commands.createBuyer({
+        const result = await commands.createSeller({
           name: name.trim(),
           sellerType: 'SHOP',
           email: null,

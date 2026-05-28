@@ -420,35 +420,6 @@ export const commands = {
 	 */
 	deleteSeller: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_seller", { id })),
 	mergeSellers: (args: MergeSellerArgs) => typedError<SellerMergeResult, CommandError>(__TAURI_INVOKE("merge_sellers", { args })),
-	/**  Tauri command that lists all buyers. */
-	getBuyers: () => typedError<SellerView[], CommandError>(__TAURI_INVOKE("get_buyers")),
-	/**  Tauri command that returns one buyer by identifier. */
-	getBuyerById: (id: SellerId) => typedError<{
-	/**  Unique identifier for the seller. */
-	id: SellerId,
-	/**  Name of the seller. */
-	name: string,
-	/**  Type of the seller. */
-	sellerType: SellerType,
-	/**  Contact email of the seller. */
-	email: string | null,
-	/**  Contact phone number of the seller. */
-	phone: string | null,
-	/**  Website URL of the seller. */
-	websiteUrl: string | null,
-	/**  Address of the seller. */
-	address: Address | null,
-	/**  Whether this row is system-seeded and protected. */
-	isSystemSeeded: boolean,
-	/**  Total usage count across buyer and seller references. */
-	usageCount: number,
-} | null, CommandError>(__TAURI_INVOKE("get_buyer_by_id", { id })),
-	/**  Tauri command that creates a buyer. */
-	createBuyer: (payload: CreateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("create_buyer", { payload })),
-	updateBuyer: (payload: UpdateSellerPayload) => typedError<Seller, CommandError>(__TAURI_INVOKE("update_buyer", { payload })),
-	/**  Tauri command that deletes a buyer by identifier. */
-	deleteBuyer: (id: SellerId) => typedError<null, CommandError>(__TAURI_INVOKE("delete_buyer", { id })),
-	mergeBuyers: (args: MergeBuyerArgs) => typedError<BuyerMergeResult, CommandError>(__TAURI_INVOKE("merge_buyers", { args })),
 	/**
 	 *  Command handler to create a new track inventory.
 	 * 
@@ -1251,13 +1222,6 @@ export type BudgetMode =
 
 /**  Quarter enum for quarterly summaries exposed at the interface boundary. */
 export type BudgetQuarter = "Q1" | "Q2" | "Q3" | "Q4";
-
-/**  Result payload returned after a successful buyer merge. */
-export type BuyerMergeResult = {
-	sourceId: string,
-	targetId: string,
-	relinkedCount: number,
-};
 
 /**  Arguments for cancel_import_session command */
 export type CancelImportSessionArgs = {
@@ -2924,12 +2888,6 @@ export type ManufacturerStatus = "ACTIVE" | "MERGED" | "OUT_OF_BUSINESS";
 
 /**  Measurement system for dimensions */
 export type MeasureUnit = "Metric" | "Imperial";
-
-/**  Input payload for buyer-merge operations. */
-export type MergeBuyerArgs = {
-	sourceId: SellerId,
-	targetId: SellerId,
-};
 
 export type MergeManufacturerArgs = {
 	sourceId: ManufacturerId,

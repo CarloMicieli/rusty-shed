@@ -1,6 +1,5 @@
 pub mod app_uow;
 pub mod budget;
-pub mod buyers;
 pub mod catalog;
 pub mod cloud_backup;
 pub mod collecting;
@@ -24,7 +23,6 @@ pub mod wishlist;
 pub mod test_utils;
 
 use crate::budget::interface::command_handlers as budget_command_handlers;
-use crate::buyers::interface::command_handlers as buyers_command_handlers;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::catalog::interface::manufacturers as manufacturers_command_handlers;
 use crate::catalog::interface::railway_companies as railway_companies_command_handlers;
@@ -186,12 +184,6 @@ fn create_specta_builder() -> Builder<tauri::Wry> {
             sellers_command_handlers::update_seller,
             sellers_command_handlers::delete_seller,
             sellers_command_handlers::merge_sellers,
-            buyers_command_handlers::get_buyers,
-            buyers_command_handlers::get_buyer_by_id,
-            buyers_command_handlers::create_buyer,
-            buyers_command_handlers::update_buyer,
-            buyers_command_handlers::delete_buyer,
-            buyers_command_handlers::merge_buyers,
             tracks_inventory_command_handlers::create_track_inventory,
             tracks_inventory_command_handlers::rename_track_inventory,
             tracks_inventory_command_handlers::add_track_purchase,
