@@ -611,6 +611,62 @@ mod tests {
         assert!(summaries.is_empty());
     }
 
+    #[sqlx::test(migrations = "./migrations")]
+    async fn remove_extra_budget_inner_rejects_invalid_id(pool: SqlitePool) {
+        let state = app_state(pool);
+
+        let result = remove_extra_budget_inner(
+            &state,
+            RemoveExtraBudgetArgs {
+                id: "not-a-valid-id".to_string(),
+            },
+        )
+        .await;
+
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn remove_extra_budget_inner_removes_existing_entry(pool: SqlitePool) {
+        let state = app_state(pool);
+        seed_budget_config(&state).await;
+
+        let currency = Currency::from_code("EUR").expect("valid currency");
+        let entry = add_extra_budget_inner(
+            &state,
+            AddExtraBudgetArgs {
+                year: Year::try_from(2025).expect("valid year"),
+                month: Month::try_from(1).expect("valid month"),
+                amount: 5_000,
+                currency: None,
+                reason: Some("Test extra".to_string()),
+            },
+            currency,
+        )
+        .await
+        .expect("extra budget should be created");
+
+        remove_extra_budget_inner(
+            &state,
+            RemoveExtraBudgetArgs {
+                id: entry.id.clone(),
+            },
+        )
+        .await
+        .expect("removal should succeed");
+
+        let entries = get_extra_budgets_inner(
+            &state,
+            GetExtraBudgetsArgs {
+                year: Year::try_from(2025).expect("valid year"),
+            },
+        )
+        .await
+        .expect("query should succeed");
+
+        assert!(entries.into_iter().all(|item| item.id != entry.id));
+    }
+
     #[test]
     fn resolve_quarterly_year_prefers_explicit_value() {
         let year = Year::try_from(2024).expect("valid year");

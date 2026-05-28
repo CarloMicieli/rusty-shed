@@ -95,6 +95,19 @@ pub async fn import_database(
     app: AppHandle,
     args: ImportDatabaseArgs,
 ) -> std::result::Result<ImportDatabaseResponse, CommandError> {
+    let db_path = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
+        .join("database.sqlite");
+
+    import_database_inner(&args, &db_path).await
+}
+
+async fn import_database_inner(
+    args: &ImportDatabaseArgs,
+    db_path: &std::path::Path,
+) -> std::result::Result<ImportDatabaseResponse, CommandError> {
     if args.source_path.is_empty() {
         return Err(CommandError::validation_field(
             "source_path",
@@ -111,15 +124,8 @@ pub async fn import_database(
 
     let source = std::path::Path::new(&args.source_path);
 
-    // Resolve the current database path
-    let db_path = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
-        .join("database.sqlite");
-
     use crate::data_management::application::import_database::import_database as run_import;
-    let result = run_import(source, &db_path, &args.confirmation)
+    let result = run_import(source, db_path, &args.confirmation)
         .await
         .map_err(CommandError::from)?;
 
@@ -134,10 +140,14 @@ pub async fn import_database(
 
 #[cfg(test)]
 mod tests {
+    use super::{ImportDatabaseArgs, import_database_inner};
+    use crate::core::infrastructure::error::CommandError;
     use crate::data_management::domain::backup_validation::{
         validate_confirmation, validate_export_destination,
     };
+    use sqlx::SqlitePool;
     use std::path::Path;
+    use tempfile::tempdir;
 
     #[test]
     fn export_handler_rejects_empty_destination_path() {
@@ -169,6 +179,72 @@ mod tests {
             validate_confirmation("RESTORE").is_ok(),
             "RESTORE confirmation should succeed"
         );
+    }
+
+    #[tokio::test]
+    async fn import_handler_inner_rejects_empty_source_path() {
+        let temp_dir = tempdir().expect("tempdir should be created");
+        let destination = temp_dir.path().join("database.sqlite");
+        let args = ImportDatabaseArgs {
+            source_path: String::new(),
+            confirmation: "RESTORE".to_string(),
+        };
+
+        let error = import_database_inner(&args, &destination)
+            .await
+            .expect_err("empty source path should fail");
+
+        assert!(matches!(error, CommandError::ValidationError(_)));
+    }
+
+    #[tokio::test]
+    async fn import_handler_inner_rejects_invalid_confirmation() {
+        let temp_dir = tempdir().expect("tempdir should be created");
+        let destination = temp_dir.path().join("database.sqlite");
+        let args = ImportDatabaseArgs {
+            source_path: "/tmp/source.sqlite".to_string(),
+            confirmation: "WRONG".to_string(),
+        };
+
+        let error = import_database_inner(&args, &destination)
+            .await
+            .expect_err("invalid confirmation should fail");
+
+        assert!(matches!(error, CommandError::ValidationError(_)));
+    }
+
+    #[tokio::test]
+    async fn import_handler_inner_imports_valid_sqlite_backup() {
+        let temp_dir = tempdir().expect("tempdir should be created");
+        let source_path = temp_dir.path().join("source.sqlite");
+        let destination_path = temp_dir.path().join("database.sqlite");
+
+        let pool = SqlitePool::connect(&format!("sqlite://{}?mode=rwc", source_path.display()))
+            .await
+            .expect("source db should open");
+        sqlx::query("CREATE TABLE seed (id INTEGER PRIMARY KEY)")
+            .execute(&pool)
+            .await
+            .expect("seed sqlite file");
+        drop(pool);
+
+        let args = ImportDatabaseArgs {
+            source_path: source_path.to_string_lossy().to_string(),
+            confirmation: "RESTORE".to_string(),
+        };
+
+        let response = import_database_inner(&args, &destination_path)
+            .await
+            .expect("import should succeed");
+
+        assert_eq!(response.file_path, source_path.to_string_lossy());
+        assert!(response.file_size_bytes > 0);
+        assert_eq!(
+            response.message,
+            "Database imported successfully. Please restart the app."
+        );
+        assert!(response.requires_restart);
+        assert!(destination_path.exists());
     }
 
     #[test]
