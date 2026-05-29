@@ -115,15 +115,6 @@ export const commands = {
 	/**  Tauri command to delete a rolling stock variant from a railway model. */
 	deleteRollingStock: (args: DeleteRollingStockArgs) => typedError<null, CommandError>(__TAURI_INVOKE("delete_rolling_stock", { args })),
 	/**
-	 *  Return the coupler type catalogue, optionally filtered to a specific coupling socket.
-	 * 
-	 *  When `socket` is provided (e.g. `"NEM_362"`), only couplers compatible with that
-	 *  socket are returned. When omitted, the full catalogue is returned.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `socket` - Optional coupling socket filter string.
-	 * 
 	 *  # Returns
 	 *  - `Ok(Vec<CouplerType>)` on success.
 	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
