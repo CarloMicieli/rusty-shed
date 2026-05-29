@@ -267,7 +267,9 @@ pub fn run() {
     let ts_config = Typescript::default();
 
     // 2. Export the bindings (This creates the TS file)
-    #[cfg(debug_assertions)] // Only export during development
+    // Android cannot write to the workspace path during startup, so keep this
+    // desktop-dev only and avoid aborting mobile launches.
+    #[cfg(all(debug_assertions, not(target_os = "android")))]
     builder
         .export(ts_config, "../src/lib/bindings.ts")
         .expect("Failed to export typescript bindings");
