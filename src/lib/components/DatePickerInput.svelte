@@ -59,12 +59,16 @@
   <Popover.Trigger
     {disabled}
     {id}
-    class="flex h-9 w-full cursor-pointer items-center justify-between rounded-sm border border-border bg-background px-3 text-sm transition-all duration-150 ease-out outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 {className}"
+    class="flex h-9 w-full min-w-0 cursor-pointer items-center justify-between rounded-sm border border-border bg-background px-3 text-sm transition-all duration-150 ease-out outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 {className}"
   >
     {#if value}
-      <span class="font-mono text-sm text-foreground">{formatDate(value)}</span>
+      <span class="min-w-0 truncate pr-2 text-left font-mono text-sm text-foreground">
+        {formatDate(value)}
+      </span>
     {:else}
-      <span class="text-sm text-muted-foreground italic">{placeholder}</span>
+      <span class="min-w-0 truncate pr-2 text-left text-sm text-muted-foreground italic">
+        {placeholder}
+      </span>
     {/if}
     <CalendarIcon class="size-4 shrink-0 text-muted-foreground" />
   </Popover.Trigger>

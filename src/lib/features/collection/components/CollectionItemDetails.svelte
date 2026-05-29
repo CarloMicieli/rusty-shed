@@ -193,7 +193,7 @@
 <div class="overflow-hidden rounded-lg border border-border bg-card">
   <div class="border-b border-border px-4 py-3">
     <div class="flex items-center justify-between gap-3">
-      <h3 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+      <h3 class="font-bebas text-sm tracking-widest text-muted-foreground uppercase">
         {m.collection_item_section_acquisition()}
       </h3>
       {#if isSold}
@@ -209,14 +209,6 @@
   </div>
 
   <div class="space-y-3 p-4">
-    {#if !isSold && !isPreordered}
-      <div class="flex justify-end">
-        <Button variant="rusty" size="sm" onclick={() => (showSellDialog = true)}>
-          {m.collection_item_sell_action()}
-        </Button>
-      </div>
-    {/if}
-
     {#if isPreordered && preorderedInfo}
       <div class="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
         <div class="flex items-center justify-between">
@@ -274,7 +266,7 @@
 
     <!-- Seller -->
     <div class="space-y-1">
-      <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
+      <span class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
         {m.collection_item_seller()}
       </span>
       <InPlaceSelectEdit
@@ -288,7 +280,7 @@
 
     <!-- Notes -->
     <div class="space-y-1">
-      <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
+      <span class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
         {m.collection_item_notes()}
       </span>
       <InPlaceEdit
@@ -300,10 +292,12 @@
     </div>
 
     <!-- Two-column footer: Price | Purchase Date -->
-    <div class="grid grid-cols-2 gap-x-3 border-t border-border pt-3">
+    <div
+      class="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-4 border-t border-border pt-3"
+    >
       <!-- Price -->
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
+      <div class="flex min-w-0 flex-col gap-0.5">
+        <span class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
           {m.collection_item_price()}
         </span>
         {#if isPriceEditing && !isSold}
@@ -351,8 +345,8 @@
       </div>
 
       <!-- Purchase Date -->
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
+      <div class="flex min-w-0 flex-col gap-0.5">
+        <span class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
           {m.collection_item_purchase_date()}
         </span>
         {#if isSold}
@@ -363,11 +357,19 @@
             onSelect={(iso: string | null) =>
               saveUpdate({ kind: 'purchaseDate', data: { purchase_date: iso } })}
             placeholder="—"
-            class="h-6"
+            class="h-6 w-full min-w-0 [&>span]:text-xs"
           />
         {/if}
       </div>
     </div>
+
+    {#if !isSold && !isPreordered}
+      <div class="flex justify-end border-t border-border pt-3">
+        <Button variant="destructive" size="sm" onclick={() => (showSellDialog = true)}>
+          {m.collection_item_sell_action()}
+        </Button>
+      </div>
+    {/if}
 
     {#if isSold}
       <div class="space-y-2 border-t border-border pt-3">
