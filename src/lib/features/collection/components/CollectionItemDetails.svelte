@@ -209,7 +209,6 @@
   </div>
 
   <div class="space-y-3 p-4">
-
     {#if isPreordered && preorderedInfo}
       <div class="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
         <div class="flex items-center justify-between">
@@ -293,7 +292,7 @@
     </div>
 
     <!-- Two-column footer: Price | Purchase Date -->
-    <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 border-t border-border pt-3">
+    <div class="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-4 border-t border-border pt-3">
       <!-- Price -->
       <div class="flex min-w-0 flex-col gap-0.5">
         <span class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
@@ -356,7 +355,7 @@
             onSelect={(iso: string | null) =>
               saveUpdate({ kind: 'purchaseDate', data: { purchase_date: iso } })}
             placeholder="—"
-            class="h-6 w-full min-w-0"
+            class="h-6 w-full min-w-0 [&>span]:text-xs"
           />
         {/if}
       </div>
