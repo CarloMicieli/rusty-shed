@@ -292,7 +292,9 @@
     </div>
 
     <!-- Two-column footer: Price | Purchase Date -->
-    <div class="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-4 border-t border-border pt-3">
+    <div
+      class="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-4 border-t border-border pt-3"
+    >
       <!-- Price -->
       <div class="flex min-w-0 flex-col gap-0.5">
         <span class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
