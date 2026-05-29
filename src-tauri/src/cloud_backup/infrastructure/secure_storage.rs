@@ -114,6 +114,23 @@ pub struct KeyringStorage {
 }
 
 #[cfg(not(target_os = "android"))]
+trait KeyringEntryOps {
+    fn get_password(&self) -> std::result::Result<String, keyring::Error>;
+    fn delete_credential(&self) -> std::result::Result<(), keyring::Error>;
+}
+
+#[cfg(not(target_os = "android"))]
+impl KeyringEntryOps for keyring::Entry {
+    fn get_password(&self) -> std::result::Result<String, keyring::Error> {
+        keyring::Entry::get_password(self)
+    }
+
+    fn delete_credential(&self) -> std::result::Result<(), keyring::Error> {
+        keyring::Entry::delete_credential(self)
+    }
+}
+
+#[cfg(not(target_os = "android"))]
 impl KeyringStorage {
     /// Create new keyring storage
     pub fn new(service: String) -> Self {
@@ -136,12 +153,23 @@ impl KeyringStorage {
         })
     }
 
-    fn read_tokens_from_entry(entry: &keyring::Entry) -> Result<Option<OAuthTokens>> {
+    fn read_tokens_from_entry<E: KeyringEntryOps>(entry: &E) -> Result<Option<OAuthTokens>> {
         match entry.get_password() {
             Ok(json) => Ok(Some(Self::decode_stored_tokens(&json)?)),
             Err(keyring::Error::NoEntry) => Ok(None),
             Err(e) => Err(CloudBackupError::StorageReadError(format!(
                 "Failed to retrieve: {}",
+                e
+            ))),
+        }
+    }
+
+    fn delete_tokens_from_entry<E: KeyringEntryOps>(entry: &E) -> Result<()> {
+        match entry.delete_credential() {
+            Ok(_) => Ok(()),
+            Err(keyring::Error::NoEntry) => Ok(()),
+            Err(e) => Err(CloudBackupError::StorageError(format!(
+                "Failed to delete: {}",
                 e
             ))),
         }
@@ -176,14 +204,7 @@ impl SecureStorage for KeyringStorage {
         let entry = keyring::Entry::new(&self.service, &key)
             .map_err(|e| CloudBackupError::StorageError(format!("Keyring entry failed: {}", e)))?;
 
-        match entry.delete_credential() {
-            Ok(_) => Ok(()),
-            Err(keyring::Error::NoEntry) => Ok(()), // Already deleted
-            Err(e) => Err(CloudBackupError::StorageError(format!(
-                "Failed to delete: {}",
-                e
-            ))),
-        }
+        Self::delete_tokens_from_entry(&entry)
     }
 
     async fn has_tokens(&self, user_id: &str) -> Result<bool> {
@@ -235,6 +256,31 @@ impl SecureStorage for StrongholdStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(target_os = "android"))]
+    use std::cell::RefCell;
+
+    #[cfg(not(target_os = "android"))]
+    struct FakeEntry {
+        get_password_result: RefCell<Option<std::result::Result<String, keyring::Error>>>,
+        delete_result: RefCell<Option<std::result::Result<(), keyring::Error>>>,
+    }
+
+    #[cfg(not(target_os = "android"))]
+    impl KeyringEntryOps for FakeEntry {
+        fn get_password(&self) -> std::result::Result<String, keyring::Error> {
+            self.get_password_result
+                .borrow_mut()
+                .take()
+                .expect("password result available")
+        }
+
+        fn delete_credential(&self) -> std::result::Result<(), keyring::Error> {
+            self.delete_result
+                .borrow_mut()
+                .take()
+                .expect("delete result available")
+        }
+    }
 
     #[test]
     fn test_token_expiry() {
@@ -289,5 +335,41 @@ mod tests {
             }
             other => panic!("unexpected error variant: {other:?}"),
         }
+    }
+
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn test_read_tokens_from_entry_success() {
+        let tokens_json = serde_json::to_string(&OAuthTokens::new(
+            "abc".to_string(),
+            Some("ref".to_string()),
+            123,
+            "Bearer".to_string(),
+        ))
+        .expect("serialize tokens");
+
+        let entry = FakeEntry {
+            get_password_result: RefCell::new(Some(Ok(tokens_json))),
+            delete_result: RefCell::new(Some(Ok(()))),
+        };
+
+        let tokens = KeyringStorage::read_tokens_from_entry(&entry)
+            .expect("read should succeed")
+            .expect("tokens should exist");
+
+        assert_eq!(tokens.access_token_str(), "abc");
+        assert_eq!(tokens.refresh_token_str(), Some("ref"));
+    }
+
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn test_delete_tokens_from_entry_ignores_missing_entry() {
+        let entry = FakeEntry {
+            get_password_result: RefCell::new(Some(Err(keyring::Error::NoEntry))),
+            delete_result: RefCell::new(Some(Err(keyring::Error::NoEntry))),
+        };
+
+        let result = KeyringStorage::delete_tokens_from_entry(&entry);
+        assert!(result.is_ok());
     }
 }

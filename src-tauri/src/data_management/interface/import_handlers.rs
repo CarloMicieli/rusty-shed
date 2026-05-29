@@ -376,10 +376,33 @@ mod tests {
         ArchiveFormat, DataContainerDto, ImportSession, ImportState, ManifestDto,
     };
     use sqlx::SqlitePool;
+    use std::io::Write;
     use std::path::PathBuf;
+    use tempfile::NamedTempFile;
+    use zip::write::SimpleFileOptions;
 
     fn app_state(pool: SqlitePool) -> AppState {
         AppState::for_test(pool)
+    }
+
+    fn create_zip_archive(files: &[(&str, &[u8])]) -> NamedTempFile {
+        let mut file = tempfile::Builder::new()
+            .suffix(".zip")
+            .tempfile()
+            .expect("create temp archive");
+        {
+            let mut zip = zip::ZipWriter::new(&mut file);
+            let options = SimpleFileOptions::default();
+
+            for (path, contents) in files {
+                zip.start_file(path, options).expect("start zip entry");
+                zip.write_all(contents).expect("write zip entry");
+            }
+
+            zip.finish().expect("finish zip archive");
+        }
+
+        file
     }
 
     #[sqlx::test]
@@ -418,6 +441,57 @@ mod tests {
         let result = get_import_preview_inner(&state, args).await;
 
         assert!(matches!(result, Err(CommandError::Unknown { .. })));
+    }
+
+    #[sqlx::test]
+    async fn analyze_import_package_rejects_invalid_archive_format(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = AnalyzeImportPackageArgs {
+            file_path: "/tmp/import.txt".to_string(),
+        };
+
+        let result = analyze_import_package_inner(&state, args).await;
+
+        assert!(matches!(result, Err(CommandError::Unknown { .. })));
+        assert!(!state.import_session_store.any(|_| true).await);
+    }
+
+    #[sqlx::test]
+    async fn analyze_import_package_stores_session_for_valid_archive(pool: SqlitePool) {
+        let state = app_state(pool);
+        let manifest = ManifestDto {
+            schema: None,
+            version: "1.0".to_string(),
+            exported_at: None,
+            source: None,
+            data: DataContainerDto::default(),
+        };
+        let manifest_json = serde_json::to_string(&manifest).expect("serialize manifest");
+        let archive = create_zip_archive(&[("manifest.json", manifest_json.as_bytes())]);
+
+        let args = AnalyzeImportPackageArgs {
+            file_path: archive.path().to_string_lossy().to_string(),
+        };
+
+        let response = analyze_import_package_inner(&state, args)
+            .await
+            .expect("analysis should succeed");
+
+        assert_eq!(response.format, ArchiveFormat::Zip);
+        assert!(response.manifest_found);
+        assert!(matches!(
+            response.validation_status,
+            ValidationStatus::Valid
+        ));
+        assert_eq!(response.record_counts.manufacturers, 0);
+
+        let stored = state
+            .import_session_store
+            .get(&response.session_id)
+            .await
+            .expect("session should be stored");
+        assert!(matches!(stored.format, ArchiveFormat::Zip));
+        assert!(stored.validated_manifest.is_some());
     }
 
     #[sqlx::test(migrations = "./migrations")]

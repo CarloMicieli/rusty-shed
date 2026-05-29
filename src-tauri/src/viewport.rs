@@ -52,21 +52,40 @@ pub fn calculate_min_size(physical_width: u32) -> (f64, f64) {
 /// - Monitor detection fails (Desktop only)
 /// - Window sizing operations fail (Desktop only)
 #[cfg(not(mobile))]
-pub fn setup_viewport<R: Runtime>(
-    window: &WebviewWindow<R>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    // Get the current monitor
-    let monitor = window
-        .current_monitor()?
-        .ok_or("Failed to get current monitor")?;
+trait ViewportWindow {
+    fn current_monitor_width(&self) -> Result<u32, Box<dyn std::error::Error>>;
+    fn set_min_size(&self, width: f64, height: f64) -> Result<(), Box<dyn std::error::Error>>;
+    fn set_size(&self, width: f64, height: f64) -> Result<(), Box<dyn std::error::Error>>;
+}
 
-    // Get physical size
-    let physical_size = monitor.size();
-    let physical_width = physical_size.width;
+#[cfg(not(mobile))]
+impl<R: Runtime> ViewportWindow for WebviewWindow<R> {
+    fn current_monitor_width(&self) -> Result<u32, Box<dyn std::error::Error>> {
+        let monitor = self
+            .current_monitor()?
+            .ok_or("Failed to get current monitor")?;
+        Ok(monitor.size().width)
+    }
+
+    fn set_min_size(&self, width: f64, height: f64) -> Result<(), Box<dyn std::error::Error>> {
+        self.set_min_size(Some(LogicalSize::new(width, height)))?;
+        Ok(())
+    }
+
+    fn set_size(&self, width: f64, height: f64) -> Result<(), Box<dyn std::error::Error>> {
+        self.set_size(LogicalSize::new(width, height))?;
+        Ok(())
+    }
+}
+
+#[cfg(not(mobile))]
+fn setup_viewport_for_window(
+    window: &impl ViewportWindow,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let physical_width = window.current_monitor_width()?;
 
     tracing::info!("Detected monitor with physical width: {}px", physical_width);
 
-    // Calculate appropriate dimensions
     let (width, height) = calculate_min_size(physical_width);
 
     tracing::info!(
@@ -75,13 +94,17 @@ pub fn setup_viewport<R: Runtime>(
         height
     );
 
-    // Apply minimum size constraints
-    let min_size = LogicalSize::new(width, height);
-    window.set_min_size(Some(min_size))?;
+    window.set_min_size(width, height)?;
+    window.set_size(width, height)?;
 
-    // Set initial size to the minimum
-    let size = LogicalSize::new(width, height);
-    window.set_size(size)?;
+    Ok(())
+}
+
+#[cfg(not(mobile))]
+pub fn setup_viewport<R: Runtime>(
+    window: &WebviewWindow<R>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    setup_viewport_for_window(window)?;
 
     Ok(())
 }
@@ -110,6 +133,9 @@ pub fn setup_viewport<R: Runtime>(
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    #[cfg(not(mobile))]
+    use std::cell::RefCell;
 
     #[test]
     fn test_calculate_min_size_4k() {
@@ -157,5 +183,55 @@ mod tests {
         let (width, height) = calculate_min_size(1024);
         assert_eq!(width, 1024.0);
         assert_eq!(height, 768.0);
+    }
+
+    #[cfg(not(mobile))]
+    #[derive(Default)]
+    struct FakeWindow {
+        monitor_width: Option<u32>,
+        min_size: RefCell<Option<(f64, f64)>>,
+        size: RefCell<Option<(f64, f64)>>,
+    }
+
+    #[cfg(not(mobile))]
+    impl ViewportWindow for FakeWindow {
+        fn current_monitor_width(&self) -> Result<u32, Box<dyn std::error::Error>> {
+            self.monitor_width
+                .ok_or_else(|| "Failed to get current monitor".into())
+        }
+
+        fn set_min_size(&self, width: f64, height: f64) -> Result<(), Box<dyn std::error::Error>> {
+            *self.min_size.borrow_mut() = Some((width, height));
+            Ok(())
+        }
+
+        fn set_size(&self, width: f64, height: f64) -> Result<(), Box<dyn std::error::Error>> {
+            *self.size.borrow_mut() = Some((width, height));
+            Ok(())
+        }
+    }
+
+    #[cfg(not(mobile))]
+    #[test]
+    fn test_setup_viewport_for_window_sets_expected_dimensions() {
+        let window = FakeWindow {
+            monitor_width: Some(2560),
+            ..Default::default()
+        };
+
+        setup_viewport_for_window(&window).expect("setup should succeed");
+
+        assert_eq!(*window.min_size.borrow(), Some((1280.0, 800.0)));
+        assert_eq!(*window.size.borrow(), Some((1280.0, 800.0)));
+    }
+
+    #[cfg(not(mobile))]
+    #[test]
+    fn test_setup_viewport_for_window_fails_without_monitor() {
+        let window = FakeWindow::default();
+
+        let result = setup_viewport_for_window(&window);
+
+        assert!(result.is_err());
     }
 }

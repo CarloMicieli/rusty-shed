@@ -63,3 +63,76 @@ pub async fn global_search(
 ) -> Result<Vec<GlobalSearchResultView>, CommandError> {
     global_search_inner(&state, args).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_uow::testing::{MockAppUow, OneShotFactory};
+    use crate::catalog::domain::railway_model::RailwayModelId;
+    use crate::core::domain::Language;
+    use crate::core::domain::identifiers::Identifier;
+    use crate::search::domain::global_search_result::{GlobalSearchResult, SearchSource};
+    use crate::search::domain::repository::MockGlobalSearchRepository;
+    use sqlx::SqlitePool;
+    use std::sync::Arc;
+
+    async fn state_with_uow(uow: MockAppUow) -> AppState {
+        let pool = SqlitePool::connect(":memory:")
+            .await
+            .expect("in-memory pool");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("enable foreign keys");
+        AppState::new_with_factory(pool, Arc::new(OneShotFactory::new(uow)))
+    }
+
+    #[tokio::test]
+    async fn global_search_inner_short_query_returns_validation_error() {
+        let state = AppState::for_test(
+            SqlitePool::connect(":memory:")
+                .await
+                .expect("in-memory pool"),
+        );
+        let args = GlobalSearchArgs {
+            query: "x".to_string(),
+            lang: Language::English,
+        };
+
+        let result = global_search_inner(&state, args).await;
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[tokio::test]
+    async fn global_search_inner_maps_wishlist_result_view() {
+        let mut repo = MockGlobalSearchRepository::new();
+        repo.expect_search().times(1).returning(|_, _| {
+            Ok(vec![GlobalSearchResult {
+                railway_model_id: RailwayModelId::from_string_unchecked(
+                    "trn:railway-model:acme:p100".to_string(),
+                ),
+                source: SearchSource::Wishlist,
+                item_id: "wishlist-item-1".to_string(),
+                parent_id: Some("wishlist-1".to_string()),
+                display_name: "E.656".to_string(),
+                manufacturer_name: "ACME".to_string(),
+            }])
+        });
+
+        let uow = MockAppUow::new().with_global_search(repo);
+        let state = state_with_uow(uow).await;
+        let args = GlobalSearchArgs {
+            query: "diesel".to_string(),
+            lang: Language::English,
+        };
+
+        let results = global_search_inner(&state, args)
+            .await
+            .expect("global search should succeed");
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].source, "wishlist");
+        assert_eq!(results[0].item_id, "wishlist-item-1");
+        assert_eq!(results[0].parent_id.as_deref(), Some("wishlist-1"));
+    }
+}

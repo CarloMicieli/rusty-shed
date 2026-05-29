@@ -214,6 +214,26 @@ mod tests {
     }
 
     #[test]
+    fn test_media_storage_error_display_formats_each_variant() {
+        assert_eq!(
+            MediaStorageError::IoError("io failed".to_string()).to_string(),
+            "I/O error: io failed"
+        );
+        assert_eq!(
+            MediaStorageError::InvalidExtension("bad ext".to_string()).to_string(),
+            "Invalid file extension: bad ext"
+        );
+        assert_eq!(
+            MediaStorageError::NotFound("missing.png".to_string()).to_string(),
+            "File not found: missing.png"
+        );
+        assert_eq!(
+            MediaStorageError::DirectoryError("mkdir failed".to_string()).to_string(),
+            "Directory error: mkdir failed"
+        );
+    }
+
+    #[test]
     fn test_generate_safe_filename() {
         let filename = MediaStorage::generate_safe_filename("photo.jpg");
         // Should have format: {uuid}_{name}.{ext}

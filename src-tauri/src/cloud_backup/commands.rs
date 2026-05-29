@@ -354,6 +354,23 @@ impl RestoreTokenRefresher for OAuthService {
     }
 }
 
+async fn prepare_restore_drive_client(
+    state: &AppState,
+    args: &RestoreBackupArgs,
+) -> std::result::Result<Arc<dyn DriveClient + Send + Sync>, CommandError> {
+    validate_restore_confirmation(args)?;
+
+    ensure_online_for_restore(crate::cloud_backup::infrastructure::is_online().await)?;
+
+    let user_email = resolve_restore_user_email(state.connected_email())?;
+
+    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
+    let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
+    let access_token = resolve_restore_access_token(&oauth_service, &user_email).await?;
+
+    Ok(build_google_drive_client(access_token))
+}
+
 async fn resolve_restore_access_token_with_storage(
     storage: &dyn SecureStorage,
     refresher: &(dyn RestoreTokenRefresher + Send + Sync),
@@ -384,16 +401,7 @@ pub async fn cloud_backup_restore_inner(
     args: RestoreBackupArgs,
     db_path: std::path::PathBuf,
 ) -> std::result::Result<(), CommandError> {
-    validate_restore_confirmation(&args)?;
-
-    ensure_online_for_restore(crate::cloud_backup::infrastructure::is_online().await)?;
-
-    let user_email = resolve_restore_user_email(state.connected_email())?;
-
-    let storage = create_platform_storage(STORAGE_SERVICE.to_string());
-    let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
-    let access_token = resolve_restore_access_token(&oauth_service, &user_email).await?;
-    let drive_client = build_google_drive_client(access_token);
+    let drive_client = prepare_restore_drive_client(state, &args).await?;
 
     // Close the pool before replacing the database file to prevent corruption.
     // The frontend will reload the app via the restore-complete event.
@@ -647,6 +655,16 @@ mod tests {
     fn restore_validation_rejects_wrong_confirmation() {
         let args = restore_args_with_confirmation("WRONG");
         let result = validate_restore_confirmation(&args);
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[tokio::test]
+    async fn prepare_restore_drive_client_rejects_wrong_confirmation() {
+        let state = AppState::for_test(sqlx::SqlitePool::connect_lazy("sqlite::memory:").unwrap());
+        let args = restore_args_with_confirmation("WRONG");
+
+        let result = prepare_restore_drive_client(&state, &args).await;
+
         assert!(matches!(result, Err(CommandError::ValidationError(_))));
     }
 

@@ -464,6 +464,193 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
+    async fn update_train_formation_inner_updates_existing_formation(pool: SqlitePool) {
+        let state = app_state(pool);
+
+        let created = create_train_formation_inner(
+            &state,
+            CreateTrainFormationArgs {
+                name: "Original Name".to_string(),
+                category_id: None,
+                start_year: None,
+                end_year: None,
+                epoch: None,
+                notes: None,
+            },
+        )
+        .await
+        .expect("create formation should succeed");
+
+        let updated = update_train_formation_inner(
+            &state,
+            created.id.clone(),
+            UpdateTrainFormationArgs {
+                name: Some("Updated Name".to_string()),
+                category_id: None,
+                start_year: None,
+                end_year: None,
+                epoch: None,
+                notes: Some("Updated in test".to_string()),
+            },
+        )
+        .await
+        .expect("update formation should succeed");
+
+        assert_eq!(updated.id, created.id);
+        assert_eq!(updated.name, "Updated Name");
+        assert_eq!(updated.notes.as_deref(), Some("Updated in test"));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn add_formation_element_inner_adds_element_to_existing_formation(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+
+        let formation = create_train_formation_inner(
+            &state,
+            CreateTrainFormationArgs {
+                name: "Element Test Formation".to_string(),
+                category_id: None,
+                start_year: None,
+                end_year: None,
+                epoch: None,
+                notes: None,
+            },
+        )
+        .await
+        .expect("create formation should succeed");
+
+        let railway_company_id = "trn:railway-company:test-co".to_string();
+        sqlx::query("INSERT INTO railway_companies (id, name, status) VALUES (?1, ?2, ?3)")
+            .bind(&railway_company_id)
+            .bind("Test Railway Co")
+            .bind("ACTIVE")
+            .execute(&pool)
+            .await
+            .expect("railway company seed should succeed");
+
+        let prototype = create_custom_prototype_inner(
+            &state,
+            CreateCustomPrototypeArgs {
+                railway_company_id,
+                series_code: "TEST-LOC".to_string(),
+                friendly_name: Some("Test Locomotive".to_string()),
+                is_motorized: true,
+                default_is_dummy: false,
+                notes: None,
+                specification_type: "LOCOMOTIVE".to_string(),
+                locomotive_type: Some("ELECTRIC_LOCOMOTIVE".to_string()),
+                locomotive_series: None,
+                service_level: None,
+                passenger_car_type: None,
+                freight_car_type: None,
+                railcar_type: None,
+                electric_multiple_unit_type: None,
+                elements_count: None,
+                is_permanently_coupled: None,
+            },
+        )
+        .await
+        .expect("prototype creation should succeed");
+
+        let prototype_id = prototype.id;
+
+        let added = add_formation_element_inner(
+            &state,
+            formation.id.clone(),
+            AddFormationElementArgs {
+                prototype_id: prototype_id.clone(),
+                owned_rolling_stock_id: None,
+            },
+        )
+        .await
+        .expect("add element should succeed");
+
+        assert_eq!(added.position_order, 0);
+        assert_eq!(added.prototype.id, prototype_id);
+
+        let detail = get_train_formation_inner(&state, formation.id)
+            .await
+            .expect("read formation detail should succeed");
+        assert_eq!(detail.elements.len(), 1);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn assign_rolling_stock_to_element_inner_updates_existing_element(pool: SqlitePool) {
+        let state = app_state(pool.clone());
+
+        let railway_company_id = "trn:railway-company:test-co-assign".to_string();
+        sqlx::query("INSERT INTO railway_companies (id, name, status) VALUES (?1, ?2, ?3)")
+            .bind(&railway_company_id)
+            .bind("Assign Test Railway Co")
+            .bind("ACTIVE")
+            .execute(&pool)
+            .await
+            .expect("railway company seed should succeed");
+
+        let prototype = create_custom_prototype_inner(
+            &state,
+            CreateCustomPrototypeArgs {
+                railway_company_id,
+                series_code: "ASSIGN-LOC".to_string(),
+                friendly_name: Some("Assign Test Locomotive".to_string()),
+                is_motorized: true,
+                default_is_dummy: false,
+                notes: None,
+                specification_type: "LOCOMOTIVE".to_string(),
+                locomotive_type: Some("ELECTRIC_LOCOMOTIVE".to_string()),
+                locomotive_series: None,
+                service_level: None,
+                passenger_car_type: None,
+                freight_car_type: None,
+                railcar_type: None,
+                electric_multiple_unit_type: None,
+                elements_count: None,
+                is_permanently_coupled: None,
+            },
+        )
+        .await
+        .expect("prototype creation should succeed");
+
+        let formation = create_train_formation_inner(
+            &state,
+            CreateTrainFormationArgs {
+                name: "Assign Element Test Formation".to_string(),
+                category_id: None,
+                start_year: None,
+                end_year: None,
+                epoch: None,
+                notes: None,
+            },
+        )
+        .await
+        .expect("create formation should succeed");
+
+        let element = add_formation_element_inner(
+            &state,
+            formation.id,
+            AddFormationElementArgs {
+                prototype_id: prototype.id,
+                owned_rolling_stock_id: None,
+            },
+        )
+        .await
+        .expect("add element should succeed");
+
+        let assigned = assign_rolling_stock_to_element_inner(
+            &state,
+            element.id.clone(),
+            AssignRollingStockToElementArgs {
+                owned_rolling_stock_id: None,
+            },
+        )
+        .await
+        .expect("assign rolling stock should succeed");
+
+        assert_eq!(assigned.id, element.id);
+        assert!(assigned.owned_rolling_stock_id.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
     async fn reorder_formation_elements_empty_list_returns_validation_error(pool: SqlitePool) {
         let state = app_state(pool);
         let args = ReorderFormationElementsArgs {

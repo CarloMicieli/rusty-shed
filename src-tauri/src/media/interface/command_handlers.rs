@@ -646,6 +646,50 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_map_upload_error_not_found() {
+        let cmd_err = map_upload_error(UploadError::ModelNotFound("missing model".to_string()));
+
+        match cmd_err {
+            CommandError::NotFound(message) => assert_eq!(message, "missing model"),
+            _ => panic!("Expected NotFound variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_upload_error_validation() {
+        let cmd_err = map_upload_error(UploadError::Validation(ValidationError::FileNotFound));
+
+        match cmd_err {
+            CommandError::BusinessRule(message) => assert_eq!(message, "File not found"),
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_upload_error_storage() {
+        let cmd_err = map_upload_error(UploadError::Storage(StorageError::FileNotFound(
+            "missing.png".to_string(),
+        )));
+
+        match cmd_err {
+            CommandError::NotFound(message) => assert_eq!(message, "missing.png"),
+            _ => panic!("Expected NotFound variant"),
+        }
+    }
+
+    #[test]
+    fn test_map_upload_error_domain() {
+        let cmd_err = map_upload_error(UploadError::Domain(
+            crate::core::domain::domain_error::DomainError::BusinessRule("boom".to_string()),
+        ));
+
+        match cmd_err {
+            CommandError::BusinessRule(message) => assert_eq!(message, "boom"),
+            _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
     async fn test_state(models_dir: std::path::PathBuf) -> AppState {
         let pool = SqlitePool::connect(":memory:")
             .await
@@ -724,6 +768,47 @@ mod tests {
         .await;
 
         assert!(matches!(result, Err(CommandError::NotFound(_))));
+    }
+
+    #[tokio::test]
+    async fn test_get_railway_model_image_returns_image_path_when_file_exists() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+        let model_id = RailwayModelId::try_from("trn:railway-model:roco:43210").expect("valid id");
+        let image_name = format!(
+            "{}.png",
+            crate::media::domain::RailwayModelImage::resolve_filename(&model_id)
+        );
+        let image_path = temp_dir.path().join(&image_name);
+        tokio::fs::write(&image_path, b"image bytes")
+            .await
+            .expect("write image");
+
+        let response = get_railway_model_image_inner(&state, model_id)
+            .await
+            .expect("image should be found");
+
+        assert!(response.has_image);
+        assert_eq!(
+            response.image_path.as_deref(),
+            Some(image_path.to_str().expect("unicode path"))
+        );
+        assert!(response.placeholder_html.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_get_railway_model_image_returns_placeholder_when_missing() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+        let model_id = RailwayModelId::try_from("trn:railway-model:roco:99999").expect("valid id");
+
+        let response = get_railway_model_image_inner(&state, model_id)
+            .await
+            .expect("missing image should fall back to placeholder");
+
+        assert!(!response.has_image);
+        assert!(response.image_path.is_none());
+        assert!(response.placeholder_html.is_some());
     }
 
     #[tokio::test]
