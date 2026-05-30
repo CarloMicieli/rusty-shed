@@ -156,76 +156,56 @@
     };
   });
 
-  onMount(async () => {
-    // 0. Initialize settings and derive onboarding status
-    try {
-      await settingsState.initialize();
-      needsOnboarding = bootstrapNeedsOnboarding(settingsState.settings);
-    } catch (err) {
-      log.warn(`Failed to initialize settings, using defaults: ${String(err)}`);
-      error = err instanceof Error ? err.message : String(err);
-      loading = false;
-      return;
-    }
-
-    // 0a. Detect OS locale for regional formatting
-    await regionalManager.init();
-
-    // 1. Initialize theme from settings
-    await themeState.initializeFromSettings();
-
-    // 2. Show main window immediately so the user sees *something* (loading state)
-    // We don't block on this failing, but log it if it does.
+  onMount(() => {
+    // Show the window before any backend work so Android never stays on a blank surface
+    // if settings initialization or IPC setup is slow.
     safeInvoke<void>('show_main_window').then((res) => {
       if (!res.ok) log.warn(`Failed to show main window: ${String(res.error)}`);
     });
 
-    // Ensure the initial app-loading spinner from app.html is removed
+    // Ensure the initial app-loading spinner from app.html is removed promptly.
     const loader = document.getElementById('app-loading');
     if (loader) {
       loader.remove();
     }
 
-    try {
-      if (needsOnboarding) {
-        loading = false;
-        return;
-      }
+    loading = false;
 
-      // 3. Fetch app version (non-critical, but good to have early)
-      const versionResult = await safeInvoke<string>('get_app_version');
-      if (versionResult.ok) {
-        appState.setVersion(versionResult.data);
-      }
+    void (async () => {
+      try {
+        // 0. Initialize settings and derive onboarding status.
+        await settingsState.initialize();
+        needsOnboarding = bootstrapNeedsOnboarding(settingsState.settings);
 
-      // 4. Initialize Database (Critical)
-      const initResult = await safeInvoke<void>('init_database');
-      if (!initResult.ok) {
-        const message =
-          initResult.error?.message ?? String(initResult.error ?? 'Database initialization failed');
-        throw new Error(message);
-      }
+        // 0a. Detect OS locale for regional formatting.
+        await regionalManager.init();
 
-      // 5. Preload data (only if DB is ready)
-      const initialFinanceYear = getInitialFinanceYear();
-      await Promise.all([
-        collectionStore.fetch(),
-        wishlistState.fetchWishlists(),
-        financeState.ensureLoaded()
-      ]);
+        // 1. Initialize theme from settings.
+        await themeState.initializeFromSettings();
 
-      // Load budget config first. Monthly records require an existing budget configuration.
-      await budgetState.load();
-      if (budgetState.hasConfig) {
-        await budgetState.loadMonthlyRecords(initialFinanceYear);
+        if (needsOnboarding) {
+          return;
+        }
+
+        // 3. Fetch app version (non-critical, but good to have early).
+        const versionResult = await safeInvoke<string>('get_app_version');
+        if (versionResult.ok) {
+          appState.setVersion(versionResult.data);
+        }
+
+        // 4. Initialize Database (Critical).
+        const initResult = await safeInvoke<void>('init_database');
+        if (!initResult.ok) {
+          const message =
+            initResult.error?.message ?? String(initResult.error ?? 'Database initialization failed');
+          throw new Error(message);
+        }
+      } catch (err) {
+        log.error(`Startup failed: ${String(err)}`);
+        // Capture the error to show in the UI.
+        error = err instanceof Error ? err.message : String(err);
       }
-    } catch (err) {
-      log.error(`Startup failed: ${String(err)}`);
-      // Capture the error to show in the UI
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      loading = false;
-    }
+    })();
   });
 </script>
 
@@ -372,26 +352,32 @@
       </div>
     </div>
 
-    <AcquisitionDrawer
-      open={showAcquisitionDrawer}
-      onClose={() => (showAcquisitionDrawer = false)}
-      onSuccess={() => {
-        showAcquisitionDrawer = false;
-        void collectionStore.refresh();
-        void dashboardState.load();
-        void dashboardState.loadBudget();
-      }}
-    />
+    {#if showAcquisitionDrawer}
+      <AcquisitionDrawer
+        open={showAcquisitionDrawer}
+        onClose={() => (showAcquisitionDrawer = false)}
+        onSuccess={() => {
+          showAcquisitionDrawer = false;
+          void collectionStore.refresh();
+          void dashboardState.load();
+          void dashboardState.loadBudget();
+        }}
+      />
+    {/if}
 
-    <AddWishlistItemDrawer
-      open={showWishlistDrawer}
-      onClose={() => (showWishlistDrawer = false)}
-      onSaved={() => (showWishlistDrawer = false)}
-    />
+    {#if showWishlistDrawer}
+      <AddWishlistItemDrawer
+        open={showWishlistDrawer}
+        onClose={() => (showWishlistDrawer = false)}
+        onSaved={() => (showWishlistDrawer = false)}
+      />
+    {/if}
 
-    <LogMaintenanceDrawer
-      open={showLogMaintenanceDrawer}
-      onClose={() => (showLogMaintenanceDrawer = false)}
-    />
+    {#if showLogMaintenanceDrawer}
+      <LogMaintenanceDrawer
+        open={showLogMaintenanceDrawer}
+        onClose={() => (showLogMaintenanceDrawer = false)}
+      />
+    {/if}
   </Tooltip.Provider>
 {/if}

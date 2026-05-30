@@ -86,16 +86,7 @@
   const acquisitionSkeletonKeys = ['acq-1', 'acq-2'] as const;
 
   onMount(() => {
-    if (dashboardInitInFlight) {
-      return;
-    }
-
-    dashboardInitInFlight = (async () => {
-      await dashboard.load();
-      await dashboard.loadBudget();
-    })().finally(() => {
-      dashboardInitInFlight = null;
-    });
+    if (dashboardInitInFlight) return;
   });
 
   // Helpers
@@ -199,7 +190,7 @@
                 <QuickActionButtons {actions} class="gap-2" />
               </div>
             </div>
-            <DashboardCharts compact={true} data={budgetChartData} {currencyCode} {hasBudget} />
+            <DashboardCharts compact={false} data={budgetChartData} {currencyCode} {hasBudget} />
           </div>
 
           <aside class="hidden lg:block">

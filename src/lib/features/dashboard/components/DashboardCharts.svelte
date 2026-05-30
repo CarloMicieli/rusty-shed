@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BarChart, LinearGradient, PieChart } from 'layerchart';
+  import { onMount } from 'svelte';
   import { BarChart2, Wallet } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
@@ -58,10 +58,56 @@
   const budgetPercent = $derived(Math.round(budget * 100));
   const monthlyYMax = $derived(Math.max(...monthlySpending.map((d) => d.amount), 1));
 
+  let isNarrowViewport = $state(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+
+    const updateViewport = () => {
+      isNarrowViewport = mediaQuery.matches;
+    };
+
+    updateViewport();
+    mediaQuery.addEventListener('change', updateViewport);
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateViewport);
+    };
+  });
+
+  const useLightweightCharts = $derived(compact || isNarrowViewport);
+
   // Compact mode reduces chart height by ~30%
   const chartHeight = $derived(compact ? 'h-44' : 'h-64');
   const chartCardClass =
     'card gauge-frame p-4 transition-colors duration-200 backdrop-blur-sm bg-card/80 border border-border';
+
+  type LayerchartModule = typeof import('layerchart');
+
+  let PieChart = $state<LayerchartModule['PieChart'] | null>(null);
+  let BarChart = $state<LayerchartModule['BarChart'] | null>(null);
+  let LinearGradient = $state<LayerchartModule['LinearGradient'] | null>(null);
+  let layerchartLoading = $state(false);
+
+  $effect(() => {
+    if (useLightweightCharts || PieChart || layerchartLoading) {
+      return;
+    }
+
+    layerchartLoading = true;
+    void import('layerchart')
+      .then((mod) => {
+        PieChart = mod.PieChart;
+        BarChart = mod.BarChart;
+        LinearGradient = mod.LinearGradient;
+      })
+      .catch((error) => {
+        console.warn(`Failed to load layerchart: ${String(error)}`);
+      })
+      .finally(() => {
+        layerchartLoading = false;
+      });
+  });
 </script>
 
 <div class="gauge-frame flex h-full items-center p-4">
@@ -76,12 +122,42 @@
       </div>
 
       <div class="relative {chartHeight} w-full">
-        {#if noBudget}
+        {#if useLightweightCharts}
+          {#if noBudget}
+            <div class="flex h-full flex-col items-center justify-center gap-3 text-center">
+              <div class="rounded-full bg-muted/60 p-3">
+                <Wallet size={28} class="text-muted-foreground" />
+              </div>
+              <p class="text-sm text-muted-foreground">{m.dashboard_chart_budget_no_budget()}</p>
+            </div>
+          {:else}
+            <div class="flex h-full flex-col items-center justify-center gap-4 text-center">
+              <div
+                class="relative grid h-28 w-28 place-items-center rounded-full border border-border bg-background"
+                style:background={`conic-gradient(#d48a3e ${budgetPercent}%, rgba(63,63,70,0.25) 0)`}
+              >
+                <div class="grid h-20 w-20 place-items-center rounded-full bg-background">
+                  <span class="text-2xl font-extrabold text-foreground">{budgetPercent}%</span>
+                </div>
+              </div>
+              <span class="text-xs tracking-tighter uppercase opacity-60">
+                {m.dashboard_chart_budget_remaining()}
+              </span>
+            </div>
+          {/if}
+        {:else if noBudget}
           <div class="flex h-full flex-col items-center justify-center gap-3 text-center">
             <div class="rounded-full bg-muted/60 p-3">
               <Wallet size={28} class="text-muted-foreground" />
             </div>
             <p class="text-sm text-muted-foreground">{m.dashboard_chart_budget_no_budget()}</p>
+          </div>
+        {:else if !PieChart}
+          <div class="flex h-full flex-col items-center justify-center gap-3 text-center">
+            <div class="rounded-full bg-muted/60 p-3">
+              <Wallet size={28} class="text-muted-foreground" />
+            </div>
+            <p class="text-sm text-muted-foreground">{m.dashboard_chart_budget_title()}</p>
           </div>
         {:else}
           <PieChart
@@ -135,7 +211,36 @@
       </div>
 
       <div class="relative {chartHeight} w-full">
-        {#if !hasSpendingData}
+        {#if useLightweightCharts}
+          {#if !hasSpendingData}
+            <div
+              class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-center"
+            >
+              <BarChart2 size={28} class="text-muted-foreground/50" />
+              <p class="text-sm text-muted-foreground">
+                {m.dashboard_chart_spending_no_data({ year: currentYear })}
+              </p>
+            </div>
+            <div class="flex h-full w-full items-end gap-1 px-4 opacity-20">
+              {#each Array(12) as _, i (i)}
+                <div class="flex-1 rounded-t bg-muted" style:height={`${18 + (i % 4) * 8}%`}></div>
+              {/each}
+            </div>
+          {:else}
+            <div class="flex h-full w-full items-end gap-1 px-2">
+              {#each monthlySpending as point (point.month)}
+                <div class="flex flex-1 flex-col items-center justify-end gap-2">
+                  <div
+                    class="w-full rounded-t bg-primary/80"
+                    style:height={`${Math.max(10, Math.round((point.amount / monthlyYMax) * 100))}%`}
+                    title={formatCurrency(point.amount)}
+                  ></div>
+                  <span class="text-[0.65rem] text-muted-foreground">{formatMonthIndex(point.month)}</span>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        {:else if !hasSpendingData}
           <div
             class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-center"
           >
@@ -150,11 +255,23 @@
               <div class="flex-1 rounded-t bg-muted" style="height: {20 + (i % 4) * 10}%"></div>
             {/each}
           </div>
+        {:else if !BarChart}
+          <div class="flex h-full w-full items-end gap-1 px-2 opacity-40">
+            {#each monthlySpending as point (point.month)}
+              <div class="flex flex-1 flex-col items-center justify-end gap-2">
+                <div
+                  class="w-full rounded-t bg-primary/50"
+                  style:height={`${Math.max(10, Math.round((point.amount / monthlyYMax) * 100))}%`}
+                ></div>
+                <span class="text-[0.65rem] text-muted-foreground">{formatMonthIndex(point.month)}</span>
+              </div>
+            {/each}
+          </div>
         {:else}
           <BarChart
             data={monthlySpending}
-            x={(d) => d.month}
-            y={(d) => d.amount}
+            x={(d: MonthlySpendingPoint) => d.month}
+            y={(d: MonthlySpendingPoint) => d.amount}
             yDomain={[0, monthlyYMax * 1.1]}
             padding={{ top: 10, right: 10, bottom: 30, left: 55 }}
             props={{
