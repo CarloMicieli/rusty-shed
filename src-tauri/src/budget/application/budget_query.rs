@@ -529,6 +529,60 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn it_should_call_dashboard_wrapper_and_return_twelve_points_without_budget() {
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get.expect_get_config().once().returning(|| Ok(None));
+
+        let mut mock_spending = MockBudgetRepository::new();
+        mock_spending
+            .expect_get_multi_year_monthly_spending()
+            .once()
+            .returning(|_, _, _| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_spending);
+
+        let result = get_budget_dashboard(&mut uow, "EUR")
+            .await
+            .expect("expected dashboard summary");
+
+        assert_eq!(result.currency, crate::core::domain::Currency::EUR);
+        assert_eq!(result.monthly_spending.len(), 12);
+        assert!(result.remaining_amount.is_none());
+        assert!(result.monthly_goal.is_none());
+    }
+
+    #[tokio::test]
+    async fn it_should_fallback_to_eur_currency_when_user_currency_is_invalid_and_no_config() {
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get.expect_get_config().once().returning(|| Ok(None));
+
+        let mut mock_spending = MockBudgetRepository::new();
+        mock_spending
+            .expect_get_multi_year_monthly_spending()
+            .once()
+            .returning(|_, _, _| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_spending);
+
+        let summary = get_budget_dashboard(&mut uow, "INVALID")
+            .await
+            .expect("expected dashboard summary with fallback currency");
+
+        assert_eq!(summary.currency, crate::core::domain::Currency::EUR);
+        assert_eq!(summary.monthly_spending.len(), 12);
+        assert!(
+            summary
+                .monthly_spending
+                .iter()
+                .all(|point| point.currency == crate::core::domain::Currency::EUR)
+        );
+    }
+
+    #[tokio::test]
     async fn it_should_calculate_rollover_chain() {
         // Arrange – base budget = 100_000 per month, no extra, spending in Jan = 60_000
         // → rollover Jan→Feb = 40_000

@@ -543,7 +543,9 @@ pub async fn get_quarterly_summaries(
 mod tests {
     use super::*;
     use crate::budget::domain::BudgetMode;
+    use crate::budget::domain::monthly_budget_record::{MonthStatus, MonthlyBudgetRecord};
     use crate::core::domain::Currency;
+    use crate::core::domain::calendar::{Month, Year};
     use sqlx::SqlitePool;
 
     fn app_state(pool: SqlitePool) -> AppState {
@@ -678,5 +680,64 @@ mod tests {
     fn resolve_quarterly_year_defaults_to_current_year() {
         let resolved = resolve_quarterly_year(None).expect("resolution should succeed");
         assert_eq!(resolved.value(), chrono::Utc::now().year());
+    }
+
+    #[test]
+    fn map_monthly_budget_record_dto_maps_valid_record() {
+        let record = MonthlyBudgetRecord {
+            year: 2026,
+            month: 4,
+            base_budget: 1_000,
+            extra_budget: 200,
+            actual_spend: 300,
+            rollover_in: 100,
+            rollover_out: 1_000,
+            status: MonthStatus::InProgress,
+            currency: Currency::EUR,
+        };
+
+        let dto = map_monthly_budget_record_dto(record).expect("mapping should succeed");
+
+        assert_eq!(dto.year, Year::try_from(2026).expect("valid year"));
+        assert_eq!(dto.month, Month::try_from(4).expect("valid month"));
+        assert_eq!(dto.available, 1_300);
+        assert_eq!(dto.remaining, 1_000);
+        assert_eq!(dto.status, "IN_PROGRESS");
+    }
+
+    #[test]
+    fn map_monthly_budget_record_dto_returns_validation_error_for_invalid_year() {
+        let record = MonthlyBudgetRecord {
+            year: 99999,
+            month: 1,
+            base_budget: 100,
+            extra_budget: 0,
+            actual_spend: 0,
+            rollover_in: 0,
+            rollover_out: 100,
+            status: MonthStatus::Projected,
+            currency: Currency::EUR,
+        };
+
+        let result = map_monthly_budget_record_dto(record);
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+    }
+
+    #[test]
+    fn map_monthly_budget_record_dto_returns_validation_error_for_invalid_month() {
+        let record = MonthlyBudgetRecord {
+            year: 2026,
+            month: 13,
+            base_budget: 100,
+            extra_budget: 0,
+            actual_spend: 0,
+            rollover_in: 0,
+            rollover_out: 100,
+            status: MonthStatus::Projected,
+            currency: Currency::EUR,
+        };
+
+        let result = map_monthly_budget_record_dto(record);
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
     }
 }
