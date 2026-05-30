@@ -26,8 +26,17 @@ export const SCALE_DISPLAY_MAP: Record<Scale, string> = {
 
 export const SCALES: Scale[] = Object.keys(SCALE_DISPLAY_MAP) as Scale[];
 
+function scaleRatioDenominator(scale: Scale): number {
+  const label = SCALE_DISPLAY_MAP[scale];
+  const match = label.match(/1:([0-9]+(?:\.[0-9]+)?)/);
+  return match ? Number.parseFloat(match[1]) : Number.POSITIVE_INFINITY;
+}
+
 export function scaleOptions(): { value: Scale; label: string }[] {
-  return SCALES.map((s) => ({ value: s, label: SCALE_DISPLAY_MAP[s] }));
+  // Bigger model scales have smaller ratio denominators, so sort ascending by denominator.
+  return [...SCALES]
+    .sort((a, b) => scaleRatioDenominator(a) - scaleRatioDenominator(b))
+    .map((s) => ({ value: s, label: SCALE_DISPLAY_MAP[s] }));
 }
 
 // ── Power Methods ─────────────────────────────────────────────────────────────
