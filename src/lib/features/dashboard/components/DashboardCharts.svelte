@@ -235,7 +235,9 @@
                     style:height={`${Math.max(10, Math.round((point.amount / monthlyYMax) * 100))}%`}
                     title={formatCurrency(point.amount)}
                   ></div>
-                  <span class="text-[0.65rem] text-muted-foreground">{formatMonthIndex(point.month)}</span>
+                  <span class="text-[0.65rem] text-muted-foreground"
+                    >{formatMonthIndex(point.month)}</span
+                  >
                 </div>
               {/each}
             </div>
@@ -263,7 +265,9 @@
                   class="w-full rounded-t bg-primary/50"
                   style:height={`${Math.max(10, Math.round((point.amount / monthlyYMax) * 100))}%`}
                 ></div>
-                <span class="text-[0.65rem] text-muted-foreground">{formatMonthIndex(point.month)}</span>
+                <span class="text-[0.65rem] text-muted-foreground"
+                  >{formatMonthIndex(point.month)}</span
+                >
               </div>
             {/each}
           </div>

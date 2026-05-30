@@ -20,7 +20,10 @@ export async function init() {
   try {
     // Attach console forwarding when running in Tauri
     const windowObj = typeof window !== 'undefined' ? window : null;
-    if (windowObj && '__TAURI_INTERNALS__' in windowObj) {
+    const isAndroidWebView =
+      typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+
+    if (windowObj && '__TAURI_INTERNALS__' in windowObj && !isAndroidWebView) {
       await attachConsole();
       console.log('[hooks.client.ts] Console forwarding attached to Tauri backend');
     }

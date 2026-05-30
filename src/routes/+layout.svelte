@@ -98,6 +98,34 @@
 
   const FINANCE_SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
 
+  type TauriAwareWindow = Window & {
+    __TAURI_INTERNALS__?: unknown;
+  };
+
+  function hasTauriBridge(): boolean {
+    return (
+      typeof window !== 'undefined' && (window as TauriAwareWindow).__TAURI_INTERNALS__ != null
+    );
+  }
+
+  function isTauriHosted(): boolean {
+    return typeof window !== 'undefined' && window.location.host === 'tauri.localhost';
+  }
+
+  async function waitForTauriBridge(timeoutMs = 4_000, pollMs = 50): Promise<boolean> {
+    if (hasTauriBridge()) return true;
+
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      await new Promise((resolve) => setTimeout(resolve, pollMs));
+      if (hasTauriBridge()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   function getInitialFinanceYear(): number {
     const currentYear = new Date().getFullYear();
     const validYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -157,22 +185,30 @@
   });
 
   onMount(() => {
-    // Show the window before any backend work so Android never stays on a blank surface
-    // if settings initialization or IPC setup is slow.
-    safeInvoke<void>('show_main_window').then((res) => {
-      if (!res.ok) log.warn(`Failed to show main window: ${String(res.error)}`);
-    });
-
-    // Ensure the initial app-loading spinner from app.html is removed promptly.
-    const loader = document.getElementById('app-loading');
-    if (loader) {
-      loader.remove();
-    }
-
-    loading = false;
-
     void (async () => {
       try {
+        if (isTauriHosted()) {
+          const bridgeReady = await waitForTauriBridge();
+          if (!bridgeReady) {
+            throw new Error('Tauri bridge did not become ready during startup');
+          }
+        }
+
+        // Show the window before any backend work so Android never stays on a blank surface
+        // if settings initialization or IPC setup is slow.
+        const showWindowResult = await safeInvoke<void>('show_main_window');
+        if (!showWindowResult.ok) {
+          log.warn(`Failed to show main window: ${String(showWindowResult.error)}`);
+        }
+
+        // Ensure the initial app-loading spinner from app.html is removed promptly.
+        const loader = document.getElementById('app-loading');
+        if (loader) {
+          loader.remove();
+        }
+
+        loading = false;
+
         // 0. Initialize settings and derive onboarding status.
         await settingsState.initialize();
         needsOnboarding = bootstrapNeedsOnboarding(settingsState.settings);
@@ -197,13 +233,15 @@
         const initResult = await safeInvoke<void>('init_database');
         if (!initResult.ok) {
           const message =
-            initResult.error?.message ?? String(initResult.error ?? 'Database initialization failed');
+            initResult.error?.message ??
+            String(initResult.error ?? 'Database initialization failed');
           throw new Error(message);
         }
       } catch (err) {
         log.error(`Startup failed: ${String(err)}`);
         // Capture the error to show in the UI.
         error = err instanceof Error ? err.message : String(err);
+        loading = false;
       }
     })();
   });
