@@ -494,4 +494,140 @@ mod tests {
 
         uow.commit().await.expect("commit should succeed");
     }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_map_add_extra_budget_database_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE extra_budgets")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let entry = ExtraBudgetEntry::new(
+            Year::try_from(2026).expect("valid year"),
+            Month::try_from(4).expect("valid month"),
+            MonetaryAmount::new(5_000, Currency::EUR),
+            Some("gift".to_string()),
+        )
+        .expect("valid extra budget entry");
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.add_extra_budget(&entry)
+                .await
+                .expect_err("add should fail")
+        };
+
+        assert!(err.starts_with("Failed to add extra budget:"), "{err}");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_map_get_extra_budget_by_id_database_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE extra_budgets")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let id = ExtraBudgetId::default();
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.get_extra_budget_by_id(&id)
+                .await
+                .expect_err("lookup should fail")
+        };
+
+        assert!(err.starts_with("Failed to get extra budget by id:"), "{err}");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_map_remove_extra_budget_database_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE extra_budgets")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let id = ExtraBudgetId::default();
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.remove_extra_budget(&id)
+                .await
+                .expect_err("remove should fail")
+        };
+
+        assert!(err.starts_with("Failed to remove extra budget:"), "{err}");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_map_monthly_spending_query_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE purchase_infos")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.get_monthly_spending(2025, "EUR")
+                .await
+                .expect_err("query should fail")
+        };
+
+        assert!(err.starts_with("Failed to get monthly spending:"), "{err}");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_map_multi_year_and_quarterly_query_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE purchase_infos")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let (multi_year_err, quarterly_err) = {
+            let mut repo = uow.budget_repo();
+            let multi_year_err = repo
+                .get_multi_year_monthly_spending(2024, 2025, "EUR")
+                .await
+                .expect_err("query should fail");
+            let quarterly_err = repo
+                .get_quarterly_spending_by_category(2025, "EUR")
+                .await
+                .expect_err("query should fail");
+            (multi_year_err, quarterly_err)
+        };
+
+        assert!(
+            multi_year_err.starts_with("Failed to get multi-year monthly spending:"),
+            "{multi_year_err}"
+        );
+        assert!(
+            quarterly_err.starts_with("Failed to get quarterly spending:"),
+            "{quarterly_err}"
+        );
+    }
 }

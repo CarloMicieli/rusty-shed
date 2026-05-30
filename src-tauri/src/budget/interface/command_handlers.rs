@@ -601,6 +601,54 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
+    async fn get_budget_dashboard_inner_returns_summary_without_budget_config(pool: SqlitePool) {
+        let state = app_state(pool);
+
+        let summary = get_budget_dashboard_inner(&state, "EUR")
+            .await
+            .expect("query should succeed");
+
+        assert!(summary.remaining_amount.is_none());
+        assert!(summary.remaining_percentage.is_none());
+        assert!(summary.total_available.is_none());
+        assert!(summary.monthly_goal.is_none());
+        assert_eq!(summary.monthly_spending.len(), 12);
+        assert!(!summary.quarterly_activity.is_empty());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_budget_dashboard_inner_returns_budget_values_when_configured(pool: SqlitePool) {
+        let state = app_state(pool);
+        seed_budget_config(&state).await;
+
+        let summary = get_budget_dashboard_inner(&state, "EUR")
+            .await
+            .expect("query should succeed");
+
+        assert!(summary.remaining_amount.is_some());
+        assert!(summary.remaining_percentage.is_some());
+        assert!(summary.total_available.is_some());
+        assert!(summary.monthly_goal.is_some());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_monthly_budget_records_inner_defaults_to_current_year(pool: SqlitePool) {
+        let state = app_state(pool);
+        seed_budget_config(&state).await;
+
+        let records = get_monthly_budget_records_inner(&state, GetMonthlyBudgetRecordsArgs { year: None })
+            .await
+            .expect("query should succeed");
+
+        assert_eq!(records.len(), 12);
+        assert!(
+            records
+                .iter()
+                .all(|record| record.year.value() == chrono::Utc::now().year())
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
     async fn get_quarterly_summaries_inner_returns_empty_for_year_without_data(pool: SqlitePool) {
         let state = app_state(pool);
         let year = Year::try_from(2025).expect("valid year");

@@ -118,10 +118,32 @@ mod tests {
     }
 
     #[test]
+    fn test_quarter_from_month_falls_back_to_q1_for_invalid_values() {
+        assert_eq!(BudgetQuarter::from_month(0), BudgetQuarter::Q1);
+        assert_eq!(BudgetQuarter::from_month(13), BudgetQuarter::Q1);
+    }
+
+    #[test]
+    fn test_quarter_number_maps_all_variants() {
+        assert_eq!(BudgetQuarter::Q1.number(), 1);
+        assert_eq!(BudgetQuarter::Q2.number(), 2);
+        assert_eq!(BudgetQuarter::Q3.number(), 3);
+        assert_eq!(BudgetQuarter::Q4.number(), 4);
+    }
+
+    #[test]
     fn test_spending_level_from_percentage() {
         assert_eq!(SpendingLevel::from_percentage(0.0), SpendingLevel::None);
         assert_eq!(SpendingLevel::from_percentage(20.0), SpendingLevel::Low);
         assert_eq!(SpendingLevel::from_percentage(50.0), SpendingLevel::Medium);
         assert_eq!(SpendingLevel::from_percentage(90.0), SpendingLevel::High);
+    }
+
+    #[test]
+    fn test_spending_level_from_percentage_boundaries() {
+        assert_eq!(SpendingLevel::from_percentage(33.0), SpendingLevel::Low);
+        assert_eq!(SpendingLevel::from_percentage(33.1), SpendingLevel::Medium);
+        assert_eq!(SpendingLevel::from_percentage(66.0), SpendingLevel::Medium);
+        assert_eq!(SpendingLevel::from_percentage(66.1), SpendingLevel::High);
     }
 }

@@ -68,4 +68,17 @@ mod tests {
         let id = ExtraBudgetId::default();
         assert!(id.as_ref().starts_with("trn:extra-budget:"));
     }
+
+    #[test]
+    fn it_should_validate_extra_budget_id() {
+        let id = ExtraBudgetId::default();
+        let result = validate_extra_budget_id(id.as_ref(), &());
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_should_reject_invalid_extra_budget_id() {
+        let result = validate_extra_budget_id("not-a-valid-id", &());
+        assert!(result.is_err());
+    }
 }
