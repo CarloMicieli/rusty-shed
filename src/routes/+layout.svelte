@@ -7,7 +7,7 @@
   import BottomNavigation from '$lib/components/BottomNavigation.svelte';
   import SearchBar from '$lib/components/SearchBar.svelte';
   import SignalFailureView from '$lib/components/signal-failure/SignalFailureView.svelte';
-  import { Bell, TrainFront } from 'lucide-svelte';
+  import { TrainFront } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import { appState } from '$lib/stores/app.svelte';
   import { themeState } from '$lib/stores/themeStore.svelte';
@@ -367,17 +367,6 @@
             <!-- Right Actions -->
             <div class="ml-auto flex items-center gap-4">
               <SearchBar />
-
-              <button
-                type="button"
-                class="relative rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
-                aria-label={m.notifications_label()}
-              >
-                <Bell size={20} />
-                <span
-                  class="absolute top-1 right-1 h-2 w-2 animate-pulse rounded-full bg-destructive"
-                ></span>
-              </button>
             </div>
           </div>
         </header>
