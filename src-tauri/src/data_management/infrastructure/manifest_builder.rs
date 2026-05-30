@@ -1858,4 +1858,67 @@ mod tests {
         assert_eq!(roster[0]["dccAddress"], 7);
         assert_eq!(roster[0]["decoderId"], "decoder-1");
     }
+
+    #[test]
+    fn resolve_export_inclusions_promotes_dependency_flags() {
+        let selection = ExportEntitySelection {
+            include_railway_models: false,
+            include_collection_items: false,
+            include_sellers: false,
+            include_maintenance_logs: true,
+            include_dcc_roster: false,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+            include_train_formations: false,
+            include_wishlists: true,
+        };
+
+        let inclusions = resolve_export_inclusions(&selection);
+
+        assert!(inclusions.include_maintenance_logs);
+        assert!(inclusions.include_collection_items);
+        assert!(inclusions.include_wishlists);
+        assert!(inclusions.include_railway_models);
+        assert!(!inclusions.include_track_inventory);
+        assert!(!inclusions.include_sellers);
+        assert!(!inclusions.include_dcc_roster);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn build_manifest_exports_empty_sections_for_selected_entities(pool: SqlitePool) {
+        let selection = ExportEntitySelection {
+            include_railway_models: true,
+            include_collection_items: true,
+            include_sellers: true,
+            include_maintenance_logs: true,
+            include_dcc_roster: true,
+            include_orphaned_images: false,
+            include_track_inventory: true,
+            include_train_formations: true,
+            include_wishlists: true,
+        };
+
+        let manifest = build_manifest(&pool, &selection, Path::new(".") )
+            .await
+            .expect("manifest build should succeed for an empty database");
+
+        assert_eq!(manifest["version"], "1.0");
+        assert_eq!(manifest["source"], "rusty-shed");
+        assert!(manifest["exportedAt"].is_string());
+
+        let data = manifest["data"].as_object().expect("data should be an object");
+        assert_eq!(data["manufacturers"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["railwayModels"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["collectionItems"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["sellers"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["maintenanceCards"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["trackProducts"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["trackInventories"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["formationCategories"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["trainFormations"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["wishlists"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["decoders"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["digitalRollingStocks"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(data["railwayCompanies"].as_array().map(|v| v.len()), Some(0));
+    }
 }
