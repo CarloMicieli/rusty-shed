@@ -566,6 +566,35 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
+    async fn get_budget_config_inner_returns_none_when_config_is_missing(pool: SqlitePool) {
+        let state = app_state(pool);
+
+        let config = get_budget_config_inner(&state)
+            .await
+            .expect("query should succeed");
+
+        assert!(config.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_budget_config_inner_returns_mapped_config_when_present(pool: SqlitePool) {
+        let state = app_state(pool);
+        seed_budget_config(&state).await;
+
+        let config = get_budget_config_inner(&state)
+            .await
+            .expect("query should succeed")
+            .expect("config should exist");
+
+        assert!(matches!(config.mode, BudgetMode::Yearly));
+        assert_eq!(config.base_amount, 120_000);
+        assert_eq!(config.monthly_amount, 10_000);
+        assert_eq!(config.yearly_amount, 120_000);
+        assert_eq!(config.currency, Currency::EUR);
+        assert_eq!(config.last_reset_year, chrono::Utc::now().year());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
     async fn get_monthly_budget_records_inner_returns_empty_for_year_without_data(
         pool: SqlitePool,
     ) {
@@ -581,6 +610,26 @@ mod tests {
         .expect("query should succeed");
 
         assert_eq!(records.len(), 12);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_budget_bootstrap_inner_returns_none_fields_without_budget_config(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let year = Year::try_from(2025).expect("valid year");
+
+        let bootstrap =
+            get_budget_bootstrap_inner(&state, GetBudgetBootstrapArgs { year: Some(year) }, "EUR")
+                .await
+                .expect("query should succeed");
+
+        assert!(bootstrap.config.is_none());
+        assert!(bootstrap.monthly_records.is_none());
+        assert!(bootstrap.dashboard_summary.remaining_amount.is_none());
+        assert!(bootstrap.dashboard_summary.remaining_percentage.is_none());
+        assert!(bootstrap.dashboard_summary.total_available.is_none());
+        assert_eq!(bootstrap.dashboard_summary.monthly_spending.len(), 12);
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -647,6 +696,42 @@ mod tests {
                 .iter()
                 .all(|record| record.year.value() == chrono::Utc::now().year())
         );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_extra_budgets_inner_returns_entries_for_requested_year(pool: SqlitePool) {
+        let state = app_state(pool);
+        seed_budget_config(&state).await;
+        let currency = Currency::from_code("EUR").expect("valid currency");
+
+        let entry = add_extra_budget_inner(
+            &state,
+            AddExtraBudgetArgs {
+                year: Year::try_from(2025).expect("valid year"),
+                month: Month::try_from(2).expect("valid month"),
+                amount: 7_500,
+                currency: None,
+                reason: Some("Bonus".to_string()),
+            },
+            currency,
+        )
+        .await
+        .expect("extra budget should be created");
+
+        let entries = get_extra_budgets_inner(
+            &state,
+            GetExtraBudgetsArgs {
+                year: Year::try_from(2025).expect("valid year"),
+            },
+        )
+        .await
+        .expect("query should succeed");
+
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].id, entry.id);
+        assert_eq!(entries[0].amount, 7_500);
+        assert_eq!(entries[0].currency, Currency::EUR);
+        assert_eq!(entries[0].reason.as_deref(), Some("Bonus"));
     }
 
     #[sqlx::test(migrations = "./migrations")]

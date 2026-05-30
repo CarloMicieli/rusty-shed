@@ -316,6 +316,18 @@ mod tests {
     use crate::core::domain::{Currency, MonetaryAmount};
 
     #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_return_none_when_budget_configuration_is_missing(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let mut repo = uow.budget_repo();
+        let loaded = repo.get_config().await.expect("get_config should succeed");
+
+        assert!(loaded.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
     async fn it_should_save_and_load_budget_configuration(conn: sqlx::SqlitePool) {
         let mut uow = SqliteUnitOfWork::new(&conn)
             .await
@@ -346,6 +358,41 @@ mod tests {
         }
 
         uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_fail_on_invalid_budget_configuration_row(conn: sqlx::SqlitePool) {
+        let mut setup = conn.acquire().await.expect("acquire connection");
+        sqlx::query(
+            "INSERT INTO budget_config (id, mode, base_amount, currency, last_reset_year, created_at, updated_at, version)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        )
+        .bind(1_i32)
+        .bind("YEARLY")
+        .bind(120_000_i64)
+        .bind("EUR")
+        .bind(99_999_i32)
+        .bind("2026-01-01T00:00:00Z")
+        .bind("2026-01-01T00:00:00Z")
+        .bind(0_i32)
+        .execute(&mut *setup)
+        .await
+        .expect("insert invalid config row");
+        drop(setup);
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+        let mut repo = uow.budget_repo();
+
+        let error = repo
+            .get_config()
+            .await
+            .expect_err("invalid config row should fail");
+
+        assert!(
+            matches!(error, DomainError::Validation(message) if message.contains("Invalid year"))
+        );
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -388,6 +435,56 @@ mod tests {
         }
 
         uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_return_empty_extra_budgets_when_year_has_no_rows(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+        let mut repo = uow.budget_repo();
+
+        let entries = repo
+            .get_extra_budgets(2026)
+            .await
+            .expect("get_extra_budgets should succeed");
+
+        assert!(entries.is_empty());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_fail_on_invalid_extra_budget_row(conn: sqlx::SqlitePool) {
+        let mut setup = conn.acquire().await.expect("acquire connection");
+        sqlx::query(
+            "INSERT INTO extra_budgets (id, year, month, amount, currency, reason, created_at, version)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        )
+        .bind("trn:extra-budget:11111111-1111-1111-1111-111111111111")
+        .bind(2026_i32)
+        .bind(4_i32)
+        .bind(5_000_i64)
+        .bind("INVALID")
+        .bind(Some("gift"))
+        .bind("2026-01-01T00:00:00Z")
+        .bind(0_i32)
+        .execute(&mut *setup)
+        .await
+        .expect("insert invalid extra budget row");
+        drop(setup);
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+        let mut repo = uow.budget_repo();
+
+        let error = repo
+            .get_extra_budgets(2026)
+            .await
+            .expect_err("invalid extra budget row should fail");
+
+        assert!(
+            matches!(error, DomainError::Validation(message) if message.contains("Invalid currency"))
+        );
     }
 
     #[sqlx::test(
