@@ -1898,7 +1898,7 @@ mod tests {
             include_wishlists: true,
         };
 
-        let manifest = build_manifest(&pool, &selection, Path::new(".") )
+        let manifest = build_manifest(&pool, &selection, Path::new("."))
             .await
             .expect("manifest build should succeed for an empty database");
 
@@ -1906,19 +1906,36 @@ mod tests {
         assert_eq!(manifest["source"], "rusty-shed");
         assert!(manifest["exportedAt"].is_string());
 
-        let data = manifest["data"].as_object().expect("data should be an object");
+        let data = manifest["data"]
+            .as_object()
+            .expect("data should be an object");
         assert_eq!(data["manufacturers"].as_array().map(|v| v.len()), Some(0));
         assert_eq!(data["railwayModels"].as_array().map(|v| v.len()), Some(0));
         assert_eq!(data["collectionItems"].as_array().map(|v| v.len()), Some(0));
         assert_eq!(data["sellers"].as_array().map(|v| v.len()), Some(0));
-        assert_eq!(data["maintenanceCards"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(
+            data["maintenanceCards"].as_array().map(|v| v.len()),
+            Some(0)
+        );
         assert_eq!(data["trackProducts"].as_array().map(|v| v.len()), Some(0));
-        assert_eq!(data["trackInventories"].as_array().map(|v| v.len()), Some(0));
-        assert_eq!(data["formationCategories"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(
+            data["trackInventories"].as_array().map(|v| v.len()),
+            Some(0)
+        );
+        assert_eq!(
+            data["formationCategories"].as_array().map(|v| v.len()),
+            Some(0)
+        );
         assert_eq!(data["trainFormations"].as_array().map(|v| v.len()), Some(0));
         assert_eq!(data["wishlists"].as_array().map(|v| v.len()), Some(0));
         assert_eq!(data["decoders"].as_array().map(|v| v.len()), Some(0));
-        assert_eq!(data["digitalRollingStocks"].as_array().map(|v| v.len()), Some(0));
-        assert_eq!(data["railwayCompanies"].as_array().map(|v| v.len()), Some(0));
+        assert_eq!(
+            data["digitalRollingStocks"].as_array().map(|v| v.len()),
+            Some(0)
+        );
+        assert_eq!(
+            data["railwayCompanies"].as_array().map(|v| v.len()),
+            Some(0)
+        );
     }
 }
