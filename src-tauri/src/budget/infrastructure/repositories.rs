@@ -544,7 +544,10 @@ mod tests {
                 .expect_err("lookup should fail")
         };
 
-        assert!(err.starts_with("Failed to get extra budget by id:"), "{err}");
+        assert!(
+            err.starts_with("Failed to get extra budget by id:"),
+            "{err}"
+        );
     }
 
     #[sqlx::test(migrations = "./migrations")]

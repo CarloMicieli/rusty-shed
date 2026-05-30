@@ -92,7 +92,8 @@ mod tests {
         repo.expect_find_summary()
             .once()
             .withf(|params| {
-                params.number_of_recent_items == DEFAULT_RECENT_ITEMS && params.models_dir.as_os_str().is_empty()
+                params.number_of_recent_items == DEFAULT_RECENT_ITEMS
+                    && params.models_dir.as_os_str().is_empty()
             })
             .returning(|_| Ok(empty_summary()));
 

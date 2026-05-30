@@ -90,7 +90,9 @@ mod tests {
         let mut repo = MockTrackProductRepository::new();
         repo.expect_upsert_translation()
             .once()
-            .returning(|_, _, _, _| Err(DomainError::Infrastructure("db upsert failed".to_string())));
+            .returning(|_, _, _, _| {
+                Err(DomainError::Infrastructure("db upsert failed".to_string()))
+            });
 
         let mut uow = FakeTrackProductUow::new(repo);
         let input = UpsertTrackProductTranslationInput {

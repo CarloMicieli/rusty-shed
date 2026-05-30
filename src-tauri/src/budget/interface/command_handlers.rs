@@ -636,9 +636,10 @@ mod tests {
         let state = app_state(pool);
         seed_budget_config(&state).await;
 
-        let records = get_monthly_budget_records_inner(&state, GetMonthlyBudgetRecordsArgs { year: None })
-            .await
-            .expect("query should succeed");
+        let records =
+            get_monthly_budget_records_inner(&state, GetMonthlyBudgetRecordsArgs { year: None })
+                .await
+                .expect("query should succeed");
 
         assert_eq!(records.len(), 12);
         assert!(

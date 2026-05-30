@@ -147,14 +147,16 @@ mod tests {
     )]
     async fn get_track_inventory_inner_returns_not_found_for_missing_inventory(pool: SqlitePool) {
         let state = app_state(pool);
-        let missing_id = TrackInventoryId::try_from(
-            "trn:track-inventory:00000000-0000-0000-0000-999999999999",
-        )
-        .expect("valid inventory id");
+        let missing_id =
+            TrackInventoryId::try_from("trn:track-inventory:00000000-0000-0000-0000-999999999999")
+                .expect("valid inventory id");
 
         let result = get_track_inventory_inner(&state, missing_id).await;
 
-        assert!(matches!(result, Err(CommandError::NotFound(_))), "{result:?}");
+        assert!(
+            matches!(result, Err(CommandError::NotFound(_))),
+            "{result:?}"
+        );
     }
 
     #[sqlx::test(

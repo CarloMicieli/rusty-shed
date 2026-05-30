@@ -143,7 +143,10 @@ mod tests {
 
         let result = get_export_preview_inner(&state).await;
 
-        assert!(matches!(result, Err(CommandError::Unknown { .. })), "{result:?}");
+        assert!(
+            matches!(result, Err(CommandError::Unknown { .. })),
+            "{result:?}"
+        );
     }
 
     #[sqlx::test(
@@ -164,11 +167,11 @@ mod tests {
 
     #[test]
     fn open_export_file_dialog_inner_returns_selected_path() {
-        let result = open_export_file_dialog_inner(
-            "backup.zip".to_string(),
-            None,
-            |_, _| Ok::<Option<std::path::PathBuf>, std::io::Error>(Some(std::path::PathBuf::from("/tmp/backup.zip"))),
-        )
+        let result = open_export_file_dialog_inner("backup.zip".to_string(), None, |_, _| {
+            Ok::<Option<std::path::PathBuf>, std::io::Error>(Some(std::path::PathBuf::from(
+                "/tmp/backup.zip",
+            )))
+        })
         .expect("dialog result should succeed");
 
         assert_eq!(result.as_deref(), Some("/tmp/backup.zip"));
@@ -176,11 +179,11 @@ mod tests {
 
     #[test]
     fn open_export_file_dialog_inner_maps_dialog_error_to_unknown() {
-        let result = open_export_file_dialog_inner(
-            "backup.zip".to_string(),
-            None,
-            |_, _| Err::<Option<std::path::PathBuf>, std::io::Error>(std::io::Error::other("dialog backend failed")),
-        );
+        let result = open_export_file_dialog_inner("backup.zip".to_string(), None, |_, _| {
+            Err::<Option<std::path::PathBuf>, std::io::Error>(std::io::Error::other(
+                "dialog backend failed",
+            ))
+        });
 
         assert!(
             matches!(result, Err(CommandError::Unknown { ref message, .. }) if message.contains("dialog backend failed")),
@@ -196,6 +199,9 @@ mod tests {
 
         let result = execute_export_inner(&state, invalid_destination).await;
 
-        assert!(matches!(result, Err(CommandError::Unknown { .. })), "{result:?}");
+        assert!(
+            matches!(result, Err(CommandError::Unknown { .. })),
+            "{result:?}"
+        );
     }
 }

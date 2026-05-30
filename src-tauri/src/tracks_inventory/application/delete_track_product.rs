@@ -86,7 +86,10 @@ mod tests {
 
         let result = DeleteTrackProductUseCase::execute(&mut uow, input).await;
 
-        assert!(matches!(result, Err(CommandError::NotFound(_))), "{result:?}");
+        assert!(
+            matches!(result, Err(CommandError::NotFound(_))),
+            "{result:?}"
+        );
     }
 
     #[tokio::test]
