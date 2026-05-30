@@ -277,7 +277,7 @@ describe('routes/+layout.svelte', () => {
     await waitFor(
       () => {
         expect(container.querySelector('.animate-spin')).toBeNull();
-        expect(screen.getByLabelText('notifications_label')).toBeInTheDocument();
+        expect(screen.getByTestId('layout-slot')).toBeInTheDocument();
       },
       { timeout: 2000 }
     );
@@ -353,7 +353,7 @@ describe('routes/+layout.svelte', () => {
     mockSafeInvoke.mockImplementation(pendingPromise);
     render(Layout, { children: createChildrenSnippet() });
 
-    expect(screen.queryByLabelText('notifications_label')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('layout-slot')).not.toBeInTheDocument();
     expect(screen.getByText('app_loading_message')).toBeInTheDocument();
   });
 

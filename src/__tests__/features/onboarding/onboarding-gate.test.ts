@@ -185,7 +185,7 @@ describe('onboarding gate integration', () => {
       timeout: 2000
     });
 
-    await waitFor(() => expect(screen.getByLabelText('notifications_label')).toBeInTheDocument(), {
+    await waitFor(() => expect(screen.getByTestId('layout-slot')).toBeInTheDocument(), {
       timeout: 2000
     });
   });
