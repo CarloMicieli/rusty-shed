@@ -124,10 +124,9 @@ impl BudgetConfiguration {
     pub fn needs_annual_reset(&self) -> bool {
         let now = Utc::now();
         let current_year_i32 = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
-        let Ok(current_year) = Year::try_from(current_year_i32) else {
-            return false;
-        };
-        current_year.value() > self.last_reset_year.value()
+        Year::try_from(current_year_i32)
+            .map(|current_year| current_year.value() > self.last_reset_year.value())
+            .unwrap_or(false)
     }
 
     /// Perform annual reset (update last_reset_year to current year).
@@ -260,5 +259,41 @@ mod tests {
                 .iter()
                 .any(|event| event.event_name() == "ANNUAL_RESET_PERFORMED")
         );
+    }
+
+    #[test]
+    fn test_needs_annual_reset_returns_true_when_last_reset_is_previous_year() {
+        let mut config = BudgetConfiguration::new(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(10_000, Currency::USD),
+        )
+        .unwrap();
+
+        let current_year_i32 = Utc::now()
+            .format("%Y")
+            .to_string()
+            .parse::<i32>()
+            .unwrap_or(2026);
+        config.last_reset_year = Year::try_from(current_year_i32 - 1).unwrap();
+
+        assert!(config.needs_annual_reset());
+    }
+
+    #[test]
+    fn test_needs_annual_reset_returns_false_when_last_reset_is_current_year() {
+        let mut config = BudgetConfiguration::new(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(10_000, Currency::USD),
+        )
+        .unwrap();
+
+        let current_year_i32 = Utc::now()
+            .format("%Y")
+            .to_string()
+            .parse::<i32>()
+            .unwrap_or(2026);
+        config.last_reset_year = Year::try_from(current_year_i32).unwrap();
+
+        assert!(!config.needs_annual_reset());
     }
 }

@@ -316,6 +316,18 @@ mod tests {
     use crate::core::domain::{Currency, MonetaryAmount};
 
     #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_return_none_when_budget_configuration_is_missing(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let mut repo = uow.budget_repo();
+        let loaded = repo.get_config().await.expect("get_config should succeed");
+
+        assert!(loaded.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
     async fn it_should_save_and_load_budget_configuration(conn: sqlx::SqlitePool) {
         let mut uow = SqliteUnitOfWork::new(&conn)
             .await
@@ -346,6 +358,41 @@ mod tests {
         }
 
         uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_fail_on_invalid_budget_configuration_row(conn: sqlx::SqlitePool) {
+        let mut setup = conn.acquire().await.expect("acquire connection");
+        sqlx::query(
+            "INSERT INTO budget_config (id, mode, base_amount, currency, last_reset_year, created_at, updated_at, version)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        )
+        .bind(1_i32)
+        .bind("YEARLY")
+        .bind(120_000_i64)
+        .bind("EUR")
+        .bind(99_999_i32)
+        .bind("2026-01-01T00:00:00Z")
+        .bind("2026-01-01T00:00:00Z")
+        .bind(0_i32)
+        .execute(&mut *setup)
+        .await
+        .expect("insert invalid config row");
+        drop(setup);
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+        let mut repo = uow.budget_repo();
+
+        let error = repo
+            .get_config()
+            .await
+            .expect_err("invalid config row should fail");
+
+        assert!(
+            matches!(error, DomainError::Validation(message) if message.contains("Invalid year"))
+        );
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -388,6 +435,56 @@ mod tests {
         }
 
         uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_return_empty_extra_budgets_when_year_has_no_rows(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+        let mut repo = uow.budget_repo();
+
+        let entries = repo
+            .get_extra_budgets(2026)
+            .await
+            .expect("get_extra_budgets should succeed");
+
+        assert!(entries.is_empty());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_fail_on_invalid_extra_budget_row(conn: sqlx::SqlitePool) {
+        let mut setup = conn.acquire().await.expect("acquire connection");
+        sqlx::query(
+            "INSERT INTO extra_budgets (id, year, month, amount, currency, reason, created_at, version)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        )
+        .bind("trn:extra-budget:11111111-1111-1111-1111-111111111111")
+        .bind(2026_i32)
+        .bind(4_i32)
+        .bind(5_000_i64)
+        .bind("INVALID")
+        .bind(Some("gift"))
+        .bind("2026-01-01T00:00:00Z")
+        .bind(0_i32)
+        .execute(&mut *setup)
+        .await
+        .expect("insert invalid extra budget row");
+        drop(setup);
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+        let mut repo = uow.budget_repo();
+
+        let error = repo
+            .get_extra_budgets(2026)
+            .await
+            .expect_err("invalid extra budget row should fail");
+
+        assert!(
+            matches!(error, DomainError::Validation(message) if message.contains("Invalid currency"))
+        );
     }
 
     #[sqlx::test(
@@ -493,5 +590,144 @@ mod tests {
         }
 
         uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_map_add_extra_budget_database_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE extra_budgets")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let entry = ExtraBudgetEntry::new(
+            Year::try_from(2026).expect("valid year"),
+            Month::try_from(4).expect("valid month"),
+            MonetaryAmount::new(5_000, Currency::EUR),
+            Some("gift".to_string()),
+        )
+        .expect("valid extra budget entry");
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.add_extra_budget(&entry)
+                .await
+                .expect_err("add should fail")
+        };
+
+        assert!(err.starts_with("Failed to add extra budget:"), "{err}");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_map_get_extra_budget_by_id_database_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE extra_budgets")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let id = ExtraBudgetId::default();
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.get_extra_budget_by_id(&id)
+                .await
+                .expect_err("lookup should fail")
+        };
+
+        assert!(
+            err.starts_with("Failed to get extra budget by id:"),
+            "{err}"
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_map_remove_extra_budget_database_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE extra_budgets")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let id = ExtraBudgetId::default();
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.remove_extra_budget(&id)
+                .await
+                .expect_err("remove should fail")
+        };
+
+        assert!(err.starts_with("Failed to remove extra budget:"), "{err}");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_map_monthly_spending_query_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE purchase_infos")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let err = {
+            let mut repo = uow.budget_repo();
+            repo.get_monthly_spending(2025, "EUR")
+                .await
+                .expect_err("query should fail")
+        };
+
+        assert!(err.starts_with("Failed to get monthly spending:"), "{err}");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_map_multi_year_and_quarterly_query_failures(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        sqlx::query("DROP TABLE purchase_infos")
+            .execute(&conn)
+            .await
+            .expect("drop should succeed");
+
+        let (multi_year_err, quarterly_err) = {
+            let mut repo = uow.budget_repo();
+            let multi_year_err = repo
+                .get_multi_year_monthly_spending(2024, 2025, "EUR")
+                .await
+                .expect_err("query should fail");
+            let quarterly_err = repo
+                .get_quarterly_spending_by_category(2025, "EUR")
+                .await
+                .expect_err("query should fail");
+            (multi_year_err, quarterly_err)
+        };
+
+        assert!(
+            multi_year_err.starts_with("Failed to get multi-year monthly spending:"),
+            "{multi_year_err}"
+        );
+        assert!(
+            quarterly_err.starts_with("Failed to get quarterly spending:"),
+            "{quarterly_err}"
+        );
     }
 }

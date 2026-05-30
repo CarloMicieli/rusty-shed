@@ -80,3 +80,52 @@ impl<T> WithDomainContext<T> for Result<T, anyhow::Error> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::WithDomainContext;
+    use crate::core::domain::domain_error::DomainError;
+
+    #[test]
+    fn returns_value_when_result_is_ok() {
+        let result = Ok::<_, sqlx::Error>(42).with_domain_context("read ok");
+
+        assert!(matches!(result, Ok(42)));
+    }
+
+    #[test]
+    fn maps_sqlx_error_to_infrastructure_error() {
+        let result = Err::<(), _>(sqlx::Error::RowNotFound).with_domain_context("load row");
+
+        assert!(matches!(result, Err(DomainError::Infrastructure(message)) if !message.is_empty()));
+    }
+
+    #[test]
+    fn maps_io_error_to_infrastructure_error() {
+        let result = Err::<(), _>(std::io::Error::other("disk unavailable"))
+            .with_domain_context("read file");
+
+        assert!(matches!(
+            result,
+            Err(DomainError::Infrastructure(message)) if message.contains("disk unavailable")
+        ));
+    }
+
+    #[test]
+    fn maps_json_error_to_infrastructure_error() {
+        let result =
+            serde_json::from_str::<serde_json::Value>("{").with_domain_context("parse payload");
+
+        assert!(matches!(
+            result,
+            Err(DomainError::Infrastructure(message)) if message.contains("EOF while parsing an object")
+        ));
+    }
+
+    #[test]
+    fn maps_anyhow_error_to_infrastructure_error() {
+        let result = Err::<(), _>(anyhow::anyhow!("boom")).with_domain_context("generic failure");
+
+        assert!(matches!(result, Err(DomainError::Infrastructure(message)) if message == "boom"));
+    }
+}

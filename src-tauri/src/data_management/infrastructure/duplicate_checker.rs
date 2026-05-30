@@ -644,6 +644,7 @@ impl DuplicateChecker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data_management::domain::LocalizedTextRecord;
 
     async fn test_pool() -> sqlx::SqlitePool {
         let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
@@ -767,6 +768,152 @@ mod tests {
         assert_eq!(result.new_count(), 1);
         assert!(result.duplicate_ids.contains(&"w1".to_string()));
         assert!(result.new_ids.contains(&"w2".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_check_track_products_empty_input() {
+        let pool = test_pool().await;
+        sqlx::query(
+            "CREATE TABLE track_products (track_id TEXT PRIMARY KEY, product_name TEXT NOT NULL)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+
+        let checker = DuplicateChecker::new(pool);
+        let result = checker.check_track_products(&[]).await.expect("check");
+
+        assert_eq!(result.total_count(), 0);
+        assert_eq!(result.duplicate_count(), 0);
+        assert_eq!(result.new_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_check_track_products_detects_duplicate_track_id() {
+        let pool = test_pool().await;
+        sqlx::query(
+            "CREATE TABLE track_products (track_id TEXT PRIMARY KEY, product_name TEXT NOT NULL)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+        sqlx::query(
+            "INSERT INTO track_products (track_id, product_name) VALUES ('trn:track:r1', 'R1 Curve')",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
+
+        let checker = DuplicateChecker::new(pool);
+        let products = vec![
+            TrackProductRecord {
+                track_id: "trn:track:r1".to_string(),
+                manufacturer_id: "trn:manufacturer:acme".to_string(),
+                product_code: "R1".to_string(),
+                description: LocalizedTextRecord {
+                    en: Some("R1 Curve".to_string()),
+                    it: None,
+                },
+                details: None,
+                track_type: "CURVE".to_string(),
+                track_code: "CODE_100".to_string(),
+                with_roadbed: false,
+                length: None,
+                radius: Some(360),
+            },
+            TrackProductRecord {
+                track_id: "trn:track:r2".to_string(),
+                manufacturer_id: "trn:manufacturer:acme".to_string(),
+                product_code: "R2".to_string(),
+                description: LocalizedTextRecord {
+                    en: Some("R2 Curve".to_string()),
+                    it: None,
+                },
+                details: None,
+                track_type: "CURVE".to_string(),
+                track_code: "CODE_100".to_string(),
+                with_roadbed: false,
+                length: None,
+                radius: Some(420),
+            },
+        ];
+
+        let result = checker
+            .check_track_products(&products)
+            .await
+            .expect("check");
+
+        assert_eq!(result.duplicate_count(), 1);
+        assert_eq!(result.new_count(), 1);
+        assert!(result.duplicate_ids.contains(&"trn:track:r1".to_string()));
+        assert!(result.new_ids.contains(&"trn:track:r2".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_check_track_inventories_empty_input() {
+        let pool = test_pool().await;
+        sqlx::query("CREATE TABLE track_inventories (id TEXT PRIMARY KEY, name TEXT NOT NULL)")
+            .execute(&pool)
+            .await
+            .expect("create table");
+
+        let checker = DuplicateChecker::new(pool);
+        let result = checker.check_track_inventories(&[]).await.expect("check");
+
+        assert_eq!(result.total_count(), 0);
+        assert_eq!(result.duplicate_count(), 0);
+        assert_eq!(result.new_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_check_track_inventories_detects_duplicate_id() {
+        let pool = test_pool().await;
+        sqlx::query("CREATE TABLE track_inventories (id TEXT PRIMARY KEY, name TEXT NOT NULL)")
+            .execute(&pool)
+            .await
+            .expect("create table");
+        sqlx::query(
+            "INSERT INTO track_inventories (id, name) VALUES ('trn:track-inventory:main', 'Main Layout')",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
+
+        let checker = DuplicateChecker::new(pool);
+        let inventories = vec![
+            TrackInventoryRecord {
+                id: "trn:track-inventory:main".to_string(),
+                name: "Main Layout".to_string(),
+                description: None,
+                items: Vec::new(),
+                purchases: Vec::new(),
+            },
+            TrackInventoryRecord {
+                id: "trn:track-inventory:branch".to_string(),
+                name: "Branch Layout".to_string(),
+                description: None,
+                items: Vec::new(),
+                purchases: Vec::new(),
+            },
+        ];
+
+        let result = checker
+            .check_track_inventories(&inventories)
+            .await
+            .expect("check");
+
+        assert_eq!(result.duplicate_count(), 1);
+        assert_eq!(result.new_count(), 1);
+        assert!(
+            result
+                .duplicate_ids
+                .contains(&"trn:track-inventory:main".to_string())
+        );
+        assert!(
+            result
+                .new_ids
+                .contains(&"trn:track-inventory:branch".to_string())
+        );
     }
 
     #[tokio::test]

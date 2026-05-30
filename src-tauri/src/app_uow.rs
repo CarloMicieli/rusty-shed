@@ -79,6 +79,42 @@ pub trait AppUnitOfWork:
     ) -> Pin<Box<dyn Future<Output = Result<(), CommandError>> + Send + 'static>>;
 }
 
+#[cfg(test)]
+mod tests {
+    use super::testing::{MockAppUow, OneShotFactory};
+    use super::*;
+    use crate::data_management::domain::{ExportUowExt, MockExportRepository};
+
+    #[test]
+    fn box_dyn_app_uow_forwards_export_repo_access() {
+        let mock_uow = MockAppUow::new().with_export(MockExportRepository::new());
+        let mut uow: Box<dyn AppUnitOfWork> = Box::new(mock_uow);
+
+        let _repo = ExportUowExt::export_repo(&mut uow);
+    }
+
+    #[tokio::test]
+    async fn one_shot_factory_returns_error_after_consumption() {
+        let factory = OneShotFactory::new(MockAppUow::new());
+
+        let first = factory.create_uow().await;
+        assert!(first.is_ok());
+
+        let second = factory.create_uow().await;
+        assert!(second.is_err());
+
+        match second {
+            Ok(_) => panic!("second call must fail"),
+            Err(err) => {
+                assert!(
+                    err.to_string().contains("uow already consumed"),
+                    "unexpected error: {err}"
+                );
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Forwarding impls – enable use cases bound on `U: XxxUowExt` to accept
 // `&mut Box<dyn AppUnitOfWork>` as the concrete type `U`.

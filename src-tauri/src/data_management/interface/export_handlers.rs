@@ -124,3 +124,84 @@ pub async fn execute_export(
 ) -> Result<ExportResult, CommandError> {
     execute_export_inner(&state, destination_path).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    #[tokio::test]
+    async fn get_export_preview_inner_maps_sql_errors_to_unknown() {
+        let pool = SqlitePool::connect("sqlite::memory:")
+            .await
+            .expect("in-memory sqlite should connect");
+        let state = app_state(pool);
+
+        let result = get_export_preview_inner(&state).await;
+
+        assert!(
+            matches!(result, Err(CommandError::Unknown { .. })),
+            "{result:?}"
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_tracks_inventory.sql")
+    )]
+    async fn get_export_preview_inner_returns_counts_with_default_selection(pool: SqlitePool) {
+        let state = app_state(pool);
+
+        let preview = get_export_preview_inner(&state)
+            .await
+            .expect("preview should succeed");
+
+        assert_eq!(preview.seller_count, 1);
+        assert_eq!(preview.train_formation_count, 0);
+        assert_eq!(preview.collection_item_count, 0);
+    }
+
+    #[test]
+    fn open_export_file_dialog_inner_returns_selected_path() {
+        let result = open_export_file_dialog_inner("backup.zip".to_string(), None, |_, _| {
+            Ok::<Option<std::path::PathBuf>, std::io::Error>(Some(std::path::PathBuf::from(
+                "/tmp/backup.zip",
+            )))
+        })
+        .expect("dialog result should succeed");
+
+        assert_eq!(result.as_deref(), Some("/tmp/backup.zip"));
+    }
+
+    #[test]
+    fn open_export_file_dialog_inner_maps_dialog_error_to_unknown() {
+        let result = open_export_file_dialog_inner("backup.zip".to_string(), None, |_, _| {
+            Err::<Option<std::path::PathBuf>, std::io::Error>(std::io::Error::other(
+                "dialog backend failed",
+            ))
+        });
+
+        assert!(
+            matches!(result, Err(CommandError::Unknown { ref message, .. }) if message.contains("dialog backend failed")),
+            "{result:?}"
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn execute_export_inner_maps_invalid_destination_to_unknown(pool: SqlitePool) {
+        let state = app_state(pool);
+        let invalid_destination =
+            "/definitely-not-existing-rusty-shed/export/backup.zip".to_string();
+
+        let result = execute_export_inner(&state, invalid_destination).await;
+
+        assert!(
+            matches!(result, Err(CommandError::Unknown { .. })),
+            "{result:?}"
+        );
+    }
+}

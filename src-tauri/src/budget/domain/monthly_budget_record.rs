@@ -166,6 +166,41 @@ mod tests {
     }
 
     #[test]
+    fn test_spent_percentage_when_over_budget_is_above_one_hundred() {
+        let record = MonthlyBudgetRecord {
+            year: 2026,
+            month: 1,
+            base_budget: 10000,
+            extra_budget: 0,
+            actual_spend: 12000,
+            rollover_in: 0,
+            rollover_out: 0,
+            status: MonthStatus::Completed,
+            currency: Currency::USD,
+        };
+
+        assert_eq!(record.spent_percentage(), 120.0);
+    }
+
+    #[test]
+    fn test_remaining_and_spent_percentage_when_available_is_zero() {
+        let record = MonthlyBudgetRecord {
+            year: 2026,
+            month: 1,
+            base_budget: 0,
+            extra_budget: 0,
+            actual_spend: 400,
+            rollover_in: 0,
+            rollover_out: 0,
+            status: MonthStatus::InProgress,
+            currency: Currency::USD,
+        };
+
+        assert_eq!(record.remaining_percentage(), 0.0);
+        assert_eq!(record.spent_percentage(), 100.0);
+    }
+
+    #[test]
     fn test_month_name_exhaustive_mapping() {
         let expected = [
             "January",

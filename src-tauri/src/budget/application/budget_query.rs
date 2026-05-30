@@ -435,7 +435,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::budget::application::testing::{FakeBudgetUow, sample_budget_config};
+    use crate::budget::application::testing::{
+        FakeBudgetUow, sample_budget_config, sample_extra_budget_entry,
+    };
     use crate::budget::domain::repository::MockBudgetRepository;
     use crate::core::domain::calendar::Year;
 
@@ -525,6 +527,131 @@ mod tests {
             matches!(result, Err(DomainError::Validation(_))),
             "Expected Validation error, got: {:?}",
             result
+        );
+    }
+
+    #[tokio::test]
+    async fn it_should_return_bootstrap_without_monthly_records_when_no_config() {
+        let mut mock_get_config = MockBudgetRepository::new();
+        mock_get_config
+            .expect_get_config()
+            .once()
+            .returning(|| Ok(None));
+
+        let mut mock_dashboard_spending = MockBudgetRepository::new();
+        mock_dashboard_spending
+            .expect_get_multi_year_monthly_spending()
+            .once()
+            .returning(|_, _, _| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get_config)
+            .with_repo(mock_dashboard_spending);
+
+        let year = Year::try_from(Utc::now().year()).expect("valid current year");
+        let result = get_budget_bootstrap(&mut uow, year, "EUR")
+            .await
+            .expect("bootstrap query should succeed");
+
+        assert!(result.config.is_none());
+        assert!(result.monthly_records.is_none());
+        assert_eq!(result.dashboard_summary.monthly_spending.len(), 12);
+    }
+
+    #[tokio::test]
+    async fn it_should_include_extra_budget_in_monthly_records() {
+        let config = sample_budget_config();
+
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(config.clone())));
+
+        let mut mock_spending = MockBudgetRepository::new();
+        mock_spending
+            .expect_get_monthly_spending()
+            .once()
+            .returning(|_, _| Ok(vec![]));
+
+        let extra_entry = sample_extra_budget_entry();
+        let expected_extra_month = extra_entry.month.value() as usize;
+        let expected_extra_amount = extra_entry.amount.amount;
+
+        let mut mock_extra = MockBudgetRepository::new();
+        mock_extra
+            .expect_get_extra_budgets()
+            .once()
+            .returning(move |_| Ok(vec![extra_entry.clone()]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_spending)
+            .with_repo(mock_extra);
+
+        let year = Year::try_from(2026).expect("valid year");
+        let records = get_monthly_budget_records(&mut uow, year)
+            .await
+            .expect("monthly query should succeed");
+
+        assert_eq!(records.len(), 12);
+        assert_eq!(
+            records[expected_extra_month - 1].extra_budget,
+            expected_extra_amount
+        );
+    }
+
+    #[tokio::test]
+    async fn it_should_call_dashboard_wrapper_and_return_twelve_points_without_budget() {
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get.expect_get_config().once().returning(|| Ok(None));
+
+        let mut mock_spending = MockBudgetRepository::new();
+        mock_spending
+            .expect_get_multi_year_monthly_spending()
+            .once()
+            .returning(|_, _, _| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_spending);
+
+        let result = get_budget_dashboard(&mut uow, "EUR")
+            .await
+            .expect("expected dashboard summary");
+
+        assert_eq!(result.currency, crate::core::domain::Currency::EUR);
+        assert_eq!(result.monthly_spending.len(), 12);
+        assert!(result.remaining_amount.is_none());
+        assert!(result.monthly_goal.is_none());
+    }
+
+    #[tokio::test]
+    async fn it_should_fallback_to_eur_currency_when_user_currency_is_invalid_and_no_config() {
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get.expect_get_config().once().returning(|| Ok(None));
+
+        let mut mock_spending = MockBudgetRepository::new();
+        mock_spending
+            .expect_get_multi_year_monthly_spending()
+            .once()
+            .returning(|_, _, _| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_spending);
+
+        let summary = get_budget_dashboard(&mut uow, "INVALID")
+            .await
+            .expect("expected dashboard summary with fallback currency");
+
+        assert_eq!(summary.currency, crate::core::domain::Currency::EUR);
+        assert_eq!(summary.monthly_spending.len(), 12);
+        assert!(
+            summary
+                .monthly_spending
+                .iter()
+                .all(|point| point.currency == crate::core::domain::Currency::EUR)
         );
     }
 
@@ -629,6 +756,80 @@ mod tests {
         assert!(result.config.is_some());
         assert!(result.monthly_records.is_some());
         assert_eq!(result.dashboard_summary.monthly_spending.len(), 12);
+    }
+
+    #[tokio::test]
+    async fn it_should_fetch_current_year_records_separately_when_bootstrap_year_is_not_current() {
+        let config = sample_budget_config();
+
+        let mut mock_get_config = MockBudgetRepository::new();
+        mock_get_config
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(config.clone())));
+
+        let requested_year = Utc::now().year() - 1;
+
+        let mut mock_requested_year_spending = MockBudgetRepository::new();
+        mock_requested_year_spending
+            .expect_get_monthly_spending()
+            .once()
+            .returning(move |year, _| {
+                assert_eq!(year, requested_year);
+                Ok(vec![(1, 4_000)])
+            });
+
+        let mut mock_requested_year_extra = MockBudgetRepository::new();
+        mock_requested_year_extra
+            .expect_get_extra_budgets()
+            .once()
+            .returning(move |year| {
+                assert_eq!(year, requested_year);
+                Ok(vec![])
+            });
+
+        let mut mock_dashboard_spending = MockBudgetRepository::new();
+        mock_dashboard_spending
+            .expect_get_multi_year_monthly_spending()
+            .once()
+            .returning(|_, _, _| Ok(vec![]));
+
+        let current_year = Utc::now().year();
+
+        let mut mock_current_year_spending = MockBudgetRepository::new();
+        mock_current_year_spending
+            .expect_get_monthly_spending()
+            .once()
+            .returning(move |year, _| {
+                assert_eq!(year, current_year);
+                Ok(vec![(1, 2_500)])
+            });
+
+        let mut mock_current_year_extra = MockBudgetRepository::new();
+        mock_current_year_extra
+            .expect_get_extra_budgets()
+            .once()
+            .returning(move |year| {
+                assert_eq!(year, current_year);
+                Ok(vec![])
+            });
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get_config)
+            .with_repo(mock_requested_year_spending)
+            .with_repo(mock_requested_year_extra)
+            .with_repo(mock_dashboard_spending)
+            .with_repo(mock_current_year_spending)
+            .with_repo(mock_current_year_extra);
+
+        let year = Year::try_from(requested_year).expect("valid test year");
+
+        let result = get_budget_bootstrap(&mut uow, year, "EUR")
+            .await
+            .expect("expected bootstrap query to succeed");
+
+        assert!(result.config.is_some());
+        assert!(matches!(result.monthly_records, Some(records) if records.len() == 12));
     }
 
     mod get_budget_dashboard_with_context_tests {
