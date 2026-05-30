@@ -1969,7 +1969,9 @@ export type DccInterface =
  *  21MTC Connector interface is a standard adopted by both the NMRA and NEM (NEM 660).
  *  Its name comes from 21 pin Marklin/Trix Connector, developed by Marklin and ESU.
  */
-"MTC_21";
+"MTC_21" | 
+/**  Hardwired decoder without a plug/socket interface. */
+"WIRES";
 
 /**  Decoder transport contract. */
 export type Decoder = {

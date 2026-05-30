@@ -100,7 +100,8 @@ export const dccInterfaceSchema = z.enum([
   'PLUX_22',
   'NEXT_18',
   'NEXT_18_S',
-  'MTC_21'
+  'MTC_21',
+  'WIRES'
 ]);
 
 export const electricMultipleUnitTypeSchema = z.enum([

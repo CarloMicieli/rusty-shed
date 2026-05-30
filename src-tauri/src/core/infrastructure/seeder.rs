@@ -1,10 +1,6 @@
-use crate::catalog::domain::railway_model::CouplerTypeId;
-use crate::core::domain::identifiers::{Identifier, slugify_entity_name};
-use crate::dcc_inventory::domain::DecoderId;
 use anyhow::Context;
 use chrono::Utc;
 use csv::ReaderBuilder;
-use slug::slugify;
 use sqlx::{QueryBuilder, SqlitePool};
 
 static MANUFACTURES: &str = include_str!(concat!(
@@ -54,27 +50,27 @@ pub async fn seed_manufacturers(pool: &SqlitePool) -> anyhow::Result<()> {
         );
 
         query_builder.push_values(chunk, |mut b, record| {
-            let name = record.get(0).unwrap_or_default();
-            let id = format!("trn:manufacturer:{}", slugify_entity_name(name));
+            let id = record.get(0).unwrap_or_default();
+            let name = record.get(1).unwrap_or_default();
 
             b.push_bind(id)
                 .push_bind(name.to_string())
                 .push_bind(
                     record
-                        .get(1)
+                        .get(2)
                         .filter(|s| !s.is_empty())
                         .map(|s| s.to_string()),
                 )
-                .push_bind(record.get(2).unwrap_or("ACTIVE").to_string())
-                .push_bind(
-                    record
-                        .get(3)
-                        .filter(|s| !s.is_empty())
-                        .map(|s| s.to_string()),
-                )
+                .push_bind(record.get(3).unwrap_or("ACTIVE").to_string())
                 .push_bind(
                     record
                         .get(4)
+                        .filter(|s| !s.is_empty())
+                        .map(|s| s.to_string()),
+                )
+                .push_bind(
+                    record
+                        .get(5)
                         .filter(|s| !s.is_empty())
                         .map(|s| s.to_string()),
                 )
@@ -131,18 +127,19 @@ pub async fn seed_railway_companies(pool: &SqlitePool) -> anyhow::Result<()> {
         query_builder.push_values(chunk, |mut b, record| {
             // Handle CSV rows that may contain stray commas inside the registered_company_name
             // column (e.g. "London, Midland and Scottish Railway" unquoted). The CSV has
-            // 6 columns: name, registered_company_name, country_code, status, operating_since, operating_until.
-            // If a row has more than 6 fields, join the middle fields into the registered_company_name.
+            // 7 columns: id, name, registered_company_name, country_code, status, operating_since, operating_until.
+            // If a row has more than 7 fields, join the middle fields into the registered_company_name.
             let len = record.len();
-            let name = record.get(0).unwrap_or_default();
+            let id = record.get(0).unwrap_or_default();
+            let name = record.get(1).unwrap_or_default();
 
-            // Reconstruct registered_company_name: everything between the first column and the last 4 columns
-            let registered_company_name: Option<String> = if len > 6 {
-                // join the middle parts (from index 1 up to len-4)
-                let middle_count = len - 5; // number of fields that belong to registered_company_name
+            // Reconstruct registered_company_name: everything between the first two columns and the last 4 columns
+            let registered_company_name: Option<String> = if len > 7 {
+                // join the middle parts (from index 2 up to len-4)
+                let middle_count = len - 6; // number of fields that belong to registered_company_name
                 let joined = record
                     .iter()
-                    .skip(1)
+                    .skip(2)
                     .take(middle_count)
                     .map(|s| s.trim())
                     .collect::<Vec<_>>()
@@ -154,7 +151,7 @@ pub async fn seed_railway_companies(pool: &SqlitePool) -> anyhow::Result<()> {
                 }
             } else {
                 record
-                    .get(1)
+                    .get(2)
                     .filter(|s| !s.is_empty())
                     .map(|s| s.to_string())
             };
@@ -195,9 +192,7 @@ pub async fn seed_railway_companies(pool: &SqlitePool) -> anyhow::Result<()> {
                 None
             };
 
-            let id = format!("trn:railway-company:{}", slugify_entity_name(name));
-
-            b.push_bind(id)
+            b.push_bind(id.to_string())
                 .push_bind(name.to_string())
                 .push_bind(registered_company_name)
                 .push_bind(country_code)
@@ -250,21 +245,19 @@ pub async fn seed_decoders(pool: &SqlitePool) -> anyhow::Result<()> {
         let mut query_builder: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
 
         query_builder.push_values(chunk, |mut b, record| {
-            let manufacturer = record.get(0).unwrap_or_default();
-            let product_code = record.get(1).unwrap_or_default();
-            let decoder_type = record.get(2).unwrap_or_default();
-            let protocol = record.get(3).unwrap_or_default();
-            let decoder_interface = record.get(4).unwrap_or_default();
+            let id = record.get(0).unwrap_or_default();
+            let manufacturer = record.get(1).unwrap_or_default();
+            let product_code = record.get(2).unwrap_or_default();
+            let decoder_type = record.get(3).unwrap_or_default();
+            let protocol = record.get(4).unwrap_or_default();
+            let decoder_interface = record.get(5).unwrap_or_default();
 
             // manufacturer id stored in DB references manufacturers.id which uses the
             // `trn:manufacturer:{slug}` format. The CSV provides the slug-like short id
             // (e.g. `esu`), so build the full TRN here.
-            let manufacturer_id = format!("trn:manufacturer:{}", slugify(manufacturer));
+            let manufacturer_id = format!("trn:manufacturer:{}", manufacturer);
 
-            // Build decoder id using the same normalization as DecoderId::new_from_parts
-            let id = DecoderId::new_from_parts(&[manufacturer, product_code]).to_string();
-
-            b.push_bind(id)
+            b.push_bind(id.to_string())
                 .push_bind(manufacturer_id)
                 .push_bind(product_code.to_string())
                 .push_bind(decoder_type.to_uppercase())
@@ -316,55 +309,53 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
         let mut query_builder: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
 
         query_builder.push_values(chunk, |mut b, record| {
-            let name = record.get(0).unwrap_or_default();
-            let seller_type = record.get(1).unwrap_or("SHOP");
+            let id = record.get(0).unwrap_or_default();
+            let name = record.get(1).unwrap_or_default();
+            let seller_type = record.get(2).unwrap_or("SHOP");
 
             // Optional fields (convert empty strings to None)
             let email = record
-                .get(2)
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string());
-
-            let phone = record
                 .get(3)
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
 
-            let website_url = record
+            let phone = record
                 .get(4)
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
 
-            let street_address = record
+            let website_url = record
                 .get(5)
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
 
-            let city = record
+            let street_address = record
                 .get(6)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            let city = record
+                .get(7)
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
 
             // Map CSV `region` -> DB `state_region` (Option A)
             let state_region = record
-                .get(7)
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string());
-
-            let postal_code = record
                 .get(8)
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
 
-            let country_code = record
+            let postal_code = record
                 .get(9)
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string());
 
-            // Seller id is derived via slug from the name using slugify
-            let seller_id = format!("trn:seller:{}", slugify_entity_name(name));
+            let country_code = record
+                .get(10)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
 
-            b.push_bind(seller_id)
+            b.push_bind(id.to_string())
                 .push_bind(name.to_string())
                 .push_bind(seller_type.to_string())
                 .push_bind(email)
@@ -404,8 +395,6 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
 }
 
 pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
-    use crate::tracks_inventory::domain::TrackId;
-
     let mut rdr = ReaderBuilder::new()
         .has_headers(true)
         .flexible(true)
@@ -431,11 +420,11 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
         let mut qb: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
 
         qb.push_values(chunk, |mut b, record| {
+            let id = record.get(0).unwrap_or_default();
             let manufacturer = record.get(2).unwrap_or_default(); // col: manufacturer_id
             let product_code = record.get(3).unwrap_or_default();
 
-            let track_id = TrackId::new_from_parts(&[manufacturer, product_code]).to_string();
-            let manufacturer_id = format!("trn:manufacturer:{}", slugify(manufacturer));
+            let manufacturer_id = format!("trn:manufacturer:{}", manufacturer);
 
             let with_roadbed: i32 = record.get(4).unwrap_or("0").parse().unwrap_or(0);
 
@@ -466,8 +455,8 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
                     _ => None,
                 };
 
-            b.push_bind(track_id.clone())
-                .push_bind(track_id)
+            b.push_bind(id.to_string())
+                .push_bind(id.to_string())
                 .push_bind(manufacturer_id)
                 .push_bind(product_code.to_string())
                 .push_bind(with_roadbed)
@@ -496,9 +485,7 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
             .context("Failed to execute track_products upsert chunk")?;
 
         for record in chunk {
-            let manufacturer = record.get(2).unwrap_or_default();
-            let product_code = record.get(3).unwrap_or_default();
-            let track_id = TrackId::new_from_parts(&[manufacturer, product_code]).to_string();
+            let track_id = record.get(0).unwrap_or_default().to_string();
             let description = record
                 .get(9)
                 .filter(|s| !s.is_empty())
@@ -528,8 +515,7 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
 /// Seed the default formation categories from the embedded CSV file.
 ///
 /// Uses an `ON CONFLICT(id) DO UPDATE SET` upsert so it is safe to call
-/// on every application startup. The `id` is derived as
-/// `trn:formation-category:{slugify(name)}`; `is_custom` is always `0`.
+/// on every application startup. `is_custom` is always `0`.
 pub async fn seed_train_categories(pool: &SqlitePool) -> anyhow::Result<()> {
     let mut rdr = ReaderBuilder::new()
         .has_headers(true)
@@ -547,10 +533,12 @@ pub async fn seed_train_categories(pool: &SqlitePool) -> anyhow::Result<()> {
             QueryBuilder::new("INSERT INTO formation_categories (id, name, is_custom) ");
 
         query_builder.push_values(chunk, |mut b, record| {
-            let name = record.get(0).unwrap_or_default();
-            let id = format!("trn:formation-category:{}", slugify(name));
+            let id = record.get(0).unwrap_or_default();
+            let name = record.get(1).unwrap_or_default();
 
-            b.push_bind(id).push_bind(name.to_string()).push_bind(0i64);
+            b.push_bind(id.to_string())
+                .push_bind(name.to_string())
+                .push_bind(0i64);
         });
 
         query_builder.push(" ON CONFLICT(id) DO UPDATE SET name = EXCLUDED.name");
@@ -696,8 +684,7 @@ pub async fn seed_prototypes(pool: &SqlitePool) -> anyhow::Result<()> {
 
 /// Seed the coupler type catalogue from the embedded CSV file.
 ///
-/// CSV columns (0-based): manufacturer, name, compatible_socket
-/// ID is derived as `trn:coupler:{slugify(manufacturer)}:{slugify(name)}`.
+/// CSV columns (0-based): id, manufacturer, name, compatible_socket
 /// Uses an `ON CONFLICT(id) DO UPDATE SET` upsert so it is safe to call on every startup.
 pub async fn seed_coupler_types(pool: &SqlitePool) -> anyhow::Result<()> {
     let mut rdr = ReaderBuilder::new()
@@ -717,13 +704,12 @@ pub async fn seed_coupler_types(pool: &SqlitePool) -> anyhow::Result<()> {
         );
 
         query_builder.push_values(chunk, |mut b, record| {
-            let manufacturer = record.get(0).unwrap_or_default();
-            let name = record.get(1).unwrap_or_default();
-            let compatible_socket = record.get(2).unwrap_or_default();
+            let id = record.get(0).unwrap_or_default();
+            let manufacturer = record.get(1).unwrap_or_default();
+            let name = record.get(2).unwrap_or_default();
+            let compatible_socket = record.get(3).unwrap_or_default();
 
-            let id = CouplerTypeId::new_from_parts(&[manufacturer, name]).to_string();
-
-            b.push_bind(id)
+            b.push_bind(id.to_string())
                 .push_bind(manufacturer.to_string())
                 .push_bind(name.to_string())
                 .push_bind(compatible_socket.to_string());
@@ -748,7 +734,33 @@ pub async fn seed_coupler_types(pool: &SqlitePool) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
+    use std::collections::HashSet;
+
+    fn csv_record_count(csv_content: &str, flexible: bool) -> i64 {
+        let mut rdr = ReaderBuilder::new()
+            .has_headers(true)
+            .flexible(flexible)
+            .from_reader(csv_content.as_bytes());
+
+        rdr.records().count() as i64
+    }
+
+    fn csv_unique_column_count(csv_content: &str, flexible: bool, column_index: usize) -> i64 {
+        let mut rdr = ReaderBuilder::new()
+            .has_headers(true)
+            .flexible(flexible)
+            .from_reader(csv_content.as_bytes());
+
+        let mut unique_values = HashSet::new();
+
+        for record in rdr.records().flatten() {
+            if let Some(value) = record.get(column_index) {
+                unique_values.insert(value.to_string());
+            }
+        }
+
+        unique_values.len() as i64
+    }
 
     #[sqlx::test(migrations = "./migrations")]
     async fn seeds_railway_companies(pool: SqlitePool) {
@@ -763,21 +775,12 @@ mod tests {
             .fetch_one(&mut *conn)
             .await
             .expect("count query should succeed");
-        assert!(count > 0, "expected at least one seeded railway company");
 
-        // Check a concrete seeded entry exists (FS -> slugified to `fs`)
-        let name: Option<String> =
-            sqlx::query_scalar::<_, String>("SELECT name FROM railway_companies WHERE id = ?")
-                .bind("trn:railway-company:fs")
-                .fetch_optional(&mut *conn)
-                .await
-                .expect("select name query should succeed");
-
-        assert!(
-            name.is_some(),
-            "expected a seeded entry for id trn:railway-company:fs"
+        let expected = csv_record_count(RAILWAY_COMPANIES, true);
+        assert_eq!(
+            count, expected,
+            "railway_companies row count should match CSV records"
         );
-        assert_eq!(name.unwrap(), "FS");
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -794,21 +797,12 @@ mod tests {
             .fetch_one(&mut *conn)
             .await
             .expect("count query should succeed");
-        assert!(count > 0, "expected at least one seeded manufacturer");
 
-        // Check a concrete seeded entry exists (Atlas Model Railroad Co. -> slugified to `atlas-model-railroad-co`)
-        let name: Option<String> =
-            sqlx::query_scalar::<_, String>("SELECT name FROM manufacturers WHERE id = ?")
-                .bind("trn:manufacturer:atlas-model-railroad-co")
-                .fetch_optional(&mut *conn)
-                .await
-                .expect("select name query should succeed");
-
-        assert!(
-            name.is_some(),
-            "expected a seeded entry for id mfr:atlas-model-railroad-co"
+        let expected = csv_record_count(MANUFACTURES, false);
+        assert_eq!(
+            count, expected,
+            "manufacturers row count should match CSV records"
         );
-        assert_eq!(name.unwrap(), "Atlas Model Railroad Co.");
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -830,21 +824,9 @@ mod tests {
             .fetch_one(&mut *conn)
             .await
             .expect("count query should succeed");
-        assert!(count > 0, "expected at least one seeded decoder");
 
-        // Check a concrete seeded entry exists (ESU 58410 -> id trn:decoder:esu:58410)
-        let product_code: Option<String> =
-            sqlx::query_scalar::<_, String>("SELECT product_code FROM decoders WHERE id = ?")
-                .bind("trn:decoder:esu:58410")
-                .fetch_optional(&mut *conn)
-                .await
-                .expect("select product_code query should succeed");
-
-        assert!(
-            product_code.is_some(),
-            "expected a seeded decoder for id trn:decoder:esu:58410"
-        );
-        assert_eq!(product_code.unwrap(), "58410");
+        let expected = csv_record_count(DECODERS, false);
+        assert_eq!(count, expected, "decoders row count should match CSV records");
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -862,17 +844,14 @@ mod tests {
             .fetch_one(&mut *conn)
             .await
             .expect("count query");
-        assert!(count > 0, "expected seeded track products");
 
-        // Spot-check: Roco 42410 → track_id = trn:track:roco:42410
-        let product_code: Option<String> =
-            sqlx::query_scalar("SELECT product_code FROM track_products WHERE track_id = ?")
-                .bind("trn:track:roco:42410")
-                .fetch_optional(&mut *conn)
-                .await
-                .expect("select query");
-        assert!(product_code.is_some(), "expected trn:track:roco:42410");
-        assert_eq!(product_code.unwrap(), "42410");
+        // track_products uses ON CONFLICT(track_id), so duplicate keys collapse to one row.
+        // CSV column 0 is the seeded track_id value.
+        let expected = csv_unique_column_count(TRACK_PRODUCTS, true, 0);
+        assert_eq!(
+            count, expected,
+            "track_products row count should match unique CSV track_id values"
+        );
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -887,19 +866,8 @@ mod tests {
             .fetch_one(&mut *conn)
             .await
             .expect("count query should succeed");
-        assert!(count > 0, "expected at least one seeded seller");
 
-        let seller_type: Option<String> =
-            sqlx::query_scalar("SELECT type FROM sellers WHERE id = ?")
-                .bind("trn:seller:model-center")
-                .fetch_optional(&mut *conn)
-                .await
-                .expect("select type query should succeed");
-
-        assert!(
-            seller_type.is_some(),
-            "expected a seeded seller for id trn:seller:model-center"
-        );
-        assert_eq!(seller_type.unwrap(), "SHOP");
+        let expected = csv_record_count(SELLERS, false);
+        assert_eq!(count, expected, "sellers row count should match CSV records");
     }
 }

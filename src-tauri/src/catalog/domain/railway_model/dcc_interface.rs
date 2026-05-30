@@ -85,6 +85,12 @@ pub enum DccInterface {
     #[strum(serialize = "MTC_21")]
     #[sqlx(rename = "MTC_21")]
     Mtc21,
+
+    /// Hardwired decoder without a plug/socket interface.
+    #[serde(rename = "WIRES")]
+    #[strum(serialize = "WIRES")]
+    #[sqlx(rename = "WIRES")]
+    Wires,
 }
 
 /// Garde validator for `DccInterface`.
@@ -115,6 +121,7 @@ mod tests {
     #[case("NEXT_18", Ok(DccInterface::Next18))]
     #[case("NEXT_18_S", Ok(DccInterface::Next18S))]
     #[case("MTC_21", Ok(DccInterface::Mtc21))]
+    #[case("WIRES", Ok(DccInterface::Wires))]
     fn parse_shouting_case(
         #[case] input: &str,
         #[case] expected: Result<DccInterface, ParseError>,
@@ -147,6 +154,7 @@ mod tests {
     #[case(DccInterface::Next18, "NEXT_18")]
     #[case(DccInterface::Next18S, "NEXT_18_S")]
     #[case(DccInterface::Mtc21, "MTC_21")]
+    #[case(DccInterface::Wires, "WIRES")]
     fn display_variants(#[case] input: DccInterface, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
     }

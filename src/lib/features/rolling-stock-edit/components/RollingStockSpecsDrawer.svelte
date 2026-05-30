@@ -142,7 +142,8 @@
     { value: 'PLUX_22', label: 'PLUX 22' },
     { value: 'NEXT_18', label: 'Next18' },
     { value: 'NEXT_18_S', label: 'Next18-S' },
-    { value: 'MTC_21', label: 'MTC 21' }
+    { value: 'MTC_21', label: 'MTC 21' },
+    { value: 'WIRES', label: 'Wires' }
   ];
 
   const couplingSockeOptions = [
