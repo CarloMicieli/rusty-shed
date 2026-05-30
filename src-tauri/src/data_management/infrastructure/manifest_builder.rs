@@ -1667,15 +1667,17 @@ mod tests {
         .await
         .expect("railway model insert should succeed");
 
-        sqlx::query("INSERT INTO wishlists (id, name, notes, is_default, version) VALUES (?, ?, ?, ?, ?)")
-            .bind("wishlist-1")
-            .bind("Favorites")
-            .bind("Wishlist notes")
-            .bind(1_i64)
-            .bind(0_i64)
-            .execute(&pool)
-            .await
-            .expect("wishlist insert should succeed");
+        sqlx::query(
+            "INSERT INTO wishlists (id, name, notes, is_default, version) VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind("wishlist-1")
+        .bind("Favorites")
+        .bind("Wishlist notes")
+        .bind(1_i64)
+        .bind(0_i64)
+        .execute(&pool)
+        .await
+        .expect("wishlist insert should succeed");
 
         sqlx::query(
             "INSERT INTO wishlist_items \

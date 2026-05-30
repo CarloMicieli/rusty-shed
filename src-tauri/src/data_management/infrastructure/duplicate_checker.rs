@@ -838,7 +838,10 @@ mod tests {
             },
         ];
 
-        let result = checker.check_track_products(&products).await.expect("check");
+        let result = checker
+            .check_track_products(&products)
+            .await
+            .expect("check");
 
         assert_eq!(result.duplicate_count(), 1);
         assert_eq!(result.new_count(), 1);
@@ -849,12 +852,10 @@ mod tests {
     #[tokio::test]
     async fn test_check_track_inventories_empty_input() {
         let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE track_inventories (id TEXT PRIMARY KEY, name TEXT NOT NULL)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
+        sqlx::query("CREATE TABLE track_inventories (id TEXT PRIMARY KEY, name TEXT NOT NULL)")
+            .execute(&pool)
+            .await
+            .expect("create table");
 
         let checker = DuplicateChecker::new(pool);
         let result = checker.check_track_inventories(&[]).await.expect("check");
@@ -867,12 +868,10 @@ mod tests {
     #[tokio::test]
     async fn test_check_track_inventories_detects_duplicate_id() {
         let pool = test_pool().await;
-        sqlx::query(
-            "CREATE TABLE track_inventories (id TEXT PRIMARY KEY, name TEXT NOT NULL)",
-        )
-        .execute(&pool)
-        .await
-        .expect("create table");
+        sqlx::query("CREATE TABLE track_inventories (id TEXT PRIMARY KEY, name TEXT NOT NULL)")
+            .execute(&pool)
+            .await
+            .expect("create table");
         sqlx::query(
             "INSERT INTO track_inventories (id, name) VALUES ('trn:track-inventory:main', 'Main Layout')",
         )
