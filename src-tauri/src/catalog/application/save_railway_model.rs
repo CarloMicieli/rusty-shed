@@ -348,10 +348,56 @@ mod tests {
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
     use crate::catalog::domain::railway_company::RailwayCompanyId;
-    use crate::catalog::domain::railway_model::{Category, PowerMethod, ProductCode};
-    use crate::catalog::domain::railway_model::{MockRailwayModelRepository, RailwayModel};
+    use crate::catalog::domain::railway_model::{
+        Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
+        RailwayModelEvent, RollingStock, RollingStockId, RollingStockParams,
+    };
     use crate::catalog::domain::scale::Scale;
     // chrono::NaiveDate not used in these tests
+
+    fn base_input() -> SaveRailwayModelInput {
+        SaveRailwayModelInput {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "P100".to_string(),
+            description: "A test model".to_string(),
+            category: "Locomotives".to_string(),
+            scale: "H0".to_string(),
+            epoch: "IV".to_string(),
+            power_method: "DC".to_string(),
+            rolling_stocks: vec![],
+        }
+    }
+
+    fn existing_model_with(
+        rolling_stocks: Vec<RollingStock>,
+        description: &str,
+        epoch: &str,
+    ) -> RailwayModel {
+        let manufacturer = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
+        let product = ProductCode::try_from("P100").unwrap();
+        let existing_id =
+            crate::catalog::domain::railway_model::RailwayModelId::new(&manufacturer, "P100")
+                .unwrap();
+
+        RailwayModel {
+            id: existing_id,
+            manufacturer_id: manufacturer,
+            product_code: product,
+            description: LocalizedField {
+                lang: Language::English,
+                value: description.to_string(),
+            },
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: epoch.into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks,
+            pending_events: Vec::new(),
+        }
+    }
 
     #[tokio::test]
     async fn it_creates_new_railway_model_when_missing() {
@@ -361,16 +407,7 @@ mod tests {
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
 
-        let input = SaveRailwayModelInput {
-            manufacturer_id: "trn:manufacturer:acme".to_string(),
-            product_code: "P100".to_string(),
-            description: "A test model".to_string(),
-            category: "Locomotives".to_string(),
-            scale: "H0".to_string(),
-            epoch: "IV".to_string(),
-            power_method: "DC".to_string(),
-            rolling_stocks: vec![],
-        };
+        let input = base_input();
 
         let id = SaveRailwayModel::execute(&mut uow, input)
             .await
@@ -385,30 +422,8 @@ mod tests {
         let mut mock = MockRailwayModelRepository::new();
 
         // build an existing minimal aggregate
-        let manufacturer = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
-        let product = ProductCode::try_from("P100").unwrap();
-        let existing_id =
-            crate::catalog::domain::railway_model::RailwayModelId::new(&manufacturer, "P100")
-                .unwrap();
-
-        let existing = RailwayModel {
-            id: existing_id.clone(),
-            manufacturer_id: manufacturer.clone(),
-            product_code: product.clone(),
-            description: LocalizedField {
-                lang: Language::English,
-                value: "Old desc".to_string(),
-            },
-            details: None,
-            power_method: PowerMethod::DC,
-            scale: Scale::H0,
-            epoch: "III".into(),
-            category: Category::Locomotives,
-            delivery_date: None,
-            availability_status: None,
-            rolling_stocks: vec![],
-            pending_events: Vec::new(),
-        };
+        let existing = existing_model_with(vec![], "Old desc", "III");
+        let existing_id = existing.id.clone();
 
         mock.expect_find_by_id()
             .times(1)
@@ -527,5 +542,92 @@ mod tests {
 
         let result = map_simple_rolling_stock(input, company_id);
         assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+
+    #[tokio::test]
+    async fn it_skips_duplicate_rolling_stock_when_merging_existing_model() {
+        let mut mock = MockRailwayModelRepository::new();
+
+        let duplicate = RollingStock::Locomotive {
+            id: RollingStockId::default(),
+            railway_id: RailwayCompanyId::try_from("trn:railway-company:rc1").unwrap(),
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "S1".to_string(),
+            road_number: Some("100".to_string()),
+            series: None,
+            depot: None,
+            locomotive_type: crate::catalog::domain::railway_model::LocomotiveType::SteamLocomotive,
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        };
+
+        let existing = existing_model_with(vec![duplicate], "A test model", "IV");
+        let existing_id = existing.id.clone();
+
+        mock.expect_find_by_id()
+            .times(1)
+            .returning(move |_, _| Ok(Some(existing.clone())));
+        mock.expect_save().times(1).returning(|aggregate| {
+            assert_eq!(aggregate.pending_events.len(), 1);
+            assert!(matches!(
+                aggregate.pending_events.first(),
+                Some(RailwayModelEvent::RailwayModelUpdated { .. })
+            ));
+            assert!(
+                aggregate
+                    .pending_events
+                    .iter()
+                    .all(|event| !matches!(event, RailwayModelEvent::RollingStockAdded { .. }))
+            );
+            Ok(())
+        });
+
+        let mut uow = FakeUow::with_railway_models_repo(mock);
+        let mut input = base_input();
+        input.rolling_stocks = vec![SimplifiedRollingStockInput {
+            railway_company_id: "trn:railway-company:rc1".to_string(),
+            series_code: "S1".to_string(),
+            road_number: Some("100".to_string()),
+            subcategory: Some("STEAM_LOCOMOTIVE".to_string()),
+            category: "Locomotive".to_string(),
+        }];
+
+        let id = SaveRailwayModel::execute(&mut uow, input)
+            .await
+            .expect("merge should succeed");
+
+        assert_eq!(id, existing_id);
+    }
+
+    #[tokio::test]
+    async fn it_rejects_invalid_nested_railway_company_before_save() {
+        let mut mock = MockRailwayModelRepository::new();
+        let existing = existing_model_with(vec![], "Old desc", "III");
+
+        mock.expect_find_by_id()
+            .times(1)
+            .returning(move |_, _| Ok(Some(existing.clone())));
+        mock.expect_save().times(0);
+
+        let mut uow = FakeUow::with_railway_models_repo(mock);
+        let mut input = base_input();
+        input.rolling_stocks = vec![SimplifiedRollingStockInput {
+            railway_company_id: "invalid-company-id".to_string(),
+            series_code: "S1".to_string(),
+            road_number: Some("100".to_string()),
+            subcategory: Some("STEAM_LOCOMOTIVE".to_string()),
+            category: "Locomotive".to_string(),
+        }];
+
+        let result = SaveRailwayModel::execute(&mut uow, input).await;
+
+        assert!(
+            matches!(result, Err(DomainError::Validation(_))),
+            "{result:?}"
+        );
     }
 }

@@ -382,8 +382,26 @@ pub struct CouplingInput {
 mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
-    use crate::catalog::domain::railway_model::MockRailwayModelRepository;
+    use crate::catalog::domain::railway_model::{
+        MockRailwayModelRepository, RailwayModelEvent, RollingStockParams,
+    };
     use pretty_assertions::assert_eq;
+
+    fn valid_input() -> CreateRailwayModelInput {
+        CreateRailwayModelInput {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "P999".to_string(),
+            power_method: "DC".to_string(),
+            scale: "H0".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            epoch: "IV".to_string(),
+            delivery_date: None,
+            availability_status: None,
+            description: "A fine locomotive".to_string(),
+            details: None,
+            rolling_stocks: vec![],
+        }
+    }
 
     #[tokio::test]
     async fn it_should_validate_railway_model_inputs() {
@@ -429,19 +447,7 @@ mod tests {
 
         let mut unit_of_work = FakeUow::with_railway_models_repo(mock);
 
-        let input = CreateRailwayModelInput {
-            manufacturer_id: "trn:manufacturer:acme".to_string(),
-            product_code: "P999".to_string(),
-            power_method: "DC".to_string(),
-            scale: "H0".to_string(),
-            category: "LOCOMOTIVES".to_string(),
-            epoch: "IV".to_string(),
-            delivery_date: None,
-            availability_status: None,
-            description: "A fine locomotive".to_string(),
-            details: None,
-            rolling_stocks: vec![],
-        };
+        let input = valid_input();
 
         let id = AddRailwayModel::execute(&mut unit_of_work, input)
             .await
@@ -451,5 +457,86 @@ mod tests {
             id.to_string().contains("acme"),
             "returned id should reference the manufacturer"
         );
+    }
+
+    #[tokio::test]
+    async fn it_rejects_invalid_nested_rolling_stock_data() {
+        let mock = MockRailwayModelRepository::new();
+        let mut unit_of_work = FakeUow::with_railway_models_repo(mock);
+
+        let mut input = valid_input();
+        input.rolling_stocks = vec![CreateRollingStockInput::Locomotive {
+            railway_company_id: "not-a-trn".to_string(),
+            friendly_name: "Test loco".to_string(),
+            series_code: "E444".to_string(),
+            road_number: "001".to_string(),
+            series: None,
+            depot: None,
+            livery: None,
+            locomotive_type: "ELECTRIC_LOCOMOTIVE".to_string(),
+            is_dummy: Some(false),
+            control: None,
+            dcc_interface: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+        }];
+
+        let result = AddRailwayModel::execute(&mut unit_of_work, input).await;
+
+        match result {
+            Err(DomainError::ValidationError(errors)) => {
+                assert!(errors.contains_key("railway_company_id"), "{errors:?}");
+            }
+            other => panic!("expected nested validation error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn it_persists_converted_rolling_stock_in_created_aggregate() {
+        let mut mock = MockRailwayModelRepository::new();
+        mock.expect_save().times(1).returning(|aggregate| {
+            assert_eq!(aggregate.pending_events.len(), 1);
+            assert!(matches!(
+                aggregate.pending_events.first(),
+                Some(RailwayModelEvent::RailwayModelCreated { params, .. })
+                    if matches!(
+                        params.rolling_stocks.first(),
+                        Some(RollingStockParams::LocomotiveParams {
+                            railway_company_id,
+                            series_code,
+                            road_number,
+                            ..
+                        }) if railway_company_id.as_ref() == "trn:railway-company:fs"
+                            && series_code.as_deref() == Some("E444")
+                            && road_number == "001"
+                    )
+            ));
+            Ok(())
+        });
+
+        let mut unit_of_work = FakeUow::with_railway_models_repo(mock);
+
+        let mut input = valid_input();
+        input.rolling_stocks = vec![CreateRollingStockInput::Locomotive {
+            railway_company_id: "trn:railway-company:fs".to_string(),
+            friendly_name: "Test loco".to_string(),
+            series_code: "E444".to_string(),
+            road_number: "001".to_string(),
+            series: Some("E.444".to_string()),
+            depot: Some("Roma Smistamento".to_string()),
+            livery: Some("XMPR".to_string()),
+            locomotive_type: "ELECTRIC_LOCOMOTIVE".to_string(),
+            is_dummy: Some(false),
+            control: None,
+            dcc_interface: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+        }];
+
+        let id = AddRailwayModel::execute(&mut unit_of_work, input)
+            .await
+            .expect("should create railway model");
+
+        assert!(id.to_string().contains("acme"));
     }
 }
