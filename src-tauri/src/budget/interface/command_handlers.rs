@@ -740,4 +740,40 @@ mod tests {
         let result = map_monthly_budget_record_dto(record);
         assert!(matches!(result, Err(CommandError::ValidationError(_))));
     }
+
+    #[test]
+    fn map_quarterly_summary_dto_maps_total_and_category_breakdown() {
+        use crate::budget::domain::dashboard::BudgetQuarter;
+        use crate::catalog::domain::railway_model::Category;
+
+        let summary = crate::budget::domain::quarterly_summary::QuarterlySummary::new(
+            2026,
+            BudgetQuarter::Q2,
+            vec![
+                crate::budget::domain::quarterly_summary::CategorySpending {
+                    category: Category::Locomotives,
+                    amount: MonetaryAmount::new(3_000, Currency::EUR),
+                    percentage: 60.0,
+                },
+                crate::budget::domain::quarterly_summary::CategorySpending {
+                    category: Category::FreightCars,
+                    amount: MonetaryAmount::new(2_000, Currency::EUR),
+                    percentage: 40.0,
+                },
+            ],
+        );
+
+        let dto = map_quarterly_summary_dto(summary);
+
+        assert_eq!(dto.year, 2026);
+        assert!(matches!(
+            dto.quarter,
+            crate::budget::interface::command_args::BudgetQuarter::Q2
+        ));
+        assert_eq!(dto.total_spending.amount, 5_000);
+        assert_eq!(dto.total_spending.currency, Currency::EUR);
+        assert_eq!(dto.category_breakdown.len(), 2);
+        assert_eq!(dto.category_breakdown[0].amount.amount, 3_000);
+        assert_eq!(dto.category_breakdown[1].amount.amount, 2_000);
+    }
 }
