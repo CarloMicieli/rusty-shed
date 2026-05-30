@@ -1629,4 +1629,231 @@ mod tests {
             ]
         );
     }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn export_wishlists_if_needed_returns_early_when_disabled(pool: SqlitePool) {
+        let mut data = json!({});
+
+        export_wishlists_if_needed(&mut data, &pool, false)
+            .await
+            .expect("export should no-op when disabled");
+
+        assert!(data["wishlists"].is_null());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn export_wishlists_if_needed_exports_wishlists_and_items(pool: SqlitePool) {
+        sqlx::query("INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)")
+            .bind("manufacturer-1")
+            .bind("Manufacturer")
+            .bind("ACTIVE")
+            .execute(&pool)
+            .await
+            .expect("manufacturer insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO railway_models \
+             (id, manufacturer_id, product_code, power_method, scale, epoch, category) \
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("trn:railway-model:test-manufacturer:test-001")
+        .bind("manufacturer-1")
+        .bind("RM-1")
+        .bind("DC")
+        .bind("H0")
+        .bind("VI")
+        .bind("LOCOMOTIVES")
+        .execute(&pool)
+        .await
+        .expect("railway model insert should succeed");
+
+        sqlx::query("INSERT INTO wishlists (id, name, notes, is_default, version) VALUES (?, ?, ?, ?, ?)")
+            .bind("wishlist-1")
+            .bind("Favorites")
+            .bind("Wishlist notes")
+            .bind(1_i64)
+            .bind(0_i64)
+            .execute(&pool)
+            .await
+            .expect("wishlist insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO wishlist_items \
+             (id, wishlist_id, railway_model_id, priority, status, added_date, removed_date, notes, desired_price_amount, desired_price_currency, purchased_price_amount, purchased_price_currency) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("wishlist-item-1")
+        .bind("wishlist-1")
+        .bind("trn:railway-model:test-manufacturer:test-001")
+        .bind("HIGH")
+        .bind("WANTED")
+        .bind("2026-01-10")
+        .bind(Option::<String>::None)
+        .bind(Some("Looking for this model"))
+        .bind(12500_i64)
+        .bind("EUR")
+        .bind(Option::<i64>::None)
+        .bind(Option::<String>::None)
+        .execute(&pool)
+        .await
+        .expect("wishlist item insert should succeed");
+
+        let mut data = json!({});
+
+        export_wishlists_if_needed(&mut data, &pool, true)
+            .await
+            .expect("wishlist export should succeed");
+
+        let wishlists = data["wishlists"]
+            .as_array()
+            .expect("wishlists should be exported as an array");
+        assert_eq!(wishlists.len(), 1);
+        assert_eq!(wishlists[0]["id"], "wishlist-1");
+        assert_eq!(wishlists[0]["isDefault"], true);
+
+        let items = wishlists[0]["items"]
+            .as_array()
+            .expect("wishlist items should be exported as an array");
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0]["desiredPrice"]["amount"], 12500);
+        assert_eq!(items[0]["status"], "WANTED");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn export_dcc_roster_if_needed_returns_early_when_disabled(pool: SqlitePool) {
+        let mut data = json!({});
+
+        export_dcc_roster_if_needed(&mut data, &pool, false)
+            .await
+            .expect("export should no-op when disabled");
+
+        assert!(data["decoders"].is_null());
+        assert!(data["digitalRollingStocks"].is_null());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn export_dcc_roster_if_needed_exports_decoders_and_digital_rolling_stocks(
+        pool: SqlitePool,
+    ) {
+        sqlx::query("INSERT INTO manufacturers (id, name, status) VALUES (?, ?, ?)")
+            .bind("manufacturer-1")
+            .bind("Manufacturer")
+            .bind("ACTIVE")
+            .execute(&pool)
+            .await
+            .expect("manufacturer insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO railway_models \
+             (id, manufacturer_id, product_code, power_method, scale, epoch, category) \
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("railway-model-1")
+        .bind("manufacturer-1")
+        .bind("RM-1")
+        .bind("DC")
+        .bind("H0")
+        .bind("VI")
+        .bind("LOCOMOTIVES")
+        .execute(&pool)
+        .await
+        .expect("railway model insert should succeed");
+
+        sqlx::query("INSERT INTO railway_companies (id, name, status) VALUES (?, ?, ?)")
+            .bind("railway-company-1")
+            .bind("Railway Company")
+            .bind("ACTIVE")
+            .execute(&pool)
+            .await
+            .expect("railway company insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO rolling_stocks \
+             (id, railway_model_id, category, railway_company_id, series_code, service_level, length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling_socket, control, is_dummy) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("rolling-stock-1")
+        .bind("railway-model-1")
+        .bind("LOCOMOTIVES")
+        .bind("railway-company-1")
+        .bind("RS-1")
+        .bind("FIRST_SECOND")
+        .bind(Option::<String>::None)
+        .bind(Option::<i64>::None)
+        .bind(Option::<i64>::None)
+        .bind(Option::<String>::None)
+        .bind("DCC_READY")
+        .bind(0_i64)
+        .execute(&pool)
+        .await
+        .expect("rolling stock insert should succeed");
+
+        sqlx::query("INSERT INTO collections (id, name) VALUES (?, ?)")
+            .bind("collection-1")
+            .bind("Collection")
+            .execute(&pool)
+            .await
+            .expect("collection insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO collection_items \
+             (id, collection_id, railway_model_id, added_date, purchase_condition, model_condition, box_condition) \
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("collection-item-1")
+        .bind("collection-1")
+        .bind("railway-model-1")
+        .bind("2026-01-10")
+        .bind("NEW")
+        .bind("MINT")
+        .bind("ORIGINAL_MINT")
+        .execute(&pool)
+        .await
+        .expect("collection item insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO decoders (id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface) VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind("decoder-1")
+        .bind("manufacturer-1")
+        .bind("D-1")
+        .bind("PLAIN")
+        .bind("DCC")
+        .bind("NEM651")
+        .execute(&pool)
+        .await
+        .expect("decoder insert should succeed");
+
+        sqlx::query(
+            "INSERT INTO owned_rolling_stocks (id, collection_item_id, rolling_stock_id, dcc_address, installed_decoder_id) VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind("owned-rolling-stock-1")
+        .bind("collection-item-1")
+        .bind("rolling-stock-1")
+        .bind(7_i64)
+        .bind("decoder-1")
+        .execute(&pool)
+        .await
+        .expect("owned rolling stock insert should succeed");
+
+        let mut data = json!({});
+
+        export_dcc_roster_if_needed(&mut data, &pool, true)
+            .await
+            .expect("dcc roster export should succeed");
+
+        let decoders = data["decoders"]
+            .as_array()
+            .expect("decoders should be exported as an array");
+        assert_eq!(decoders.len(), 1);
+        assert_eq!(decoders[0]["id"], "decoder-1");
+
+        let roster = data["digitalRollingStocks"]
+            .as_array()
+            .expect("digital roster should be exported as an array");
+        assert_eq!(roster.len(), 1);
+        assert_eq!(roster[0]["id"], "owned-rolling-stock-1");
+        assert_eq!(roster[0]["dccAddress"], 7);
+        assert_eq!(roster[0]["decoderId"], "decoder-1");
+    }
 }
