@@ -197,6 +197,33 @@ mod tests {
             result
         );
     }
+
+    #[tokio::test]
+    async fn it_should_sort_q3_q4_and_handle_zero_total_percentage() {
+        let rows = vec![
+            (4i32, "LOCOMOTIVES".to_string(), 10_000i64),
+            (3i32, "FREIGHT_CARS".to_string(), 0i64),
+        ];
+
+        let mut mock = MockBudgetRepository::new();
+        mock.expect_get_quarterly_spending_by_category()
+            .once()
+            .returning(move |_, _| Ok(rows.clone()));
+
+        let mut uow = FakeBudgetUow::new().with_repo(mock);
+        let year = Year::try_from(2025).expect("valid year");
+
+        let result = get_quarterly_summaries(&mut uow, year, "EUR")
+            .await
+            .expect("query should succeed");
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].quarter, BudgetQuarter::Q3);
+        assert_eq!(result[1].quarter, BudgetQuarter::Q4);
+        assert_eq!(result[0].total_spending.amount, 0);
+        assert_eq!(result[0].category_breakdown[0].percentage, 0.0);
+    }
+
     #[rstest]
     #[case(1, BudgetQuarter::Q1)]
     #[case(2, BudgetQuarter::Q2)]
