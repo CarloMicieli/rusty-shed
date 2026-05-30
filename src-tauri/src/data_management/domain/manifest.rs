@@ -427,16 +427,14 @@ pub struct TrainFormationRecord {
 
 /// A single slot in a train formation's composition.
 ///
-/// `owned_rolling_stock_id` is exported for informational purposes only;
-/// it is **not** restored on import (set to NULL) since the target database
-/// may have different collection items.
+/// `owned_rolling_stock_id` is a strict relational reference to
+/// `owned_rolling_stocks.id` and is restored during import.
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct FormationElementRecord {
     pub id: String,
     pub prototype_id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub owned_rolling_stock_id: Option<String>,
+    pub owned_rolling_stock_id: String,
     pub position_order: i64,
     /// 1 = traction required, -1 = traction excluded, 0 = default
     pub traction_override: i64,
@@ -472,8 +470,8 @@ pub struct DecoderRecord {
 #[serde(rename_all = "camelCase")]
 pub struct DigitalRollingStockRecord {
     pub id: String,
-    /// References an owned rolling stock (collection item) in the source database.
-    /// Preserved for informational purposes; not validated on import.
+    /// References an owned rolling stock in the source database.
+    /// This relation is validated and restored on import.
     pub owned_rolling_stock_id: String,
     pub dcc_address: i64,
     #[serde(default, skip_serializing_if = "Option::is_none")]

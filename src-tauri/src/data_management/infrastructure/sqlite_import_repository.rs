@@ -1047,15 +1047,30 @@ impl SqliteImportRepository {
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
             for element in &formation.elements {
+                let owned_rolling_stock_exists = Self::exists_by_id(
+                    tx,
+                    "SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?",
+                    &element.owned_rolling_stock_id,
+                )
+                .await?;
+
+                if !owned_rolling_stock_exists {
+                    return Err(DataManagementError::InvalidInput(format!(
+                        "Formation element '{}' in formation '{}' references missing owned rolling stock '{}'",
+                        element.id, formation.id, element.owned_rolling_stock_id
+                    )));
+                }
+
                 sqlx::query(
                     "INSERT OR IGNORE INTO formation_elements \
                      (id, formation_id, prototype_id, owned_rolling_stock_id, \
                       position_order, traction_override) \
-                     VALUES (?, ?, ?, NULL, ?, ?)",
+                     VALUES (?, ?, ?, ?, ?, ?)",
                 )
                 .bind(&element.id)
                 .bind(&formation.id)
                 .bind(&element.prototype_id)
+                .bind(&element.owned_rolling_stock_id)
                 .bind(element.position_order)
                 .bind(element.traction_override)
                 .execute(&mut **tx)
@@ -2185,7 +2200,7 @@ mod tests {
                 elements: vec![crate::data_management::domain::FormationElementRecord {
                     id: "trn:formation-element:e2e:001".to_string(),
                     prototype_id: "trn:prototype:e2e:001".to_string(),
-                    owned_rolling_stock_id: Some("trn:ors:e2e:001".to_string()),
+                    owned_rolling_stock_id: "trn:ors:e2e:001".to_string(),
                     position_order: 0,
                     traction_override: 0,
                 }],
@@ -2299,5 +2314,16 @@ mod tests {
         .await
         .expect("digital setup should be persisted on owned_rolling_stocks");
         assert_eq!(roster_count, 1);
+
+        let formation_owned_link_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(1) FROM formation_elements \
+             WHERE id = ? AND owned_rolling_stock_id = ?",
+        )
+        .bind("trn:formation-element:e2e:001")
+        .bind("trn:ors:e2e:001")
+        .fetch_one(&pool)
+        .await
+        .expect("formation element owned rolling stock link should be restored");
+        assert_eq!(formation_owned_link_count, 1);
     }
 }

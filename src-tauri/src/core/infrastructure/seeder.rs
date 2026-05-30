@@ -826,7 +826,10 @@ mod tests {
             .expect("count query should succeed");
 
         let expected = csv_record_count(DECODERS, false);
-        assert_eq!(count, expected, "decoders row count should match CSV records");
+        assert_eq!(
+            count, expected,
+            "decoders row count should match CSV records"
+        );
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -868,6 +871,9 @@ mod tests {
             .expect("count query should succeed");
 
         let expected = csv_record_count(SELLERS, false);
-        assert_eq!(count, expected, "sellers row count should match CSV records");
+        assert_eq!(
+            count, expected,
+            "sellers row count should match CSV records"
+        );
     }
 }

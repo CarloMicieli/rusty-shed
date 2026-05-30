@@ -110,6 +110,7 @@ impl SchemaValidator {
         let railway_company_ids = Self::extract_ids(data, "railwayCompanies");
         let railway_model_ids = Self::extract_ids(data, "railwayModels");
         let collection_item_ids = Self::extract_ids(data, "collectionItems");
+        let owned_rolling_stock_ids = Self::extract_ids(data, "ownedRollingStocks");
         let seller_ids = Self::extract_ids(data, "sellers");
 
         Self::validate_railway_model_references(
@@ -124,7 +125,18 @@ impl SchemaValidator {
             &seller_ids,
             &mut errors,
         );
-        Self::validate_maintenance_card_references(data, &collection_item_ids, &mut errors);
+        Self::validate_maintenance_card_references(
+            data,
+            &collection_item_ids,
+            &owned_rolling_stock_ids,
+            &mut errors,
+        );
+        Self::validate_digital_rolling_stock_references(
+            data,
+            &owned_rolling_stock_ids,
+            &mut errors,
+        );
+        Self::validate_formation_element_references(data, &owned_rolling_stock_ids, &mut errors);
 
         if errors.is_empty() {
             Ok(())
@@ -223,6 +235,7 @@ impl SchemaValidator {
     fn validate_maintenance_card_references(
         data: &Value,
         collection_item_ids: &HashSet<String>,
+        owned_rolling_stock_ids: &HashSet<String>,
         errors: &mut Vec<ValidationError>,
     ) {
         let Some(cards) = data.get("maintenanceCards").and_then(|v| v.as_array()) else {
@@ -241,6 +254,78 @@ impl SchemaValidator {
                         item_id
                     ),
                 ));
+            }
+
+            if let Some(owned_id) = card.get("ownedRollingStockId").and_then(|v| v.as_str())
+                && !owned_rolling_stock_ids.contains(owned_id)
+            {
+                errors.push(ValidationError::new(
+                    format!("data.maintenanceCards[{}].ownedRollingStockId", idx),
+                    "referential_integrity",
+                    format!(
+                        "Owned rolling stock '{}' not found in ownedRollingStocks list",
+                        owned_id
+                    ),
+                ));
+            }
+        }
+    }
+
+    fn validate_digital_rolling_stock_references(
+        data: &Value,
+        owned_rolling_stock_ids: &HashSet<String>,
+        errors: &mut Vec<ValidationError>,
+    ) {
+        let Some(roster) = data.get("digitalRollingStocks").and_then(|v| v.as_array()) else {
+            return;
+        };
+
+        for (idx, item) in roster.iter().enumerate() {
+            if let Some(owned_id) = item.get("ownedRollingStockId").and_then(|v| v.as_str())
+                && !owned_rolling_stock_ids.contains(owned_id)
+            {
+                errors.push(ValidationError::new(
+                    format!("data.digitalRollingStocks[{}].ownedRollingStockId", idx),
+                    "referential_integrity",
+                    format!(
+                        "Owned rolling stock '{}' not found in ownedRollingStocks list",
+                        owned_id
+                    ),
+                ));
+            }
+        }
+    }
+
+    fn validate_formation_element_references(
+        data: &Value,
+        owned_rolling_stock_ids: &HashSet<String>,
+        errors: &mut Vec<ValidationError>,
+    ) {
+        let Some(formations) = data.get("trainFormations").and_then(|v| v.as_array()) else {
+            return;
+        };
+
+        for (formation_idx, formation) in formations.iter().enumerate() {
+            let Some(elements) = formation.get("elements").and_then(|v| v.as_array()) else {
+                continue;
+            };
+
+            for (element_idx, element) in elements.iter().enumerate() {
+                if let Some(owned_id) = element.get("ownedRollingStockId").and_then(|v| v.as_str())
+                    && !owned_rolling_stock_ids.contains(owned_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!(
+                            "data.trainFormations[{}].elements[{}].ownedRollingStockId",
+                            formation_idx, element_idx
+                        ),
+                        "referential_integrity",
+                        format!(
+                            "Owned rolling stock '{}' not found in ownedRollingStocks list",
+                            owned_id
+                        ),
+                    ));
+                }
             }
         }
     }
@@ -407,8 +492,26 @@ mod tests {
                     "railwayModelId": "trn:railway-model:acme:100",
                     "purchase": { "sellerId": "trn:seller:shop" }
                 }],
+                "ownedRollingStocks": [{ "id": "trn:owned-rolling-stock:1" }],
                 "maintenanceCards": [{
-                    "collectionItemId": "trn:collection-item:1"
+                    "collectionItemId": "trn:collection-item:1",
+                    "ownedRollingStockId": "trn:owned-rolling-stock:1"
+                }],
+                "digitalRollingStocks": [{
+                    "id": "trn:digital-rolling-stock:1",
+                    "ownedRollingStockId": "trn:owned-rolling-stock:1",
+                    "dccAddress": 3
+                }],
+                "trainFormations": [{
+                    "id": "trn:train-formation:1",
+                    "name": "Formation",
+                    "elements": [{
+                        "id": "trn:formation-element:1",
+                        "prototypeId": "trn:prototype:1",
+                        "ownedRollingStockId": "trn:owned-rolling-stock:1",
+                        "positionOrder": 0,
+                        "tractionOverride": 0
+                    }]
                 }]
             }
         });
@@ -433,14 +536,33 @@ mod tests {
                     "railwayModelId": "trn:railway-model:unknown",
                     "purchase": { "sellerId": "trn:seller:missing" }
                 }],
-                "maintenanceCards": [{ "collectionItemId": "trn:collection-item:unknown" }]
+                "maintenanceCards": [{
+                    "collectionItemId": "trn:collection-item:unknown",
+                    "ownedRollingStockId": "trn:owned-rolling-stock:unknown"
+                }],
+                "digitalRollingStocks": [{
+                    "id": "trn:digital-rolling-stock:missing",
+                    "ownedRollingStockId": "trn:owned-rolling-stock:unknown",
+                    "dccAddress": 3
+                }],
+                "trainFormations": [{
+                    "id": "trn:train-formation:missing",
+                    "name": "Broken Formation",
+                    "elements": [{
+                        "id": "trn:formation-element:missing",
+                        "prototypeId": "trn:prototype:missing",
+                        "ownedRollingStockId": "trn:owned-rolling-stock:unknown",
+                        "positionOrder": 0,
+                        "tractionOverride": 0
+                    }]
+                }]
             }
         });
 
         let errors = SchemaValidator::validate_referential_integrity(&manifest)
             .expect_err("expected referential integrity errors");
 
-        assert_eq!(errors.len(), 5);
+        assert_eq!(errors.len(), 8);
         assert!(
             errors
                 .iter()
@@ -465,6 +587,21 @@ mod tests {
             errors
                 .iter()
                 .any(|e| e.path == "data.maintenanceCards[0].collectionItemId")
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.maintenanceCards[0].ownedRollingStockId")
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.digitalRollingStocks[0].ownedRollingStockId")
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.path == "data.trainFormations[0].elements[0].ownedRollingStockId")
         );
     }
 

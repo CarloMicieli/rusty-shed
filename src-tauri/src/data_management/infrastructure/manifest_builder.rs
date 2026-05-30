@@ -1004,18 +1004,29 @@ async fn export_train_formations_if_needed(
         .await
         .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
 
-        let elements: Vec<Value> = elem_rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "prototypeId": row.try_get::<String, _>("prototype_id").ok(),
-                    "ownedRollingStockId": row.try_get::<Option<String>, _>("owned_rolling_stock_id").ok().flatten(),
-                    "positionOrder": row.try_get::<i64, _>("position_order").ok(),
-                    "tractionOverride": row.try_get::<i64, _>("traction_override").ok().unwrap_or(0),
-                }))
-            })
-            .collect();
+        let mut elements: Vec<Value> = Vec::with_capacity(elem_rows.len());
+        for row in &elem_rows {
+            let element_id: String = row
+                .try_get("id")
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+            let owned_rolling_stock_id = row
+                .try_get::<Option<String>, _>("owned_rolling_stock_id")
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?
+                .ok_or_else(|| {
+                    ExportError::DatabaseError(format!(
+                        "Formation element '{}' is missing owned_rolling_stock_id; strict export requires this relation",
+                        element_id
+                    ))
+                })?;
+
+            elements.push(strip_null_fields(json!({
+                "id": element_id,
+                "prototypeId": row.try_get::<String, _>("prototype_id").ok(),
+                "ownedRollingStockId": owned_rolling_stock_id,
+                "positionOrder": row.try_get::<i64, _>("position_order").ok(),
+                "tractionOverride": row.try_get::<i64, _>("traction_override").ok().unwrap_or(0),
+            })));
+        }
 
         train_formations.push(strip_null_fields(json!({
             "id": tf_id,
