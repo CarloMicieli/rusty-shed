@@ -124,10 +124,9 @@ impl BudgetConfiguration {
     pub fn needs_annual_reset(&self) -> bool {
         let now = Utc::now();
         let current_year_i32 = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
-        let Ok(current_year) = Year::try_from(current_year_i32) else {
-            return false;
-        };
-        current_year.value() > self.last_reset_year.value()
+        Year::try_from(current_year_i32)
+            .map(|current_year| current_year.value() > self.last_reset_year.value())
+            .unwrap_or(false)
     }
 
     /// Perform annual reset (update last_reset_year to current year).
