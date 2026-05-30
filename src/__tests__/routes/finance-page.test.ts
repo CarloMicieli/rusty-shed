@@ -177,6 +177,16 @@ describe('routes/finance/+page.svelte', () => {
     });
   });
 
+  it('renders only one setup-budget CTA when no config exists', () => {
+    mockFinanceState.hasFetched = true;
+    mockBudgetState.isLoading = false;
+    mockBudgetState.hasConfig = false;
+    render(FinancePage);
+    return waitFor(() => {
+      expect(screen.getAllByText('dashboard_chart_budget_set_cta')).toHaveLength(1);
+    });
+  });
+
   it('shows monthly allocation card when hasConfig is true', () => {
     mockFinanceState.hasFetched = true;
     mockBudgetState.isLoading = false;

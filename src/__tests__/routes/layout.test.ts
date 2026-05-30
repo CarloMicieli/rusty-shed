@@ -124,6 +124,7 @@ vi.mock('$lib/features/dashboard/DashboardState.svelte', () => ({
 
 const { mockBudgetState, mockFinanceState } = vi.hoisted(() => ({
   mockBudgetState: {
+    hasConfig: false,
     load: vi.fn().mockResolvedValue(undefined),
     loadMonthlyRecords: vi.fn().mockResolvedValue(undefined)
   },
@@ -219,6 +220,7 @@ describe('routes/+layout.svelte', () => {
 
     mockBudgetState.load = vi.fn().mockResolvedValue(undefined);
     mockBudgetState.loadMonthlyRecords = vi.fn().mockResolvedValue(undefined);
+    mockBudgetState.hasConfig = false;
     mockFinanceState.ensureLoaded = vi.fn().mockResolvedValue(undefined);
     mockFinanceState.startListening = vi.fn().mockResolvedValue(undefined);
     mockFinanceState.stopListening = vi.fn();
@@ -305,6 +307,31 @@ describe('routes/+layout.svelte', () => {
     mockSuccessfulStartup();
     render(Layout, { children: createChildrenSnippet() });
     await waitFor(() => expect(settingsState.initialize).toHaveBeenCalled(), { timeout: 2000 });
+  });
+
+  it('hydrates finance and budget state during successful startup', async () => {
+    mockSuccessfulStartup();
+    render(Layout, { children: createChildrenSnippet() });
+
+    await waitFor(() => {
+      expect(mockFinanceState.ensureLoaded).toHaveBeenCalledTimes(1);
+      expect(mockBudgetState.load).toHaveBeenCalledTimes(1);
+      expect(mockBudgetState.loadMonthlyRecords).not.toHaveBeenCalled();
+    });
+  });
+
+  it('loads finance year records on startup when budget config exists', async () => {
+    mockBudgetState.hasConfig = true;
+    const currentYear = new Date().getFullYear();
+    const storedYear = String(currentYear - 1);
+    window.localStorage.setItem('finance:selected-year', storedYear);
+
+    mockSuccessfulStartup();
+    render(Layout, { children: createChildrenSnippet() });
+
+    await waitFor(() => {
+      expect(mockBudgetState.loadMonthlyRecords).toHaveBeenCalledWith(Number(storedYear));
+    });
   });
 
   it('mounts initialization surface within 100ms in test environment', () => {

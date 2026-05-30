@@ -237,6 +237,18 @@
             String(initResult.error ?? 'Database initialization failed');
           throw new Error(message);
         }
+
+        const initialFinanceYear = getInitialFinanceYear();
+        await Promise.all([
+          collectionStore.fetch(),
+          wishlistState.fetchWishlists(),
+          financeState.ensureLoaded()
+        ]);
+
+        await budgetState.load();
+        if (budgetState.hasConfig) {
+          await budgetState.loadMonthlyRecords(initialFinanceYear);
+        }
       } catch (err) {
         log.error(`Startup failed: ${String(err)}`);
         // Capture the error to show in the UI.

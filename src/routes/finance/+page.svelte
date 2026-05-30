@@ -341,7 +341,9 @@
       description={m.budget_subtitle()}
     >
       {#snippet actions()}
-        <FinanceSettingsButton onclick={() => (configSheetOpen = true)} />
+        {#if initialized && budgetState.hasConfig}
+          <FinanceSettingsButton onclick={() => (configSheetOpen = true)} />
+        {/if}
       {/snippet}
     </PageHeader>
   </div>
