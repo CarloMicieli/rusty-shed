@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import * as m from '$lib/paraglide/messages.js';
   import { Sparkles, Heart, LayoutGrid, Table, PackagePlus } from 'lucide-svelte';
   import { onMount } from 'svelte';
@@ -25,8 +27,10 @@
   // Drawer state
   let showAddModelDrawer = $state(false);
 
-  // View toggle state
-  let viewMode = $state<'grid' | 'table'>('grid');
+  const viewMode = $derived.by((): 'grid' | 'table' => {
+    const current = $page.url.searchParams.get('view');
+    return current === 'table' ? 'table' : 'grid';
+  });
 
   // Purchase dialog state
   let purchaseDialogOpen = $state(false);
@@ -125,6 +129,19 @@
     closeAddModelDrawer();
     // Refresh handled by WishlistState method
   }
+
+  function setViewMode(mode: 'grid' | 'table') {
+    if (viewMode === mode) return;
+
+    const url = new URL($page.url);
+    url.searchParams.set('view', mode);
+
+    void goto(url, {
+      keepFocus: true,
+      noScroll: true,
+      replaceState: true
+    });
+  }
 </script>
 
 <svelte:head>
@@ -203,7 +220,7 @@
                     ? 'border-primary bg-primary/15 text-primary'
                     : 'border-layout-border text-muted-foreground hover:border-primary/40 hover:text-primary'
                 ].join(' ')}
-                onclick={() => (viewMode = 'grid')}
+                onclick={() => setViewMode('grid')}
               >
                 <LayoutGrid size={16} />
               </button>
@@ -216,7 +233,7 @@
                     ? 'border-primary bg-primary/15 text-primary'
                     : 'border-layout-border text-muted-foreground hover:border-primary/40 hover:text-primary'
                 ].join(' ')}
-                onclick={() => (viewMode = 'table')}
+                onclick={() => setViewMode('table')}
               >
                 <Table size={16} />
               </button>
@@ -238,6 +255,7 @@
               <WishlistTableView
                 items={wishlistItems}
                 {activeWishlistId}
+                {viewMode}
                 {otherTargets}
                 onRemove={handleRemove}
                 onMove={handleMove}

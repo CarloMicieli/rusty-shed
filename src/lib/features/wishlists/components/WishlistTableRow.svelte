@@ -6,18 +6,20 @@
   import { commands } from '$lib/bindings';
   import { readFile } from '@tauri-apps/plugin-fs';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     item: WishlistItem;
     wishlistId: string;
+    viewMode?: 'grid' | 'table';
     onRemove?: (itemId: string) => void;
     onMove?: (itemId: string) => void;
     onPurchase?: (itemId: string) => void;
   }
 
-  let { item, wishlistId, onRemove, onMove, onPurchase }: Props = $props();
+  let { item, wishlistId, viewMode = 'grid', onRemove, onMove, onPurchase }: Props = $props();
 
   let photoUrl = $state<string | null>(null);
   let modelDetails = $state<RailwayModelView | null>(null);
@@ -102,14 +104,22 @@
     }
   });
 
+  const modelMetadata = $derived.by(() => {
+    const manufacturer = modelDetails?.manufacturer.display ?? '—';
+    const productCode = modelDetails?.productCode;
+    return productCode ? `${manufacturer} • ${productCode}` : manufacturer;
+  });
+
   function handleRowClick() {
-    void goto(`/wishlists/${wishlistId}/items/${item.id}`);
+    const viewQuery = viewMode === 'table' ? '?view=table' : '?view=grid';
+    void goto(resolve(`/wishlists/${wishlistId}/items/${item.id}${viewQuery}`));
   }
 
   function handleRowKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      void goto(`/wishlists/${wishlistId}/items/${item.id}`);
+      const viewQuery = viewMode === 'table' ? '?view=table' : '?view=grid';
+      void goto(resolve(`/wishlists/${wishlistId}/items/${item.id}${viewQuery}`));
     }
   }
 </script>
@@ -132,7 +142,7 @@
     ></div>
   </td>
 
-  <!-- Model: thumbnail + brand/name -->
+  <!-- Model: thumbnail + identity -->
   <td class="px-4 py-3">
     <div class="flex items-center gap-3">
       <!-- Thumbnail -->
@@ -148,24 +158,13 @@
         {/if}
       </div>
       <!-- Text -->
-      <div class="flex min-w-0 flex-col">
-        <span
-          class="truncate text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
-        >
-          {modelDetails?.manufacturer.display ?? '—'}
-        </span>
+      <div class="flex min-w-0 flex-col gap-0.5">
         <span class="truncate text-sm font-semibold text-foreground">
           {modelDetails?.description ?? item.railwayModelId}
         </span>
+        <span class="truncate text-xs text-muted-foreground">{modelMetadata}</span>
       </div>
     </div>
-  </td>
-
-  <!-- Product Code -->
-  <td class="px-4 py-3">
-    <span class="font-mono text-xs text-muted-foreground">
-      {modelDetails?.productCode ?? '—'}
-    </span>
   </td>
 
   <!-- Price Target -->

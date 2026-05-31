@@ -63,6 +63,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 import WishlistTableRow from '../WishlistTableRow.svelte';
 import type { WishlistItem } from '$lib/bindings';
 import { commands } from '$lib/bindings';
+import { goto } from '$app/navigation';
 
 function makeItem(overrides: Partial<WishlistItem> = {}): WishlistItem {
   return {
@@ -130,26 +131,14 @@ describe('WishlistTableRow', () => {
     });
   });
 
-  it('displays manufacturer and description after model loads', async () => {
+  it('displays description as primary and manufacturer with code as metadata', async () => {
     const item = makeItem();
     render(WishlistTableRow, { props: { item, wishlistId: 'wl-1' } });
 
     await waitFor(
       () => {
-        expect(screen.getByText('A.C.M.E.')).toBeInTheDocument();
         expect(screen.getByText('Class 218 Diesel Locomotive')).toBeInTheDocument();
-      },
-      { timeout: 2000 }
-    );
-  });
-
-  it('displays product code after model loads', async () => {
-    const item = makeItem();
-    render(WishlistTableRow, { props: { item, wishlistId: 'wl-1' } });
-
-    await waitFor(
-      () => {
-        expect(screen.getByText('37858')).toBeInTheDocument();
+        expect(screen.getByText('A.C.M.E. • 37858')).toBeInTheDocument();
       },
       { timeout: 2000 }
     );
@@ -231,6 +220,19 @@ describe('WishlistTableRow', () => {
     });
 
     warnSpy.mockRestore();
+  });
+
+  it('navigates to detail page preserving table view query', async () => {
+    const item = makeItem();
+    const { container } = render(WishlistTableRow, {
+      props: { item, wishlistId: 'wl-1', viewMode: 'table' }
+    });
+
+    const row = container.querySelector('tr');
+    expect(row).toBeTruthy();
+    row?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(vi.mocked(goto)).toHaveBeenCalledWith('/wishlists/wl-1/items/trn:wishlist-item:test-1?view=table');
   });
 
   // ── Action buttons ──────────────────────────────────────────────────────────

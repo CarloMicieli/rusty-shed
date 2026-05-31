@@ -35,7 +35,6 @@ vi.mock('$lib/features/settings/RegionalManager.svelte', () => ({
 vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_table_col_priority: () => 'Priority',
   wishlist_table_col_model: () => 'Model',
-  wishlist_table_col_product_code: () => 'Product Code',
   wishlist_table_col_price_target: () => 'Price Target',
   wishlist_table_col_status: () => 'Status',
   wishlist_table_col_actions: () => 'Actions',
@@ -101,13 +100,12 @@ describe('WishlistTableView', () => {
 
   // ── Table structure ─────────────────────────────────────────────────────────
 
-  it('renders table with all 6 column headers when items are present', () => {
+  it('renders table with all 5 column headers when items are present', () => {
     const items = [makeItem()];
     render(WishlistTableView, { props: { ...defaultProps, items } });
 
     expect(screen.getByText('Priority')).toBeInTheDocument();
     expect(screen.getByText('Model')).toBeInTheDocument();
-    expect(screen.getByText('Product Code')).toBeInTheDocument();
     expect(screen.getByText('Price Target')).toBeInTheDocument();
     expect(screen.getByText('Status')).toBeInTheDocument();
     expect(screen.getByText('Actions')).toBeInTheDocument();

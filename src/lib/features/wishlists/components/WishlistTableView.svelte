@@ -8,13 +8,22 @@
   interface Props {
     items: WishlistItem[];
     activeWishlistId: string | null;
+    viewMode?: 'grid' | 'table';
     otherTargets: WishlistPreview[];
     onRemove?: (detail: { itemId: string; wishlistId: string }) => void;
     onMove?: (detail: { itemId: string; fromId: string; toId: string }) => void;
     onPurchase?: (itemId: string) => void;
   }
 
-  const { items, activeWishlistId, otherTargets, onRemove, onMove, onPurchase }: Props = $props();
+  const {
+    items,
+    activeWishlistId,
+    viewMode = 'grid',
+    otherTargets,
+    onRemove,
+    onMove,
+    onPurchase
+  }: Props = $props();
 
   let movingItemId = $state<string | null>(null);
 
@@ -59,14 +68,6 @@
               {m.wishlist_table_col_model()}
             </span>
           </th>
-          <!-- Product Code -->
-          <th class="px-4 py-3 text-left">
-            <span
-              class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
-            >
-              {m.wishlist_table_col_product_code()}
-            </span>
-          </th>
           <!-- Price Target -->
           <th class="px-4 py-3 text-left">
             <span
@@ -98,6 +99,7 @@
           <WishlistTableRow
             {item}
             wishlistId={activeWishlistId ?? ''}
+            {viewMode}
             onRemove={handleRemove}
             onMove={handleMoveTrigger}
             {onPurchase}
