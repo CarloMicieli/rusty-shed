@@ -35,6 +35,10 @@
   });
 </script>
 
-<a href={queryString ? `${resolve(path)}${queryString}` : resolve(path)} aria-label={ariaLabel} class={linkClass}>
+<a
+  href={queryString ? `${resolve(path)}${queryString}` : resolve(path)}
+  aria-label={ariaLabel}
+  class={linkClass}
+>
   <ChevronLeft size={22} />
 </a>

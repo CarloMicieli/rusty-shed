@@ -232,7 +232,9 @@ describe('WishlistTableRow', () => {
     expect(row).toBeTruthy();
     row?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-    expect(vi.mocked(goto)).toHaveBeenCalledWith('/wishlists/wl-1/items/trn:wishlist-item:test-1?view=table');
+    expect(vi.mocked(goto)).toHaveBeenCalledWith(
+      '/wishlists/wl-1/items/trn:wishlist-item:test-1?view=table'
+    );
   });
 
   // ── Action buttons ──────────────────────────────────────────────────────────
