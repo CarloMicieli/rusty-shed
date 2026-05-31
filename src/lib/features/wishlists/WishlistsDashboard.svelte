@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { replaceState } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/stores';
   import * as m from '$lib/paraglide/messages.js';
   import { Sparkles, Heart, LayoutGrid, Table, PackagePlus } from 'lucide-svelte';
@@ -135,12 +136,8 @@
 
     const url = new URL($page.url);
     url.searchParams.set('view', mode);
-
-    void goto(url, {
-      keepFocus: true,
-      noScroll: true,
-      replaceState: true
-    });
+    const query = url.searchParams.toString();
+    replaceState(`${resolve('/wishlists')}${query.length > 0 ? `?${query}` : ''}`, $page.state);
   }
 </script>
 
@@ -241,16 +238,14 @@
 
             <!-- Items: Grid or Table -->
             {#if viewMode === 'grid'}
-              <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                <WishlistItems
-                  items={wishlistItems}
-                  {activeWishlistId}
-                  {otherTargets}
-                  onRemove={handleRemove}
-                  onMove={handleMove}
-                  onPurchase={handlePurchaseTrigger}
-                />
-              </div>
+              <WishlistItems
+                items={wishlistItems}
+                {activeWishlistId}
+                {otherTargets}
+                onRemove={handleRemove}
+                onMove={handleMove}
+                onPurchase={handlePurchaseTrigger}
+              />
             {:else}
               <WishlistTableView
                 items={wishlistItems}
