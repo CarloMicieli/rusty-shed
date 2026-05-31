@@ -48,7 +48,7 @@
     itemHeight is an estimated card height; overscan prevents blank flashes
     during rapid scrolling with large wishlists.
   -->
-  <VirtualGrid items={items} itemHeight={380} itemMinWidth={240} gap={24} overscan={3}>
+  <VirtualGrid {items} itemHeight={420} itemMinWidth={240} gap={24} overscan={3}>
     {#snippet children(item, _idx)}
       {@const wishlistItem = item as WishlistItem}
       <WishlistItemCard

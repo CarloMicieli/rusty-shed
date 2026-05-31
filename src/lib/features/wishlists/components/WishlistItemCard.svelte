@@ -81,65 +81,17 @@
     class="group relative flex flex-col overflow-hidden border-2 border-border/20 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-amber-500/10"
   >
     <CardHeader class="p-4 pb-2">
-      <div class="flex items-start justify-between gap-2">
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-1.5 overflow-hidden">
-            <span
-              class="truncate text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
-            >
-              {modelDetails?.manufacturer.display ?? m.wishlist_item_card_searching()}
-            </span>
-          </div>
-          <h3 class="truncate text-sm font-bold text-foreground">
-            {modelDetails?.description ?? item.railwayModelId}
-          </h3>
-        </div>
-
-        <div class="flex shrink-0 items-center gap-1.5">
-          {#if showPurchaseAction && onPurchase}
-            <Button
-              variant="secondary"
-              size="sm"
-              class="h-8 border-amber-500/40 bg-amber-500/12 px-2.5 text-[11px] font-bold text-amber-200 hover:bg-amber-500/20"
-              aria-label={m.wishlist_item_card_purchase()}
-              onclick={(e: MouseEvent) => {
-                e.stopPropagation();
-                onPurchase(item.id);
-              }}
-            >
-              <ShoppingCart size={12} />
-              <span class="ml-1.5">{m.wishlist_item_card_purchase()}</span>
-            </Button>
-          {/if}
-
-          {#if onMove}
-            <button
-              type="button"
-              aria-label={m.wishlist_item_card_move()}
-              title={m.wishlist_item_card_move()}
-              onclick={(e) => {
-                e.stopPropagation();
-                onMove(item.id);
-              }}
-              class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-500"
-            >
-              <MoveRight size={13} />
-            </button>
-          {/if}
-
-          <button
-            type="button"
-            aria-label={m.wishlist_table_row_remove_title()}
-            title={m.wishlist_table_row_remove_title()}
-            onclick={(e) => {
-              e.stopPropagation();
-              onRemove?.(item.id);
-            }}
-            class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 overflow-hidden">
+          <span
+            class="truncate text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
           >
-            <Trash2 size={14} />
-          </button>
+            {modelDetails?.manufacturer.display ?? m.wishlist_item_card_searching()}
+          </span>
         </div>
+        <h3 class="truncate text-sm font-bold text-foreground">
+          {modelDetails?.description ?? item.railwayModelId}
+        </h3>
       </div>
     </CardHeader>
 
@@ -206,6 +158,55 @@
           <p class="font-mono text-xs text-foreground">
             {modelDetails?.productCode ?? '—'}
           </p>
+        </div>
+      </div>
+
+      <!-- Action row -->
+      <div class="mt-3 flex items-center gap-2">
+        {#if showPurchaseAction && onPurchase}
+          <Button
+            variant="secondary"
+            size="sm"
+            class="h-8 flex-1 border-amber-500/40 bg-amber-500/12 px-3 text-[11px] font-bold text-amber-200 hover:bg-amber-500/20"
+            aria-label={m.wishlist_item_card_purchase()}
+            onclick={(e: MouseEvent) => {
+              e.stopPropagation();
+              onPurchase(item.id);
+            }}
+          >
+            <ShoppingCart size={12} />
+            <span class="ml-1.5">{m.wishlist_item_card_purchase()}</span>
+          </Button>
+        {/if}
+
+        <div class="flex items-center gap-1.5">
+          {#if onMove}
+            <button
+              type="button"
+              aria-label={m.wishlist_item_card_move()}
+              title={m.wishlist_item_card_move()}
+              onclick={(e) => {
+                e.stopPropagation();
+                onMove(item.id);
+              }}
+              class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-500"
+            >
+              <MoveRight size={13} />
+            </button>
+          {/if}
+
+          <button
+            type="button"
+            aria-label={m.wishlist_table_row_remove_title()}
+            title={m.wishlist_table_row_remove_title()}
+            onclick={(e) => {
+              e.stopPropagation();
+              onRemove?.(item.id);
+            }}
+            class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
       </div>
     </CardContent>
