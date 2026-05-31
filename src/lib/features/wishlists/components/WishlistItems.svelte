@@ -2,6 +2,7 @@
   import { Heart } from 'lucide-svelte';
   import type { WishlistItem, WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
+  import VirtualGrid from '$lib/components/VirtualGrid.svelte';
   import WishlistItemCard from './WishlistItemCard.svelte';
   import MoveModelModal from './MoveModelModal.svelte';
 
@@ -42,15 +43,23 @@
     </p>
   </div>
 {:else if items.length > 0}
-  {#each items as item (item.id)}
-    <WishlistItemCard
-      {item}
-      {wishlistId}
-      onRemove={handleRemove}
-      onMove={handleMoveTrigger}
-      onPurchase={onPurchase ? (itemId) => onPurchase(itemId) : undefined}
-    />
-  {/each}
+  <!--
+    VirtualGrid keeps the DOM lightweight by rendering only visible rows.
+    itemHeight is an estimated card height; overscan prevents blank flashes
+    during rapid scrolling with large wishlists.
+  -->
+  <VirtualGrid {items} itemHeight={420} itemMinWidth={240} gap={24} overscan={3}>
+    {#snippet children(item, _idx)}
+      {@const wishlistItem = item as WishlistItem}
+      <WishlistItemCard
+        item={wishlistItem}
+        {wishlistId}
+        onRemove={handleRemove}
+        onMove={handleMoveTrigger}
+        onPurchase={onPurchase ? (itemId) => onPurchase(itemId) : undefined}
+      />
+    {/snippet}
+  </VirtualGrid>
 {/if}
 
 <MoveModelModal

@@ -13,6 +13,7 @@
   import WishlistItemSidebar from '$lib/features/wishlists/components/WishlistItemSidebar.svelte';
   import PurchaseDialog from '$lib/features/wishlists/components/PurchaseDialog.svelte';
   import { Button } from '$lib/components';
+  import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import type {
     RailwayModelView,
     RailwayModelImageResponse,
@@ -22,6 +23,7 @@
 
   const wishlistId = $page.params.wishlistId as string;
   const itemId = $page.params.itemId as string;
+  const wishlistState = getWishlistContext();
 
   let wishlistName = $state('');
   let wishlistItem = $state<WishlistItem | null>(null);
@@ -31,6 +33,15 @@
   let error = $state<string | null>(null);
   let notFound = $state(false);
   let purchaseDialogOpen = $state(false);
+
+  const backView = $derived.by(() => {
+    const view = $page.url.searchParams.get('view');
+    return view === 'table' || view === 'grid' ? view : null;
+  });
+
+  const backQuery = $derived.by(() => {
+    return backView ? { view: backView } : undefined;
+  });
 
   const displayModel = $derived(model ? toRailwayModel(model, null, imageResponse) : null);
 
@@ -64,7 +75,15 @@
 
   async function handleModelUpdated() {
     try {
-      await loadData();
+      await Promise.all([loadData(), wishlistState.loadWishlistItems(wishlistId)]);
+    } catch (e) {
+      error = e instanceof Error ? e.message : m.wishlist_item_error();
+    }
+  }
+
+  async function handleSidebarUpdated() {
+    try {
+      await Promise.all([reloadItem(), wishlistState.loadWishlistItems(wishlistId)]);
     } catch (e) {
       error = e instanceof Error ? e.message : m.wishlist_item_error();
     }
@@ -90,7 +109,7 @@
 
   function handlePurchaseSuccess() {
     purchaseDialogOpen = false;
-    void reloadItem();
+    void Promise.all([reloadItem(), wishlistState.loadWishlistItems(wishlistId)]);
   }
 
   onMount(async () => {
@@ -123,17 +142,22 @@
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{m.wishlist_item_not_found()}</p>
     <p class="text-sm text-muted-foreground">{m.wishlist_item_not_found_message()}</p>
-    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} />
+    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} query={backQuery} />
   </div>
 {:else if error}
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{error}</p>
-    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} />
+    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} query={backQuery} />
   </div>
 {:else if wishlistItem}
   <div class="w-full max-w-full">
     <!-- Back button -->
-    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} class="mb-6" />
+    <DetailBackLink
+      path="/wishlists"
+      ariaLabel={m.wishlist_item_back()}
+      query={backQuery}
+      class="mb-6"
+    />
 
     <!-- Two-panel layout -->
     <div class="flex flex-col gap-6 lg:flex-row">
@@ -156,7 +180,7 @@
           {wishlistId}
           {wishlistName}
           defaultCurrency={settingsState.settings.currency as Currency}
-          onUpdate={reloadItem}
+          onUpdate={handleSidebarUpdated}
         />
         {#if wishlistItem.status === 'WANTED' || wishlistItem.status === 'ON_ORDER'}
           <Button variant="default" class="w-full" onclick={() => (purchaseDialogOpen = true)}>

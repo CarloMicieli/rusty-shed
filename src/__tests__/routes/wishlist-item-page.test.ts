@@ -27,8 +27,16 @@ const mockCommands = vi.hoisted(() => ({
   getRailwayModelImage: vi.fn()
 }));
 
+const mockWishlistContext = vi.hoisted(() => ({
+  loadWishlistItems: vi.fn().mockResolvedValue(undefined)
+}));
+
 vi.mock('$lib/bindings', () => ({
   commands: mockCommands
+}));
+
+vi.mock('$lib/features/wishlists/WishlistState.svelte', () => ({
+  getWishlistContext: vi.fn(() => mockWishlistContext)
 }));
 
 vi.mock('$lib/features/collection/utils/modelViewMapper', () => ({

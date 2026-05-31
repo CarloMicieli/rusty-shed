@@ -105,7 +105,7 @@ describe('WishlistItemCard', () => {
     });
   });
 
-  it('renders the purchase action in the header rail for wanted items', async () => {
+  it('renders the purchase action in the bottom action row for wanted items', async () => {
     render(WishlistItemCard, {
       props: { item: makeItem(), wishlistId: 'wl-1', onPurchase: vi.fn() }
     });
@@ -129,7 +129,7 @@ describe('WishlistItemCard', () => {
     expect(mockGoto).not.toHaveBeenCalled();
   });
 
-  it('renders move and remove actions in the header rail', async () => {
+  it('renders move and remove actions in the bottom action row', async () => {
     render(WishlistItemCard, {
       props: {
         item: makeItem(),

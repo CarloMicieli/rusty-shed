@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { replaceState } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import { page } from '$app/stores';
   import * as m from '$lib/paraglide/messages.js';
   import { Sparkles, Heart, LayoutGrid, Table, PackagePlus } from 'lucide-svelte';
   import { onMount } from 'svelte';
@@ -25,8 +28,10 @@
   // Drawer state
   let showAddModelDrawer = $state(false);
 
-  // View toggle state
-  let viewMode = $state<'grid' | 'table'>('grid');
+  const viewMode = $derived.by((): 'grid' | 'table' => {
+    const current = $page.url.searchParams.get('view');
+    return current === 'table' ? 'table' : 'grid';
+  });
 
   // Purchase dialog state
   let purchaseDialogOpen = $state(false);
@@ -125,6 +130,15 @@
     closeAddModelDrawer();
     // Refresh handled by WishlistState method
   }
+
+  function setViewMode(mode: 'grid' | 'table') {
+    if (viewMode === mode) return;
+
+    const url = new URL($page.url);
+    url.searchParams.set('view', mode);
+    const query = url.searchParams.toString();
+    replaceState(`${resolve('/wishlists')}${query.length > 0 ? `?${query}` : ''}`, $page.state);
+  }
 </script>
 
 <svelte:head>
@@ -203,7 +217,7 @@
                     ? 'border-primary bg-primary/15 text-primary'
                     : 'border-layout-border text-muted-foreground hover:border-primary/40 hover:text-primary'
                 ].join(' ')}
-                onclick={() => (viewMode = 'grid')}
+                onclick={() => setViewMode('grid')}
               >
                 <LayoutGrid size={16} />
               </button>
@@ -216,7 +230,7 @@
                     ? 'border-primary bg-primary/15 text-primary'
                     : 'border-layout-border text-muted-foreground hover:border-primary/40 hover:text-primary'
                 ].join(' ')}
-                onclick={() => (viewMode = 'table')}
+                onclick={() => setViewMode('table')}
               >
                 <Table size={16} />
               </button>
@@ -224,20 +238,19 @@
 
             <!-- Items: Grid or Table -->
             {#if viewMode === 'grid'}
-              <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                <WishlistItems
-                  items={wishlistItems}
-                  {activeWishlistId}
-                  {otherTargets}
-                  onRemove={handleRemove}
-                  onMove={handleMove}
-                  onPurchase={handlePurchaseTrigger}
-                />
-              </div>
+              <WishlistItems
+                items={wishlistItems}
+                {activeWishlistId}
+                {otherTargets}
+                onRemove={handleRemove}
+                onMove={handleMove}
+                onPurchase={handlePurchaseTrigger}
+              />
             {:else}
               <WishlistTableView
                 items={wishlistItems}
                 {activeWishlistId}
+                {viewMode}
                 {otherTargets}
                 onRemove={handleRemove}
                 onMove={handleMove}
