@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ChevronLeft } from 'lucide-svelte';
   import { resolve } from '$app/paths';
+  import { SvelteURLSearchParams } from 'svelte/reactivity';
   import { twMerge } from 'tailwind-merge';
 
   type DetailBackPath = '/collection' | '/maintenance' | '/railway-tracks' | '/wishlists';
@@ -23,7 +24,7 @@
 
   const queryString = $derived.by(() => {
     if (!query) return '';
-    const params = new URLSearchParams();
+    const params = new SvelteURLSearchParams();
     for (const [key, value] of Object.entries(query)) {
       if (value && value.trim().length > 0) {
         params.set(key, value);
