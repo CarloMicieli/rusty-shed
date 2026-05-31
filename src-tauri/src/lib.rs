@@ -33,6 +33,7 @@ use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::logging::init_tracing;
 use crate::core::interface::command_handlers as core_command_handlers;
+use crate::core::interface::debug_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
 use crate::data_management::interface::backup_handlers as database_backup_command_handlers;
 use crate::data_management::interface::export_handlers as export_command_handlers;
@@ -121,6 +122,8 @@ fn create_specta_builder() -> Builder<tauri::Wry> {
         .commands(collect_commands![
             core_command_handlers::is_db_initialized,
             core_command_handlers::get_app_version,
+            debug_command_handlers::get_db_stats,
+            debug_command_handlers::get_recent_logs,
             init_database,
             show_main_window,
             manufacturers_command_handlers::get_manufacturers,
@@ -333,8 +336,13 @@ pub fn run() {
                 .resolve("database.sqlite", BaseDirectory::AppData)
                 .map_err(|e| anyhow::anyhow!("Failed to resolve db path: {e}"))?;
 
+            let log_dir = app
+                .path()
+                .app_log_dir()
+                .map_err(|e| anyhow::anyhow!("Failed to resolve log dir: {e}"))?;
+
             // Initial management of state
-            app.manage(AppState::new(pool.clone(), models_dir, db_path));
+            app.manage(AppState::new(pool.clone(), models_dir, db_path, log_dir));
 
             start_connectivity_monitor(app.handle().clone());
 

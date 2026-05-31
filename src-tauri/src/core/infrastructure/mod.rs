@@ -1,4 +1,5 @@
 pub mod db;
+pub mod debug;
 mod domain_context;
 pub mod error;
 pub mod logging;

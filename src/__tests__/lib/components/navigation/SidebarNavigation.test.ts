@@ -34,6 +34,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   app_railway_tracks: () => 'Railway Tracks',
   app_train_formations: () => 'Train Formations',
   app_settings: () => 'Settings',
+  app_debug: () => 'Debug',
   app_version_prefix: () => 'v.'
 }));
 
@@ -70,7 +71,7 @@ describe('SidebarNavigation', () => {
     vi.clearAllMocks();
   });
 
-  it('renders all 10 desktop navigation entries including settings', () => {
+  it('renders all 11 desktop navigation entries including settings and debug', () => {
     render(SidebarNavigation);
 
     // Check for all navigation entries rendered in the sidebar.
@@ -84,6 +85,7 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Railway Tracks')).toBeTruthy();
     expect(screen.getByText('Train Formations')).toBeTruthy();
     expect(screen.getByText('Settings')).toBeTruthy();
+    expect(screen.getByText('Debug')).toBeTruthy();
   });
 
   it('applies active state to current route', () => {
@@ -126,6 +128,7 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Digital (DCC)')).toBeTruthy();
     expect(screen.getByText('Railway Tracks')).toBeTruthy();
     expect(screen.getByText('Train Formations')).toBeTruthy();
+    expect(screen.getByText('Debug')).toBeTruthy();
   });
 
   it('renders nav with correct base classes', () => {

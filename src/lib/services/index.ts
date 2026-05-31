@@ -15,6 +15,8 @@ export {
   isRetryableError
 } from './errors';
 export { fetchSettings, saveSettings } from './settings';
+export { fetchDbStats, fetchRecentLogs } from './debug';
+export type { DatabaseTableStat } from './debug';
 export type {
   SettingsDto,
   UpdateSettingsPayload,

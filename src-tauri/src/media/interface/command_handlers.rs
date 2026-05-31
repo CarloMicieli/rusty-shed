@@ -698,7 +698,12 @@ mod tests {
             .execute(&pool)
             .await
             .expect("enable foreign keys");
-        AppState::new(pool, models_dir, std::path::PathBuf::new())
+        AppState::new(
+            pool,
+            models_dir,
+            std::path::PathBuf::new(),
+            std::path::PathBuf::new(),
+        )
     }
 
     #[tokio::test]
