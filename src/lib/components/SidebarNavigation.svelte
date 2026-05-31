@@ -1,6 +1,6 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { Settings, ChevronsLeft, ChevronsRight } from 'lucide-svelte';
+  import { Settings, Bug, ChevronsLeft, ChevronsRight } from 'lucide-svelte';
   import { page } from '$app/stores';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
@@ -102,6 +102,26 @@
           <Settings size={20} class="shrink-0" />
           {#if !collapsed}
             <span class="tracking-wide">{m.app_settings()}</span>
+          {/if}
+        </a>
+      </div>
+
+      <!-- Debug link -->
+      <div class="relative overflow-hidden">
+        {#if pathname === '/debug'}
+          <div class="absolute inset-y-0 left-0 w-[2px] bg-sidebar-primary"></div>
+        {/if}
+        <a
+          href={resolve('/debug')}
+          class="flex w-full items-center rounded-lg py-2.5 text-sm font-medium transition-colors {collapsed
+            ? 'justify-center px-2'
+            : 'justify-start gap-3 px-4'} {navLinkClass(pathname === '/debug')}"
+          aria-current={pathname === '/debug' ? 'page' : undefined}
+          title={collapsed ? m.app_debug() : undefined}
+        >
+          <Bug size={20} class="shrink-0" />
+          {#if !collapsed}
+            <span class="tracking-wide">{m.app_debug()}</span>
           {/if}
         </a>
       </div>

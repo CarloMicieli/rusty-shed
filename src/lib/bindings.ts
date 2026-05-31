@@ -6,6 +6,10 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 export const commands = {
 	isDbInitialized: () => __TAURI_INVOKE<boolean>("is_db_initialized"),
 	getAppVersion: () => __TAURI_INVOKE<string>("get_app_version"),
+	/**  Return row counts and best-effort size estimates for application tables. */
+	getDbStats: () => typedError<DatabaseTableStat[], CommandError>(__TAURI_INVOKE("get_db_stats")),
+	/**  Return the latest persisted application log lines. */
+	getRecentLogs: (limit: number | null) => typedError<string[], CommandError>(__TAURI_INVOKE("get_recent_logs", { limit })),
 	initDatabase: () => typedError<null, CommandError>(__TAURI_INVOKE("init_database")),
 	showMainWindow: () => typedError<null, CommandError>(__TAURI_INVOKE("show_main_window")),
 	/**  Tauri command to retrieve all manufacturers. */
@@ -1930,6 +1934,16 @@ export type DashboardTotals = {
 	maintenanceDue: number,
 	/**  Total monetary value of the entire collection. */
 	totalValue: MonetaryAmount | null,
+};
+
+/**  Read model for a single SQLite table's high-level statistics. */
+export type DatabaseTableStat = {
+	/**  SQLite table name. */
+	tableName: string,
+	/**  Current row count. */
+	rowCount: number,
+	/**  Best-effort approximate size in bytes, if available. */
+	estimatedBytes: number | null,
 };
 
 /**

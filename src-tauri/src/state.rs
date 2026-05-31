@@ -44,6 +44,8 @@ pub struct AppState {
     models_dir: PathBuf,
     /// Resolved path to the SQLite database file.
     db_path: PathBuf,
+    /// Resolved path to the application log directory.
+    log_dir: PathBuf,
     /// Email of the currently connected Google account (None if not connected).
     connected_email: RwLock<Option<String>>,
     /// Current cloud backup sync operation state.
@@ -56,7 +58,12 @@ pub struct AppState {
 
 impl AppState {
     /// Create a new `AppState` wrapping an existing `SqlitePool`.
-    pub fn new(db_pool: SqlitePool, models_dir: PathBuf, db_path: PathBuf) -> Self {
+    pub fn new(
+        db_pool: SqlitePool,
+        models_dir: PathBuf,
+        db_path: PathBuf,
+        log_dir: PathBuf,
+    ) -> Self {
         let uow_factory = Arc::new(SqliteUowFactory::new(db_pool.clone()));
         Self {
             initialized: AtomicBool::new(false),
@@ -64,6 +71,7 @@ impl AppState {
             uow_factory,
             models_dir,
             db_path,
+            log_dir,
             connected_email: RwLock::new(None),
             sync_state: RwLock::new(SyncState {
                 operation_id: None,
@@ -85,6 +93,7 @@ impl AppState {
             uow_factory,
             models_dir: PathBuf::new(),
             db_path: PathBuf::new(),
+            log_dir: PathBuf::new(),
             connected_email: RwLock::new(None),
             sync_state: RwLock::new(SyncState {
                 operation_id: None,
@@ -120,6 +129,11 @@ impl AppState {
     /// Return a reference to the resolved database file path.
     pub fn db_path(&self) -> &Path {
         &self.db_path
+    }
+
+    /// Return a reference to the resolved application log directory.
+    pub fn log_dir(&self) -> &Path {
+        &self.log_dir
     }
 
     /// Create a new `AppUnitOfWork` via the injected factory.
@@ -199,6 +213,6 @@ impl AppState {
     /// the test harness and no real filesystem paths are needed.
     #[cfg(test)]
     pub fn for_test(pool: SqlitePool) -> Self {
-        Self::new(pool, PathBuf::new(), PathBuf::new())
+        Self::new(pool, PathBuf::new(), PathBuf::new(), PathBuf::new())
     }
 }

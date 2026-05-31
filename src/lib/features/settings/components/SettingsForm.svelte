@@ -1,7 +1,7 @@
 <script lang="ts">
   import { settingsState } from '../SettingsState.svelte';
   import { setLocale } from '$lib/paraglide/runtime.js';
-  import * as m from '$lib/paraglide/messages';
+  import * as m from '$lib/paraglide/messages.js';
   import { log } from '$lib/tauri-logger';
   import LanguageSelector from './LanguageSelector.svelte';
   import CurrencySelector from './CurrencySelector.svelte';
