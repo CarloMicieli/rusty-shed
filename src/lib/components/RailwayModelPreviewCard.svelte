@@ -50,8 +50,6 @@
     purchaseDate: string | null;
     /** Purchase price */
     price?: import('$lib/bindings').MonetaryAmount | null;
-    /** Sold date (ISO 8601 format: "YYYY-MM-DD") */
-    soldDate?: string | null;
     /** Whether the collection item is sold */
     isSold?: boolean;
     /** URL to model photo/image */
@@ -268,11 +266,11 @@
   <CardHeader class="p-3 pb-2">
     <div class="flex items-start justify-between gap-2">
       <div class="min-w-0 flex-1 space-y-1">
-        <div class="flex flex-wrap items-center gap-1">
-          <span class="text-xs font-semibold text-zinc-200">{displayManufacturer}</span>
+        <div class="flex min-w-0 items-center gap-1 whitespace-nowrap">
+          <span class="truncate text-xs font-semibold text-zinc-200">{displayManufacturer}</span>
           {#if model.productCode}
-            <span class="text-zinc-600" aria-hidden="true">·</span>
-            <span class="font-mono text-xs text-zinc-500">{model.productCode}</span>
+            <span class="shrink-0 text-zinc-600" aria-hidden="true">·</span>
+            <span class="shrink-0 font-mono text-xs text-zinc-500">{model.productCode}</span>
           {/if}
         </div>
         {#if displayDescription}
@@ -383,7 +381,7 @@
     <Separator class="my-2.5 bg-border" />
 
     <div class="space-y-3">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr_1fr]">
         <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
           <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
             {m.depot_category()}

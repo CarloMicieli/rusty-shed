@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractSoldDate, isSoldItem, extractPurchaseDate } from '../cardDataMapper';
+import { isSoldItem, extractPurchaseDate } from '../cardDataMapper';
 import type { PurchaseInfo } from '$lib/bindings';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -38,30 +38,6 @@ const preOrderedInfo: PurchaseInfo = {
     expectedDate: null
   }
 };
-
-// ── extractSoldDate ──────────────────────────────────────────────────────────
-
-describe('extractSoldDate', () => {
-  it('returns saleDate from sold purchaseInfo', () => {
-    expect(extractSoldDate(soldInfo, null)).toBe('2025-03-10');
-  });
-
-  it('returns removedDate when purchaseInfo is null', () => {
-    expect(extractSoldDate(null, '2025-04-01')).toBe('2025-04-01');
-  });
-
-  it('returns removedDate when purchaseInfo is purchased (not sold)', () => {
-    expect(extractSoldDate(purchasedInfo, '2025-05-01')).toBe('2025-05-01');
-  });
-
-  it('returns null when both purchaseInfo and removedDate are null', () => {
-    expect(extractSoldDate(null, null)).toBeNull();
-  });
-
-  it('prefers saleDate over removedDate for sold purchaseInfo', () => {
-    expect(extractSoldDate(soldInfo, '2025-99-99')).toBe('2025-03-10');
-  });
-});
 
 // ── isSoldItem ───────────────────────────────────────────────────────────────
 

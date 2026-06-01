@@ -31,7 +31,6 @@ export function collectionItemToCardData(item: CollectionItemView): RailwayModel
     era: railwayModel.epoch,
     purchaseDate: extractPurchaseDate(purchaseInfo),
     price: extractPurchasePrice(purchaseInfo),
-    soldDate: extractSoldDate(purchaseInfo, item.removedDate),
     isSold: isSoldItem(purchaseInfo, item.removedDate),
     photoUrl: null,
     unitCount: rollingStocks.length > 1 ? rollingStocks.length : null,
@@ -111,20 +110,6 @@ export function extractPurchaseDate(purchaseInfo: PurchaseInfo | null): string |
     default:
       return null;
   }
-}
-
-/**
- * Extract sold date from purchase info with removedDate fallback.
- */
-export function extractSoldDate(
-  purchaseInfo: PurchaseInfo | null,
-  removedDate: string | null
-): string | null {
-  if (purchaseInfo?.kind === 'sold') {
-    return purchaseInfo.data.saleDate;
-  }
-
-  return removedDate;
 }
 
 export function extractPurchasePrice(purchaseInfo: PurchaseInfo | null): MonetaryAmount | null {
