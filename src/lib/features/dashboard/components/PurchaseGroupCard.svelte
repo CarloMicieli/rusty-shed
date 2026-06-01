@@ -54,7 +54,7 @@
 
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
     {#each group.modelCards as card (card.id)}
-      <ModelCard {card} onclick={() => onModelClick?.(card.id)} />
+      <ModelCard {card} purchaseDate={formattedDate} onclick={() => onModelClick?.(card.id)} />
     {/each}
   </div>
 

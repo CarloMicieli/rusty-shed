@@ -2,7 +2,8 @@ import type {
   CollectionItemView,
   OwnedRollingStockView,
   Category,
-  PurchaseInfo
+  PurchaseInfo,
+  MonetaryAmount
 } from '$lib/bindings';
 
 import type {
@@ -21,13 +22,15 @@ export function collectionItemToCardData(item: CollectionItemView): RailwayModel
     id: railwayModel.railwayModelId,
     manufacturer: railwayModel.manufacturer,
     productCode: railwayModel.productCode,
-    series: railwayModel.description,
+    description: railwayModel.description,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     category: mapCategory(railwayModel.category),
     scale: railwayModel.scale,
     powerMethod: railwayModel.powerMethod,
+    condition: item.purchaseCondition,
     era: railwayModel.epoch,
     purchaseDate: extractPurchaseDate(purchaseInfo),
+    price: extractPurchasePrice(purchaseInfo),
     soldDate: extractSoldDate(purchaseInfo, item.removedDate),
     isSold: isSoldItem(purchaseInfo, item.removedDate),
     photoUrl: null,
@@ -122,4 +125,19 @@ export function extractSoldDate(
   }
 
   return removedDate;
+}
+
+export function extractPurchasePrice(purchaseInfo: PurchaseInfo | null): MonetaryAmount | null {
+  if (!purchaseInfo) return null;
+
+  switch (purchaseInfo.kind) {
+    case 'purchased':
+      return purchaseInfo.data.price;
+    case 'sold':
+      return purchaseInfo.data.purchasePrice ?? purchaseInfo.data.salePrice;
+    case 'preOrdered':
+      return purchaseInfo.data.totalPrice;
+    default:
+      return null;
+  }
 }

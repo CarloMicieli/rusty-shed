@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::{Category, PowerMethod};
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::PurchaseCondition;
 use crate::core::domain::MonetaryAmount;
@@ -21,6 +22,12 @@ pub struct ModelCard {
 
     /// Purchase condition status
     pub condition: PurchaseCondition,
+
+    /// Catalog category of the railway model.
+    pub category: Category,
+
+    /// Primary power method of the railway model.
+    pub power_method: PowerMethod,
 
     /// Model description or auto-generated title
     /// Frontend will truncate to ~100 characters

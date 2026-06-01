@@ -72,21 +72,28 @@ describe('collectionItemToCardData', () => {
     expect(result.id).toBe('trn:railway-model:marklin:3000');
     expect(result.manufacturer).toBe('Märklin');
     expect(result.productCode).toBe('3000');
-    expect(result.series).toBe('BR 89.0');
+    expect(result.description).toBe('BR 89.0');
     expect(result.scale).toBe('H0');
     expect(result.era).toBe('III');
   });
 
-  it('maps description to series', () => {
+  it('maps description to description', () => {
     const item = makeItem();
     item.railwayModel.description = 'Class 140';
-    expect(collectionItemToCardData(item).series).toBe('Class 140');
+    expect(collectionItemToCardData(item).description).toBe('Class 140');
   });
 
   it('sets powerMethod and photoUrl when available', () => {
     const result = collectionItemToCardData(makeItem());
     expect(result.powerMethod).toBe('AC');
     expect(result.photoUrl).toBeNull();
+  });
+
+  it('maps purchase condition and price fields', () => {
+    const result = collectionItemToCardData(makeItem());
+
+    expect(result.condition).toBeNull();
+    expect(result.price).toBeNull();
   });
 
   it('sets unitCount when more than one rolling stock', () => {

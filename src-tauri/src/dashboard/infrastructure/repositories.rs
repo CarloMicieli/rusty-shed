@@ -145,6 +145,8 @@ impl<'conn> SqliteDashboardRepository<'conn> {
                     COALESCE(t.description, '') AS description,
                     NULL AS image_path,
                     ci.purchase_condition,
+                    rm.category,
+                    rm.power_method,
                     rm.scale,
                     rm.epoch AS era,
                     pi.purchased_price_amount AS price_amount,

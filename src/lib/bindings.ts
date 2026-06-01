@@ -2925,6 +2925,10 @@ export type ModelCard = {
 	productCode: string,
 	/**  Purchase condition status */
 	condition: PurchaseCondition,
+	/**  Catalog category of the railway model. */
+	category: Category,
+	/**  Primary power method of the railway model. */
+	powerMethod: PowerMethod,
 	/**
 	 *  Model description or auto-generated title
 	 *  Frontend will truncate to ~100 characters

@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::{Category, PowerMethod};
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::PurchaseCondition;
 use crate::core::domain::domain_error::DomainError;
@@ -75,6 +76,8 @@ pub struct ModelCardRow {
     pub description: String,
     pub image_path: Option<String>,
     pub purchase_condition: Option<String>,
+    pub category: Category,
+    pub power_method: PowerMethod,
     pub scale: Option<String>,
     pub era: Option<String>,
     pub price_amount: Option<i64>,
@@ -102,6 +105,8 @@ impl From<ModelCardRow> for ModelCard {
             manufacturer: row.manufacturer_name,
             product_code: row.product_code,
             condition,
+            category: row.category,
+            power_method: row.power_method,
             description: row.description,
             scale: row.scale,
             era: row.era,
