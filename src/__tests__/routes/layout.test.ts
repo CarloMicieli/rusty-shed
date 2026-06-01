@@ -117,7 +117,14 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', () => ({
 }));
 
 vi.mock('$lib/features/dashboard/DashboardState.svelte', () => ({
-  createDashboardState: vi.fn(() => ({})),
+  createDashboardState: vi.fn(() => ({
+    load: vi.fn().mockResolvedValue(undefined),
+    loadBudget: vi.fn().mockResolvedValue(undefined),
+    retry: vi.fn().mockResolvedValue(undefined),
+    data: null,
+    isLoading: false,
+    error: null
+  })),
   setDashboardContext: vi.fn(),
   getDashboardContext: vi.fn(() => ({}))
 }));

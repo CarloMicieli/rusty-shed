@@ -241,6 +241,7 @@
 
         const initialFinanceYear = getInitialFinanceYear();
         await Promise.all([
+          dashboardState.load(),
           collectionStore.fetch(),
           wishlistState.fetchWishlists(),
           financeState.ensureLoaded()
