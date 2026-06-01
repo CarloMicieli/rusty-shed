@@ -86,6 +86,7 @@
     {:else}
       <div
         class="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/70"
+        style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
       >
         <TrainFront class="h-12 w-12 text-muted-foreground" />
       </div>
