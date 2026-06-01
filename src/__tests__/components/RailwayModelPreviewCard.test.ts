@@ -114,7 +114,7 @@ describe('RailwayModelPreviewCard', () => {
       expect(screen.getByText('DCC')).toBeTruthy();
       expect(screen.getByText(/VI/)).toBeTruthy();
       expect(screen.getByText('PURCHASED')).toBeTruthy();
-      expect(container.querySelectorAll('[class*="sm:grid-cols-3"]').length).toBe(1);
+      expect(container.querySelectorAll('[class*="sm:grid-cols-[2fr_1fr_1fr]"]').length).toBe(1);
       expect(container.querySelectorAll('[class*="sm:grid-cols-2"]').length).toBe(1);
       unmount();
 
