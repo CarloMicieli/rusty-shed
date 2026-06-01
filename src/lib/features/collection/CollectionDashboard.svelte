@@ -250,6 +250,19 @@
     <div class="flex-1">
       <div class="px-4 py-6 sm:px-6">
         {#if !isCollectionEmpty && !isLoading}
+          <div
+            class="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
+          >
+            {@render StatChip(m.category_value_locomotives(), summaryData.locomotivesCount)}
+            {@render StatChip(m.category_value_passenger_cars(), summaryData.passengerCarsCount)}
+            {@render StatChip(m.category_value_freight_cars(), summaryData.freightCarsCount)}
+            {@render StatChip(m.category_value_train_sets(), summaryData.trainSetsCount)}
+            {@render StatChip(m.category_value_railcars(), summaryData.railcarsCount)}
+            {@render StatChip(
+              m.category_value_electric_multiple_units(),
+              summaryData.electricMultipleUnitsCount
+            )}
+          </div>
           <div class="mb-4 flex flex-wrap gap-2">
             <button
               type="button"
@@ -275,19 +288,6 @@
               {collectionStats.soldCount}
               {m.collection_stats_sold()}
             </button>
-          </div>
-          <div
-            class="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
-          >
-            {@render StatChip(m.category_value_locomotives(), summaryData.locomotivesCount)}
-            {@render StatChip(m.category_value_passenger_cars(), summaryData.passengerCarsCount)}
-            {@render StatChip(m.category_value_freight_cars(), summaryData.freightCarsCount)}
-            {@render StatChip(m.category_value_train_sets(), summaryData.trainSetsCount)}
-            {@render StatChip(m.category_value_railcars(), summaryData.railcarsCount)}
-            {@render StatChip(
-              m.category_value_electric_multiple_units(),
-              summaryData.electricMultipleUnitsCount
-            )}
           </div>
         {/if}
         {#if isLoading && rawItems.length === 0}
