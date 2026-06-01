@@ -2,7 +2,8 @@ import type {
   CollectionItemView,
   OwnedRollingStockView,
   Category,
-  PurchaseInfo
+  PurchaseInfo,
+  MonetaryAmount
 } from '$lib/bindings';
 
 import type {
@@ -21,14 +22,15 @@ export function collectionItemToCardData(item: CollectionItemView): RailwayModel
     id: railwayModel.railwayModelId,
     manufacturer: railwayModel.manufacturer,
     productCode: railwayModel.productCode,
-    series: railwayModel.description,
+    description: railwayModel.description,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     category: mapCategory(railwayModel.category),
     scale: railwayModel.scale,
     powerMethod: railwayModel.powerMethod,
+    condition: item.purchaseCondition,
     era: railwayModel.epoch,
     purchaseDate: extractPurchaseDate(purchaseInfo),
-    soldDate: extractSoldDate(purchaseInfo, item.removedDate),
+    price: extractPurchasePrice(purchaseInfo),
     isSold: isSoldItem(purchaseInfo, item.removedDate),
     photoUrl: null,
     unitCount: rollingStocks.length > 1 ? rollingStocks.length : null,
@@ -110,16 +112,17 @@ export function extractPurchaseDate(purchaseInfo: PurchaseInfo | null): string |
   }
 }
 
-/**
- * Extract sold date from purchase info with removedDate fallback.
- */
-export function extractSoldDate(
-  purchaseInfo: PurchaseInfo | null,
-  removedDate: string | null
-): string | null {
-  if (purchaseInfo?.kind === 'sold') {
-    return purchaseInfo.data.saleDate;
-  }
+export function extractPurchasePrice(purchaseInfo: PurchaseInfo | null): MonetaryAmount | null {
+  if (!purchaseInfo) return null;
 
-  return removedDate;
+  switch (purchaseInfo.kind) {
+    case 'purchased':
+      return purchaseInfo.data.price;
+    case 'sold':
+      return purchaseInfo.data.purchasePrice ?? purchaseInfo.data.salePrice;
+    case 'preOrdered':
+      return purchaseInfo.data.totalPrice;
+    default:
+      return null;
+  }
 }

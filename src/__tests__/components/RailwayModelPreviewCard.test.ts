@@ -18,6 +18,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   enum_category_railcars: () => 'Railcars',
   enum_category_train_sets: () => 'Train Sets',
   components_purchaseDate: () => 'PURCHASED',
+  dashboard_card_price: () => 'PRICE',
   components_deleteButton: () => 'Delete model',
   common_delete: () => 'Delete',
   common_cancel: () => 'Cancel',
@@ -106,10 +107,15 @@ describe('RailwayModelPreviewCard', () => {
 
   describe('User Story 2: Metadata Badges and Status Indicators', () => {
     it('displays scale, power method, era badges; omits them when data is missing', () => {
-      const { unmount } = render(RailwayModelPreviewCard, { props: { model: mockModel } });
+      const { container, unmount } = render(RailwayModelPreviewCard, {
+        props: { model: mockModel }
+      });
       expect(screen.getByText('H0')).toBeTruthy();
       expect(screen.getByText('DCC')).toBeTruthy();
       expect(screen.getByText(/VI/)).toBeTruthy();
+      expect(screen.getByText('PURCHASED')).toBeTruthy();
+      expect(container.querySelectorAll('[class*="sm:grid-cols-[2fr_1fr_1fr]"]').length).toBe(1);
+      expect(container.querySelectorAll('[class*="sm:grid-cols-2"]').length).toBe(1);
       unmount();
 
       render(RailwayModelPreviewCard, {
@@ -120,9 +126,7 @@ describe('RailwayModelPreviewCard', () => {
       expect(screen.queryByText('H0')).toBeFalsy();
       expect(screen.queryByText('DCC')).toBeFalsy();
       expect(screen.queryByText(/VI/)).toBeFalsy();
-      // Purchase date section is always rendered; it becomes invisible when date is null
-      const purchasedLabel = screen.getByText(/PURCHASED/);
-      expect(purchasedLabel.closest('div.invisible')).toBeTruthy();
+      expect(screen.queryByText(/PURCHASED/)).toBeFalsy();
     });
 
     it('displays unit count badge when > 1 and hides it when unitCount is 1', () => {
@@ -130,7 +134,7 @@ describe('RailwayModelPreviewCard', () => {
         props: { model: { ...mockModel, unitCount: 3 } }
       });
       expect(screen.getByText(/×3/)).toBeTruthy();
-      expect(container.querySelector('.absolute.bottom-2.right-2')).toBeTruthy();
+      expect(container.querySelector('.absolute.bottom-2.left-2')).toBeTruthy();
       unmount();
 
       render(RailwayModelPreviewCard, { props: { model: { ...mockModel, unitCount: 1 } } });

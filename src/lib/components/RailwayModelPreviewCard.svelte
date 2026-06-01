@@ -32,20 +32,24 @@
     manufacturer: string | null;
     /** Manufacturer's product code (e.g., "1236", "H0-2047") */
     productCode: string | null;
-    /** Series designation (e.g., "Class 140", "BR 01") */
-    series: string | null;
+    /** Short description or display title for the model */
+    description?: string | null;
+    /** Optional series designation (e.g., "Class 140", "BR 01") */
+    series?: string | null;
     /** Model category for classification */
-    category: ModelCategory;
+    category?: ModelCategory | null;
     /** Model scale (e.g., "H0", "N", "TT", "Z") */
     scale: string | null;
     /** Power method (e.g., "DC", "AC", "DCC") */
     powerMethod: string | null;
+    /** Purchase condition (NEW / PRE_OWNED) */
+    condition?: import('$lib/bindings').PurchaseCondition | null;
     /** Historical era classification (e.g., "III", "IV", "V") */
     era: string | null;
     /** Purchase date (ISO 8601 format: "YYYY-MM-DD") */
     purchaseDate: string | null;
-    /** Sold date (ISO 8601 format: "YYYY-MM-DD") */
-    soldDate?: string | null;
+    /** Purchase price */
+    price?: import('$lib/bindings').MonetaryAmount | null;
     /** Whether the collection item is sold */
     isSold?: boolean;
     /** URL to model photo/image */
@@ -83,6 +87,7 @@
   import { Badge } from '$lib/components/ui/badge';
   import { Separator } from '$lib/components/ui/separator';
   import { Volume2, Zap, TrainFront, Box, Users, Layers } from 'lucide-svelte';
+  import { format, isValid } from 'date-fns';
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { readFile } from '@tauri-apps/plugin-fs';
@@ -92,9 +97,11 @@
 
   const displayManufacturer = $derived(model.manufacturer ?? m.components_unknownManufacturer());
 
-  const displaySeries = $derived(model.series ?? 'Railway Model');
+  const displayDescription = $derived(model.description ?? model.series ?? '');
 
   const displayCategory = $derived.by((): string => {
+    if (!model.category || model.category === 'Unknown') return '—';
+
     switch (model.category) {
       case 'SteamLocomotive':
       case 'ElectricLocomotive':
@@ -117,24 +124,10 @@
     if (!model.purchaseDate) return null;
 
     const parsedDate = new Date(model.purchaseDate);
-    return Number.isNaN(parsedDate.getTime())
-      ? model.purchaseDate
-      : parsedDate.toLocaleDateString(regionalManager.locale);
+    return isValid(parsedDate) ? format(parsedDate, 'MMM d, yyyy') : model.purchaseDate;
   });
 
   const isSold = $derived(model.isSold ?? false);
-
-  const displaySoldDate = $derived.by((): string | null => {
-    if (!model.soldDate) return null;
-
-    const parsedDate = new Date(model.soldDate);
-    return Number.isNaN(parsedDate.getTime())
-      ? model.soldDate
-      : parsedDate.toLocaleDateString(regionalManager.locale);
-  });
-
-  const footerLabel = $derived(isSold ? m.components_soldDate() : m.components_purchaseDate());
-  const footerValue = $derived(isSold ? displaySoldDate : displayPurchaseDate);
 
   // Compact display label for power method badge
   const powerMethodLabel = $derived.by((): string => {
@@ -149,6 +142,23 @@
   });
 
   // Category-to-icon mapping for technical drawing placeholder
+
+  const displayCondition = $derived.by((): string => {
+    switch (model.condition) {
+      case 'NEW':
+        return m.dashboard_condition_new();
+      case 'PRE_OWNED':
+        return m.dashboard_condition_preowned();
+      default:
+        return '';
+    }
+  });
+
+  const displayPrice = $derived.by((): string | null => {
+    if (!model.price) return null;
+
+    return regionalManager.formatCurrencyWith(model.price.amount, model.price.currency);
+  });
   const PlaceholderIcon = $derived.by(() => {
     switch (model.category) {
       case 'SteamLocomotive':
@@ -255,24 +265,28 @@
 >
   <CardHeader class="p-3 pb-2">
     <div class="flex items-start justify-between gap-2">
-      <!-- Manufacturer · product code -->
-      <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-center gap-1">
-          <span class="text-xs font-semibold text-zinc-200">{displayManufacturer}</span>
+      <div class="min-w-0 flex-1 space-y-1">
+        <div class="flex min-w-0 items-center gap-1 whitespace-nowrap">
+          <span class="truncate text-xs font-semibold text-zinc-200">{displayManufacturer}</span>
           {#if model.productCode}
-            <span class="text-zinc-600" aria-hidden="true">·</span>
-            <span class="font-mono text-xs text-zinc-500">{model.productCode}</span>
+            <span class="shrink-0 text-zinc-600" aria-hidden="true">·</span>
+            <span class="shrink-0 font-mono text-xs text-zinc-500">{model.productCode}</span>
           {/if}
         </div>
-        <!-- Locomotive class / series name -->
-        <h3 class="mt-0.5 line-clamp-2 text-sm leading-tight font-medium text-zinc-100">
-          {displaySeries}
-        </h3>
+        {#if displayDescription}
+          <h3 class="line-clamp-2 text-sm leading-tight font-medium text-zinc-100">
+            {displayDescription}
+          </h3>
+        {/if}
       </div>
 
       <!-- Delete button + confirmation dialog: hidden by default, revealed on card hover -->
       {#if onDelete}
-        <PreviewCardActions modelId={model.id} modelSeries={model.series} {onDelete} />
+        <PreviewCardActions
+          modelId={model.id}
+          modelSeries={displayDescription || model.series || null}
+          {onDelete}
+        />
       {/if}
     </div>
   </CardHeader>
@@ -344,46 +358,71 @@
         </div>
       {/if}
 
-      <!-- Unit count badge (bottom-right): shown only when > 1 -->
       {#if model.unitCount && model.unitCount > 1}
-        <div class="absolute right-2 bottom-2 z-20">
+        <div class="absolute bottom-2 left-2 z-20">
           <Badge class="border-transparent bg-zinc-800/90 px-1.5 py-0.5 text-xs text-zinc-300">
             ×{model.unitCount}
           </Badge>
         </div>
       {/if}
+
+      {#if displayCondition}
+        <div class="absolute right-2 bottom-2 z-20">
+          <Badge
+            variant={model.condition === 'NEW' ? 'default' : 'secondary'}
+            class="px-1.5 py-0.5 text-[10px] font-bold"
+          >
+            {displayCondition}
+          </Badge>
+        </div>
+      {/if}
     </div>
 
-    <!-- Separator between image and technical specs -->
     <Separator class="my-2.5 bg-border" />
 
-    <!-- Technical specs grid: Road Number · Scale · Era -->
-    <div class="grid grid-cols-3 divide-x divide-border">
-      <div class="flex flex-col items-center gap-0.5 pr-2">
-        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
-          {m.depot_category()}
-        </span>
-        <span class="w-full truncate text-center text-xs text-foreground">{displayCategory}</span>
+    <div class="space-y-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr_1fr]">
+        <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
+          <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+            {m.depot_category()}
+          </span>
+          <span class="w-full truncate font-mono text-xs text-foreground">{displayCategory}</span>
+        </div>
+        <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
+          <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+            {m.depot_scale()}
+          </span>
+          <span class="w-full truncate font-mono text-xs text-foreground">{model.scale ?? '—'}</span
+          >
+        </div>
+        <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
+          <span class="text-[10px] tracking-wider text-muted-foreground uppercase"
+            >{m.depot_era()}</span
+          >
+          <span class="w-full truncate font-mono text-xs text-foreground">{model.era ?? '—'}</span>
+        </div>
       </div>
-      <div class="flex flex-col items-center gap-0.5 px-2">
-        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
-          {m.depot_scale()}
-        </span>
-        <span class="font-mono text-xs text-foreground">{model.scale ?? '—'}</span>
-      </div>
-      <div class="flex flex-col items-center gap-0.5 pl-2">
-        <span class="text-[10px] tracking-wider text-muted-foreground uppercase"
-          >{m.depot_era()}</span
-        >
-        <span class="font-mono text-xs text-foreground">{model.era ?? '—'}</span>
-      </div>
-    </div>
 
-    <div class="mt-2.5 text-center" class:invisible={!footerValue}>
-      <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
-        {footerLabel}
-      </span>
-      <div class="mt-0.5 font-mono text-xs text-zinc-300">{footerValue ?? ''}</div>
+      {#if displayPurchaseDate || displayPrice}
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
+            <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+              {m.components_purchaseDate()}
+            </span>
+            <span class="w-full truncate font-mono text-xs text-foreground">
+              {displayPurchaseDate ?? '—'}
+            </span>
+          </div>
+          <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
+            <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+              {m.dashboard_card_price()}
+            </span>
+            <span class="w-full truncate font-mono text-xs text-foreground"
+              >{displayPrice ?? '—'}</span
+            >
+          </div>
+        </div>
+      {/if}
     </div>
   </CardContent>
 </Card>

@@ -87,6 +87,12 @@
 
   onMount(() => {
     if (dashboardInitInFlight) return;
+
+    if (dashboard.data !== null || dashboard.isLoading) return;
+
+    dashboardInitInFlight = dashboard.load().finally(() => {
+      dashboardInitInFlight = null;
+    });
   });
 
   // Helpers
