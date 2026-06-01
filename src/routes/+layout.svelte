@@ -32,6 +32,7 @@
   import { onMount, setContext } from 'svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
+  import { collectionState } from '$lib/features/collection/CollectionState.svelte';
   import { collectionStore } from '$lib/state/collection.svelte';
   import { listen } from '@tauri-apps/api/event';
   import AcquisitionDrawer from '$lib/features/acquisition/AcquisitionDrawer.svelte';
@@ -398,6 +399,7 @@
         onSuccess={() => {
           showAcquisitionDrawer = false;
           void collectionStore.refresh();
+          void collectionState.forceRefresh();
           void dashboardState.load();
           void dashboardState.loadBudget();
         }}
