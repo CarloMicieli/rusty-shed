@@ -394,7 +394,8 @@
           <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
             {m.depot_scale()}
           </span>
-          <span class="w-full truncate font-mono text-xs text-foreground">{model.scale ?? '—'}</span>
+          <span class="w-full truncate font-mono text-xs text-foreground">{model.scale ?? '—'}</span
+          >
         </div>
         <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
           <span class="text-[10px] tracking-wider text-muted-foreground uppercase"
@@ -418,7 +419,9 @@
             <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
               {m.dashboard_card_price()}
             </span>
-            <span class="w-full truncate font-mono text-xs text-foreground">{displayPrice ?? '—'}</span>
+            <span class="w-full truncate font-mono text-xs text-foreground"
+              >{displayPrice ?? '—'}</span
+            >
           </div>
         </div>
       {/if}

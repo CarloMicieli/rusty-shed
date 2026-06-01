@@ -52,7 +52,7 @@
   role="button"
   tabindex={0}
   class="cursor-pointer"
-  onclick={onclick}
+  {onclick}
   onkeydown={(e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
