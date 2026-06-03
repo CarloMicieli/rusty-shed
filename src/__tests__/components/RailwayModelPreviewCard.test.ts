@@ -69,7 +69,7 @@ describe('RailwayModelPreviewCard', () => {
         props: { model: mockModel, class: 'custom-class' }
       });
 
-      const card = container.querySelector('.card');
+      const card = container.querySelector('.preview-card');
       expect(card).toBeTruthy();
       expect(card?.classList.contains('custom-class')).toBe(true);
       expect(card?.classList.contains('transition-all')).toBe(true);
@@ -114,6 +114,10 @@ describe('RailwayModelPreviewCard', () => {
       expect(screen.getByText('DCC')).toBeTruthy();
       expect(screen.getByText(/VI/)).toBeTruthy();
       expect(screen.getByText('PURCHASED')).toBeTruthy();
+      expect(container.querySelector('.flex.flex-row.items-start.gap-4.sm\\:block')).toBeTruthy();
+      expect(container.querySelector('.aspect-video.h-32.w-32.shrink-0.sm\\:w-full')).toBeTruthy();
+      expect(container.querySelectorAll('[class*="grid-cols-2"]').length).toBeGreaterThanOrEqual(2);
+      expect(container.querySelectorAll('[class*="items-start"][class*="text-left"]').length).toBeGreaterThan(0);
       expect(container.querySelectorAll('[class*="sm:grid-cols-[2fr_1fr_1fr]"]').length).toBe(1);
       expect(container.querySelectorAll('[class*="sm:grid-cols-2"]').length).toBe(1);
       unmount();
@@ -284,7 +288,7 @@ describe('RailwayModelPreviewCard', () => {
       });
 
       expect(container.querySelector('.grid')).toBeTruthy();
-      const card = container.querySelector('.card');
+      const card = container.querySelector('.preview-card');
       expect(card).toBeTruthy();
       expect(card?.classList.contains('transition-all')).toBe(true);
     });

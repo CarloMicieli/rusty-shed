@@ -26,6 +26,8 @@
   import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
 
+  const MOBILE_BREAKPOINT = 1024;
+
   function useCollectionUI() {
     let showDrawer = $state(false);
     let showFilterSidebar = $state(true);
@@ -80,6 +82,7 @@
   }
 
   const ui = useCollectionUI();
+  let isMobileGrid = $state(false);
 
   const defaultSummary = $state<CollectionSummaryType>({
     locomotivesCount: 0,
@@ -120,8 +123,19 @@
   const hasActiveFilters = $derived(collectionService.hasActiveFilters);
 
   onMount(() => {
+    const syncMobileGrid = () => {
+      isMobileGrid = window.innerWidth < MOBILE_BREAKPOINT;
+    };
+
+    syncMobileGrid();
     void collectionService.fetchCollection();
     void loadCollectionStats();
+
+    window.addEventListener('resize', syncMobileGrid, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', syncMobileGrid);
+    };
   });
 
   async function loadCollectionStats() {
@@ -426,7 +440,7 @@
             <VirtualGrid
               items={filteredItems}
               itemHeight={340}
-              itemMinWidth={240}
+              itemMinWidth={isMobileGrid ? 10000 : 240}
               gap={16}
               overscan={3}
             >
@@ -434,7 +448,7 @@
                 <div
                   role="button"
                   tabindex={0}
-                  class="cursor-pointer"
+                  class="w-full cursor-pointer"
                   onclick={() => handleCardClick(item)}
                   onkeydown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -446,6 +460,7 @@
                   <RailwayModelPreviewCard
                     model={collectionItemToCardData(item)}
                     onDelete={() => void collectionService.deleteItem(item.id)}
+                    class="w-full"
                   />
                 </div>
               {/snippet}
