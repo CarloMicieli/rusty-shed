@@ -39,6 +39,9 @@
   import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
   import LogMaintenanceDrawer from '$lib/features/maintenance/components/LogMaintenanceDrawer.svelte';
   import { financeState } from '$lib/state/finance.svelte';
+  import { drawerRegistry } from '$lib/state/drawer-registry.svelte';
+  import { createMobileMatchMediaState } from '$lib/state/match-media.svelte';
+  import { createPageTitleState, setPageTitleContext } from '$lib/state/page-title.svelte';
   import WelcomeWizard from '$lib/features/onboarding/WelcomeWizard.svelte';
   import {
     bootstrapNeedsOnboarding,
@@ -52,7 +55,37 @@
   let showWishlistDrawer = $state(false);
   let showLogMaintenanceDrawer = $state(false);
   let sidebarCollapsed = $state(false);
+  let isMobileViewport = $state(false);
   let { children } = $props();
+
+  const LAYOUT_DRAWER_IDS = {
+    acquisition: 'layout:acquisition',
+    wishlist: 'layout:wishlist',
+    maintenance: 'layout:maintenance'
+  } as const;
+
+  const mobileMedia = createMobileMatchMediaState();
+  const pageTitleState = createPageTitleState();
+  const mobileHeaderTitle = $derived(pageTitleState.title ?? m.app_name());
+
+  setPageTitleContext(pageTitleState);
+
+  function syncLayoutDrawerFlags(): void {
+    const activeIds = new Set(drawerRegistry.stack.map((layer) => layer.id));
+    showAcquisitionDrawer = activeIds.has(LAYOUT_DRAWER_IDS.acquisition);
+    showWishlistDrawer = activeIds.has(LAYOUT_DRAWER_IDS.wishlist);
+    showLogMaintenanceDrawer = activeIds.has(LAYOUT_DRAWER_IDS.maintenance);
+  }
+
+  function openLayoutDrawer(id: string): void {
+    drawerRegistry.openParent(id);
+    syncLayoutDrawerFlags();
+  }
+
+  function closeLayoutDrawer(id: string): void {
+    drawerRegistry.closeById(id, 'button');
+    syncLayoutDrawerFlags();
+  }
 
   const constrainedPagePrefixes: string[] = [];
 
@@ -63,25 +96,31 @@
   );
 
   // Close all layout-level drawers when the user navigates to another page
-  beforeNavigate(() => {
-    showAcquisitionDrawer = false;
-    showWishlistDrawer = false;
-    showLogMaintenanceDrawer = false;
+  beforeNavigate((navigation) => {
+    if (navigation.type === 'popstate' && drawerRegistry.depth > 0) {
+      drawerRegistry.closeTop('back');
+      syncLayoutDrawerFlags();
+      navigation.cancel();
+      return;
+    }
+
+    drawerRegistry.clear('button');
+    syncLayoutDrawerFlags();
   });
 
   // Expose open function so any child route can open the acquisition drawer
   setContext('openAcquisitionDrawer', () => {
-    showAcquisitionDrawer = true;
+    openLayoutDrawer(LAYOUT_DRAWER_IDS.acquisition);
   });
 
   // Expose open function so any child route can open the wishlist item drawer
   setContext('openWishlistDrawer', () => {
-    showWishlistDrawer = true;
+    openLayoutDrawer(LAYOUT_DRAWER_IDS.wishlist);
   });
 
   // Expose open function so any child route can open the log maintenance drawer
   setContext('openLogMaintenanceDrawer', () => {
-    showLogMaintenanceDrawer = true;
+    openLayoutDrawer(LAYOUT_DRAWER_IDS.maintenance);
   });
 
   // Create and provide contexts
@@ -144,6 +183,20 @@
   // Manage Tauri event listeners and finance state subscription using $effect
   // so setup and cleanup are co-located.
   $effect(() => {
+    drawerRegistry.setSourceRoute($page.url.pathname);
+  });
+
+  $effect(() => {
+    const unsubscribe = mobileMedia.subscribe((matches) => {
+      isMobileViewport = matches;
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
+
+  $effect(() => {
     let cancelled = false;
     let unlistenAcquisition: (() => void) | undefined;
     let unlistenMaintenance: (() => void) | undefined;
@@ -151,10 +204,10 @@
     const setupListeners = async () => {
       try {
         const u1 = await listen('open-acquisition-drawer', () => {
-          showAcquisitionDrawer = true;
+          openLayoutDrawer(LAYOUT_DRAWER_IDS.acquisition);
         });
         const u2 = await listen('open-maintenance-drawer', () => {
-          showLogMaintenanceDrawer = true;
+          openLayoutDrawer(LAYOUT_DRAWER_IDS.maintenance);
         });
 
         // If the effect was torn down while we were awaiting, clean up immediately.
@@ -186,6 +239,17 @@
   });
 
   onMount(() => {
+    const onPopState = () => {
+      if (drawerRegistry.depth === 0) {
+        return;
+      }
+
+      drawerRegistry.closeTop('back');
+      syncLayoutDrawerFlags();
+    };
+
+    window.addEventListener('popstate', onPopState);
+
     void (async () => {
       try {
         if (isTauriHosted()) {
@@ -258,6 +322,11 @@
         loading = false;
       }
     })();
+
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      mobileMedia.destroy();
+    };
   });
 </script>
 
@@ -330,7 +399,7 @@
 {:else}
   <Tooltip.Provider>
     <div
-      class="flex h-screen w-full flex-col overflow-hidden font-sans text-foreground lg:flex-row"
+      class="safe-area-pad flex h-screen w-full flex-col overflow-hidden font-sans text-foreground lg:flex-row"
       style:background-color="var(--sidebar)"
       in:fade={{ delay: 1 }}
     >
@@ -363,7 +432,9 @@
             <!-- Mobile: Logo / Brand (Visible only when sidebar is hidden) -->
             <div class="flex items-center gap-2 lg:hidden">
               <TrainFront class="text-primary" size={24} />
-              <span class="text-sm font-bold tracking-widest uppercase">{m.app_name()}</span>
+              <span class="max-w-[70vw] truncate text-sm font-bold tracking-widest uppercase">
+                {mobileHeaderTitle}
+              </span>
             </div>
 
             <!-- Right Actions -->
@@ -375,7 +446,10 @@
 
         <!-- Page Content -->
         <main class="relative flex-1 overflow-hidden">
-          <div class="h-full w-full max-w-full overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8">
+          <div
+            class="h-full w-full max-w-full overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8"
+            class:safe-area-pad-bottom-nav={isMobileViewport}
+          >
             {#key $page.url.pathname}
               <div
                 in:fade={{ duration: 150, delay: 1 }}
@@ -396,9 +470,9 @@
     {#if showAcquisitionDrawer}
       <AcquisitionDrawer
         open={showAcquisitionDrawer}
-        onClose={() => (showAcquisitionDrawer = false)}
+        onClose={() => closeLayoutDrawer(LAYOUT_DRAWER_IDS.acquisition)}
         onSuccess={() => {
-          showAcquisitionDrawer = false;
+          closeLayoutDrawer(LAYOUT_DRAWER_IDS.acquisition);
           void collectionStore.refresh();
           void collectionState.forceRefresh();
           void dashboardState.load();
@@ -410,15 +484,15 @@
     {#if showWishlistDrawer}
       <AddWishlistItemDrawer
         open={showWishlistDrawer}
-        onClose={() => (showWishlistDrawer = false)}
-        onSaved={() => (showWishlistDrawer = false)}
+        onClose={() => closeLayoutDrawer(LAYOUT_DRAWER_IDS.wishlist)}
+        onSaved={() => closeLayoutDrawer(LAYOUT_DRAWER_IDS.wishlist)}
       />
     {/if}
 
     {#if showLogMaintenanceDrawer}
       <LogMaintenanceDrawer
         open={showLogMaintenanceDrawer}
-        onClose={() => (showLogMaintenanceDrawer = false)}
+        onClose={() => closeLayoutDrawer(LAYOUT_DRAWER_IDS.maintenance)}
       />
     {/if}
   </Tooltip.Provider>

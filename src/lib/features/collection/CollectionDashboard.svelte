@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { collectionState, availableScales } from './CollectionState.svelte';
   import type { StatusFilter } from './CollectionState.svelte';
   import { Button, Badge } from '$lib/components';
@@ -25,6 +26,23 @@
   import CollectionTableView from './components/CollectionTableView.svelte';
   import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import { createMobileMatchMediaState } from '$lib/state/match-media.svelte';
+
+  const mobileMedia = createMobileMatchMediaState();
+  let isMobileViewport = $state(false);
+
+  $effect(() => {
+    const unsubscribe = mobileMedia.subscribe((matches) => {
+      isMobileViewport = matches;
+      if (matches && ui.viewMode === 'table') {
+        ui.setViewMode('grid');
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
 
   function useCollectionUI() {
     let showDrawer = $state(false);
@@ -172,7 +190,12 @@
   }
 
   function handleCardClick(item: CollectionItemView) {
-    goto(`/collection/${item.id.split(':').pop()}`);
+    const itemId = item.id.split(':').pop();
+    if (!itemId) {
+      return;
+    }
+
+    goto(resolve(`/collection/${itemId}`));
   }
 </script>
 
@@ -224,7 +247,7 @@
             variant="rusty"
             onclick={ui.startCreate}
             size="sm"
-            class="shadow-lg shadow-amber-500/10"
+            class="hidden min-h-11 shadow-lg shadow-amber-500/10 md:inline-flex"
           >
             <TrainFront size={18} />
             {m.collection_add_model()}
@@ -234,7 +257,7 @@
             onclick={ui.toggleFilterSidebar}
             variant="outline"
             size="sm"
-            class="md:hidden"
+            class="min-h-11 min-w-11 md:hidden"
             title={m.collection_toggle_filters_title()}
           >
             <Filter size={18} />
@@ -310,7 +333,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleScale(scale)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-9 w-9 rounded-sm p-0.5 transition-colors hover:bg-white/20"
                       aria-label={`Remove scale filter: ${scale}`}
                     >
                       <X size={14} />
@@ -327,7 +350,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleEpoch(epoch)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-9 w-9 rounded-sm p-0.5 transition-colors hover:bg-white/20"
                       aria-label={`Remove epoch filter: ${epoch}`}
                     >
                       <X size={14} />
@@ -344,7 +367,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleCategory(category)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-9 w-9 rounded-sm p-0.5 transition-colors hover:bg-white/20"
                       aria-label={`Remove category filter: ${category}`}
                     >
                       <X size={14} />
@@ -361,7 +384,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleCompany(company)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-9 w-9 rounded-sm p-0.5 transition-colors hover:bg-white/20"
                       aria-label={`Remove company filter: ${company}`}
                     >
                       <X size={14} />
@@ -378,7 +401,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleTag(tag)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-9 w-9 rounded-sm p-0.5 transition-colors hover:bg-white/20"
                       aria-label={`Remove tag filter: ${tag}`}
                     >
                       <X size={14} />
@@ -390,7 +413,7 @@
           {/if}
 
           <!-- View mode toolbar -->
-          <div class="mb-4 flex items-center justify-end">
+          <div class="mb-4 hidden items-center justify-end md:flex">
             <div class="flex items-center gap-1 rounded-lg border border-border/60 p-0.5">
               <button
                 type="button"
@@ -426,7 +449,7 @@
             <VirtualGrid
               items={filteredItems}
               itemHeight={340}
-              itemMinWidth={240}
+              itemMinWidth={isMobileViewport ? 320 : 240}
               gap={16}
               overscan={3}
             >
@@ -543,6 +566,18 @@
     void loadCollectionStats();
   }}
 />
+
+{#if isMobileViewport && !isCollectionEmpty}
+  <Button
+    class="safe-area-inset-bottom fixed right-4 bottom-4 z-40 min-h-11 rounded-full px-5 font-semibold shadow-xl md:hidden"
+    variant="rusty"
+    onclick={ui.startCreate}
+    aria-label={m.collection_mobile_add_fab()}
+  >
+    <TrainFront size={18} />
+    {m.collection_mobile_add_fab()}
+  </Button>
+{/if}
 
 {#snippet StatChip(label: string, count: number)}
   <div

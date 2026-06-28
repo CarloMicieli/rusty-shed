@@ -17,10 +17,10 @@
 
 **Purpose**: Create the planning/test scaffolding required for feature execution.
 
-- [ ] T001 Create mobile redesign test plan notes in docs/testing/mobile-redesign-test-matrix.md
-- [ ] T002 [P] Create mobile fixture helpers for viewport and safe-area simulation in src/__tests__/helpers/mobileViewport.ts
-- [ ] T003 [P] Create mobile interaction helper utilities (tap target/assertions) in src/__tests__/helpers/mobileInteractions.ts
-- [ ] T004 Add feature section and execution notes to specs/043-mobile-redesign/quickstart.md
+- [X] T001 Create mobile redesign test plan notes in docs/testing/mobile-redesign-test-matrix.md
+- [X] T002 [P] Create mobile fixture helpers for viewport and safe-area simulation in src/__tests__/helpers/mobileViewport.ts
+- [X] T003 [P] Create mobile interaction helper utilities (tap target/assertions) in src/__tests__/helpers/mobileInteractions.ts
+- [X] T004 Add feature section and execution notes to specs/043-mobile-redesign/quickstart.md
 
 ---
 
@@ -30,13 +30,13 @@
 
 **⚠️ CRITICAL**: No user-story implementation begins before this phase completes.
 
-- [ ] T005 Implement Tailwind safe-area utilities and touch-hover variant in src/routes/layout.css
-- [ ] T006 Update mobile main-shell padding and safe-area handling in src/routes/+layout.svelte
-- [ ] T007 [P] Add shared matchMedia helper for non-CSS toggles in src/lib/state/match-media.svelte.ts
-- [ ] T008 Implement bounded drawer registry state (max depth 2) in src/lib/state/drawer-registry.svelte.ts
-- [ ] T009 Wire drawer registry with route/back-pop synchronization in src/routes/+layout.svelte
-- [ ] T010 [P] Add drawer registry unit tests (stack bound + pop order + replace behavior) in src/__tests__/state/drawer-registry.svelte.test.ts
-- [ ] T011 [P] Add route/back integration test for overlay unwind behavior in src/__tests__/routes/mobile-back-stack.test.ts
+- [X] T005 Implement Tailwind safe-area utilities and touch-hover variant in src/routes/layout.css
+- [X] T006 Update mobile main-shell padding and safe-area handling in src/routes/+layout.svelte
+- [X] T007 [P] Add shared matchMedia helper for non-CSS toggles in src/lib/state/match-media.svelte.ts
+- [X] T008 Implement bounded drawer registry state (max depth 2) in src/lib/state/drawer-registry.svelte.ts
+- [X] T009 Wire drawer registry with route/back-pop synchronization in src/routes/+layout.svelte
+- [X] T010 [P] Add drawer registry unit tests (stack bound + pop order + replace behavior) in src/__tests__/state/drawer-registry.svelte.test.ts
+- [X] T011 [P] Add route/back integration test for overlay unwind behavior in src/__tests__/routes/mobile-back-stack.test.ts
 
 **Checkpoint**: Foundational mobile primitives are complete; user stories can proceed.
 
@@ -50,21 +50,21 @@
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Add mobile shell safe-area regression tests in src/__tests__/routes/mobile-layout-shell.test.ts
-- [ ] T013 [P] [US1] Add BottomNavigation label/truncation tests for long Italian strings in src/__tests__/lib/components/BottomNavigation.mobile.test.ts
-- [ ] T014 [P] [US1] Add MoreMenu top-actions accessibility/reachability test in src/__tests__/lib/components/navigation/MoreMenu.mobile.test.ts
+- [X] T012 [P] [US1] Add mobile shell safe-area regression tests in src/__tests__/routes/mobile-layout-shell.test.ts
+- [X] T013 [P] [US1] Add BottomNavigation label/truncation tests for long Italian strings in src/__tests__/lib/components/BottomNavigation.mobile.test.ts
+- [X] T014 [P] [US1] Add MoreMenu top-actions accessibility/reachability test in src/__tests__/lib/components/navigation/MoreMenu.mobile.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] Add page-title context outlet support for mobile header in src/routes/+layout.svelte
-- [ ] T016 [US1] Provide shared page-title context state in src/lib/state/page-title.svelte.ts
-- [ ] T017 [US1] Refactor bottom navigation to keep 4 primary items plus More in src/lib/components/BottomNavigation.svelte
-- [ ] T018 [US1] Move Settings/Debug as top actions in mobile More panel in src/lib/components/navigation/MoreMenu.svelte
-- [ ] T019 [US1] Apply mobile-safe truncation and typography constraints for nav labels in src/lib/components/BottomNavigation.svelte
-- [ ] T020 [US1] Add/update mobile navigation i18n keys in messages/en.json
-- [ ] T021 [US1] Add/update mobile navigation i18n keys in messages/it.json
-- [ ] T022 [US1] Add mobile title-context wiring for collection page in src/routes/collection/+page.svelte
-- [ ] T023 [US1] Add mobile title-context wiring for settings page in src/routes/settings/+page.svelte
+- [X] T015 [US1] Add page-title context outlet support for mobile header in src/routes/+layout.svelte
+- [X] T016 [US1] Provide shared page-title context state in src/lib/state/page-title.svelte.ts
+- [X] T017 [US1] Refactor bottom navigation to keep 4 primary items plus More in src/lib/components/BottomNavigation.svelte
+- [X] T018 [US1] Move Settings/Debug as top actions in mobile More panel in src/lib/components/navigation/MoreMenu.svelte
+- [X] T019 [US1] Apply mobile-safe truncation and typography constraints for nav labels in src/lib/components/BottomNavigation.svelte
+- [X] T020 [US1] Add/update mobile navigation i18n keys in messages/en.json
+- [X] T021 [US1] Add/update mobile navigation i18n keys in messages/it.json
+- [X] T022 [US1] Add mobile title-context wiring for collection page in src/routes/collection/+page.svelte
+- [X] T023 [US1] Add mobile title-context wiring for settings page in src/routes/settings/+page.svelte
 
 **Checkpoint**: US1 is independently functional and testable as MVP.
 
@@ -78,19 +78,19 @@
 
 ### Tests for User Story 2
 
-- [ ] T024 [P] [US2] Add mobile collection layout tests (single-column + min width) in src/__tests__/collection/CollectionDashboard.mobile-layout.test.ts
-- [ ] T025 [P] [US2] Add filter-chip touch target tests in src/__tests__/collection/CollectionDashboard.touch-target.test.ts
-- [ ] T026 [P] [US2] Add VirtualGrid itemMinWidth behavior tests in src/__tests__/lib/components/VirtualGrid.mobile.test.ts
+- [X] T024 [P] [US2] Add mobile collection layout tests (single-column + min width) in src/__tests__/collection/CollectionDashboard.mobile-layout.test.ts
+- [X] T025 [P] [US2] Add filter-chip touch target tests in src/__tests__/collection/CollectionDashboard.touch-target.test.ts
+- [X] T026 [P] [US2] Add VirtualGrid itemMinWidth behavior tests in src/__tests__/lib/components/VirtualGrid.mobile.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Enforce `itemMinWidth=320` and hide mobile table toggle in src/lib/features/collection/CollectionDashboard.svelte
-- [ ] T028 [US2] Add contextual FAB behavior for collection mobile view in src/lib/features/collection/CollectionDashboard.svelte
-- [ ] T029 [US2] Update preview card mobile layout (Option B reflow + category badge treatment) in src/lib/components/RailwayModelPreviewCard.svelte
-- [ ] T030 [US2] Apply 44x44 and chip-remove 36x36 touch target sizing in src/lib/features/collection/CollectionDashboard.svelte
-- [ ] T031 [US2] Align collection route wrapper with new mobile spacing and safe-area constraints in src/routes/collection/+page.svelte
-- [ ] T032 [US2] Add/update collection mobile UI i18n keys in messages/en.json
-- [ ] T033 [US2] Add/update collection mobile UI i18n keys in messages/it.json
+- [X] T027 [US2] Enforce `itemMinWidth=320` and hide mobile table toggle in src/lib/features/collection/CollectionDashboard.svelte
+- [X] T028 [US2] Add contextual FAB behavior for collection mobile view in src/lib/features/collection/CollectionDashboard.svelte
+- [X] T029 [US2] Update preview card mobile layout (Option B reflow + category badge treatment) in src/lib/components/RailwayModelPreviewCard.svelte
+- [X] T030 [US2] Apply 44x44 and chip-remove 36x36 touch target sizing in src/lib/features/collection/CollectionDashboard.svelte
+- [X] T031 [US2] Align collection route wrapper with new mobile spacing and safe-area constraints in src/routes/collection/+page.svelte
+- [X] T032 [US2] Add/update collection mobile UI i18n keys in messages/en.json
+- [X] T033 [US2] Add/update collection mobile UI i18n keys in messages/it.json
 
 **Checkpoint**: US2 can be validated independently of US3/US4.
 
@@ -104,22 +104,22 @@
 
 ### Tests for User Story 3
 
-- [ ] T034 [P] [US3] Add mobile sheet depth and dismiss-order tests in src/__tests__/lib/components/drawer/DrawerShell.depth.test.ts
-- [ ] T035 [P] [US3] Add mobile inline-edit suppression tests in src/__tests__/collection/InPlaceEdit.mobile.test.ts
-- [ ] T036 [P] [US3] Add media capability fallback tests (camera unavailable/denied/error) in src/__tests__/lib/components/model-details/ImageUpload.mobile-capability.test.ts
+- [X] T034 [P] [US3] Add mobile sheet depth and dismiss-order tests in src/__tests__/lib/components/drawer/DrawerShell.depth.test.ts
+- [X] T035 [P] [US3] Add mobile inline-edit suppression tests in src/__tests__/collection/InPlaceEdit.mobile.test.ts
+- [X] T036 [P] [US3] Add media capability fallback tests (camera unavailable/denied/error) in src/__tests__/lib/components/model-details/ImageUpload.mobile-capability.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T037 [US3] Refactor drawer shell to bottom-sheet on mobile and side-panel on md+ in src/lib/components/drawer/DrawerShell.svelte
-- [ ] T038 [US3] Add GPU-friendly transform/compositor and reduced-motion behavior in src/lib/components/drawer/DrawerShell.svelte
-- [ ] T039 [US3] Disable inline edit behavior on mobile and route edit actions to drawer flow in src/lib/components/InPlaceEdit.svelte
-- [ ] T040 [US3] Wire detail page edit actions to unified mobile sheet flow in src/routes/collection/[itemId]/+page.svelte
-- [ ] T041 [US3] Add camera capability probing and fallback mode switching in src/lib/components/model-details/ImageUpload.svelte
-- [ ] T042 [US3] Remove capture attribute when camera capability is unavailable and preserve form state in src/lib/components/model-details/ImageDropZone.svelte
-- [ ] T043 [US3] Add/update media fallback i18n keys in messages/en.json
-- [ ] T044 [US3] Add/update media fallback i18n keys in messages/it.json
-- [ ] T059 [US3] Create contract-to-implementation mapping for mobile operations in docs/testing/mobile-redesign-contract-mapping.md
-- [ ] T060 [P] [US3] Add contract conformance tests for drawer/media operations in src/__tests__/contracts/mobile-redesign.contract.test.ts
+- [X] T037 [US3] Refactor drawer shell to bottom-sheet on mobile and side-panel on md+ in src/lib/components/drawer/DrawerShell.svelte
+- [X] T038 [US3] Add GPU-friendly transform/compositor and reduced-motion behavior in src/lib/components/drawer/DrawerShell.svelte
+- [X] T039 [US3] Disable inline edit behavior on mobile and route edit actions to drawer flow in src/lib/components/InPlaceEdit.svelte
+- [X] T040 [US3] Wire detail page edit actions to unified mobile sheet flow in src/routes/collection/[itemId]/+page.svelte
+- [X] T041 [US3] Add camera capability probing and fallback mode switching in src/lib/components/model-details/ImageUpload.svelte
+- [X] T042 [US3] Remove capture attribute when camera capability is unavailable and preserve form state in src/lib/components/model-details/ImageDropZone.svelte
+- [X] T043 [US3] Add/update media fallback i18n keys in messages/en.json
+- [X] T044 [US3] Add/update media fallback i18n keys in messages/it.json
+- [X] T059 [US3] Create contract-to-implementation mapping for mobile operations in docs/testing/mobile-redesign-contract-mapping.md
+- [X] T060 [P] [US3] Add contract conformance tests for drawer/media operations in src/__tests__/contracts/mobile-redesign.contract.test.ts
 
 **Checkpoint**: US3 edit flow works independently with bounded sheet nesting and media fallback.
 

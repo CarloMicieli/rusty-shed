@@ -7,6 +7,7 @@
 @plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant touch-hover (@media (hover: hover) and (pointer: fine));
 
 :root {
   --radius: 0.625rem;
@@ -218,6 +219,21 @@
 }
 
 @layer components {
+  .safe-area-pad {
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+
+  .safe-area-pad-bottom-nav {
+    padding-bottom: calc(6rem + max(env(safe-area-inset-bottom), 0px));
+  }
+
+  .safe-area-inset-bottom {
+    bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
   .page-content-constrained {
     width: min(100%, var(--page-content-max-width));
     margin-inline: auto;

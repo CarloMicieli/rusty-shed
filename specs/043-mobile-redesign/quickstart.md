@@ -83,3 +83,12 @@ pnpm specta:generate
 - Mobile behavior is active only below 768 px.
 - No desktop-severity regressions are present.
 - i18n and touch-target audits pass on 375 px baseline.
+
+## Feature Execution Notes
+
+- Phase 1 setup assets:
+	- Test planning matrix in `docs/testing/mobile-redesign-test-matrix.md`.
+	- Mobile viewport helper in `src/__tests__/helpers/mobileViewport.ts`.
+	- Mobile interaction helper in `src/__tests__/helpers/mobileInteractions.ts`.
+- Foundational tasks (safe-area and drawer registry) must complete before story-level work.
+- At every story checkpoint, run targeted tests first, then update localized catalogs in both `messages/en.json` and `messages/it.json`.

@@ -381,12 +381,16 @@
     <Separator class="my-2.5 bg-border" />
 
     <div class="space-y-3">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr_1fr]">
-        <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-[2fr_1fr_1fr]">
+        <div
+          class="col-span-2 flex min-w-0 flex-col items-center gap-0.5 text-center sm:col-span-1"
+        >
           <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
             {m.depot_category()}
           </span>
-          <span class="w-full truncate font-mono text-xs text-foreground">{displayCategory}</span>
+          <Badge variant="secondary" class="w-full justify-center truncate font-mono text-xs">
+            {displayCategory}
+          </Badge>
         </div>
         <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
           <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
