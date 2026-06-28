@@ -1,9 +1,19 @@
 # Feature Specification: Mobile Redesign
 
-**Feature Branch**: `001-mobile-redesign`  
+**Feature Branch**: `043-mobile-redesign`  
 **Created**: 2026-06-28  
 **Status**: Draft  
 **Input**: User description: "feature 43: mobile redesign"
+
+## Clarifications
+
+### Session 2026-06-28
+
+- Q: What viewport range defines mobile redesign scope? → A: Below 768 px only; desktop unchanged at 768 px and above.
+- Q: What is the fallback when camera capture is unavailable or denied? → A: Fall back to file picker/gallery in the same editing flow.
+- Q: What is the maximum nested sheet depth on mobile? → A: One nested level maximum (parent + one child).
+- Q: What mobile touch target minimum applies to interactive controls? → A: 44x44 px minimum, except chip remove affordances may be 36x36 px.
+- Q: How are Settings and Debug exposed in mobile navigation? → A: Keep 4 primary tabs plus More; place Settings and Debug as top actions inside More.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -19,7 +29,7 @@ As a mobile user, I can navigate all primary areas and understand page context i
 
 1. **Given** a mobile viewport, **When** the user opens any primary route, **Then** page content is fully visible and not clipped by top or bottom device insets.
 2. **Given** a mobile viewport with Italian language selected, **When** navigation labels or page titles are long, **Then** labels remain readable without overlapping adjacent controls.
-3. **Given** a user on mobile, **When** they need non-primary destinations such as Settings or Debug, **Then** they can reach those destinations through mobile navigation in at most two taps.
+3. **Given** a user on mobile, **When** they need non-primary destinations such as Settings or Debug, **Then** they can reach those destinations via the More panel in at most two taps.
 
 ---
 
@@ -73,19 +83,19 @@ As a product owner, I can release mobile improvements incrementally while mainta
 ### Edge Cases
 
 - What happens when a localized navigation label exceeds expected length on very narrow devices (320-360 px)?
-- How does the app behave when a user rapidly opens and dismisses multiple sheet layers?
+- How does the app behave when a user rapidly opens and dismisses sheet layers up to the one-level nesting limit?
 - What happens when safe-area inset values are unavailable or zero on devices without notches?
-- How does the interface behave if camera capture is unavailable, denied, or canceled mid-flow?
+- If camera capture is unavailable, denied, or canceled, how does the flow fall back to gallery/file picker without losing current form state?
 - How does collection browsing behave when data sets are sparse, very large, or filtered to zero results?
 
 ## Requirements _(mandatory)_
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST provide a mobile-optimized app shell for viewports below desktop breakpoint while preserving current desktop behavior.
+- **FR-001**: The system MUST provide a mobile-optimized app shell for viewports below 768 px while preserving current desktop behavior at 768 px and above.
 - **FR-002**: The system MUST ensure all primary content remains visible above device bottom insets and navigation chrome on mobile.
 - **FR-003**: The system MUST show page-context titles in the mobile header for inner pages so users always know where they are.
-- **FR-004**: The system MUST provide a mobile navigation path to secondary destinations, including Settings and Debug.
+- **FR-004**: The system MUST keep four primary bottom-navigation destinations plus a More entry, and MUST expose Settings and Debug as top actions within More.
 - **FR-005**: The system MUST ensure mobile navigation labels remain readable in all supported languages without overlap or truncation-induced ambiguity.
 - **FR-006**: The system MUST present collection items in a mobile-friendly single-column browsing experience on phone-sized viewports.
 - **FR-007**: The system MUST expose a contextual add action within the collection mobile view.
@@ -94,6 +104,9 @@ As a product owner, I can release mobile improvements incrementally while mainta
 - **FR-010**: The system MUST route mobile detail editing through a unified sheet-based editing flow rather than inline edit widgets.
 - **FR-011**: The system MUST support layered sheet interactions on mobile with clear visual hierarchy and reliable dismiss behavior.
 - **FR-012**: The system MUST allow users to attach images from native camera capture within the mobile editing flow.
+- **FR-016**: If camera capture is unavailable, denied, or canceled, the system MUST offer gallery/file picker fallback in the same editing flow without discarding in-progress edits.
+- **FR-017**: Mobile editing sheets MUST allow at most one nested child sheet at a time (parent + one child), and dismiss actions MUST return focus and state to the parent sheet.
+- **FR-018**: On mobile viewports below 768 px, interactive controls MUST provide at least a 44x44 px hit target, except chip remove affordances which MAY use a 36x36 px minimum target.
 - **FR-013**: The system MUST support phased rollout by enabling each milestone to be independently releasable without blocking unfinished mobile milestones.
 - **FR-014**: The system MUST provide consistent loading placeholders during mobile startup and asynchronous bridge initialization.
 - **FR-015**: The system MUST maintain parity across supported mobile languages for spacing, typography, and interaction affordances.
@@ -109,7 +122,7 @@ As a product owner, I can release mobile improvements incrementally while mainta
 
 ### Assumptions
 
-- The redesign targets mobile-first behavior up to tablet breakpoints while keeping desktop behavior unchanged.
+- The redesign targets mobile behavior only for viewports below 768 px, while behavior at 768 px and above remains unchanged.
 - The app continues supporting at least English and Italian during this feature rollout.
 - Mobile improvements are delivered as incremental milestones that can be validated independently.
 - Existing data models and business rules remain valid; this feature primarily changes user interaction and presentation behavior.
@@ -126,7 +139,7 @@ As a product owner, I can release mobile improvements incrementally while mainta
 
 - **SC-001**: In usability validation, at least 95% of users complete core mobile navigation to any destination in 2 taps or fewer.
 - **SC-002**: In mobile collection testing, at least 90% of users complete a browse-filter-add workflow in under 90 seconds without assistance.
-- **SC-003**: In touch-target audits, 100% of high-frequency mobile controls meet minimum tap target standards.
+- **SC-003**: In touch-target audits for viewports below 768 px, 100% of interactive controls meet a 44x44 px minimum hit target, except chip remove affordances which meet at least 36x36 px.
 - **SC-004**: In multilingual mobile regression testing at 375 px width, 0 critical text-overlap or clipping defects remain open.
 - **SC-005**: In phased rollout validation, every delivered milestone is deployable independently with no desktop-severity regressions.
 - **SC-006**: During mobile startup in native builds, users see visible non-blocking loading placeholders within 1 second of app launch.
