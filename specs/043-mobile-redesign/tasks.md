@@ -118,6 +118,8 @@
 - [ ] T042 [US3] Remove capture attribute when camera capability is unavailable and preserve form state in src/lib/components/model-details/ImageDropZone.svelte
 - [ ] T043 [US3] Add/update media fallback i18n keys in messages/en.json
 - [ ] T044 [US3] Add/update media fallback i18n keys in messages/it.json
+- [ ] T059 [US3] Create contract-to-implementation mapping for mobile operations in docs/testing/mobile-redesign-contract-mapping.md
+- [ ] T060 [P] [US3] Add contract conformance tests for drawer/media operations in src/__tests__/contracts/mobile-redesign.contract.test.ts
 
 **Checkpoint**: US3 edit flow works independently with bounded sheet nesting and media fallback.
 
@@ -140,6 +142,9 @@
 - [ ] T048 [US4] Ensure startup loading surface is non-blocking and mobile-safe in src/routes/+layout.svelte
 - [ ] T049 [US4] Add milestone-based mobile regression checklist and acceptance report template in docs/testing/mobile-redesign-regression-checklist.md
 - [ ] T050 [US4] Document mobile rollout and desktop parity verification steps in specs/043-mobile-redesign/quickstart.md
+- [ ] T056 [US4] Define SC measurement protocol (sample size, timing method, pass/fail thresholds) in docs/testing/mobile-redesign-metrics-protocol.md
+- [ ] T057 [P] [US4] Add startup placeholder timing assertion (<1s target) in src/__tests__/routes/mobile-startup-placeholder-timing.test.ts
+- [ ] T058 [US4] Capture SC-001/SC-002/SC-006 validation evidence in docs/testing/mobile-redesign-metrics-report.md
 
 **Checkpoint**: All stories are independently verifiable; rollout is safe and measurable.
 
@@ -152,7 +157,7 @@
 - [ ] T051 [P] Run full feature verification commands from quickstart and capture output notes in specs/043-mobile-redesign/quickstart.md
 - [ ] T052 [P] Perform final touch-target audit and document exceptions in docs/testing/mobile-redesign-test-matrix.md
 - [ ] T053 [P] Perform final Italian 375px visual audit notes in docs/testing/mobile-redesign-test-matrix.md
-- [ ] T054 Run final code quality checks and fix findings in src/routes/+layout.svelte
+- [ ] T054 Run repository-wide quality gates for all touched files (`pnpm format`, `pnpm lint`, `pnpm check`, `pnpm test`, and rust checks if affected), then resolve findings across changed paths
 - [ ] T055 Update feature changelog entry in CHANGELOG.md
 
 ---
