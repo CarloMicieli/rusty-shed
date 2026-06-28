@@ -7,3 +7,6 @@ allowBuilds:
   'esbuild': true
   'lightningcss': true
   'rolldown': true
+
+overrides:
+  typebox: 1.1.39
