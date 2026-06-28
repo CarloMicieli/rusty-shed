@@ -1,6 +1,6 @@
 # Rusty Shed — Mobile Redesign Guidelines
 
-> **Status:** Blueprint — pre-implementation reference  
+> **Status:** Actionable — Q&A resolved; ready for implementation  
 > **Scope:** Mobile-only enhancements (≤ `md` breakpoint, i.e., `< 768 px`) that **must not alter the desktop experience** (`lg:` and above remain untouched).  
 > **Stack:** Tauri 2 · Svelte 5 (Runes) · Tailwind CSS v4 · shadcn-svelte (bits-ui) · Paraglide-JS i18n
 
@@ -158,6 +158,34 @@ Implementation approach for `DrawerShell.svelte`:
 - `DrawerShell` mobile: `z-50`, `max-h-[90dvh]`
 - `QuickAddShell` mobile: `z-60`, `max-h-[75dvh]`, slightly dragged-up to reveal the parent sheet edge
 
+**Svelte 5 runes-based stacking — avoid manual `z-index` increments.** Use a module-level `DrawerRegistry` to track active drawers and derive visual offsets reactively:
+
+```ts
+// src/lib/states/drawer.svelte.ts
+class DrawerRegistry {
+  stack = $state<string[]>([]);
+
+  open(id: string) { this.stack.push(id); }
+  close() { this.stack.pop(); }
+  getDepth(id: string) { return this.stack.indexOf(id); }
+}
+export const drawers = new DrawerRegistry();
+```
+
+Inside `DrawerShell.svelte`, bind the depth to inline style rather than static class values so the parent sheet automatically scales back when a child sheet opens — mimicking native iOS modal stacking:
+
+```svelte
+<div
+  class="fixed bottom-0 left-0 right-0 max-h-[90dvh] rounded-t-2xl border-t-2 bg-card transition-transform duration-300"
+  style:transform={drawers.getDepth(id) > 0
+    ? `translateY(-${drawers.getDepth(id) * 8}px) scale(${1 - drawers.getDepth(id) * 0.04})`
+    : 'none'}
+  style:z-index={50 + drawers.getDepth(id)}
+>
+```
+
+This way a `QuickAdd` overlay automatically pushes the parent `DrawerShell` into the background without any hardcoded `z-60` or `max-h-[75dvh]` magic numbers.
+
 #### Confirmation Dialogs (e.g., Discard, Restore)
 
 Keep centered modal pattern (`Dialog`) for binary decisions — they are short, focused, and centering is appropriate. Apply:
@@ -302,17 +330,18 @@ Desktop `hover:` variants create false "sticky hover" states on touch (iOS webki
      }
    }
    ```
-   > **Note:** A cleaner Tailwind v4 approach is to prefix hover variants with `@media (hover: hover)` using the `@custom-variant` directive. See below.
+   > **Note:** A cleaner Tailwind v4 approach is to prefix hover variants with `@media (hover: hover)` using the `@variant` directive. See below.
 
-2. **Tailwind v4 `@custom-variant` for precise-pointer hover** — add to `layout.css`:
+2. **Tailwind v4 `@variant` for precise-pointer hover** — add to `layout.css`:
    ```css
-   @custom-variant mouse-hover (&:is(:hover)) {
+   /* Native Tailwind v4 touch-safe hover variant */
+   @variant touch-hover (&:hover) {
      @media (hover: hover) and (pointer: fine) {
        &:hover { @slot; }
      }
    }
    ```
-   Then replace `hover:bg-sidebar-accent` with `mouse-hover:bg-sidebar-accent` in navigation components. This ensures hover styles never fire on touch screens.
+   Then replace `hover:bg-sidebar-accent` with `touch-hover:bg-sidebar-accent` in navigation components. This ensures hover styles never fire on touch screens. The `@variant` directive compiles this into a proper Tailwind utility with full purge and tree-shaking support — cleaner than the `@custom-variant` workaround.
    
    > **Implementation note:** Replacing all `hover:` in the codebase is a large refactor. Prioritize doing it for navigation items, card interactions, and buttons — components where sticky hover is most visible on iOS.
 
@@ -428,100 +457,80 @@ These pages were not audited in detail, but the same density rules apply:
 
 ## Section 4: Discovery Questionnaire
 
-These questions must be answered before finalizing page-by-page implementation steps. They represent gaps identified during the codebase audit where product decisions must drive technical choices.
+These questions were answered by the product owner on 2026-06-28. All answers are now incorporated into the guidelines above where relevant, and the implementation checklist below is updated accordingly.
 
 ---
 
 ### Q1: What are the target mobile platforms and OS versions?
 
-**Context:** `viewport.svelte.ts` uses User-Agent detection (`/Android|iPhone|iPad|iPod/i`) to determine `isMobile` and conditionally applies safe-area CSS variables. Tauri 2 supports Android (API 24+) and iOS (16+) as well as desktop.
+**Decision:** Primary targets are **Android (API 26+)** and **iOS (16.4+)**.
 
-**Decision needed:**
-- Is this app being shipped as an **Android APK**, **iOS `.ipa`**, or **both**?
-- What is the minimum OS version for each platform?
-- Is the Tauri webview `WKWebView` on iOS or `Android WebView` on Android, and is it updated to a version that supports `dvh` units (`100dvh` is used in `DrawerShell`)? If not, `100dvh` must be replaced with a JS-calculated fallback.
-- Does the iOS version need to handle the iPhone SE (375 × 667 px at 1× — the smallest supported modern form factor)?
+- **Form factor baseline:** The absolute lower bound for layout optimization is the **iPhone SE / iPhone 8 grid (375 × 667 px)**. All density calculations in Sections 2 and 3 use this as the minimum.
+- **`dvh` unit support:** iOS 16.4+ ships full Dynamic Viewport Unit support. `max-h-[90dvh]` and similar `dvh`-based classes in `DrawerShell` are safe to use without JS-calculated fallbacks.
+- **WebView engine:** `WKWebView` (iOS) and Android WebView (API 26+). Both support `env(safe-area-inset-*)`. No custom polyfills needed.
 
-**Impact on guidelines:** Safe-area inset handling, dynamic viewport height unit support, and the minimum screen width assumption for all density calculations.
+**Impact resolved:** Safe-area utilities (`pt-safe`, `pb-safe`, etc.) in Section 2.2 are confirmed correct. The `dvh` unit is confirmed for all bottom-sheet height constraints.
 
 ---
 
 ### Q2: Which user workflows occur most frequently on mobile vs. desktop?
 
-**Context:** The navigation structure exposes 9 feature areas. The bottom nav currently promotes Dashboard, Collection, Finance, and Wishlists as the 4 primary mobile items. However, mobile users in the field (at a hobby fair or a train show) may primarily use the app to:
-- (a) **Look up a model** they already own (Collection → detail view)
-- (b) **Record a purchase** on the spot (Acquisition drawer from Dashboard)
-- (c) **Check their wishlist** while browsing in a shop (Wishlists)
-- (d) **Log a maintenance event** after running a layout (Maintenance)
+**Decision:** The primary mobile use pattern is a hybrid of **(a) looking up a model** on the display floor to confirm ownership or check a running number, and **(c) verifying a wishlist** to avoid duplicate purchases at hobby fairs or train shows.
 
-**Decision needed:**
-- Which of these is the #1 mobile use case? This determines whether the FAB action (Section 1.1) should be "New Acquisition" (case b) or something else.
-- Should the "More" menu expose **Maintenance** prominently (possibly as the 5th primary nav item) given its time-sensitive, field-use nature?
-- Is the Depot / Digital DCC / Railway Tracks / Train Formations section ever used on mobile, or is it purely a desktop feature? If not, these can be deprioritized in the "More" menu and the mobile navigation can be simplified.
+- **Keep the 4 core nav items:** Dashboard, Collection, Finance, and Wishlists remain the primary mobile bottom-nav items. No item replacement needed.
+- **FAB placement:** Do **not** add a global FAB across all pages. Implement a contextual quick-action button exclusively on the **Collection page** and **Wishlist page** (`bottom-20` above the bottom nav).
+- **"More" sheet:** Settings and Debug move to the **top** of the `MoreMenu` sheet as full-width rows with chevron arrows. Depot, Digital DCC, Railway Tracks, and Train Formations are deprioritized in the sheet but remain reachable.
+- **Maintenance:** Not a primary mobile workflow; it remains in the "More" sheet. No change to primary nav.
 
-**Impact on guidelines:** Navigation primary/secondary split, FAB placement, and header CTA placement.
+**Impact resolved:** Navigation structure and FAB scope are confirmed. Section 1.1's "Consider a FAB" note is now a concrete recommendation scoped to Collection and Wishlist pages only.
 
 ---
 
 ### Q3: How should the RailwayModelCard detail view behave on mobile?
 
-**Context:** `RailwayModelCard` is a complex, highly interactive component with:
-- An image upload / drag-drop zone (not usable on mobile)
-- A 5-column specs bar with editable fields (`BadgePicker`, `InPlaceEdit`)
-- A multi-tab container (tabs: Description, DCC, Maintenance history, etc.)
-- Inline editing via `BadgePicker` (popover-based) and `InPlaceEdit`
+**Decision:** The mobile detail view is optimized for **readability first**. Editing is not disabled entirely, but inline micro-input patterns are replaced with full-width equivalents.
 
-On mobile, drag-and-drop image upload is impossible. The `BadgePicker` pops a dropdown that may be cut off at screen edges.
+- **`InPlaceEdit`:** Disable inline editing below the `md:` breakpoint. Replace with an **"Edit Profile"** action button in the card header that opens all editable fields as a full-width form list in a bottom sheet.
+- **`BadgePicker`:** Convert popover-based pickers into **choice-chip bottom drawers** on mobile (full-screen option sheet instead of a popover that risks edge clipping).
+- **Image upload:** Replace the drag-and-drop zone with a native `<input type="file" accept="image/*" capture="environment">` trigger. This lets Tauri engage the device's native camera/photo library picker on both Android and iOS.
+- **Tab layout:** Keep the multi-tab pattern; do not convert to accordion or horizontal swipe for the initial mobile pass. The existing tab bar is functional at 375 px.
 
-**Decision needed:**
-- Should mobile users be able to **edit model details** at all, or is the mobile detail view **read-only** (with edits redirected to desktop)?
-- If editing is allowed on mobile:
-  - Should `BadgePicker` be replaced with a full-screen picker sheet on mobile?
-  - Should `InPlaceEdit` use a full-width text input bottom sheet instead of an inline input?
-  - How should image upload work on mobile — use the OS file picker / camera?
-- Should the multi-tab layout collapse to an **accordion** (`<details>`) or a **paginated horizontal swipe** on mobile to reduce vertical scrolling?
-
-**Impact on guidelines:** The editable component strategy, `DrawerShell` → bottom-sheet conversion scope, and whether the full detail page is in-scope for the initial mobile pass.
+**Impact resolved:** `DrawerShell` → bottom-sheet conversion is in scope. `InPlaceEdit` and `BadgePicker` adaptations are confirmed for the initial mobile pass.
 
 ---
 
 ### Q4: What are the i18n / text-length constraints on mobile?
 
-**Context:** The app is dual-language (English and Italian). Italian strings are consistently 20–40% longer than their English equivalents. For example, navigation labels already use uppercase `text-[10px]` in the bottom bar. Italian nav labels like "FORMAZIONI" (Train Formations) may be longer than their English equivalents.
+**Decision:** The app must handle Italian text expansions (20–40% longer than English) gracefully at all breakpoints.
 
-**Decision needed:**
-- Have both English and Italian strings been tested at `text-[10px]` in the 48 px bottom nav tab width? Do any Italian labels overflow or require wrapping?
-- For the mobile header context label (Section 1.1), what is the maximum character count that fits on the smallest supported screen width (375 px) at `text-sm font-bold`? This determines whether page names need shortened mobile-specific Paraglide message keys.
-- Are there plans to add a third language? If so, the mobile typography scale must reserve even more safety margin.
+- **Bottom nav labels:** Enforce a strict `truncate` or `overflow-x-auto` on all `<span>` label elements inside `BottomNavigation`. If Italian labels like `"FORMAZIONI"` squeeze flex items on 375 px screens, drop from `text-[10px]` to `text-[9px]` or apply horizontal string clipping via CSS `overflow: hidden; text-overflow: clip`.
+- **Header page title:** Apply `max-w-[180px] truncate block` to the injected `<h1>` in the mobile header (Section 1.1). This provides clean ellipsis fallback for long Italian page names without layout breaking.
+- **No third language** planned for the current roadmap. The existing 2-language margin is sufficient.
 
-**Impact on guidelines:** The Typography section's T0 and T9 levels, the bottom nav label truncation policy, and whether a `truncate` class needs to be added to nav labels.
+**Impact resolved:** T9 (bottom nav labels) in Section 3.1 now has a confirmed truncation policy. The mobile header title constraint is confirmed at `max-w-[180px]`.
 
 ---
 
 ### Q5: What is the offline / connectivity constraint for Tauri mobile builds?
 
-**Context:** The app uses Tauri 2 IPC (`invoke`) for all data operations. On desktop, this is synchronous and reliable. On mobile (especially Android), Tauri's WebView bridge can introduce latency, and the app may be backgrounded during use (e.g., switching apps to check a price, then returning).
+**Decision:** The 4-second Tauri bridge timeout remains unchanged. The loading UX is changed from a full-screen blocking spinner to incremental skeletons.
 
-The `+layout.svelte` `onMount` boot sequence does a `waitForTauriBridge()` with a 4-second timeout, and `init_database` + several data-fetching calls are made sequentially before the UI is interactive. If this sequence fails on mobile (bridge timeout), the user sees the `SignalFailureView` error screen.
+- **Keep the 4-second timeout** — appropriate for all target Android devices including mid-range hardware (API 26+).
+- **Mount the root shell navigation instantly** with per-section **skeleton blocks** rather than holding back the full UI behind a global spinner. Each feature area (Dashboard stats, Collection list, Wishlists) loads independently with its own skeleton → data transition.
+- **Individual lazy loading** per page section is confirmed for the mobile architecture. `DrawerShell` and `AcquisitionDrawer` state is not restored after OS backgrounding in this initial pass — unsaved state is accepted as lost on background/restore.
 
-**Decision needed:**
-- Is the 4-second Tauri bridge timeout appropriate for all target Android devices, including lower-end ones?
-- Should the mobile UI show intermediate loading states (per-section skeletons) instead of the full-screen loading spinner, to make the app feel faster?
-- Can individual feature areas (Dashboard stats, Collection list, Wishlists) load independently with their own loading states rather than waiting for all data before showing anything?
-- What happens to unsaved form state in `DrawerShell` / `AcquisitionDrawer` when the OS backgrounds the app on Android? Is there session restoration or is data lost?
-
-**Impact on guidelines:** Mobile loading state design (Section 1.1 header zone), the boot sequence UX, and whether per-page lazy loading should be added to the mobile architecture.
+**Impact resolved:** Section 1.1 boot sequence note is now concrete: skeleton-first loading is the confirmed pattern. The `SignalFailureView` remains as the hard-failure fallback after 4 seconds.
 
 ---
 
 ## Appendix: Implementation Checklist (Pre-Code)
 
-Before writing any code, the following must be confirmed:
+All five Q&A responses have been collected from the product owner (2026-06-28). The following items are now confirmed:
 
-- [ ] All five Q&A responses collected from the product owner
-- [ ] Target screen size confirmed (minimum: 375 × 667 px)
+- [x] All five Q&A responses collected from the product owner
+- [x] Target screen size confirmed (minimum: 375 × 667 px — iPhone SE baseline)
 - [ ] `pb-safe-area` Tailwind v4 utility verified at runtime (or replaced with `pb-safe`)
-- [ ] `dvh` unit support confirmed for target Tauri WebView version
+- [x] `dvh` unit support confirmed for target Tauri WebView version (iOS 16.4+, Android API 26+)
 - [ ] Desktop regression test baseline captured (screenshot / automated) for:
   - `+layout.svelte` (sidebar, header, content area)
   - `CollectionDashboard.svelte` (grid, filter sidebar)
@@ -532,4 +541,4 @@ Before writing any code, the following must be confirmed:
 
 ---
 
-*Document last updated: 2026-06-28. Authored from codebase audit of commit HEAD on branch at time of writing.*
+*Document last updated: 2026-06-28 — Q&A resolved by product owner; status updated to Actionable. Authored from codebase audit of commit HEAD on branch at time of writing.*
