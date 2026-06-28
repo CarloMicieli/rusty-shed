@@ -453,6 +453,42 @@ These pages were not audited in detail, but the same density rules apply:
 - Numeric values: `font-mono text-sm` (T8 scale).
 - Status badges: max 2 badges per row; additional badges truncated with `+N more`.
 
+### 3.3 Mobile Image & Camera Capture Layouts
+
+To bridge the gap between Tauri's desktop drag-and-drop file inputs and native mobile hardware pipelines, all image management containers must transition to a tap-to-capture architecture.
+
+#### Native Hardware File Bridge
+
+- **No drag-and-drop dropzones on mobile:** Remove desktop wrapper classes like `border-dashed` input panels below the `md:` breakpoint. Replace them with single-action tactile trigger buttons.
+- **Direct camera execution:** Implement explicit media triggers to skip deep directory browsing on active devices:
+
+  ```html
+  <input type="file" accept="image/*" capture="environment" class="sr-only" id="mobile-camera-capture" />
+  <label
+    for="mobile-camera-capture"
+    class="h-12 w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium rounded-xl active:scale-95"
+  >
+    <Camera class="h-5 w-5" />
+    <span>Capture Model Photo</span>
+  </label>
+  ```
+
+  The `capture="environment"` attribute opens the rear-facing camera directly on both iOS (`WKWebView`) and Android (`WebView`). Tauri's file system plugin then receives the selected file path via the standard `<input>` change event, keeping the IPC bridge interaction identical to the desktop flow.
+
+#### Image Aspect-Ratio Containers
+
+- **Enforce strict geometry blocks:** In grid and list previews, imagery must be hard-bound to an aspect ratio utility (`aspect-video` or `aspect-[4/3]`) combined with `object-cover`. This safely handles varying smartphone camera capture outputs without inducing unexpected page layout shifts or vertical stretching down to the 375 px baseline:
+
+  ```html
+  <!-- Mobile-safe image container -->
+  <div class="w-full aspect-video overflow-hidden rounded-lg">
+    <img src={model.imageUrl} alt={model.name} class="h-full w-full object-cover" />
+  </div>
+  ```
+
+- **Skeleton placeholder geometry:** Image skeleton loaders must use the same `aspect-video` container so the layout does not reflow when the image loads.
+- **Missing image fallback:** When no image is available, render a centered icon placeholder inside the same `aspect-video` container (`bg-muted flex items-center justify-center`) rather than collapsing the container height.
+
 ---
 
 ## Section 4: Discovery Questionnaire
