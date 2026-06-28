@@ -340,7 +340,11 @@
   />
 {:else if loading}
   <div
-    class="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"
+    class="safe-area-pad pointer-events-none flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"
+    data-testid="startup-loading-surface"
+    role="status"
+    aria-live="polite"
+    aria-busy="true"
     in:fade={{ delay: 1 }}
     out:fade
   >

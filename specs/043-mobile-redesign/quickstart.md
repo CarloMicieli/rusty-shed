@@ -92,3 +92,15 @@ pnpm specta:generate
 	- Mobile interaction helper in `src/__tests__/helpers/mobileInteractions.ts`.
 - Foundational tasks (safe-area and drawer registry) must complete before story-level work.
 - At every story checkpoint, run targeted tests first, then update localized catalogs in both `messages/en.json` and `messages/it.json`.
+
+## US4 Rollout Verification Steps
+
+1. Execute desktop parity and mobile overflow tests:
+	- `pnpm vitest --run src/__tests__/routes/desktop-parity.mobile-redesign.test.ts`
+	- `pnpm vitest --run src/__tests__/routes/mobile-i18n-overflow.test.ts`
+2. Execute startup placeholder behavior and timing checks:
+	- `pnpm vitest --run src/__tests__/routes/mobile-startup-placeholder.test.ts`
+	- `pnpm vitest --run src/__tests__/routes/mobile-startup-placeholder-timing.test.ts`
+3. Fill the milestone checklist and acceptance template in `docs/testing/mobile-redesign-regression-checklist.md`.
+4. Record SC evidence in `docs/testing/mobile-redesign-metrics-report.md` using thresholds from `docs/testing/mobile-redesign-metrics-protocol.md`.
+5. Verify desktop behavior manually at `>=768px` for shell, navigation, collection, and detail routes before release sign-off.

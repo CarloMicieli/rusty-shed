@@ -1,3 +1,5 @@
+import { SvelteSet } from 'svelte/reactivity';
+
 export type MatchMediaState = {
   readonly query: string;
   readonly matches: boolean;

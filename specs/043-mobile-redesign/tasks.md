@@ -133,18 +133,18 @@
 
 ### Tests for User Story 4
 
-- [ ] T045 [P] [US4] Add desktop parity regression tests for updated shell/navigation/components in src/__tests__/routes/desktop-parity.mobile-redesign.test.ts
-- [ ] T046 [P] [US4] Add multilingual overflow/truncation tests (en/it at 375px) in src/__tests__/routes/mobile-i18n-overflow.test.ts
-- [ ] T047 [P] [US4] Add startup placeholder behavior tests during async initialization in src/__tests__/routes/mobile-startup-placeholder.test.ts
+- [X] T045 [P] [US4] Add desktop parity regression tests for updated shell/navigation/components in src/__tests__/routes/desktop-parity.mobile-redesign.test.ts
+- [X] T046 [P] [US4] Add multilingual overflow/truncation tests (en/it at 375px) in src/__tests__/routes/mobile-i18n-overflow.test.ts
+- [X] T047 [P] [US4] Add startup placeholder behavior tests during async initialization in src/__tests__/routes/mobile-startup-placeholder.test.ts
 
 ### Implementation for User Story 4
 
-- [ ] T048 [US4] Ensure startup loading surface is non-blocking and mobile-safe in src/routes/+layout.svelte
-- [ ] T049 [US4] Add milestone-based mobile regression checklist and acceptance report template in docs/testing/mobile-redesign-regression-checklist.md
-- [ ] T050 [US4] Document mobile rollout and desktop parity verification steps in specs/043-mobile-redesign/quickstart.md
-- [ ] T056 [US4] Define SC measurement protocol (sample size, timing method, pass/fail thresholds) in docs/testing/mobile-redesign-metrics-protocol.md
-- [ ] T057 [P] [US4] Add startup placeholder timing assertion (<1s target) in src/__tests__/routes/mobile-startup-placeholder-timing.test.ts
-- [ ] T058 [US4] Capture SC-001/SC-002/SC-006 validation evidence in docs/testing/mobile-redesign-metrics-report.md
+- [X] T048 [US4] Ensure startup loading surface is non-blocking and mobile-safe in src/routes/+layout.svelte
+- [X] T049 [US4] Add milestone-based mobile regression checklist and acceptance report template in docs/testing/mobile-redesign-regression-checklist.md
+- [X] T050 [US4] Document mobile rollout and desktop parity verification steps in specs/043-mobile-redesign/quickstart.md
+- [X] T056 [US4] Define SC measurement protocol (sample size, timing method, pass/fail thresholds) in docs/testing/mobile-redesign-metrics-protocol.md
+- [X] T057 [P] [US4] Add startup placeholder timing assertion (<1s target) in src/__tests__/routes/mobile-startup-placeholder-timing.test.ts
+- [X] T058 [US4] Capture SC-001/SC-002/SC-006 validation evidence in docs/testing/mobile-redesign-metrics-report.md
 
 **Checkpoint**: All stories are independently verifiable; rollout is safe and measurable.
 
