@@ -154,11 +154,11 @@
 
 **Purpose**: Final consistency, docs, and full validation.
 
-- [ ] T051 [P] Run full feature verification commands from quickstart and capture output notes in specs/043-mobile-redesign/quickstart.md
-- [ ] T052 [P] Perform final touch-target audit and document exceptions in docs/testing/mobile-redesign-test-matrix.md
-- [ ] T053 [P] Perform final Italian 375px visual audit notes in docs/testing/mobile-redesign-test-matrix.md
-- [ ] T054 Run repository-wide quality gates for all touched files (`pnpm format`, `pnpm lint`, `pnpm check`, `pnpm test`, and rust checks if affected), then resolve findings across changed paths
-- [ ] T055 Update feature changelog entry in CHANGELOG.md
+- [X] T051 [P] Run full feature verification commands from quickstart and capture output notes in specs/043-mobile-redesign/quickstart.md
+- [X] T052 [P] Perform final touch-target audit and document exceptions in docs/testing/mobile-redesign-test-matrix.md
+- [X] T053 [P] Perform final Italian 375px visual audit notes in docs/testing/mobile-redesign-test-matrix.md
+- [X] T054 Run repository-wide quality gates for all touched files (`pnpm format`, `pnpm lint`, `pnpm check`, `pnpm test`, and rust checks if affected), then resolve findings across changed paths
+- [X] T055 Update feature changelog entry in CHANGELOG.md
 
 ---
 
