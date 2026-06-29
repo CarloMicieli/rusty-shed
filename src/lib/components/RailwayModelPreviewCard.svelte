@@ -178,6 +178,18 @@
     }
   });
 
+  const mobileStatusLabel = $derived.by((): string => {
+    if (isSold) {
+      return m.collection_stats_sold();
+    }
+
+    if (displayCondition) {
+      return displayCondition;
+    }
+
+    return m.collection_stats_active();
+  });
+
   let resolvedPhotoUrl = $state<string | null>(null);
 
   function mimeFromPath(path: string): string {
@@ -259,7 +271,7 @@
   Amber border becomes solid on hover; delete button fades in.
 -->
 <Card
-  class="group card relative rounded-2xl border-2 border-primary/35 shadow-xl transition-all duration-200 hover:border-primary hover:shadow-[0_0_10px_rgba(212,138,66,0.15)] {isSold
+  class="group card relative rounded-2xl border-2 border-primary/35 shadow-xl transition-all duration-200 active:scale-[0.98] active:bg-muted/50 md:hover:border-primary md:hover:shadow-[0_0_10px_rgba(212,138,66,0.15)] {isSold
     ? 'opacity-70 grayscale'
     : ''} {className ?? ''}"
 >
@@ -271,6 +283,13 @@
           {#if model.productCode}
             <span class="shrink-0 text-zinc-600" aria-hidden="true">·</span>
             <span class="shrink-0 font-mono text-xs text-zinc-500">{model.productCode}</span>
+          {/if}
+          {#if powerMethodLabel}
+            <Badge
+              class="ml-auto border-transparent bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary md:hidden"
+            >
+              {powerMethodLabel}
+            </Badge>
           {/if}
         </div>
         {#if displayDescription}
@@ -324,7 +343,7 @@
       <!-- Digital features overlay (top-left) -->
       {#if model.digitalFeatures.length > 0}
         <div
-          class="absolute top-2 left-2 z-20 flex gap-1"
+          class="absolute top-12 left-2 z-20 flex gap-1 md:top-2"
           aria-label={m.railway_model_digital_features_label()}
         >
           {#each model.digitalFeatures as feature (feature)}
@@ -347,9 +366,21 @@
         </div>
       {/if}
 
+      <div class="absolute top-2 left-2 z-20 md:hidden">
+        <Badge class="max-w-[11rem] border-transparent bg-background/85 px-2 py-1 text-[10px] font-semibold">
+          <span class="block truncate">{displayCategory}</span>
+        </Badge>
+      </div>
+
+      <div class="absolute top-2 right-2 z-20 md:hidden">
+        <Badge class="border-transparent bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground">
+          {mobileStatusLabel}
+        </Badge>
+      </div>
+
       <!-- Power method badge (top-right): amber on black, prominent -->
       {#if model.powerMethod}
-        <div class="absolute top-2 right-2 z-20">
+        <div class="absolute top-2 right-2 z-20 hidden md:block">
           <Badge
             class="border-transparent bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground"
           >
@@ -367,7 +398,7 @@
       {/if}
 
       {#if displayCondition}
-        <div class="absolute right-2 bottom-2 z-20">
+        <div class="absolute right-2 bottom-2 z-20 hidden md:block">
           <Badge
             variant={model.condition === 'NEW' ? 'default' : 'secondary'}
             class="px-1.5 py-0.5 text-[10px] font-bold"
@@ -381,9 +412,41 @@
     <Separator class="my-2.5 bg-border" />
 
     <div class="space-y-3">
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-[2fr_1fr_1fr]">
+      <div class="grid grid-cols-2 gap-3 md:hidden">
+        <div class="flex min-w-0 flex-col gap-0.5">
+          <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+            {m.depot_scale()}
+          </span>
+          <span class="truncate font-mono text-xs text-foreground">{model.scale ?? '—'}</span>
+        </div>
+        <div class="flex min-w-0 flex-col gap-0.5">
+          <span class="text-[10px] tracking-wider text-muted-foreground uppercase">{m.depot_era()}</span>
+          <span class="truncate font-mono text-xs text-foreground">{model.era ?? '—'}</span>
+        </div>
+      </div>
+
+      {#if displayPurchaseDate || displayPrice}
+        <div class="grid grid-cols-2 gap-3 md:hidden">
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+              {m.components_purchaseDate()}
+            </span>
+            <span class="truncate font-mono text-xs text-foreground">
+              {displayPurchaseDate ?? '—'}
+            </span>
+          </div>
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+              {m.dashboard_card_price()}
+            </span>
+            <span class="truncate font-mono text-xs text-foreground">{displayPrice ?? '—'}</span>
+          </div>
+        </div>
+      {/if}
+
+      <div class="hidden gap-3 md:grid md:grid-cols-[2fr_1fr_1fr]">
         <div
-          class="col-span-2 flex min-w-0 flex-col items-center gap-0.5 text-center sm:col-span-1"
+          class="flex min-w-0 flex-col items-center gap-0.5 text-center"
         >
           <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
             {m.depot_category()}
@@ -408,7 +471,7 @@
       </div>
 
       {#if displayPurchaseDate || displayPrice}
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div class="hidden gap-3 md:grid md:grid-cols-2">
           <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
             <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
               {m.components_purchaseDate()}

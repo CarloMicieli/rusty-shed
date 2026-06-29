@@ -3,13 +3,16 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 describe('CollectionDashboard touch-target contracts', () => {
-  it('keeps removable filter controls at 36x36 minimum target size', () => {
+  it('keeps removable filter controls at 44x44 minimum target size on mobile', () => {
     const source = readFileSync(
       resolve('src/lib/features/collection/CollectionDashboard.svelte'),
       'utf8'
     );
 
-    const targetClassCount = source.split('h-9 w-9 rounded-sm p-0.5 transition-colors').length - 1;
+    const targetClassCount =
+      source.split(
+        'h-11 w-11 rounded-sm p-0.5 active:scale-[0.98] active:bg-white/20 transition-all md:h-9 md:w-9 md:hover:bg-white/20'
+      ).length - 1;
     expect(targetClassCount).toBeGreaterThanOrEqual(5);
   });
 });
