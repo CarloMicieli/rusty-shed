@@ -367,13 +367,17 @@
       {/if}
 
       <div class="absolute top-2 left-2 z-20 md:hidden">
-        <Badge class="max-w-[11rem] border-transparent bg-background/85 px-2 py-1 text-[10px] font-semibold">
+        <Badge
+          class="max-w-[11rem] border-transparent bg-background/85 px-2 py-1 text-[10px] font-semibold"
+        >
           <span class="block truncate">{displayCategory}</span>
         </Badge>
       </div>
 
       <div class="absolute top-2 right-2 z-20 md:hidden">
-        <Badge class="border-transparent bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground">
+        <Badge
+          class="border-transparent bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground"
+        >
           {mobileStatusLabel}
         </Badge>
       </div>
@@ -420,7 +424,9 @@
           <span class="truncate font-mono text-xs text-foreground">{model.scale ?? '—'}</span>
         </div>
         <div class="flex min-w-0 flex-col gap-0.5">
-          <span class="text-[10px] tracking-wider text-muted-foreground uppercase">{m.depot_era()}</span>
+          <span class="text-[10px] tracking-wider text-muted-foreground uppercase"
+            >{m.depot_era()}</span
+          >
           <span class="truncate font-mono text-xs text-foreground">{model.era ?? '—'}</span>
         </div>
       </div>
@@ -445,9 +451,7 @@
       {/if}
 
       <div class="hidden gap-3 md:grid md:grid-cols-[2fr_1fr_1fr]">
-        <div
-          class="flex min-w-0 flex-col items-center gap-0.5 text-center"
-        >
+        <div class="flex min-w-0 flex-col items-center gap-0.5 text-center">
           <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
             {m.depot_category()}
           </span>

@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { TrainFront, X, Filter, LayoutGrid, Rows3, SlidersHorizontal, Search } from 'lucide-svelte';
+  import {
+    TrainFront,
+    X,
+    Filter,
+    LayoutGrid,
+    Rows3,
+    SlidersHorizontal,
+    Search
+  } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -292,7 +300,7 @@
               onclick={ui.toggleFilterSidebar}
               variant="outline"
               size="sm"
-              class="min-h-11 min-w-11 rounded-full active:scale-[0.98] active:bg-muted/50 transition-all"
+              class="min-h-11 min-w-11 rounded-full transition-all active:scale-[0.98] active:bg-muted/50"
               title={m.collection_toggle_filters_title()}
               aria-expanded={ui.showFilterSidebar}
               aria-controls="collection-mobile-filter-panel"
@@ -301,9 +309,13 @@
             </Button>
           </div>
           <div
-            class="mb-4 flex gap-2 overflow-x-auto pb-1 whitespace-nowrap snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] md:hidden"
+            class="mb-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-2 overflow-x-auto pb-1 whitespace-nowrap [-ms-overflow-style:none] md:hidden"
           >
-            {@render StatPill(m.category_value_locomotives(), summaryData.locomotivesCount, 'text-primary')}
+            {@render StatPill(
+              m.category_value_locomotives(),
+              summaryData.locomotivesCount,
+              'text-primary'
+            )}
             {@render StatPill(
               m.category_value_passenger_cars(),
               summaryData.passengerCarsCount,
@@ -314,8 +326,16 @@
               summaryData.freightCarsCount,
               'text-primary'
             )}
-            {@render StatPill(m.category_value_train_sets(), summaryData.trainSetsCount, 'text-primary')}
-            {@render StatPill(m.category_value_railcars(), summaryData.railcarsCount, 'text-primary')}
+            {@render StatPill(
+              m.category_value_train_sets(),
+              summaryData.trainSetsCount,
+              'text-primary'
+            )}
+            {@render StatPill(
+              m.category_value_railcars(),
+              summaryData.railcarsCount,
+              'text-primary'
+            )}
             {@render StatPill(
               m.category_value_electric_multiple_units(),
               summaryData.electricMultipleUnitsCount,
@@ -323,24 +343,27 @@
             )}
             <button
               type="button"
-              class="min-h-11 shrink-0 snap-start rounded-full border border-amber-500/30 bg-amber-500/8 px-3 text-xs font-medium text-amber-300 active:scale-[0.98] active:bg-amber-500/18 transition-all"
+              class="min-h-11 shrink-0 snap-start rounded-full border border-amber-500/30 bg-amber-500/8 px-3 text-xs font-medium text-amber-300 transition-all active:scale-[0.98] active:bg-amber-500/18"
               onclick={() => handleLifecycleChipClick('preordered')}
             >
-              {collectionStats.preorderedCount} {m.collection_stats_preordered()}
+              {collectionStats.preorderedCount}
+              {m.collection_stats_preordered()}
             </button>
             <button
               type="button"
-              class="min-h-11 shrink-0 snap-start rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 text-xs font-medium text-emerald-300 active:scale-[0.98] active:bg-emerald-500/18 transition-all"
+              class="min-h-11 shrink-0 snap-start rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 text-xs font-medium text-emerald-300 transition-all active:scale-[0.98] active:bg-emerald-500/18"
               onclick={() => handleLifecycleChipClick('active')}
             >
-              {collectionStats.activeCount} {m.collection_stats_active()}
+              {collectionStats.activeCount}
+              {m.collection_stats_active()}
             </button>
             <button
               type="button"
-              class="min-h-11 shrink-0 snap-start rounded-full border border-rose-500/30 bg-rose-500/8 px-3 text-xs font-medium text-rose-300 active:scale-[0.98] active:bg-rose-500/18 transition-all"
+              class="min-h-11 shrink-0 snap-start rounded-full border border-rose-500/30 bg-rose-500/8 px-3 text-xs font-medium text-rose-300 transition-all active:scale-[0.98] active:bg-rose-500/18"
               onclick={() => handleLifecycleChipClick('sold')}
             >
-              {collectionStats.soldCount} {m.collection_stats_sold()}
+              {collectionStats.soldCount}
+              {m.collection_stats_sold()}
             </button>
           </div>
           <div
@@ -403,7 +426,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleScale(scale)}
-                      class="h-11 w-11 rounded-sm p-0.5 active:scale-[0.98] active:bg-white/20 transition-all md:h-9 md:w-9 md:hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove scale filter: ${scale}`}
                     >
                       <X size={14} />
@@ -420,7 +443,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleEpoch(epoch)}
-                      class="h-11 w-11 rounded-sm p-0.5 active:scale-[0.98] active:bg-white/20 transition-all md:h-9 md:w-9 md:hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove epoch filter: ${epoch}`}
                     >
                       <X size={14} />
@@ -437,7 +460,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleCategory(category)}
-                      class="h-11 w-11 rounded-sm p-0.5 active:scale-[0.98] active:bg-white/20 transition-all md:h-9 md:w-9 md:hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove category filter: ${category}`}
                     >
                       <X size={14} />
@@ -454,7 +477,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleCompany(company)}
-                      class="h-11 w-11 rounded-sm p-0.5 active:scale-[0.98] active:bg-white/20 transition-all md:h-9 md:w-9 md:hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove company filter: ${company}`}
                     >
                       <X size={14} />
@@ -471,7 +494,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleTag(tag)}
-                      class="h-11 w-11 rounded-sm p-0.5 active:scale-[0.98] active:bg-white/20 transition-all md:h-9 md:w-9 md:hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove tag filter: ${tag}`}
                     >
                       <X size={14} />
