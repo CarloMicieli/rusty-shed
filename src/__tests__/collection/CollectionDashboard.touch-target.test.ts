@@ -11,7 +11,7 @@ describe('CollectionDashboard touch-target contracts', () => {
 
     const targetClassCount =
       source.split(
-        'h-11 w-11 rounded-sm p-0.5 active:scale-[0.98] active:bg-white/20 transition-all md:h-9 md:w-9 md:hover:bg-white/20'
+        'h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20'
       ).length - 1;
     expect(targetClassCount).toBeGreaterThanOrEqual(5);
   });
