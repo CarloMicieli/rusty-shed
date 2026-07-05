@@ -5,9 +5,7 @@
 export type MeasureUnit = 'Metric' | 'Imperial';
 
 export type EntityStatusBadge =
-  | { kind: 'protected' }
-  | { kind: 'in-use'; usageCount: number }
-  | { kind: 'unused' };
+  { kind: 'protected' } | { kind: 'in-use'; usageCount: number } | { kind: 'unused' };
 
 export function deriveEntityStatusBadge(
   isSystemSeeded: boolean,

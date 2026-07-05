@@ -1,13 +1,7 @@
 import type { ArchiveFormat } from '$lib/bindings';
 
 export type ImportSessionState =
-  | 'pending'
-  | 'analyzed'
-  | 'validated'
-  | 'previewed'
-  | 'importing'
-  | 'completed'
-  | 'failed';
+  'pending' | 'analyzed' | 'validated' | 'previewed' | 'importing' | 'completed' | 'failed';
 
 export interface ImportSession {
   id: string;
