@@ -88,8 +88,7 @@
   const formError = $derived(
     asyncError ??
       (($errors.selectedProductId?.[0] ?? $errors.quantity?.[0] ?? $errors.priceAmount?.[0]) as
-        | string
-        | undefined) ??
+        string | undefined) ??
       null
   );
 
