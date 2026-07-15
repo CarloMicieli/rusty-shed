@@ -22,6 +22,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   SQLX_OFFLINE: true
+  CARGO_BUILD_WARNINGS: deny
 
 jobs:
   build:
@@ -69,7 +70,7 @@ jobs:
         run: pnpm test
 
       - name: 🦀 Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.97.0
         with:
           components: clippy, rustfmt
 
@@ -95,7 +96,7 @@ jobs:
         working-directory: src-tauri
 
       - name: 🦀 Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features --keep-going
         working-directory: src-tauri
 
       - name: 🦀 Run cargo tests

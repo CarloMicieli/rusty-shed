@@ -5,7 +5,7 @@ description = "The ultimate companion app for scale modelers and collectors"
 authors = ["Carlo Micieli <piovarolo@gmail.com>"]
 edition = "2024"
 license = "Apache-2.0"
-rust-version = "1.96.0"
+rust-version = "1.97.0"
 default-run = "rusty-shed"
 
 [[bin]]
