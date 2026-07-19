@@ -5,7 +5,7 @@ description = "The ultimate companion app for scale modelers and collectors"
 authors = ["Carlo Micieli <piovarolo@gmail.com>"]
 edition = "2024"
 license = "Apache-2.0"
-rust-version = "1.96.0"
+rust-version = "1.97.0"
 default-run = "rusty-shed"
 
 [[bin]]
@@ -23,8 +23,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build                  = { version = "2.6.3", features = [] }
 
 [dependencies]
-anyhow                       = "1.0.103"
-async-trait                  = "0.1.89"
+anyhow                       = "1.0.104"
+async-trait                  = "0.1.91"
 chrono                       = { version = "0.4.45", features = ["serde"] }
 csv                          = "1.4.0"
 flate2                       = "1.1.9"
@@ -33,18 +33,18 @@ image                        = "0.25.10"
 infer                        = "0.19.0"
 isocountry                   = "0.3.2"
 itertools                    = "0.14.0"
-jsonschema                   = { version = "0.45.1", default-features = false }
+jsonschema                   = { version = "0.47.0", default-features = false }
 libc                         = "0.2"
 oauth2                       = { version = "5", features = ["reqwest"] }
 once_cell                    = "1.21.4"
 parking_lot                  = "0.12.5"
 online                       = { version = "4.0.2", default-features = false, features = ["tokio", "tokio-runtime"] }
-regex                        = "1.12.4"
+regex                        = "1.13.1"
 reqwest                      = { version = "0.13.4", default-features = false, features = ["json", "rustls", "query", "form"] }
 rust_decimal                 = { version = "1.42.1", features = ["serde-with-float"] }
 rust_decimal_macros          = "1.40.0"
 secrecy                      = { version = "0.10", features = ["serde"] }
-serde                        = { version = "1.0.228", features = ["derive"] }
+serde                        = { version = "1.0.229", features = ["derive"] }
 serde_json                   = "1.0.150"
 sha2                         = "0.11.0"
 slug                         = "0.1.6"
@@ -54,27 +54,27 @@ sqlx                         = { version = "0.8.6", features = ["sqlite", "runti
 strum                        = "0.28.0"
 strum_macros                 = "0.28.0"
 tar                          = "0.4.46"
-tauri                        = { version = "2.11.3", features = ["protocol-asset", "image-png"] }
+tauri                        = { version = "2.11.5", features = ["protocol-asset", "image-png"] }
 tauri-plugin-global-shortcut = "2.3.2"
-tauri-plugin-dialog          = "2.7.1"
+tauri-plugin-dialog          = "2.7.2"
 tauri-plugin-fs              = "2.5.1"
 tauri-plugin-http            = "2.5.9"
-tauri-plugin-log             = "2.8.0"
+tauri-plugin-log             = "2.9.0"
 tauri-plugin-mcp-bridge      = "0.10.0"
-tauri-plugin-oauth           = "2.0.0"
+tauri-plugin-oauth           = "2.1.0"
 tauri-plugin-opener          = "2.5.4"
 tauri-plugin-os              = "2.3.2"
-tauri-plugin-store           = "2.4.3"
+tauri-plugin-store           = "2.4.4"
 tauri-plugin-window-state    = "2.4.1"
 tauri-specta                 = { version = "2.0.0-rc.25", features = ["typescript"] }
-thiserror                    = "2.0.18"
-tokio                        = { version = "1.52.3", features = ["rt-multi-thread", "macros", "fs"] }
+thiserror                    = "2.0.19"
+tokio                        = { version = "1.53.0", features = ["rt-multi-thread", "macros", "fs"] }
 tracing                      = { version = "0.1.44", features = ["log"] }
 tracing-subscriber           = { version = "0.3.23", features = ["env-filter", "fmt"] }
 url                          = { version = "2.5.8", features = ["serde"] }
 urlencoding                  = "2.1.3"
 tempfile                     = "3.27.0"
-uuid                         = { version = "1.23.4", features = ["v4", "serde", "fast-rng"] }
+uuid                         = { version = "1.24.0", features = ["v4", "serde", "fast-rng"] }
 zeroize                      = { version = "1.9.0", features = ["derive"] }
 zip                          = "8.6.0"
 
@@ -85,7 +85,7 @@ keyring                      = { version = "3", features = ["windows-native", "s
 fake                         = { version = "5.1.0", features = ["derive"] }
 mockall                      = "0.14.0"
 pretty_assertions            = "1.4.1"
-rand                         = "0.10.1"
+rand                         = "0.10.2"
 rstest                       = "0.26.1"
-serde_derive                 = "1.0.228"
+serde_derive                 = "1.0.229"
 serial_test                  = "3.5.0"

@@ -13,26 +13,26 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Main dashboard view showing stats, quick actions, and purchase groups.
   - **Children:**
     - **PageHeader**  
-       _Location:_ src/lib/components/PageHeader.svelte  
-       _Summary:_ Renders the dashboard's main header.
+      _Location:_ src/lib/components/PageHeader.svelte  
+      _Summary:_ Renders the dashboard's main header.
     - **StatsCard**  
-       _Location:_ src/lib/components/StatsCard.svelte  
-       _Summary:_ Displays key statistics in card format.
+      _Location:_ src/lib/components/StatsCard.svelte  
+      _Summary:_ Displays key statistics in card format.
     - **QuickActionButtons**  
-       _Location:_ src/lib/components/QuickActionButtons.svelte  
-       _Summary:_ Renders a set of quick action buttons for dashboard tasks.
+      _Location:_ src/lib/components/QuickActionButtons.svelte  
+      _Summary:_ Renders a set of quick action buttons for dashboard tasks.
     - **DashboardCharts**  
-       _Location:_ src/lib/features/dashboard/DashboardCharts.svelte  
-       _Summary:_ Visualizes dashboard data (charts/graphs).
+      _Location:_ src/lib/features/dashboard/DashboardCharts.svelte  
+      _Summary:_ Visualizes dashboard data (charts/graphs).
     - **PurchaseGroupCard**  
-       _Location:_ src/lib/features/dashboard/PurchaseGroupCard.svelte  
-       _Summary:_ Shows grouped purchase information.
+      _Location:_ src/lib/features/dashboard/PurchaseGroupCard.svelte  
+      _Summary:_ Shows grouped purchase information.
     - **DashboardAction**  
-       _Location:_ src/lib/features/dashboard/components/DashboardAction.svelte  
-       _Summary:_ Represents a single dashboard action.
+      _Location:_ src/lib/features/dashboard/components/DashboardAction.svelte  
+      _Summary:_ Represents a single dashboard action.
     - **DashboardSectionHeader**  
-       _Location:_ src/lib/features/dashboard/components/DashboardSectionHeader.svelte  
-       _Summary:_ Section header for dashboard groupings.
+      _Location:_ src/lib/features/dashboard/components/DashboardSectionHeader.svelte  
+      _Summary:_ Section header for dashboard groupings.
 
 ---
 
@@ -45,8 +45,8 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Displays a signal failure/error state.
   - **Children:**
     - **SignalFailureView**  
-       _Location:_ src/lib/components/signal-failure/SignalFailureView.svelte  
-       _Summary:_ Renders error details and troubleshooting info.
+      _Location:_ src/lib/components/signal-failure/SignalFailureView.svelte  
+      _Summary:_ Renders error details and troubleshooting info.
 
 ---
 
@@ -59,11 +59,11 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Global search interface for models and wishlists.
   - **Children:**
     - **SearchResultCard**  
-       _Location:_ src/lib/features/search/components/SearchResultCard.svelte  
-       _Summary:_ Displays a single search result.
+      _Location:_ src/lib/features/search/components/SearchResultCard.svelte  
+      _Summary:_ Displays a single search result.
     - **SearchEmptyState**  
-       _Location:_ src/lib/features/search/components/SearchEmptyState.svelte  
-       _Summary:_ Shown when no search results are found.
+      _Location:_ src/lib/features/search/components/SearchEmptyState.svelte  
+      _Summary:_ Shown when no search results are found.
 
 ---
 
@@ -76,17 +76,17 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Budget tracking and configuration.
   - **Children:**
     - **GaugeStatCard**  
-       _Location:_ src/lib/components/GaugeStatCard.svelte  
-       _Summary:_ Visualizes budget stats.
+      _Location:_ src/lib/components/GaugeStatCard.svelte  
+      _Summary:_ Visualizes budget stats.
     - **BudgetConfigSheet**  
-       _Location:_ src/lib/features/budget/components/BudgetConfigSheet.svelte  
-       _Summary:_ Sheet/modal for configuring budget.
+      _Location:_ src/lib/features/budget/components/BudgetConfigSheet.svelte  
+      _Summary:_ Sheet/modal for configuring budget.
     - **BudgetMonthRow**  
-       _Location:_ src/lib/features/budget/components/BudgetMonthRow.svelte  
-       _Summary:_ Displays monthly budget data.
+      _Location:_ src/lib/features/budget/components/BudgetMonthRow.svelte  
+      _Summary:_ Displays monthly budget data.
     - **ExtraBudgetModal**  
-       _Location:_ src/lib/features/budget/components/ExtraBudgetModal.svelte  
-       _Summary:_ Modal for adding extra budget.
+      _Location:_ src/lib/features/budget/components/ExtraBudgetModal.svelte  
+      _Summary:_ Modal for adding extra budget.
 
 ---
 
@@ -99,14 +99,14 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Manages digital rolling stock and DCC addresses.
   - **Children:**
     - **DigitalSummary**  
-       _Location:_ src/lib/features/digital-roster/components/DigitalSummary.svelte  
-       _Summary:_ Summarizes digital roster stats.
+      _Location:_ src/lib/features/digital-roster/components/DigitalSummary.svelte  
+      _Summary:_ Summarizes digital roster stats.
     - **DigitalRosterTable**  
-       _Location:_ src/lib/features/digital-roster/components/DigitalRosterTable.svelte  
-       _Summary:_ Table of digital rolling stock.
+      _Location:_ src/lib/features/digital-roster/components/DigitalRosterTable.svelte  
+      _Summary:_ Table of digital rolling stock.
     - **DecoderInstallDrawer**  
-       _Location:_ src/lib/features/digital-roster/components/DecoderInstallDrawer.svelte  
-       _Summary:_ Drawer for installing DCC decoders.
+      _Location:_ src/lib/features/digital-roster/components/DecoderInstallDrawer.svelte  
+      _Summary:_ Drawer for installing DCC decoders.
 
 ---
 
@@ -119,23 +119,23 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Lists and manages track inventories.
   - **Children:**
     - **InventoryDetail**  
-       _Location:_ src/lib/features/track-inventory/components/InventoryDetail.svelte  
-       _Summary:_ Shows details for a selected inventory.
+      _Location:_ src/lib/features/track-inventory/components/InventoryDetail.svelte  
+      _Summary:_ Shows details for a selected inventory.
     - **TrackCommandBar**  
-       _Location:_ src/lib/features/track-inventory/components/TrackCommandBar.svelte  
-       _Summary:_ Command bar for inventory actions.
+      _Location:_ src/lib/features/track-inventory/components/TrackCommandBar.svelte  
+      _Summary:_ Command bar for inventory actions.
     - **CreateInventoryDialog**  
-       _Location:_ src/lib/features/track-inventory/components/CreateInventoryDialog.svelte  
-       _Summary:_ Dialog for creating new inventory.
+      _Location:_ src/lib/features/track-inventory/components/CreateInventoryDialog.svelte  
+      _Summary:_ Dialog for creating new inventory.
     - **RenameInventoryDialog**  
-       _Location:_ src/lib/features/track-inventory/components/RenameInventoryDialog.svelte  
-       _Summary:_ Dialog for renaming inventory.
+      _Location:_ src/lib/features/track-inventory/components/RenameInventoryDialog.svelte  
+      _Summary:_ Dialog for renaming inventory.
     - **DeleteInventoryDialog**  
-       _Location:_ src/lib/features/track-inventory/components/DeleteInventoryDialog.svelte  
-       _Summary:_ Dialog for deleting inventory.
+      _Location:_ src/lib/features/track-inventory/components/DeleteInventoryDialog.svelte  
+      _Summary:_ Dialog for deleting inventory.
     - **AddTracksPurchaseDrawer**  
-       _Location:_ src/lib/features/track-inventory/components/AddTracksPurchaseDrawer.svelte  
-       _Summary:_ Drawer for adding track purchases.
+      _Location:_ src/lib/features/track-inventory/components/AddTracksPurchaseDrawer.svelte  
+      _Summary:_ Drawer for adding track purchases.
 
 ---
 
@@ -164,8 +164,8 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Lists and manages train formations.
   - **Children:**
     - **FormationList**  
-       _Location:_ src/lib/features/train-formations/components/FormationList.svelte  
-       _Summary:_ Lists all train formations.
+      _Location:_ src/lib/features/train-formations/components/FormationList.svelte  
+      _Summary:_ Lists all train formations.
 
 ---
 
@@ -178,8 +178,8 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Edits a specific train formation.
   - **Children:**
     - **FormationBuilder**  
-       _Location:_ src/lib/features/train-formations/components/FormationBuilder.svelte  
-       _Summary:_ UI for building/editing a train formation.
+      _Location:_ src/lib/features/train-formations/components/FormationBuilder.svelte  
+      _Summary:_ UI for building/editing a train formation.
 
 ---
 
@@ -194,17 +194,17 @@ This document provides a structural audit and component mapping for all "Page" c
     - **GaugeStatCard**
     - **PageHeader**
     - **MaintenanceCardList**  
-       _Location:_ src/lib/features/maintenance/components/MaintenanceCardList.svelte  
-       _Summary:_ Lists all maintenance cards.
+      _Location:_ src/lib/features/maintenance/components/MaintenanceCardList.svelte  
+      _Summary:_ Lists all maintenance cards.
     - **EmptyMaintenanceState**  
-       _Location:_ src/lib/features/maintenance/components/EmptyMaintenanceState.svelte  
-       _Summary:_ Shown when no maintenance cards exist.
+      _Location:_ src/lib/features/maintenance/components/EmptyMaintenanceState.svelte  
+      _Summary:_ Shown when no maintenance cards exist.
     - **AddMaintenanceCardModal**  
-       _Location:_ src/lib/features/maintenance/components/AddMaintenanceCardModal.svelte  
-       _Summary:_ Modal for adding a new maintenance card.
+      _Location:_ src/lib/features/maintenance/components/AddMaintenanceCardModal.svelte  
+      _Summary:_ Modal for adding a new maintenance card.
     - **LogMaintenanceDrawer**  
-       _Location:_ src/lib/features/maintenance/components/LogMaintenanceDrawer.svelte  
-       _Summary:_ Drawer for logging maintenance events.
+      _Location:_ src/lib/features/maintenance/components/LogMaintenanceDrawer.svelte  
+      _Summary:_ Drawer for logging maintenance events.
 
 ---
 
@@ -217,11 +217,11 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Shows and edits a specific maintenance card.
   - **Children:**
     - **MaintenanceEventTimeline**  
-       _Location:_ src/lib/features/maintenance/components/MaintenanceEventTimeline.svelte  
-       _Summary:_ Timeline of maintenance events.
+      _Location:_ src/lib/features/maintenance/components/MaintenanceEventTimeline.svelte  
+      _Summary:_ Timeline of maintenance events.
     - **AddEventModal**  
-       _Location:_ src/lib/features/maintenance/components/AddEventModal.svelte  
-       _Summary:_ Modal for adding a maintenance event.
+      _Location:_ src/lib/features/maintenance/components/AddEventModal.svelte  
+      _Summary:_ Modal for adding a maintenance event.
 
 ---
 
@@ -234,8 +234,8 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Application settings and cloud backup.
   - **Children:**
     - **SettingsForm**  
-       _Location:_ src/lib/components/SettingsForm.svelte  
-       _Summary:_ Main settings form.
+      _Location:_ src/lib/components/SettingsForm.svelte  
+      _Summary:_ Main settings form.
     - **GoogleConnectButton**
     - **ConnectivityIndicator**
     - **SyncButton**
@@ -301,8 +301,8 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Dashboard for the user's collection.
   - **Children:**
     - **CollectionDashboard**  
-       _Location:_ src/lib/features/collection/CollectionDashboard.svelte  
-       _Summary:_ Main dashboard for collection overview.
+      _Location:_ src/lib/features/collection/CollectionDashboard.svelte  
+      _Summary:_ Main dashboard for collection overview.
 
 ---
 
@@ -330,8 +330,8 @@ This document provides a structural audit and component mapping for all "Page" c
   - **Summary:** Dashboard for all wishlists.
   - **Children:**
     - **WishlistsDashboard**  
-       _Location:_ src/lib/features/wishlists/WishlistsDashboard.svelte  
-       _Summary:_ Main dashboard for wishlist overview.
+      _Location:_ src/lib/features/wishlists/WishlistsDashboard.svelte  
+      _Summary:_ Main dashboard for wishlist overview.
 
 ---
 

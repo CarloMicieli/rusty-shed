@@ -82,8 +82,7 @@
   const formError = $derived(
     asyncError ??
       (($errors.manufacturerId?.[0] ?? $errors.productCode?.[0] ?? $errors.description?.[0]) as
-        | string
-        | undefined) ??
+        string | undefined) ??
       null
   );
 

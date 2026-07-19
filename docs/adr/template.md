@@ -14,11 +14,11 @@ Describe the specific technical challenge or business requirement. Why is this d
 
 2. Decision Drivers
 
-   [Driver 1, e.g., Performance requirements]
+[Driver 1, e.g., Performance requirements]
 
-   [Driver 2, e.g., Ease of maintenance]
+[Driver 2, e.g., Ease of maintenance]
 
-   [Driver 3, e.g., Licensing costs]
+[Driver 3, e.g., Licensing costs]
 
 3. Considered Options
 
@@ -51,6 +51,6 @@ Consequences
 
 5. More Information
 
-   [Link to documentation]
+[Link to documentation]
 
-   [Link to a prototype or benchmark]
+[Link to a prototype or benchmark]
