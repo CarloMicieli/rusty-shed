@@ -45,7 +45,7 @@ rust_decimal                 = { version = "1.42.1", features = ["serde-with-flo
 rust_decimal_macros          = "1.40.0"
 secrecy                      = { version = "0.10", features = ["serde"] }
 serde                        = { version = "1.0.229", features = ["derive"] }
-serde_json                   = "1.0.150"
+serde_json                   = "1.0.151"
 sha2                         = "0.11.0"
 slug                         = "0.1.6"
 specta                       = { version = "=2.0.0-rc.25", features = ["derive", "chrono", "rust_decimal", "uuid", "url"] }
@@ -68,7 +68,7 @@ tauri-plugin-store           = "2.4.4"
 tauri-plugin-window-state    = "2.4.1"
 tauri-specta                 = { version = "2.0.0-rc.25", features = ["typescript"] }
 thiserror                    = "2.0.19"
-tokio                        = { version = "1.53.0", features = ["rt-multi-thread", "macros", "fs"] }
+tokio                        = { version = "1.53.1", features = ["rt-multi-thread", "macros", "fs"] }
 tracing                      = { version = "0.1.44", features = ["log"] }
 tracing-subscriber           = { version = "0.3.23", features = ["env-filter", "fmt"] }
 url                          = { version = "2.5.8", features = ["serde"] }
