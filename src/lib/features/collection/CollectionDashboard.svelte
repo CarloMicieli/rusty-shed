@@ -29,7 +29,6 @@
   import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
   import VirtualGrid from '$lib/components/VirtualGrid.svelte';
   import { collectionItemToCardData } from './utils/cardDataMapper';
-  import FilterPanel from './components/FilterPanel.svelte';
   import ControlPanel from './components/ControlPanel.svelte';
   import CollectionTableView from './components/CollectionTableView.svelte';
   import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
@@ -54,7 +53,8 @@
 
   function useCollectionUI() {
     let showDrawer = $state(false);
-    let showFilterSidebar = $state(true);
+    let showDesktopFilterSidebar = $state(true);
+    let showMobileFilterSheet = $state(false);
     let viewMode = $state<'grid' | 'table'>('grid');
     let editing = $state<CollectionItemView | null>(null);
 
@@ -73,8 +73,20 @@
       editing = null;
     };
 
-    const toggleFilterSidebar = () => {
-      showFilterSidebar = !showFilterSidebar;
+    const toggleDesktopFilterSidebar = () => {
+      showDesktopFilterSidebar = !showDesktopFilterSidebar;
+    };
+
+    const openMobileFilterSheet = () => {
+      showMobileFilterSheet = true;
+    };
+
+    const closeMobileFilterSheet = () => {
+      showMobileFilterSheet = false;
+    };
+
+    const toggleMobileFilterSheet = () => {
+      showMobileFilterSheet = !showMobileFilterSheet;
     };
 
     const setViewMode = (mode: 'grid' | 'table') => {
@@ -88,8 +100,11 @@
       set showDrawer(value: boolean) {
         showDrawer = value;
       },
-      get showFilterSidebar() {
-        return showFilterSidebar;
+      get showDesktopFilterSidebar() {
+        return showDesktopFilterSidebar;
+      },
+      get showMobileFilterSheet() {
+        return showMobileFilterSheet;
       },
       get viewMode() {
         return viewMode;
@@ -100,7 +115,10 @@
       startCreate,
       edit,
       closeDrawer,
-      toggleFilterSidebar,
+      toggleDesktopFilterSidebar,
+      openMobileFilterSheet,
+      closeMobileFilterSheet,
+      toggleMobileFilterSheet,
       setViewMode
     };
   }
@@ -282,7 +300,7 @@
   <div class="relative -mx-4 flex flex-1 flex-col md:flex-row lg:-mx-8">
     <!-- Main Content -->
     <div class="flex-1">
-      <div class="px-4 py-6 sm:px-6">
+      <div class="px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] sm:px-6 md:pb-6">
         {#if !isCollectionEmpty && !isLoading}
           <div class="mb-4 grid grid-cols-[1fr_auto] items-center gap-2 md:hidden">
             <label class="relative flex min-h-11 items-center" for="collection-mobile-search">
@@ -297,19 +315,20 @@
               />
             </label>
             <Button
-              onclick={ui.toggleFilterSidebar}
+              onclick={ui.openMobileFilterSheet}
               variant="outline"
               size="sm"
               class="min-h-11 min-w-11 rounded-full transition-all active:scale-[0.98] active:bg-muted/50"
               title={m.collection_toggle_filters_title()}
-              aria-expanded={ui.showFilterSidebar}
-              aria-controls="collection-mobile-filter-panel"
+              aria-label={m.collection_toggle_filters_title()}
+              aria-expanded={ui.showMobileFilterSheet}
+              aria-controls="collection-mobile-filter-sheet"
             >
               <Filter size={18} />
             </Button>
           </div>
           <div
-            class="mb-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-2 overflow-x-auto pb-1 whitespace-nowrap [-ms-overflow-style:none] md:hidden"
+            class="-mx-4 mb-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1 whitespace-nowrap [-ms-overflow-style:none] md:hidden"
           >
             {@render StatPill(
               m.category_value_locomotives(),
@@ -346,7 +365,7 @@
               class="min-h-11 shrink-0 snap-start rounded-full border border-amber-500/30 bg-amber-500/8 px-3 text-xs font-medium text-amber-300 transition-all active:scale-[0.98] active:bg-amber-500/18"
               onclick={() => handleLifecycleChipClick('preordered')}
             >
-              {collectionStats.preorderedCount}
+              <span class="font-mono">{collectionStats.preorderedCount}</span>
               {m.collection_stats_preordered()}
             </button>
             <button
@@ -354,7 +373,7 @@
               class="min-h-11 shrink-0 snap-start rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 text-xs font-medium text-emerald-300 transition-all active:scale-[0.98] active:bg-emerald-500/18"
               onclick={() => handleLifecycleChipClick('active')}
             >
-              {collectionStats.activeCount}
+              <span class="font-mono">{collectionStats.activeCount}</span>
               {m.collection_stats_active()}
             </button>
             <button
@@ -362,7 +381,7 @@
               class="min-h-11 shrink-0 snap-start rounded-full border border-rose-500/30 bg-rose-500/8 px-3 text-xs font-medium text-rose-300 transition-all active:scale-[0.98] active:bg-rose-500/18"
               onclick={() => handleLifecycleChipClick('sold')}
             >
-              {collectionStats.soldCount}
+              <span class="font-mono">{collectionStats.soldCount}</span>
               {m.collection_stats_sold()}
             </button>
           </div>
@@ -573,43 +592,57 @@
       </div>
     </div>
 
-    <!-- Sidebar (Right) — persistent on desktop, toggled on mobile -->
-    {#if ui.showFilterSidebar}
-      <!-- Mobile: full-width panel below content -->
-      <aside
-        id="collection-mobile-filter-panel"
-        class="w-full flex-shrink-0 border-t border-border bg-card md:hidden"
+    {#if ui.showMobileFilterSheet && !isCollectionEmpty}
+      <div
+        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md md:hidden"
+        onclick={ui.closeMobileFilterSheet}
+        role="presentation"
+      ></div>
+
+      <div
+        id="collection-mobile-filter-sheet"
+        class="fixed inset-x-0 bottom-0 z-[55] max-h-[85dvh] overflow-hidden rounded-sm border border-border bg-card md:hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label={m.collection_filters_title()}
       >
-        <FilterPanel
+        <ControlPanel
           {filters}
+          availableScales={availableScaleOptions}
+          {availableCompanies}
+          {availableCategories}
+          {availableEpochs}
           {availableTags}
-          {availableScales}
-          onSearch={handleSearch}
-          onSetScale={handleScale}
+          {hasActiveFilters}
+          onToggleScale={handleToggleScale}
+          onToggleCompany={handleToggleCompany}
+          onToggleCategory={handleToggleCategory}
+          onToggleEpoch={handleToggleEpoch}
           onToggleTag={handleTag}
+          onSetStatus={handleSetStatus}
           onClear={handleClear}
-          onToggleSidebar={ui.toggleFilterSidebar}
+          onCloseMobileSheet={ui.closeMobileFilterSheet}
         />
-      </aside>
+      </div>
     {/if}
 
     <!-- Desktop: always-visible command center sidebar (narrows to icon rail when collapsed) -->
     {#if !isCollectionEmpty}
       <aside
         class="sticky top-0 hidden h-dvh flex-shrink-0 flex-col overflow-hidden border-l border-layout-border bg-card md:flex"
-        style="width: {ui.showFilterSidebar
+        style="width: {ui.showDesktopFilterSidebar
           ? '280px'
           : '60px'}; transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);"
       >
         <!-- Sidebar header — always visible -->
         <div
           class="flex flex-shrink-0 items-center border-b border-layout-border px-2 py-3"
-          class:justify-between={ui.showFilterSidebar}
-          class:justify-center={!ui.showFilterSidebar}
+          class:justify-between={ui.showDesktopFilterSidebar}
+          class:justify-center={!ui.showDesktopFilterSidebar}
         >
           <span
             class="text-[10px] font-semibold tracking-widest whitespace-nowrap text-muted-foreground uppercase transition-[opacity,width] duration-200"
-            style="opacity: {ui.showFilterSidebar ? '1' : '0'}; width: {ui.showFilterSidebar
+            style="opacity: {ui.showDesktopFilterSidebar ? '1' : '0'}; width: {ui.showDesktopFilterSidebar
               ? 'auto'
               : '0'}; overflow: hidden;"
           >
@@ -618,9 +651,10 @@
           <button
             type="button"
             class="rounded p-1 text-muted-foreground transition-colors hover:text-primary"
-            onclick={ui.toggleFilterSidebar}
+            onclick={ui.toggleDesktopFilterSidebar}
             title={m.collection_toggle_filters_title()}
-            aria-expanded={ui.showFilterSidebar}
+            aria-expanded={ui.showDesktopFilterSidebar}
+            aria-label={m.collection_toggle_filters_title()}
           >
             <SlidersHorizontal size={14} />
           </button>
@@ -629,7 +663,7 @@
         <!-- Sidebar content — fades in after sidebar expands -->
         <div
           class="flex-1 overflow-y-auto transition-opacity duration-200"
-          style="opacity: {ui.showFilterSidebar ? '1' : '0'}; pointer-events: {ui.showFilterSidebar
+          style="opacity: {ui.showDesktopFilterSidebar ? '1' : '0'}; pointer-events: {ui.showDesktopFilterSidebar
             ? 'auto'
             : 'none'};"
         >
@@ -639,14 +673,16 @@
             {availableCompanies}
             {availableCategories}
             {availableEpochs}
+            {availableTags}
             {hasActiveFilters}
             onToggleScale={handleToggleScale}
             onToggleCompany={handleToggleCompany}
             onToggleCategory={handleToggleCategory}
             onToggleEpoch={handleToggleEpoch}
+            onToggleTag={handleTag}
             onSetStatus={handleSetStatus}
             onClear={handleClear}
-            onToggleSidebar={ui.toggleFilterSidebar}
+            onToggleSidebar={ui.toggleDesktopFilterSidebar}
           />
         </div>
       </aside>
@@ -679,8 +715,8 @@
   <div
     class="flex flex-col justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors md:hover:bg-muted/40"
   >
-    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{label}</p>
-    <p class="mt-1 text-lg font-bold text-primary">{count}</p>
+    <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{label}</p>
+    <p class="mt-1 font-mono text-lg font-bold text-primary">{count}</p>
   </div>
 {/snippet}
 
@@ -688,7 +724,7 @@
   <div
     class="min-h-11 shrink-0 snap-start rounded-full border border-border/60 bg-muted/30 px-3 py-2 leading-tight"
   >
-    <p class="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</p>
-    <p class={`text-sm font-bold ${countColorClass}`}>{count}</p>
+    <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{label}</p>
+    <p class={`font-mono text-sm font-bold ${countColorClass}`}>{count}</p>
   </div>
 {/snippet}

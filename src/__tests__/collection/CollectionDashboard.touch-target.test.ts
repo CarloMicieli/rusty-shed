@@ -15,4 +15,15 @@ describe('CollectionDashboard touch-target contracts', () => {
       ).length - 1;
     expect(targetClassCount).toBeGreaterThanOrEqual(5);
   });
+
+  it('applies tactile press feedback to mobile filter sheet controls', () => {
+    const controlPanelSource = readFileSync(
+      resolve('src/lib/features/collection/components/ControlPanel.svelte'),
+      'utf8'
+    );
+
+    expect(controlPanelSource).toContain('min-h-11');
+    expect(controlPanelSource).toContain('active:scale-[0.98]');
+    expect(controlPanelSource).toContain('active:bg-muted/50');
+  });
 });
