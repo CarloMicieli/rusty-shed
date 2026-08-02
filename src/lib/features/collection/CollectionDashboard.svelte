@@ -642,9 +642,9 @@
         >
           <span
             class="text-[10px] font-semibold tracking-widest whitespace-nowrap text-muted-foreground uppercase transition-[opacity,width] duration-200"
-            style="opacity: {ui.showDesktopFilterSidebar ? '1' : '0'}; width: {ui.showDesktopFilterSidebar
-              ? 'auto'
-              : '0'}; overflow: hidden;"
+            style="opacity: {ui.showDesktopFilterSidebar
+              ? '1'
+              : '0'}; width: {ui.showDesktopFilterSidebar ? 'auto' : '0'}; overflow: hidden;"
           >
             Filters
           </span>
@@ -663,9 +663,9 @@
         <!-- Sidebar content — fades in after sidebar expands -->
         <div
           class="flex-1 overflow-y-auto transition-opacity duration-200"
-          style="opacity: {ui.showDesktopFilterSidebar ? '1' : '0'}; pointer-events: {ui.showDesktopFilterSidebar
-            ? 'auto'
-            : 'none'};"
+          style="opacity: {ui.showDesktopFilterSidebar
+            ? '1'
+            : '0'}; pointer-events: {ui.showDesktopFilterSidebar ? 'auto' : 'none'};"
         >
           <ControlPanel
             {filters}
