@@ -192,10 +192,6 @@
     }, 220);
   }
 
-  function handleScale(scale: string | null) {
-    collectionService.setScale(scale);
-  }
-
   function handleToggleScale(scale: string) {
     collectionService.toggleScale(scale);
   }
