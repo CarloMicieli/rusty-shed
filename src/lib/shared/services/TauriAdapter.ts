@@ -306,9 +306,13 @@ export async function safeInvokeWithRetry<T>(
 export async function safeCommand<T, E>(
   promise: Promise<{ status: 'ok'; data: T } | { status: 'error'; error: E }>
 ): Promise<SafeResult<T>> {
-  const result = await promise;
-  if (result.status === 'ok') {
-    return { ok: true, data: result.data };
+  try {
+    const result = await promise;
+    if (result.status === 'ok') {
+      return { ok: true, data: result.data };
+    }
+    return { ok: false, error: normalizeError(result.error) };
+  } catch (error) {
+    return { ok: false, error: normalizeError(error) };
   }
-  return { ok: false, error: normalizeError(result.error) };
 }
