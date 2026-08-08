@@ -50,7 +50,7 @@ export async function waitForTauriBridge(timeoutMs = 4_000, pollMs = 50): Promis
 const FINANCE_SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
 
 export function getInitialFinanceYear(): number {
-  const currentYear = new Date().getFullYear();
+  const currentYear = new Date(Date.now()).getFullYear();
   const validYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   try {
