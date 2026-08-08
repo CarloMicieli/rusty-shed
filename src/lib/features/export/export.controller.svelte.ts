@@ -2,7 +2,8 @@
 // Manages the frontend state for the archive export workflow
 
 import { setContext, getContext } from 'svelte';
-import { safeInvoke } from '$lib/services';
+import { safeCommand } from '$lib/services';
+import { commands } from '$lib/bindings';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
 import type { ExportResult } from '$lib/bindings';
@@ -17,7 +18,7 @@ export class ExportController {
     if (this.isExporting) return;
 
     // Open the native file save dialog
-    const pathResult = await safeInvoke<string | null>('open_export_file_dialog');
+    const pathResult = await safeCommand(commands.openExportFileDialog());
     if (!pathResult.ok) {
       this.error = pathResult.error.message;
       toaster.error({ title: m.export_archive_error({ error: pathResult.error.message }) });
@@ -34,9 +35,7 @@ export class ExportController {
     this.error = null;
 
     try {
-      const exportResult = await safeInvoke<ExportResult>('execute_export', {
-        destinationPath
-      });
+      const exportResult = await safeCommand(commands.executeExport(destinationPath));
 
       if (exportResult.ok) {
         toaster.success({
