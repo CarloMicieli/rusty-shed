@@ -30,10 +30,7 @@
   import { financeState } from '$lib/state/finance.svelte';
   import WelcomeWizard from '$lib/features/onboarding/WelcomeWizard.svelte';
   import { completeOnboardingStatus } from '$lib/features/onboarding/onboarding-state.svelte';
-  import {
-    bootstrapApp,
-    postOnboardingBoot
-  } from '$lib/features/app/AppBootstrap.svelte';
+  import { bootstrapApp, postOnboardingBoot } from '$lib/features/app/AppBootstrap.svelte';
 
   let loading = $state(true);
   let needsOnboarding = $state(false);

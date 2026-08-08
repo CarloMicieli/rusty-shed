@@ -350,11 +350,13 @@ export class CollectionState {
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
       const removedDate = new Date().toISOString().split('T')[0];
 
-      const result = await safeCommand(commands.removeCollectionItem({
-        collectionItemId: id,
-        category: item.railwayModel.category,
-        removedDate
-      }));
+      const result = await safeCommand(
+        commands.removeCollectionItem({
+          collectionItemId: id,
+          category: item.railwayModel.category,
+          removedDate
+        })
+      );
 
       if (!result.ok) {
         const errorMessage = getErrorMessage(result.error);

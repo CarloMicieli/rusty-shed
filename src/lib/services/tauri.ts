@@ -5,4 +5,9 @@
  * service files continue to resolve without modification.
  */
 
-export { safeInvoke, invokeOrThrow, safeInvokeWithRetry, safeCommand } from '$lib/shared/services/TauriAdapter';
+export {
+  safeInvoke,
+  invokeOrThrow,
+  safeInvokeWithRetry,
+  safeCommand
+} from '$lib/shared/services/TauriAdapter';
