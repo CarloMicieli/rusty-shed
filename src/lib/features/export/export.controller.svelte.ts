@@ -6,7 +6,6 @@ import { safeCommand } from '$lib/services';
 import { commands } from '$lib/bindings';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
-import type { ExportResult } from '$lib/bindings';
 
 const EXPORT_CONTEXT_KEY = Symbol('export-controller');
 
