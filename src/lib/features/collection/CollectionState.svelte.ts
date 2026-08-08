@@ -7,9 +7,11 @@ import { SvelteSet } from 'svelte/reactivity';
 import type {
   CollectionView,
   AddRailwayModelToCollectionArgs,
-  ReceivePreorderArgs
+  ReceivePreorderArgs,
+  RemoveCollectionItemArgs
 } from '$lib/bindings';
-import { safeInvoke, getErrorMessage } from '$lib/services';
+import { commands } from '$lib/bindings';
+import { safeCommand, getErrorMessage } from '$lib/services';
 import { collectionStore } from '$lib/state/collection.svelte';
 
 export type StatusFilter = 'active' | 'preordered' | 'sold' | 'all';
@@ -192,7 +194,7 @@ export class CollectionState {
     this.#isLoading = true;
 
     try {
-      const result = await safeInvoke<CollectionView>('get_collection');
+      const result = await safeCommand(commands.getCollection());
 
       if (!result.ok) {
         console.error('Failed to fetch collection:', result.error);
@@ -280,7 +282,7 @@ export class CollectionState {
    * @returns true if successful, false otherwise
    */
   addRailwayModel = async (args: AddRailwayModelToCollectionArgs): Promise<boolean> => {
-    const result = await safeInvoke('add_railway_model_to_collection', { args });
+    const result = await safeCommand(commands.addRailwayModelToCollection(args));
 
     if (result.ok) {
       toaster.success(m.add_model_success(), { duration: 3000 });
@@ -298,7 +300,7 @@ export class CollectionState {
    * @returns true if successful, false otherwise
    */
   receivePreorder = async (args: ReceivePreorderArgs): Promise<boolean> => {
-    const result = await safeInvoke('receive_preorder', { args });
+    const result = await safeCommand(commands.receivePreorder(args));
 
     if (result.ok) {
       toaster.success(m.collection_item_receive_action(), { duration: 3000 });
@@ -349,13 +351,11 @@ export class CollectionState {
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
       const removedDate = new Date().toISOString().split('T')[0];
 
-      const result = await safeInvoke('remove_collection_item', {
-        args: {
-          collectionItemId: id,
-          category: item.railwayModel.category,
-          removedDate
-        }
-      });
+      const result = await safeCommand(commands.removeCollectionItem({
+        collectionItemId: id,
+        category: item.railwayModel.category,
+        removedDate
+      } as RemoveCollectionItemArgs));
 
       if (!result.ok) {
         const errorMessage = getErrorMessage(result.error);
