@@ -11,6 +11,7 @@ import { commands } from '$lib/bindings';
 import { appState } from '$lib/stores/app.svelte';
 import { themeState } from '$lib/stores/themeStore.svelte';
 import { log } from '$lib/tauri-logger';
+import { SvelteDate } from 'svelte/reactivity';
 import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 import { settingsState } from '$lib/features/settings/SettingsState.svelte';
 import { bootstrapNeedsOnboarding } from '$lib/features/onboarding/onboarding-state.svelte';
@@ -50,7 +51,7 @@ export async function waitForTauriBridge(timeoutMs = 4_000, pollMs = 50): Promis
 const FINANCE_SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
 
 export function getInitialFinanceYear(): number {
-  const currentYear = new Date().getFullYear();
+  const currentYear = new SvelteDate().getFullYear();
   const validYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   try {
