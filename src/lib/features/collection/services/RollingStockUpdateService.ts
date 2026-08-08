@@ -65,9 +65,7 @@ export async function updateRollingStockSubcategory(
 }
 
 /** Update DCC / control / length fields on a rolling stock item. */
-export async function updateRollingStockDcc(
-  args: UpdateRollingStockDccArgs
-): Promise<boolean> {
+export async function updateRollingStockDcc(args: UpdateRollingStockDccArgs): Promise<boolean> {
   const result = await commands.updateRollingStockDcc(args);
   return result.status === 'ok';
 }

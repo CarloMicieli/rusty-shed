@@ -370,7 +370,8 @@ export class WishlistState {
     );
     toastLoading(toastId);
 
-    const result = await safeCommand(commands.addToWishlist({
+    const result = await safeCommand(
+      commands.addToWishlist({
         wishlistId,
         railwayModelId: modelId,
         priority: null,
@@ -379,7 +380,8 @@ export class WishlistState {
         desiredPriceCurrency: null,
         notes: null,
         addedDate: null
-      }));
+      })
+    );
 
     if (!result.ok) {
       console.error('Failed to add item to wishlist:', result.error);
@@ -459,9 +461,13 @@ export class WishlistState {
     });
     toastLoading(toastId);
 
-    const result = await safeCommand(commands.moveItemToList({
-      itemId, destinationWishlistId: toWishlistId, wishlistId: fromWishlistId
-    }));
+    const result = await safeCommand(
+      commands.moveItemToList({
+        itemId,
+        destinationWishlistId: toWishlistId,
+        wishlistId: fromWishlistId
+      })
+    );
 
     if (!result.ok) {
       console.error('Failed to move item to list:', result.error);

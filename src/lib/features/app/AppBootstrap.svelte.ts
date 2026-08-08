@@ -26,9 +26,7 @@ type TauriAwareWindow = Window & {
 };
 
 function hasTauriBridge(): boolean {
-  return (
-    typeof window !== 'undefined' && (window as TauriAwareWindow).__TAURI_INTERNALS__ != null
-  );
+  return typeof window !== 'undefined' && (window as TauriAwareWindow).__TAURI_INTERNALS__ != null;
 }
 
 export function isTauriHosted(): boolean {
@@ -70,9 +68,7 @@ export function getInitialFinanceYear(): number {
 // ─────────────────────────────────────────────────────────────
 
 export type BootstrapResult =
-  | { status: 'normal' }
-  | { status: 'needs-onboarding' }
-  | { status: 'error'; message: string };
+  { status: 'normal' } | { status: 'needs-onboarding' } | { status: 'error'; message: string };
 
 // ─────────────────────────────────────────────────────────────
 // COLD-START BOOTSTRAP
@@ -95,7 +91,11 @@ export async function bootstrapApp(opts: {
   onBridgeReady: () => void;
   dashboardState: { load: () => Promise<void> };
   wishlistState: { fetchWishlists: () => Promise<void> };
-  budgetState: { load: () => Promise<void>; hasConfig: boolean; loadMonthlyRecords: (year: number) => Promise<void> };
+  budgetState: {
+    load: () => Promise<void>;
+    hasConfig: boolean;
+    loadMonthlyRecords: (year: number) => Promise<void>;
+  };
 }): Promise<BootstrapResult> {
   try {
     if (isTauriHosted()) {
@@ -147,7 +147,11 @@ export async function bootstrapApp(opts: {
 export async function postOnboardingBoot(opts: {
   dashboardState: { load: () => Promise<void> };
   wishlistState: { fetchWishlists: () => Promise<void> };
-  budgetState: { load: () => Promise<void>; hasConfig: boolean; loadMonthlyRecords: (year: number) => Promise<void> };
+  budgetState: {
+    load: () => Promise<void>;
+    hasConfig: boolean;
+    loadMonthlyRecords: (year: number) => Promise<void>;
+  };
 }): Promise<void> {
   const versionResult = await commands.getAppVersion();
   appState.setVersion(versionResult);
