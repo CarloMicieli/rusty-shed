@@ -7,8 +7,7 @@ import { SvelteSet } from 'svelte/reactivity';
 import type {
   CollectionView,
   AddRailwayModelToCollectionArgs,
-  ReceivePreorderArgs,
-  RemoveCollectionItemArgs
+  ReceivePreorderArgs
 } from '$lib/bindings';
 import { commands } from '$lib/bindings';
 import { safeCommand, getErrorMessage } from '$lib/services';
@@ -355,7 +354,7 @@ export class CollectionState {
         collectionItemId: id,
         category: item.railwayModel.category,
         removedDate
-      } as RemoveCollectionItemArgs));
+      }));
 
       if (!result.ok) {
         const errorMessage = getErrorMessage(result.error);
