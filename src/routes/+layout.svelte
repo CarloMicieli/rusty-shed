@@ -35,8 +35,6 @@
   type LayoutViewState = 'loading' | 'needs-onboarding' | 'ready' | 'error';
 
   let viewState = $state<LayoutViewState>('loading');
-  let needsOnboarding = $state(false);
-  let error = $state<string | null>(null);
   let sidebarCollapsed = $state(false);
   let { children } = $props();
 
@@ -82,10 +80,8 @@
       });
 
       if (result.status === 'needs-onboarding') {
-        needsOnboarding = true;
         viewState = 'needs-onboarding';
       } else if (result.status === 'error') {
-        error = result.message;
         viewState = 'error';
       } else {
         viewState = 'ready';
@@ -130,8 +126,7 @@
         await completeOnboardingStatus(settingsState);
         await postOnboardingBoot({ dashboardState, wishlistState, budgetState });
         viewState = 'ready';
-      } catch (err) {
-        error = err instanceof Error ? err.message : String(err);
+      } catch {
         viewState = 'error';
       }
     }}
