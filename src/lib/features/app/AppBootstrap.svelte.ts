@@ -177,11 +177,18 @@ export async function postOnboardingBoot(opts: {
 
   const initialFinanceYear = getInitialFinanceYear();
 
-  const dashboardLoad = typeof opts.dashboardState?.load === 'function' ? opts.dashboardState.load() : Promise.resolve();
-  const wishlistLoad = typeof opts.wishlistState?.fetchWishlists === 'function'
-    ? opts.wishlistState.fetchWishlists()
-    : Promise.resolve();
-  const financeLoad = typeof financeState.ensureLoaded === 'function' ? financeState.ensureLoaded() : Promise.resolve();
+  const dashboardLoad =
+    typeof opts.dashboardState?.load === 'function'
+      ? opts.dashboardState.load()
+      : Promise.resolve();
+  const wishlistLoad =
+    typeof opts.wishlistState?.fetchWishlists === 'function'
+      ? opts.wishlistState.fetchWishlists()
+      : Promise.resolve();
+  const financeLoad =
+    typeof financeState.ensureLoaded === 'function'
+      ? financeState.ensureLoaded()
+      : Promise.resolve();
 
   await Promise.all([dashboardLoad, collectionStore.fetch(), wishlistLoad, financeLoad]);
 
