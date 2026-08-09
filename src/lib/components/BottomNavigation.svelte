@@ -35,7 +35,7 @@
   class="pb-safe-area fixed right-0 bottom-0 left-0 z-50 border-t-2 border-primary bg-card lg:hidden"
   style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);"
 >
-  <div class="flex h-16 items-center justify-around">
+  <div class="flex h-16 items-center justify-around px-1">
     {#each PRIMARY_ITEMS as item (item.id)}
       <a
         href={resolve(item.href as '/dashboard')}
@@ -51,7 +51,11 @@
           ></div>
         {/if}
         <item.icon size={20} />
-        <span class="text-[10px] font-bold tracking-wider uppercase">{item.label()}</span>
+        <span
+          class="max-w-[5.5rem] truncate text-[10px] leading-tight font-bold tracking-wider uppercase"
+        >
+          {item.label()}
+        </span>
         {#if item.id === 'wishlists' && defaultWishlist}
           <Badge variant="outline" class="text-[9px]">{defaultWishlist.count}</Badge>
         {/if}
@@ -74,7 +78,11 @@
         ></div>
       {/if}
       <Ellipsis size={20} />
-      <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_more()}</span>
+      <span
+        class="max-w-[5.5rem] truncate text-[10px] leading-tight font-bold tracking-wider uppercase"
+      >
+        {m.app_more()}
+      </span>
     </button>
   </div>
 

@@ -26,10 +26,12 @@
     confirm_delete_image_title,
     confirm_delete_image_description,
     image_deleted,
-    common_cancel
+    common_cancel,
+    image_upload_camera_fallback_notice
   } from '$lib/paraglide/messages.js';
   import type { RailwayModelId } from '$lib/bindings';
   import ImageCropDialog from './ImageCropDialog.svelte';
+  import { onMount } from 'svelte';
 
   interface Props {
     modelId: RailwayModelId;
@@ -46,11 +48,40 @@
   let error = $state<string | null>(null);
   let showDeleteSuccess = $state(false);
   let isDeleteDialogOpen = $state(false);
+  let cameraAvailable = $state(true);
+  let probeStatus = $state<'success' | 'unsupported' | 'denied' | 'error'>('success');
+  let activeInputMode = $state<'camera_capture' | 'gallery_picker'>('camera_capture');
+
+  onMount(() => {
+    void probeCameraCapability();
+  });
+
+  async function probeCameraCapability() {
+    try {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) {
+        cameraAvailable = false;
+        probeStatus = 'unsupported';
+        activeInputMode = 'gallery_picker';
+        return;
+      }
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const hasVideoInput = devices.some((device) => device.kind === 'videoinput');
+
+      cameraAvailable = hasVideoInput;
+      probeStatus = hasVideoInput ? 'success' : 'unsupported';
+      activeInputMode = hasVideoInput ? 'camera_capture' : 'gallery_picker';
+    } catch (err) {
+      const message = err instanceof Error ? err.message.toLowerCase() : '';
+      const denied = message.includes('denied') || message.includes('permission');
+      cameraAvailable = false;
+      probeStatus = denied ? 'denied' : 'error';
+      activeInputMode = 'gallery_picker';
+    }
+  }
 
   async function handleUpload() {
     error = null;
-
-    console.log('[ImageUpload] Starting upload for model:', modelId);
 
     const startDir = await homeDir().catch(() => undefined);
 
@@ -65,12 +96,11 @@
       ]
     });
 
-    console.log('[ImageUpload] File selected:', file);
-
     if (!file) {
-      console.log('[ImageUpload] User cancelled file selection');
       return;
     }
+
+    activeInputMode = cameraAvailable ? 'camera_capture' : 'gallery_picker';
 
     const ext = file.split('.').pop()?.toLowerCase() ?? '';
     const mimeMap: Record<string, string> = {
@@ -189,6 +219,14 @@
       </Dialog>
     {/if}
   </div>
+
+  {#if !cameraAvailable}
+    <Alert class="border-amber-500/40 bg-amber-500/10 text-amber-200">
+      <AlertDescription>
+        {image_upload_camera_fallback_notice({ mode: activeInputMode, status: probeStatus })}
+      </AlertDescription>
+    </Alert>
+  {/if}
 
   <!-- Crop Dialog -->
   <ImageCropDialog
