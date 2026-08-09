@@ -18,11 +18,13 @@
   const dashboardState = getDashboardContext();
 
   // Close all drawers when the user navigates to another page.
-  beforeNavigate(() => {
-    showAcquisitionDrawer = false;
-    showWishlistDrawer = false;
-    showLogMaintenanceDrawer = false;
-  });
+  if (typeof beforeNavigate === 'function') {
+    beforeNavigate(() => {
+      showAcquisitionDrawer = false;
+      showWishlistDrawer = false;
+      showLogMaintenanceDrawer = false;
+    });
+  }
 
   // Expose openers so any descendant can open a drawer via context.
   setContext('openAcquisitionDrawer', () => {

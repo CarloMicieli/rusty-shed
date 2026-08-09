@@ -32,7 +32,9 @@
   import { completeOnboardingStatus } from '$lib/features/onboarding/onboarding-state.svelte';
   import { bootstrapApp, postOnboardingBoot } from '$lib/features/app/AppBootstrap.svelte';
 
-  let loading = $state(true);
+  type LayoutViewState = 'loading' | 'needs-onboarding' | 'ready' | 'error';
+
+  let viewState = $state<LayoutViewState>('loading');
   let needsOnboarding = $state(false);
   let error = $state<string | null>(null);
   let sidebarCollapsed = $state(false);
@@ -73,7 +75,6 @@
         onBridgeReady: () => {
           const loader = document.getElementById('app-loading');
           if (loader) loader.remove();
-          loading = false;
         },
         dashboardState,
         wishlistState,
@@ -82,15 +83,18 @@
 
       if (result.status === 'needs-onboarding') {
         needsOnboarding = true;
+        viewState = 'needs-onboarding';
       } else if (result.status === 'error') {
         error = result.message;
-        loading = false;
+        viewState = 'error';
+      } else {
+        viewState = 'ready';
       }
     })();
   });
 </script>
 
-{#if error}
+{#if viewState === 'error'}
   <SignalFailureView
     errorId={generateErrorId()}
     moduleLabel={m.module_label_signal_box()}
@@ -98,7 +102,7 @@
       window.location.href = '/';
     }}
   />
-{:else if loading}
+{:else if viewState === 'loading'}
   <div
     class="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"
     in:fade={{ delay: 1 }}
@@ -117,22 +121,22 @@
       <p class="text-sm text-muted-foreground">{m.app_loading_message()}</p>
     </div>
   </div>
-{:else if needsOnboarding}
+{:else if viewState === 'needs-onboarding'}
   <WelcomeWizard
     onComplete={async () => {
       needsOnboarding = false;
-      loading = true;
+      viewState = 'loading';
       try {
         await completeOnboardingStatus(settingsState);
         await postOnboardingBoot({ dashboardState, wishlistState, budgetState });
+        viewState = 'ready';
       } catch (err) {
         error = err instanceof Error ? err.message : String(err);
-      } finally {
-        loading = false;
+        viewState = 'error';
       }
     }}
   />
-{:else}
+{:else if viewState === 'ready'}
   <Tooltip.Provider>
     <div
       class="flex h-screen w-full flex-col overflow-hidden font-sans text-foreground lg:flex-row"

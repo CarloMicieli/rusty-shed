@@ -8,7 +8,6 @@
  */
 
 import { SvelteDate } from 'svelte/reactivity';
-import { commands } from '$lib/bindings';
 import { appState } from '$lib/stores/app.svelte';
 import { themeState } from '$lib/stores/themeStore.svelte';
 import { log } from '$lib/tauri-logger';
@@ -17,6 +16,7 @@ import { settingsState } from '$lib/features/settings/SettingsState.svelte';
 import { bootstrapNeedsOnboarding } from '$lib/features/onboarding/onboarding-state.svelte';
 import { collectionStore } from '$lib/state/collection.svelte';
 import { financeState } from '$lib/state/finance.svelte';
+import { safeInvoke } from '$lib/services';
 
 // ─────────────────────────────────────────────────────────────
 // INTERNAL HELPERS
@@ -25,6 +25,16 @@ import { financeState } from '$lib/state/finance.svelte';
 type TauriAwareWindow = Window & {
   __TAURI_INTERNALS__?: unknown;
 };
+
+function formatCommandError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') return message;
+  }
+  return JSON.stringify(error);
+}
 
 function hasTauriBridge(): boolean {
   return typeof window !== 'undefined' && (window as TauriAwareWindow).__TAURI_INTERNALS__ != null;
@@ -106,9 +116,9 @@ export async function bootstrapApp(opts: {
       }
     }
 
-    const showResult = await commands.showMainWindow();
-    if (showResult.status === 'error') {
-      log.warn(`Failed to show main window: ${JSON.stringify(showResult.error)}`);
+    const showResult = await safeInvoke<null>('show_main_window');
+    if (!showResult.ok) {
+      log.warn(`Failed to show main window: ${formatCommandError(showResult.error)}`);
     }
 
     opts.onBridgeReady();
@@ -154,29 +164,31 @@ export async function postOnboardingBoot(opts: {
     loadMonthlyRecords: (year: number) => Promise<void>;
   };
 }): Promise<void> {
-  const versionResult = await commands.getAppVersion();
-  appState.setVersion(versionResult);
+  const versionResult = await safeInvoke<string>('get_app_version');
+  if (!versionResult.ok) {
+    throw new Error(formatCommandError(versionResult.error) || 'Failed to read app version');
+  }
+  appState.setVersion(versionResult.data);
 
-  const initResult = await commands.initDatabase();
-  if (initResult.status === 'error') {
-    throw new Error(
-      typeof initResult.error === 'string'
-        ? initResult.error
-        : JSON.stringify(initResult.error) || 'Database initialization failed'
-    );
+  const initResult = await safeInvoke<null>('init_database');
+  if (!initResult.ok) {
+    throw new Error(formatCommandError(initResult.error) || 'Database initialization failed');
   }
 
   const initialFinanceYear = getInitialFinanceYear();
 
-  await Promise.all([
-    opts.dashboardState.load(),
-    collectionStore.fetch(),
-    opts.wishlistState.fetchWishlists(),
-    financeState.ensureLoaded()
-  ]);
+  const dashboardLoad = typeof opts.dashboardState?.load === 'function' ? opts.dashboardState.load() : Promise.resolve();
+  const wishlistLoad = typeof opts.wishlistState?.fetchWishlists === 'function'
+    ? opts.wishlistState.fetchWishlists()
+    : Promise.resolve();
+  const financeLoad = typeof financeState.ensureLoaded === 'function' ? financeState.ensureLoaded() : Promise.resolve();
 
-  await opts.budgetState.load();
-  if (opts.budgetState.hasConfig) {
+  await Promise.all([dashboardLoad, collectionStore.fetch(), wishlistLoad, financeLoad]);
+
+  if (typeof opts.budgetState?.load === 'function') {
+    await opts.budgetState.load();
+  }
+  if (opts.budgetState?.hasConfig && typeof opts.budgetState?.loadMonthlyRecords === 'function') {
     await opts.budgetState.loadMonthlyRecords(initialFinanceYear);
   }
 }
