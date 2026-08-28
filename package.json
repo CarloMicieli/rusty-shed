@@ -103,9 +103,6 @@
     "zod": "^4.5.4"
   },
   "packageManager": "bun@1.4.0",
-  "workspaces": [
-    "packages/*"
-  ],
   "overrides": {
     "typebox": "1.1.39"
   }
