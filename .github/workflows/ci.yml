@@ -74,7 +74,7 @@ jobs:
       - name: 🧹 Linting (ESLint)
         run: bun run lint
 
-      - name: 🧪 Type Check (TypeScript)
+      - name: 🧪 Type Check (TypeScript, heavy)
         run: bun run check
 
       - name: 🎭 Run frontend build
