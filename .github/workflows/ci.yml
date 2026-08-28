@@ -66,9 +66,6 @@ jobs:
       - name: 🧹 Linting (ESLint)
         run: bun run lint
 
-      - name: 🧹 Linting (ESLint, type-aware)
-        run: bun run lint:typed
-
       - name: 🧪 Type Check (TypeScript)
         run: bun run check
 

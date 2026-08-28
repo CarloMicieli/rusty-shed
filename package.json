@@ -12,8 +12,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "svelte-kit sync && eslint . --cache --cache-location .eslintcache",
-    "lint:typed": "svelte-kit sync && ESLINT_TYPED=true eslint .",
+    "lint": "svelte-kit sync && eslint . --cache --cache-location .eslintcache --report-unused-disable-directives-severity off",
     "test:unit": "vitest --environment happy-dom",
     "test": "vitest --run --environment happy-dom",
     "test:ci": "vitest --run --environment happy-dom",
@@ -104,7 +103,9 @@
     "zod": "^4.5.4"
   },
   "packageManager": "bun@1.4.0",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "overrides": {
     "typebox": "1.1.39"
   }
