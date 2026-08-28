@@ -18,20 +18,26 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v6
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          bun-version: 1.4.0
 
-      - name: 🟢 Update Node.js dependencies
+      - name: 📦 Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: 🟢 Update Bun dependencies
         run: |
-          # pnpm update will refresh the pnpm-lock.yaml
-          # Use 'pnpm update --latest' if you want to ignore ranges in package.json
-          pnpm update
+          # bun update refreshes bun.lock
+          # Use 'bun update --latest' if you want to ignore ranges in package.json
+          bun update
 
       - name: 🦀 Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.98.0
@@ -53,11 +59,11 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: weekly pnpm and cargo update'
-          title: 'chore: weekly pnpm and cargo update'
+          commit-message: 'chore: weekly bun and cargo update'
+          title: 'chore: weekly bun and cargo update'
           body: |
             Automated weekly dependency updates for Tauri 2 project.
             - Updated `Cargo.lock`
-            - Updated `pnpm-lock.yaml`
+            - Updated `bun.lock`
           branch: automated-dep-update
           delete-branch: true

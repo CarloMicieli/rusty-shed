@@ -9,6 +9,7 @@ import ts from 'typescript-eslint';
 import svelteConfig from './svelte.config.js';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
+const typeAwareLint = process.env.ESLINT_TYPED === 'true';
 
 const allowDefaultProject = [
   'eslint.config.js',
@@ -49,10 +50,14 @@ export default defineConfig(
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
       parserOptions: {
-        // projectService: true is the modern way to handle type-aware linting
-        projectService: {
-          allowDefaultProject
-        },
+        ...(typeAwareLint
+          ? {
+              // projectService: true is the modern way to handle type-aware linting
+              projectService: {
+                allowDefaultProject
+              }
+            }
+          : {}),
         extraFileExtensions: ['.svelte'],
         svelteConfig
       }
@@ -65,10 +70,10 @@ export default defineConfig(
       // Disable for Tauri apps where base path handling is not needed
       'svelte/no-navigation-without-resolve': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
+      '@typescript-eslint/no-unsafe-assignment': typeAwareLint ? 'error' : 'off',
+      '@typescript-eslint/no-unsafe-member-access': typeAwareLint ? 'error' : 'off',
+      '@typescript-eslint/no-unsafe-call': typeAwareLint ? 'error' : 'off',
+      '@typescript-eslint/no-unsafe-return': typeAwareLint ? 'error' : 'off',
       // Allow unused variables that start with _
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -81,9 +86,13 @@ export default defineConfig(
 
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject
-        },
+        ...(typeAwareLint
+          ? {
+              projectService: {
+                allowDefaultProject
+              }
+            }
+          : {}),
         extraFileExtensions: ['.svelte'],
         parser: ts.parser,
         svelteConfig

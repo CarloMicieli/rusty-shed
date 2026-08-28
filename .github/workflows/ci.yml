@@ -42,32 +42,41 @@ jobs:
             libwebkit2gtk-4.1-dev \
             librsvg2-dev
 
-      - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v6
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          bun-version: 1.4.0
+
+      - name: 📦 Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: 📦 Install frontend dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: 🎨 Check Formatting (Prettier)
-        run: pnpm format:check
+        run: bun run format:check
 
       - name: 🧹 Linting (ESLint)
-        run: pnpm lint
+        run: bun run lint
+
+      - name: 🧹 Linting (ESLint, type-aware)
+        run: bun run lint:typed
 
       - name: 🧪 Type Check (TypeScript)
-        run: pnpm check
+        run: bun run check
 
       - name: 🎭 Run frontend build
-        run: pnpm build
+        run: bun run build
 
       - name: 🔬 Run frontend tests
-        run: pnpm test
+        run: bun run test
 
       - name: 🦀 Setup Rust toolchain
         uses: dtolnay/rust-toolchain@1.98.0
@@ -86,7 +95,7 @@ jobs:
       - name: Verify Bindings are up-to-date
         run: |
           if [ -n "$(git status --porcelain src/lib/bindings.ts)" ]; then
-            echo "::error::TypeScript bindings are out of sync! Please run 'pnpm specta:generate' locally and commit the changes."
+            echo "::error::TypeScript bindings are out of sync! Please run 'bun run specta:generate' locally and commit the changes."
             git diff src/lib/bindings.ts
             exit 1
           fi
