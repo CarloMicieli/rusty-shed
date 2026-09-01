@@ -42,7 +42,7 @@ jobs:
           tool: cargo-edit
 
       - name: 🦀 Upgrade dependencies
-        run: cargo upgrade --pinned # Updates Cargo.toml
+        run: cargo upgrade --pinned --recursive=false # Updates Cargo.toml only
         working-directory: src-tauri
 
       - name: 🦀 Update Cargo.lock
