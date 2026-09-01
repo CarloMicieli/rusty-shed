@@ -13,7 +13,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:fast": "oxlint .",
-    "lint": "svelte-kit sync && bun run lint:fast && eslint .",
+    "lint": "svelte-kit sync && bun run lint:fast && eslint . --cache --cache-location .eslintcache --report-unused-disable-directives-severity off",
     "test:unit": "vitest --environment happy-dom",
     "test": "vitest --run --environment happy-dom",
     "test:ci": "vitest --run --environment happy-dom",

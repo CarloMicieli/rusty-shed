@@ -64,9 +64,7 @@ jobs:
         run: bun run format:check
 
       - name: 🧹 Linting (Oxlint & ESLint)
-        run: |
-          bun run lint:fast
-          svelte-kit sync && eslint .
+        run: bun run lint
 
       - name: 🧪 Type Check (TypeScript, heavy)
         run: bun run check
