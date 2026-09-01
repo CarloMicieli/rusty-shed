@@ -63,8 +63,10 @@ jobs:
       - name: 🎨 Check Formatting (Prettier)
         run: bun run format:check
 
-      - name: 🧹 Linting (ESLint)
-        run: bun run lint
+      - name: 🧹 Linting (Oxlint & ESLint)
+        run: |
+          bun run lint:fast
+          svelte-kit sync && eslint .
 
       - name: 🧪 Type Check (TypeScript, heavy)
         run: bun run check
