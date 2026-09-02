@@ -126,7 +126,7 @@ export function makeMockSeller(overrides?: Partial<Seller>) {
       updated_at: new Date().toISOString()
     }
   };
-  return { ...base, ...(overrides ?? {}) };
+  return { ...base, ...overrides };
 }
 
 export function mockGetSellersResponse(sellers: unknown[]) {
