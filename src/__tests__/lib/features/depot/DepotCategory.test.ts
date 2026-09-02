@@ -58,7 +58,7 @@ describe('DepotCategory.svelte', () => {
         ...defaultProps,
         title: 'Passenger Cars',
         categoryId: 'PASS-002',
-        items: new Array(10).fill(null).map((_, i) => ({ id: String(i) }))
+        items: Array.from({ length: 10 }, (_, i) => ({ id: String(i) }))
       }
     });
     expect(screen.getByText('Passenger Cars')).toBeInTheDocument();
