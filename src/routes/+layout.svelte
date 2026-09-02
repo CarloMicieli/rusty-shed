@@ -120,7 +120,6 @@
 {:else if viewState === 'needs-onboarding'}
   <WelcomeWizard
     onComplete={async () => {
-      needsOnboarding = false;
       viewState = 'loading';
       try {
         await completeOnboardingStatus(settingsState);
