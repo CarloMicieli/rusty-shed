@@ -11,8 +11,12 @@ function resolveMaintenanceDue(totals: DashboardSummary['totals'] | Record<strin
     return totals.maintenanceDue;
   }
 
-  const fallback = totals['maintenance_due'];
-  return typeof fallback === 'number' ? fallback : 0;
+  if ('maintenance_due' in totals) {
+    const fallback = (totals as Record<string, unknown>)['maintenance_due'];
+    return typeof fallback === 'number' ? fallback : 0;
+  }
+
+  return 0;
 }
 
 function toastError(message?: string) {
