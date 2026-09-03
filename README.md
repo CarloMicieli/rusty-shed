@@ -15,7 +15,7 @@ Rusty Shed helps model railway enthusiasts manage their collections, their wish 
 
 ## Running on Ubuntu (prerequisites)
 
-You need Node (pnpm recommended), the Rust toolchain (`rustup`, `cargo`) and the Tauri CLI if you prefer to use it. On Ubuntu, this project required a few additional system packages to compile GTK / webview dependencies — install these before building:
+You need Bun, the Rust toolchain (`rustup`, `cargo`) and the Tauri CLI if you prefer to use it. On Ubuntu, this project required a few additional system packages to compile GTK / webview dependencies — install these before building:
 
 ```bash
 sudo apt update
@@ -32,27 +32,27 @@ sudo apt install -y \
 1. Install JS and Rust deps:
 
 ```bash
-pnpm install
+bun install
 rustup toolchain install stable
 ```
 
 2. Start the frontend dev server:
 
 ```bash
-pnpm dev
+bun run dev
 ```
 
 3. In a separate terminal run Tauri (launches the desktop app using the Vite dev server):
 
 ```bash
-pnpm tauri dev
+bun run tauri dev
 ```
 
 ## Build (production)
 
 ```bash
-pnpm build
-pnpm tauri build
+bun run build
+bun run tauri build
 ```
 
 ## Committing
@@ -60,32 +60,32 @@ pnpm tauri build
 This repository follows Conventional Commits. Use the provided Commitizen config to compose messages that follow the project's commit rules:
 
 ```bash
-pnpm install
-pnpm commit
+bun install
+bun run commit
 ```
 
 This will launch the interactive Commitizen prompt which enforces the allowed commit prefixes (eg. `feat`, `fix`, `docs`, `chore`, etc.).
 
 ## Rust Commands
 
-You can run common Cargo commands for the Tauri/Rust crate located in `src-tauri` using the `pnpm` scripts added to `package.json`.
+You can run common Cargo commands for the Tauri/Rust crate located in `src-tauri` using the `bun` scripts added to `package.json`.
 
 Examples:
 
 ```bash
-pnpm run rust:fmt     # runs `cargo fmt --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:build   # runs `cargo build --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:run     # runs `cargo run --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:test    # runs `cargo test --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:clean   # runs `cargo clean --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:clippy  # runs `cargo clippy --manifest-path src-tauri/Cargo.toml`
+bun run rust:fmt     # runs `cargo fmt --manifest-path src-tauri/Cargo.toml`
+bun run rust:build   # runs `cargo build --manifest-path src-tauri/Cargo.toml`
+bun run rust:run     # runs `cargo run --manifest-path src-tauri/Cargo.toml`
+bun run rust:test    # runs `cargo test --manifest-path src-tauri/Cargo.toml`
+bun run rust:clean   # runs `cargo clean --manifest-path src-tauri/Cargo.toml`
+bun run rust:clippy  # runs `cargo clippy --manifest-path src-tauri/Cargo.toml`
 ```
 
 Pass extra Cargo flags after `--`, for example:
 
 ```bash
-pnpm run rust:build -- --release
-pnpm run rust:run -- --bin <binary-name>
+bun run rust:build -- --release
+bun run rust:run -- --bin <binary-name>
 ```
 
 These commands let you invoke Cargo for the `src-tauri` crate without changing directories.
