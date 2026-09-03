@@ -19,7 +19,9 @@ import type { DashboardSummary, QueryCriteria } from '$lib/bindings';
 // ─────────────────────────────────────────────────────────────
 const SERVICE_KEY = Symbol('dashboard-service');
 
-function resolveMaintenanceDue(totals: DashboardSummary['totals'] | Record<string, unknown> | null | undefined): number {
+function resolveMaintenanceDue(
+  totals: DashboardSummary['totals'] | Record<string, unknown> | null | undefined
+): number {
   if (!totals) return 0;
 
   if (typeof totals.maintenanceDue === 'number') {
@@ -57,9 +59,7 @@ export class DashboardService {
   }
 
   // Derived state
-  hasMaintenance = $derived(
-    resolveMaintenanceDue(this.#data?.totals) > 0
-  );
+  hasMaintenance = $derived(resolveMaintenanceDue(this.#data?.totals) > 0);
 
   recentItemsCount = $derived(this.#data?.recentItems?.length ?? 0);
 
