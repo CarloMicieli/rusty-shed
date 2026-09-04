@@ -82,7 +82,7 @@
   const { form, tainted, reset, isTainted } = superForm<FormState>(emptyForm, {
     SPA: true,
     dataType: 'json',
-    validators: zod(rollingStockSpecsSchema as any)
+    validators: zod(rollingStockSpecsSchema)
   });
   let originalForm = $state<FormState>({ ...emptyForm });
   let isLoading = $state(false);
