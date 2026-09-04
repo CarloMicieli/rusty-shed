@@ -172,11 +172,70 @@ pub mod testing {
             Self::default()
         }
 
+        pub fn with_dashboard(mut self, r: impl DashboardRepository + 'static) -> Self {
+            let mut opt = Some(Box::new(r) as Box<dyn DashboardRepository>);
+            self.dashboard = Some(Box::new(move || {
+                opt.take()
+                    .unwrap_or_else(|| panic!("MockAppUow::dashboard_repository already accessed"))
+            }));
+            self
+        }
+
+        pub fn with_dcc_inventory(
+            mut self,
+            r: impl DigitalRollingStockRepository + 'static,
+        ) -> Self {
+            let mut opt = Some(Box::new(r) as Box<dyn DigitalRollingStockRepository>);
+            self.dcc_inventory = Some(Box::new(move || {
+                opt.take().unwrap_or_else(|| {
+                    panic!("MockAppUow::digital_rolling_stocks_repository already accessed")
+                })
+            }));
+            self
+        }
+
         pub fn with_export(mut self, r: impl ExportRepository + 'static) -> Self {
             let mut opt = Some(Box::new(r) as Box<dyn ExportRepository>);
             self.export = Some(Box::new(move || {
                 opt.take()
                     .unwrap_or_else(|| panic!("MockAppUow::export_repo already accessed"))
+            }));
+            self
+        }
+
+        pub fn with_global_search(mut self, r: impl GlobalSearchRepository + 'static) -> Self {
+            let mut opt = Some(Box::new(r) as Box<dyn GlobalSearchRepository>);
+            self.global_search = Some(Box::new(move || {
+                opt.take()
+                    .unwrap_or_else(|| panic!("MockAppUow::global_search_repo already accessed"))
+            }));
+            self
+        }
+
+        pub fn with_track_product(mut self, r: impl TrackProductRepository + 'static) -> Self {
+            let mut opt = Some(Box::new(r) as Box<dyn TrackProductRepository>);
+            self.track_product = Some(Box::new(move || {
+                opt.take()
+                    .unwrap_or_else(|| panic!("MockAppUow::track_products_repo already accessed"))
+            }));
+            self
+        }
+
+        pub fn with_track_inventory(mut self, r: impl TrackInventoryRepository + 'static) -> Self {
+            let mut opt = Some(Box::new(r) as Box<dyn TrackInventoryRepository>);
+            self.track_inventory = Some(Box::new(move || {
+                opt.take().unwrap_or_else(|| {
+                    panic!("MockAppUow::track_inventories_repo already accessed")
+                })
+            }));
+            self
+        }
+
+        pub fn with_trains_repo(mut self, r: impl TrainsRepository + 'static) -> Self {
+            let mut opt = Some(Box::new(r) as Box<dyn TrainsRepository>);
+            self.trains = Some(Box::new(move || {
+                opt.take()
+                    .unwrap_or_else(|| panic!("MockAppUow::trains_repo already accessed"))
             }));
             self
         }
