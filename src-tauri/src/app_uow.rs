@@ -12,9 +12,6 @@
 /// ## Test path
 /// Tests inject a custom `AppUowFactory` via `AppState::new_with_factory`, providing
 /// whatever `AppUnitOfWork` implementation they need.
-use std::future::Future;
-use std::pin::Pin;
-
 use crate::budget::domain::{BudgetRepository, BudgetUowExt};
 use crate::catalog::domain::manufacturer::{ManufacturerRepository, ManufacturerUowExt};
 use crate::catalog::domain::railway_company::{RailwayCompanyRepository, RailwayCompanyUowExt};
@@ -32,8 +29,8 @@ use crate::tracks_inventory::domain::{
     TrackInventoryRepository, TrackProductRepository, TrackProductUowExt, TracksInventoryUowExt,
 };
 use crate::trains::domain::{TrainsRepository, TrainsUowExt};
-use crate::wishlist::domain::repository::WishlistRepository;
 use crate::wishlist::domain::WishlistUowExt;
+use crate::wishlist::domain::repository::WishlistRepository;
 
 /// A composite Unit of Work trait covering all domain contexts, plus a
 /// `commit` lifecycle method that replaces direct database commits.
@@ -178,7 +175,8 @@ pub mod testing {
         pub fn with_export(mut self, r: impl ExportRepository + 'static) -> Self {
             let mut opt = Some(Box::new(r) as Box<dyn ExportRepository>);
             self.export = Some(Box::new(move || {
-                opt.take().unwrap_or_else(|| panic!("MockAppUow::export_repo already accessed"))
+                opt.take()
+                    .unwrap_or_else(|| panic!("MockAppUow::export_repo already accessed"))
             }));
             self
         }
@@ -196,7 +194,9 @@ pub mod testing {
 
     macro_rules! get_or_panic {
         ($opt:expr, $name:literal) => {
-            ($opt.as_mut().unwrap_or_else(|| panic!("{} not configured", $name)))()
+            ($opt
+                .as_mut()
+                .unwrap_or_else(|| panic!("{} not configured", $name)))()
         };
     }
 
@@ -229,7 +229,10 @@ pub mod testing {
         fn digital_rolling_stocks_repository(
             &mut self,
         ) -> Box<dyn DigitalRollingStockRepository + '_> {
-            get_or_panic!(self.dcc_inventory, "MockAppUow::digital_rolling_stocks_repository")
+            get_or_panic!(
+                self.dcc_inventory,
+                "MockAppUow::digital_rolling_stocks_repository"
+            )
         }
     }
     impl GlobalSearchUowExt for MockAppUow {
