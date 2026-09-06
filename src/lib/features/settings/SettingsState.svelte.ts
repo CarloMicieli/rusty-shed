@@ -4,7 +4,8 @@
  * Provides reactive settings state and methods to load/update settings.
  */
 
-import { safeInvoke } from '$lib/services';
+import { safeCommand } from '$lib/services';
+import { commands } from '$lib/bindings';
 import type { UpdateSettingsInput, UserSettings_Serialize } from '$lib/bindings';
 import type { LibraryTab } from './library-types';
 import { log } from '$lib/tauri-logger';
@@ -42,7 +43,7 @@ export class SettingsState {
 
     try {
       log.debug('SettingsState: Calling get_settings command...');
-      const result = await safeInvoke<UserSettings_Serialize>('get_settings');
+      const result = await safeCommand(commands.getSettings());
       if (result.ok) {
         log.debug('SettingsState: Settings received');
         this.settings = result.data;
@@ -66,9 +67,7 @@ export class SettingsState {
 
     try {
       log.debug('SettingsState: Calling update_settings command...');
-      const result = await safeInvoke<UserSettings_Serialize>('update_settings', {
-        input
-      } as Record<string, unknown>);
+      const result = await safeCommand(commands.updateSettings(input));
       if (result.ok) {
         log.debug('SettingsState: Update successful');
         this.settings = result.data;
@@ -86,7 +85,7 @@ export class SettingsState {
    * Initialize settings on first run
    */
   async initialize(): Promise<void> {
-    const result = await safeInvoke<UserSettings_Serialize>('initialize_settings');
+    const result = await safeCommand(commands.initializeSettings());
     if (result.ok) {
       this.settings = result.data;
     } else {

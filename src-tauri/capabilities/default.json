@@ -15,14 +15,13 @@
     "fs:allow-applocaldata-read-recursive",
     "fs:allow-applocaldata-write-recursive",
     "fs:scope-applocaldata-recursive",
-    "fs:allow-home-read-recursive",
     "dialog:default",
     {
       "identifier": "http:allow-fetch",
       "allow": [
-        {
-          "url": "http://localhost:*"
-        }
+        { "url": "http://127.0.0.1:48374/" },
+        { "url": "http://127.0.0.1:48375/" },
+        { "url": "http://127.0.0.1:48376/" }
       ]
     }
   ]

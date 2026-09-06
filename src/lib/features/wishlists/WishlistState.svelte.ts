@@ -8,7 +8,8 @@ import type {
   WishlistItemView,
   AddRailwayModelToWishListArgs
 } from '$lib/bindings';
-import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
+import { safeCommand, getErrorMessage, isRetryableError } from '$lib/services';
+import { commands } from '$lib/bindings';
 
 // Using WishlistPreview from bindings directly
 export type { WishlistPreview as WishlistPreviewLite };
@@ -167,7 +168,7 @@ export class WishlistState {
   async fetchWishlists() {
     this.#isLoading = true;
     try {
-      const result = await safeInvoke<WishlistView[]>('get_wishlists');
+      const result = await safeCommand(commands.getWishlists());
 
       if (!result.ok) {
         console.error('Failed to fetch wishlists:', result.error);
@@ -197,7 +198,7 @@ export class WishlistState {
   }
 
   async loadWishlistItems(wishlistId: string) {
-    const result = await safeInvoke<WishlistView | null>('get_wishlist_by_id', { id: wishlistId });
+    const result = await safeCommand(commands.getWishlistById(wishlistId));
 
     if (!result.ok) {
       console.error('Failed to load wishlist items:', result.error);
@@ -241,9 +242,7 @@ export class WishlistState {
     if (isDefault || cleared.length === 0) this.#activeWishlistId = tempId;
     if (!silent) toastLoading(toastId);
 
-    const result = await safeInvoke<WishlistPreview>('create_wishlist', {
-      input: { name, notes: null, isDefault }
-    });
+    const result = await safeCommand(commands.createWishlist({ name, notes: null, isDefault }));
 
     if (!result.ok) {
       console.error('Failed to create wishlist:', result.error);
@@ -276,7 +275,7 @@ export class WishlistState {
     this.#wishlists = this.#wishlists.map((w) => (w.id === id ? { ...w, name } : w));
     toastLoading(toastId);
 
-    const result = await safeInvoke('rename_wishlist', { input: { wishlistId: id, name } });
+    const result = await safeCommand(commands.renameWishlist({ wishlistId: id, name }));
 
     if (!result.ok) {
       console.error('Failed to rename wishlist:', result.error);
@@ -305,7 +304,7 @@ export class WishlistState {
     if (this.#activeWishlistId === id) this.#activeWishlistId = null;
     toastLoading(toastId);
 
-    const result = await safeInvoke('delete_wishlist', { id });
+    const result = await safeCommand(commands.deleteWishlist(id));
 
     if (!result.ok) {
       console.error('Failed to delete wishlist:', result.error);
@@ -330,7 +329,7 @@ export class WishlistState {
     this.#activeWishlistId = id;
     toastLoading(toastId);
 
-    const result = await safeInvoke('set_default_wishlist', { id });
+    const result = await safeCommand(commands.setDefaultWishlist(id));
 
     if (!result.ok) {
       console.error('Failed to set default wishlist:', result.error);
@@ -371,8 +370,8 @@ export class WishlistState {
     );
     toastLoading(toastId);
 
-    const result = await safeInvoke<WishlistItem>('add_to_wishlist', {
-      input: {
+    const result = await safeCommand(
+      commands.addToWishlist({
         wishlistId,
         railwayModelId: modelId,
         priority: null,
@@ -381,8 +380,8 @@ export class WishlistState {
         desiredPriceCurrency: null,
         notes: null,
         addedDate: null
-      }
-    });
+      })
+    );
 
     if (!result.ok) {
       console.error('Failed to add item to wishlist:', result.error);
@@ -422,7 +421,7 @@ export class WishlistState {
     );
     toastLoading(toastId);
 
-    const result = await safeInvoke('remove_from_wishlist', { itemId });
+    const result = await safeCommand(commands.removeFromWishlist(itemId));
 
     if (!result.ok) {
       console.error('Failed to remove item from wishlist:', result.error);
@@ -462,9 +461,13 @@ export class WishlistState {
     });
     toastLoading(toastId);
 
-    const result = await safeInvoke('move_item_to_list', {
-      input: { itemId, destinationWishlistId: toWishlistId, wishlistId: fromWishlistId }
-    });
+    const result = await safeCommand(
+      commands.moveItemToList({
+        itemId,
+        destinationWishlistId: toWishlistId,
+        wishlistId: fromWishlistId
+      })
+    );
 
     if (!result.ok) {
       console.error('Failed to move item to list:', result.error);
@@ -498,7 +501,7 @@ export class WishlistState {
     const toastId = randomId();
     toastLoading(toastId);
 
-    const result = await safeInvoke('add_railway_model_to_wish_list', { args });
+    const result = await safeCommand(commands.addRailwayModelToWishList(args));
 
     if (!result.ok) {
       console.error('Failed to add railway model to wishlist:', result.error);

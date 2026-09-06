@@ -91,7 +91,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { readFile } from '@tauri-apps/plugin-fs';
-  import { commands } from '$lib/bindings';
+  import { fetchRailwayModelImagePath } from '$lib/features/search/ModelSearchService';
   import PreviewCardActions from '$lib/components/model-details/components/PreviewCardActions.svelte';
   import { getCachedImage, setCachedImage } from '$lib/state/image-cache';
 
@@ -217,10 +217,9 @@
               ? await pathToBlobUrl(photoUrl)
               : photoUrl;
         } else {
-          const result = await commands.getRailwayModelImage(modelId);
-          const imageData = result.status === 'ok' ? result.data : null;
-          if (imageData?.hasImage && imageData.imagePath) {
-            newUrl = await pathToBlobUrl(imageData.imagePath);
+          const imagePath = await fetchRailwayModelImagePath(modelId);
+          if (imagePath) {
+            newUrl = await pathToBlobUrl(imagePath);
           }
         }
       } catch (e) {
