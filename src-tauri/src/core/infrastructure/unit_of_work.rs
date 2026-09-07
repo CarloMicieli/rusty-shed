@@ -1,7 +1,5 @@
 use crate::app_uow::{AppUnitOfWork, AppUowFactory};
 use crate::core::infrastructure::error::CommandError;
-use std::future::Future;
-use std::pin::Pin;
 
 /// A specialized implementation of the Unit of Work pattern for SQLite.
 ///
@@ -50,16 +48,13 @@ impl SqliteUnitOfWork {
     }
 }
 
+#[async_trait::async_trait]
 impl AppUnitOfWork for SqliteUnitOfWork {
-    fn commit(
-        self: Box<Self>,
-    ) -> Pin<Box<dyn Future<Output = Result<(), CommandError>> + Send + 'static>> {
-        Box::pin(async move {
-            (*self)
-                .commit()
-                .await
-                .map_err(|e| CommandError::DatabaseError(e.to_string()))
-        })
+    async fn commit(self: Box<Self>) -> Result<(), CommandError> {
+        (*self)
+            .commit()
+            .await
+            .map_err(|e| CommandError::DatabaseError(e.to_string()))
     }
 }
 
