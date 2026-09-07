@@ -1,3 +1,5 @@
+import { browser, describe, expect, it } from '@wdio/globals';
+
 describe('Rusty Shed desktop app', () => {
   it('opens the main window', async () => {
     await browser.waitUntil(
