@@ -18,6 +18,15 @@ fn extract_auth_code(url: &str) -> Option<String> {
     })
 }
 
+/// Fixed ports tried in order for the local OAuth callback server on desktop.
+///
+/// Using a fixed port set instead of a random port allows the Tauri capability file to
+/// restrict `http:allow-fetch` to exactly these addresses, applying the principle of
+/// least privilege and preventing the WebView from contacting arbitrary local services.
+/// The server binds to the first available port in the list.
+#[cfg(not(target_os = "android"))]
+const OAUTH_CALLBACK_PORTS: &[u16] = &[48374, 48375, 48376];
+
 /// Connect Google account via OAuth PKCE flow.
 ///
 /// On desktop this starts a localhost callback server via `tauri-plugin-oauth`
@@ -34,23 +43,29 @@ pub async fn connect_google(
     let redirect_uri = {
         let tx_for_closure = tx_cell.clone();
 
-        let port = tauri_plugin_oauth::start(move |url| {
-            if let Some(tx) = tx_for_closure
-                .lock()
-                .expect("oauth tx lock poisoned")
-                .take()
-            {
-                let send_result = match extract_auth_code(&url) {
-                    Some(code) => tx.send(Ok(code)),
-                    None => tx.send(Err(CloudBackupError::OAuthFailed(
-                        "No authorization code in callback URL".to_string(),
-                    ))),
-                };
-                if send_result.is_err() {
-                    tracing::warn!("OAuth callback: receiver already dropped");
+        let port = tauri_plugin_oauth::start_with_config(
+            tauri_plugin_oauth::OauthConfig {
+                ports: Some(OAUTH_CALLBACK_PORTS.to_vec()),
+                ..Default::default()
+            },
+            move |url| {
+                if let Some(tx) = tx_for_closure
+                    .lock()
+                    .expect("oauth tx lock poisoned")
+                    .take()
+                {
+                    let send_result = match extract_auth_code(&url) {
+                        Some(code) => tx.send(Ok(code)),
+                        None => tx.send(Err(CloudBackupError::OAuthFailed(
+                            "No authorization code in callback URL".to_string(),
+                        ))),
+                    };
+                    if send_result.is_err() {
+                        tracing::warn!("OAuth callback: receiver already dropped");
+                    }
                 }
-            }
-        })
+            },
+        )
         .map_err(|e| CloudBackupError::OAuthFailed(format!("Failed to start OAuth server: {e}")))?;
 
         format!("http://127.0.0.1:{port}")
