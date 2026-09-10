@@ -27,6 +27,12 @@ sudo apt install -y \
 	librsvg2-dev
 ```
 
+If you want to run the native end-to-end tests locally on Linux, install the WebDriver and X11 helpers used by the test harness as well:
+
+```bash
+sudo apt install -y webkit2gtk-driver xvfb
+```
+
 ## Development
 
 1. Install JS and Rust deps:
@@ -54,6 +60,22 @@ pnpm tauri dev
 pnpm build
 pnpm tauri build
 ```
+
+## Testing
+
+Run the frontend test suite with Vitest:
+
+```bash
+pnpm test
+```
+
+Run the native end-to-end test against the Tauri app bundle on Linux:
+
+```bash
+xvfb-run pnpm test:e2e
+```
+
+The e2e harness starts `tauri-driver` and expects `WebKitWebDriver` to be available on the system PATH. On Ubuntu, that comes from the `webkit2gtk-driver` package.
 
 ## Committing
 
