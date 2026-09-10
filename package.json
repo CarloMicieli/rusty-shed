@@ -17,6 +17,7 @@
     "test": "vitest --run --environment happy-dom",
     "test:ci": "vitest --run --environment happy-dom",
     "test:coverage": "vitest --run --environment happy-dom --coverage",
+    "test:e2e": "pnpm tauri build --debug --no-bundle && wdio run wdio.conf.js",
     "tauri": "tauri",
     "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
     "rust:build": "cargo build --manifest-path src-tauri/Cargo.toml",
@@ -74,6 +75,11 @@
     "@types/uuid": "^11.0.0",
     "@vitest/browser-playwright": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
+    "@wdio/cli": "9.31.2",
+    "@wdio/globals": "9.31.3",
+    "@wdio/local-runner": "9.31.2",
+    "@wdio/mocha-framework": "9.31.2",
+    "@wdio/spec-reporter": "9.31.2",
     "bits-ui": "^2.19.0",
     "clsx": "^2.1.1",
     "eslint": "^9.39.5",
@@ -100,6 +106,7 @@
     "vite": "^8.2.2",
     "vitest": "^4.1.11",
     "vitest-browser-svelte": "^2.2.1",
+    "webdriverio": "9.31.2",
     "zod": "^4.5.4"
   },
   "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457"
