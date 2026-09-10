@@ -15,6 +15,7 @@ const allowDefaultProject = [
   'svelte.config.js',
   'vitest.config.ts',
   'wdio.conf.js',
+  'test/e2e/*.js',
   'tools/*.js',
   'src/lib/types/*.d.ts'
 ];
