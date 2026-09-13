@@ -86,6 +86,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: 'src-tauri -> target'
+          cache-targets: false
 
       - name: Install tauri-driver
         run: cargo install tauri-driver --version 2.0.6 --locked

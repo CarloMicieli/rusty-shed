@@ -50,6 +50,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: 'src-tauri -> target'
+          cache-targets: false
 
       - name: 🔖 Sync version from tag to tauri.conf.json
         run: |
