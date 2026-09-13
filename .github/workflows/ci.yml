@@ -82,11 +82,16 @@ jobs:
         with:
           components: clippy, rustfmt
 
-      - name: ⚡ Rust Cache
-        uses: Swatinem/rust-cache@v2
+      - name: ⚡ Cargo Cache
+        uses: actions/cache@v4
         with:
-          workspaces: 'src-tauri -> target'
-          cache-targets: false
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install tauri-driver
         run: cargo install tauri-driver --version 2.0.6 --locked
