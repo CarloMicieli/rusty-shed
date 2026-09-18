@@ -35,7 +35,7 @@
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-dialog": "^2.7.3",
     "@tauri-apps/plugin-fs": "^2.5.2",
-    "@tauri-apps/plugin-http": "^2.6.0",
+    "@tauri-apps/plugin-http": "^2.6.1",
     "@tauri-apps/plugin-log": "^2.9.1",
     "@tauri-apps/plugin-opener": "^2.5.5",
     "@tauri-apps/plugin-stronghold": "^2.3.2",
@@ -51,7 +51,7 @@
     "marked": "^17.0.6",
     "shadcn-svelte": "1.1.1",
     "svelte-dnd-action": "^0.9.79",
-    "tailwind-merge": "^3.6.0",
+    "tailwind-merge": "^3.7.0",
     "uuid": "^13.0.2"
   },
   "devDependencies": {
@@ -71,7 +71,7 @@
     "@testing-library/jest-dom": "^6.10.0",
     "@testing-library/svelte": "^5.4.2",
     "@testing-library/user-event": "^14.6.7",
-    "@types/node": "^25.9.6",
+    "@types/node": "^25.9.7",
     "@types/uuid": "^11.0.0",
     "@vitest/browser-playwright": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
@@ -91,7 +91,7 @@
     "lucide-svelte": "^0.562.0",
     "mode-watcher": "^1.1.0",
     "playwright": "^1.63.0",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.7",
     "prettier-plugin-svelte": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.7.4",
     "svelte": "^5.57.0",
@@ -107,7 +107,7 @@
     "vitest": "^4.1.11",
     "vitest-browser-svelte": "^2.2.1",
     "webdriverio": "9.31.2",
-    "zod": "^4.6.2"
+    "zod": "^4.6.5"
   },
   "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457"
 }
