@@ -24,6 +24,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { setActiveLocale } from '$lib/stores/locale.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
+  import { getPageTitleContext } from '$lib/state/page-title.svelte';
   import { cn } from '$lib/utils';
 
   let settings: SettingsDto | null = $state(null);
@@ -42,6 +43,15 @@
   let selectedBackupId = $state<string | null>(null);
   let selectedBackupLabel = $state<string>('');
   let activeTab = $state<'preferences' | 'data-management'>('preferences');
+  const pageTitle = getPageTitleContext();
+
+  $effect(() => {
+    pageTitle.setTitle(m.app_settings());
+
+    return () => {
+      pageTitle.clearTitle();
+    };
+  });
 
   const settingsTabBaseClass =
     'rounded-sm border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-all duration-150 ease-out';

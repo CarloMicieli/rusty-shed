@@ -1,0 +1,212 @@
+openapi: 3.1.0
+info:
+  title: Mobile Redesign Interaction Contract
+  version: 0.1.0
+  description: |
+    Logical contract for mobile redesign behaviors.
+    These contracts map to frontend state/actions and existing Tauri invoke boundaries.
+servers:
+  - url: tauri://local
+paths:
+  /mobile/layout/profile:
+    get:
+      summary: Resolve effective viewport and safe-area profile
+      operationId: getMobileLayoutProfile
+      responses:
+        '200':
+          description: Effective layout profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileViewportProfileResponse'
+
+  /mobile/navigation/model:
+    get:
+      summary: Get mobile navigation composition for active route
+      operationId: getMobileNavigationModel
+      responses:
+        '200':
+          description: Navigation model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileNavigationModelResponse'
+
+  /mobile/drawer/open:
+    post:
+      summary: Open a drawer/sheet layer in bounded stack
+      operationId: openMobileDrawerLayer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenDrawerRequest'
+      responses:
+        '200':
+          description: Drawer opened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrawerStateResponse'
+        '409':
+          description: Stack depth limit exceeded
+
+  /mobile/drawer/close:
+    post:
+      summary: Close top-most drawer layer
+      operationId: closeMobileDrawerLayer
+      responses:
+        '200':
+          description: Drawer closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrawerStateResponse'
+
+  /mobile/media/capability:
+    get:
+      summary: Resolve camera capability and fallback mode for image attachment
+      operationId: getMobileMediaCapability
+      responses:
+        '200':
+          description: Capability result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaCapabilityResponse'
+
+  /mobile/media/attach:
+    post:
+      summary: Attach image through camera capture or gallery picker
+      operationId: attachMobileMedia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaAttachRequest'
+      responses:
+        '200':
+          description: Media attached and edit session preserved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAttachResponse'
+        '400':
+          description: Invalid attachment request
+
+components:
+  schemas:
+    MobileViewportProfileResponse:
+      type: object
+      required: [isMobile, breakpointPx, safeAreaInsets, reducedMotion]
+      properties:
+        isMobile:
+          type: boolean
+        breakpointPx:
+          type: integer
+          const: 768
+        safeAreaInsets:
+          type: object
+          required: [top, right, bottom, left]
+          properties:
+            top:
+              type: number
+            right:
+              type: number
+            bottom:
+              type: number
+            left:
+              type: number
+        reducedMotion:
+          type: boolean
+
+    MobileNavigationModelResponse:
+      type: object
+      required: [primaryDestinations, hasMoreEntry, moreTopActions]
+      properties:
+        primaryDestinations:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            type: string
+        hasMoreEntry:
+          type: boolean
+          const: true
+        moreTopActions:
+          type: array
+          items:
+            type: string
+          description: Must include settings and debug.
+
+    OpenDrawerRequest:
+      type: object
+      required: [layerKind, layerId]
+      properties:
+        layerKind:
+          type: string
+          enum: [parent, child]
+        layerId:
+          type: string
+        replaceIfFull:
+          type: boolean
+          default: false
+
+    DrawerStateResponse:
+      type: object
+      required: [depth, stack]
+      properties:
+        depth:
+          type: integer
+          minimum: 0
+          maximum: 2
+        stack:
+          type: array
+          maxItems: 2
+          items:
+            type: object
+            required: [layerKind, layerId]
+            properties:
+              layerKind:
+                type: string
+                enum: [parent, child]
+              layerId:
+                type: string
+
+    MediaCapabilityResponse:
+      type: object
+      required: [cameraAvailable, probeStatus, recommendedMode]
+      properties:
+        cameraAvailable:
+          type: boolean
+        probeStatus:
+          type: string
+          enum: [success, unsupported, denied, error]
+        recommendedMode:
+          type: string
+          enum: [camera_capture, gallery_picker]
+
+    MediaAttachRequest:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [camera_capture, gallery_picker]
+        captureAttributeEnabled:
+          type: boolean
+          description: Must be false when camera capability is unavailable.
+
+    MediaAttachResponse:
+      type: object
+      required: [attached, modeUsed, formStatePreserved]
+      properties:
+        attached:
+          type: boolean
+        modeUsed:
+          type: string
+          enum: [camera_capture, gallery_picker]
+        formStatePreserved:
+          type: boolean

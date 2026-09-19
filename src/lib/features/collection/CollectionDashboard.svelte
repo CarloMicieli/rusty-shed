@@ -1,11 +1,20 @@
 <script lang="ts">
-  import { TrainFront, X, Filter, LayoutGrid, Rows3, SlidersHorizontal } from 'lucide-svelte';
+  import {
+    TrainFront,
+    X,
+    Filter,
+    LayoutGrid,
+    Rows3,
+    SlidersHorizontal,
+    Search
+  } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { collectionState, availableScales } from './CollectionState.svelte';
   import type { StatusFilter } from './CollectionState.svelte';
-  import { Button, Badge } from '$lib/components';
+  import { Button, Badge, Input } from '$lib/components';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { commands } from '$lib/bindings';
 
@@ -20,15 +29,32 @@
   import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
   import VirtualGrid from '$lib/components/VirtualGrid.svelte';
   import { collectionItemToCardData } from './utils/cardDataMapper';
-  import FilterPanel from './components/FilterPanel.svelte';
   import ControlPanel from './components/ControlPanel.svelte';
   import CollectionTableView from './components/CollectionTableView.svelte';
   import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import { createMobileMatchMediaState } from '$lib/state/match-media.svelte';
+
+  const mobileMedia = createMobileMatchMediaState();
+  let isMobileViewport = $state(false);
+
+  $effect(() => {
+    const unsubscribe = mobileMedia.subscribe((matches) => {
+      isMobileViewport = matches;
+      if (matches && ui.viewMode === 'table') {
+        ui.setViewMode('grid');
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
 
   function useCollectionUI() {
     let showDrawer = $state(false);
-    let showFilterSidebar = $state(true);
+    let showDesktopFilterSidebar = $state(true);
+    let showMobileFilterSheet = $state(false);
     let viewMode = $state<'grid' | 'table'>('grid');
     let editing = $state<CollectionItemView | null>(null);
 
@@ -47,8 +73,20 @@
       editing = null;
     };
 
-    const toggleFilterSidebar = () => {
-      showFilterSidebar = !showFilterSidebar;
+    const toggleDesktopFilterSidebar = () => {
+      showDesktopFilterSidebar = !showDesktopFilterSidebar;
+    };
+
+    const openMobileFilterSheet = () => {
+      showMobileFilterSheet = true;
+    };
+
+    const closeMobileFilterSheet = () => {
+      showMobileFilterSheet = false;
+    };
+
+    const toggleMobileFilterSheet = () => {
+      showMobileFilterSheet = !showMobileFilterSheet;
     };
 
     const setViewMode = (mode: 'grid' | 'table') => {
@@ -62,8 +100,11 @@
       set showDrawer(value: boolean) {
         showDrawer = value;
       },
-      get showFilterSidebar() {
-        return showFilterSidebar;
+      get showDesktopFilterSidebar() {
+        return showDesktopFilterSidebar;
+      },
+      get showMobileFilterSheet() {
+        return showMobileFilterSheet;
       },
       get viewMode() {
         return viewMode;
@@ -74,12 +115,16 @@
       startCreate,
       edit,
       closeDrawer,
-      toggleFilterSidebar,
+      toggleDesktopFilterSidebar,
+      openMobileFilterSheet,
+      closeMobileFilterSheet,
+      toggleMobileFilterSheet,
       setViewMode
     };
   }
 
   const ui = useCollectionUI();
+  let mobileSearchDebounce: ReturnType<typeof setTimeout> | null = null;
 
   const defaultSummary = $state<CollectionSummaryType>({
     locomotivesCount: 0,
@@ -118,6 +163,7 @@
   const availableCategories = $derived(collectionService.availableCategories);
   const availableEpochs = $derived(collectionService.availableEpochs);
   const hasActiveFilters = $derived(collectionService.hasActiveFilters);
+  let mobileSearchQuery = $derived(filters.query);
 
   onMount(() => {
     void collectionService.fetchCollection();
@@ -135,8 +181,15 @@
     collectionService.setQuery(query);
   }
 
-  function handleScale(scale: string | null) {
-    collectionService.setScale(scale);
+  function handleMobileSearchInput(value: string) {
+    mobileSearchQuery = value;
+    if (mobileSearchDebounce) {
+      clearTimeout(mobileSearchDebounce);
+    }
+
+    mobileSearchDebounce = setTimeout(() => {
+      handleSearch(value);
+    }, 220);
   }
 
   function handleToggleScale(scale: string) {
@@ -172,7 +225,12 @@
   }
 
   function handleCardClick(item: CollectionItemView) {
-    goto(`/collection/${item.id.split(':').pop()}`);
+    const itemId = item.id.split(':').pop();
+    if (!itemId) {
+      return;
+    }
+
+    goto(resolve(`/collection/${itemId}`));
   }
 </script>
 
@@ -224,20 +282,10 @@
             variant="rusty"
             onclick={ui.startCreate}
             size="sm"
-            class="shadow-lg shadow-amber-500/10"
+            class="hidden min-h-11 shadow-lg shadow-amber-500/10 md:inline-flex"
           >
             <TrainFront size={18} />
             {m.collection_add_model()}
-          </Button>
-          <!-- Mobile-only filter toggle -->
-          <Button
-            onclick={ui.toggleFilterSidebar}
-            variant="outline"
-            size="sm"
-            class="md:hidden"
-            title={m.collection_toggle_filters_title()}
-          >
-            <Filter size={18} />
           </Button>
         {/if}
       {/snippet}
@@ -248,10 +296,93 @@
   <div class="relative -mx-4 flex flex-1 flex-col md:flex-row lg:-mx-8">
     <!-- Main Content -->
     <div class="flex-1">
-      <div class="px-4 py-6 sm:px-6">
+      <div class="px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] sm:px-6 md:pb-6">
         {#if !isCollectionEmpty && !isLoading}
+          <div class="mb-4 grid grid-cols-[1fr_auto] items-center gap-2 md:hidden">
+            <label class="relative flex min-h-11 items-center" for="collection-mobile-search">
+              <Search class="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="collection-mobile-search"
+                type="search"
+                class="h-11 w-full rounded-full border-border/70 bg-card pr-3 pl-9 text-sm"
+                placeholder={m.collection_search_placeholder()}
+                value={mobileSearchQuery}
+                oninput={(e) => handleMobileSearchInput((e.target as HTMLInputElement).value)}
+              />
+            </label>
+            <Button
+              onclick={ui.openMobileFilterSheet}
+              variant="outline"
+              size="sm"
+              class="min-h-11 min-w-11 rounded-full transition-all active:scale-[0.98] active:bg-muted/50"
+              title={m.collection_toggle_filters_title()}
+              aria-label={m.collection_toggle_filters_title()}
+              aria-expanded={ui.showMobileFilterSheet}
+              aria-controls="collection-mobile-filter-sheet"
+            >
+              <Filter size={18} />
+            </Button>
+          </div>
           <div
-            class="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
+            class="-mx-4 mb-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1 whitespace-nowrap [-ms-overflow-style:none] md:hidden"
+          >
+            {@render StatPill(
+              m.category_value_locomotives(),
+              summaryData.locomotivesCount,
+              'text-primary'
+            )}
+            {@render StatPill(
+              m.category_value_passenger_cars(),
+              summaryData.passengerCarsCount,
+              'text-primary'
+            )}
+            {@render StatPill(
+              m.category_value_freight_cars(),
+              summaryData.freightCarsCount,
+              'text-primary'
+            )}
+            {@render StatPill(
+              m.category_value_train_sets(),
+              summaryData.trainSetsCount,
+              'text-primary'
+            )}
+            {@render StatPill(
+              m.category_value_railcars(),
+              summaryData.railcarsCount,
+              'text-primary'
+            )}
+            {@render StatPill(
+              m.category_value_electric_multiple_units(),
+              summaryData.electricMultipleUnitsCount,
+              'text-primary'
+            )}
+            <button
+              type="button"
+              class="min-h-11 shrink-0 snap-start rounded-full border border-amber-500/30 bg-amber-500/8 px-3 text-xs font-medium text-amber-300 transition-all active:scale-[0.98] active:bg-amber-500/18"
+              onclick={() => handleLifecycleChipClick('preordered')}
+            >
+              <span class="font-mono">{collectionStats.preorderedCount}</span>
+              {m.collection_stats_preordered()}
+            </button>
+            <button
+              type="button"
+              class="min-h-11 shrink-0 snap-start rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 text-xs font-medium text-emerald-300 transition-all active:scale-[0.98] active:bg-emerald-500/18"
+              onclick={() => handleLifecycleChipClick('active')}
+            >
+              <span class="font-mono">{collectionStats.activeCount}</span>
+              {m.collection_stats_active()}
+            </button>
+            <button
+              type="button"
+              class="min-h-11 shrink-0 snap-start rounded-full border border-rose-500/30 bg-rose-500/8 px-3 text-xs font-medium text-rose-300 transition-all active:scale-[0.98] active:bg-rose-500/18"
+              onclick={() => handleLifecycleChipClick('sold')}
+            >
+              <span class="font-mono">{collectionStats.soldCount}</span>
+              {m.collection_stats_sold()}
+            </button>
+          </div>
+          <div
+            class="mb-6 hidden gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 md:grid md:grid-cols-3 lg:grid-cols-6"
           >
             {@render StatChip(m.category_value_locomotives(), summaryData.locomotivesCount)}
             {@render StatChip(m.category_value_passenger_cars(), summaryData.passengerCarsCount)}
@@ -263,7 +394,7 @@
               summaryData.electricMultipleUnitsCount
             )}
           </div>
-          <div class="mb-4 flex flex-wrap gap-2">
+          <div class="mb-4 hidden flex-wrap gap-2 md:flex">
             <button
               type="button"
               class="rounded-full border border-amber-500/30 bg-amber-500/8 px-3 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-500/14"
@@ -310,7 +441,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleScale(scale)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove scale filter: ${scale}`}
                     >
                       <X size={14} />
@@ -327,7 +458,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleEpoch(epoch)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove epoch filter: ${epoch}`}
                     >
                       <X size={14} />
@@ -344,7 +475,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleCategory(category)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove category filter: ${category}`}
                     >
                       <X size={14} />
@@ -361,7 +492,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleCompany(company)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove company filter: ${company}`}
                     >
                       <X size={14} />
@@ -378,7 +509,7 @@
                     <button
                       type="button"
                       onclick={() => collectionService.toggleTag(tag)}
-                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      class="h-11 w-11 rounded-sm p-0.5 transition-all active:scale-[0.98] active:bg-white/20 md:h-9 md:w-9 md:hover:bg-white/20"
                       aria-label={`Remove tag filter: ${tag}`}
                     >
                       <X size={14} />
@@ -390,7 +521,7 @@
           {/if}
 
           <!-- View mode toolbar -->
-          <div class="mb-4 flex items-center justify-end">
+          <div class="mb-4 hidden items-center justify-end md:flex">
             <div class="flex items-center gap-1 rounded-lg border border-border/60 p-0.5">
               <button
                 type="button"
@@ -426,7 +557,7 @@
             <VirtualGrid
               items={filteredItems}
               itemHeight={340}
-              itemMinWidth={240}
+              itemMinWidth={isMobileViewport ? 320 : 240}
               gap={16}
               overscan={3}
             >
@@ -434,7 +565,7 @@
                 <div
                   role="button"
                   tabindex={0}
-                  class="cursor-pointer"
+                  class="min-h-11 cursor-pointer transition-transform active:scale-[0.99]"
                   onclick={() => handleCardClick(item)}
                   onkeydown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -457,51 +588,69 @@
       </div>
     </div>
 
-    <!-- Sidebar (Right) — persistent on desktop, toggled on mobile -->
-    {#if ui.showFilterSidebar}
-      <!-- Mobile: full-width panel below content -->
-      <aside class="w-full flex-shrink-0 border-t border-border bg-card md:hidden">
-        <FilterPanel
+    {#if ui.showMobileFilterSheet && !isCollectionEmpty}
+      <div
+        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md md:hidden"
+        onclick={ui.closeMobileFilterSheet}
+        role="presentation"
+      ></div>
+
+      <div
+        id="collection-mobile-filter-sheet"
+        class="fixed inset-x-0 bottom-0 z-[55] max-h-[85dvh] overflow-hidden rounded-sm border border-border bg-card md:hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label={m.collection_filters_title()}
+      >
+        <ControlPanel
           {filters}
+          availableScales={availableScaleOptions}
+          {availableCompanies}
+          {availableCategories}
+          {availableEpochs}
           {availableTags}
-          {availableScales}
-          onSearch={handleSearch}
-          onSetScale={handleScale}
+          {hasActiveFilters}
+          onToggleScale={handleToggleScale}
+          onToggleCompany={handleToggleCompany}
+          onToggleCategory={handleToggleCategory}
+          onToggleEpoch={handleToggleEpoch}
           onToggleTag={handleTag}
+          onSetStatus={handleSetStatus}
           onClear={handleClear}
-          onToggleSidebar={ui.toggleFilterSidebar}
+          onCloseMobileSheet={ui.closeMobileFilterSheet}
         />
-      </aside>
+      </div>
     {/if}
 
     <!-- Desktop: always-visible command center sidebar (narrows to icon rail when collapsed) -->
     {#if !isCollectionEmpty}
       <aside
         class="sticky top-0 hidden h-dvh flex-shrink-0 flex-col overflow-hidden border-l border-layout-border bg-card md:flex"
-        style="width: {ui.showFilterSidebar
+        style="width: {ui.showDesktopFilterSidebar
           ? '280px'
           : '60px'}; transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);"
       >
         <!-- Sidebar header — always visible -->
         <div
           class="flex flex-shrink-0 items-center border-b border-layout-border px-2 py-3"
-          class:justify-between={ui.showFilterSidebar}
-          class:justify-center={!ui.showFilterSidebar}
+          class:justify-between={ui.showDesktopFilterSidebar}
+          class:justify-center={!ui.showDesktopFilterSidebar}
         >
           <span
             class="text-[10px] font-semibold tracking-widest whitespace-nowrap text-muted-foreground uppercase transition-[opacity,width] duration-200"
-            style="opacity: {ui.showFilterSidebar ? '1' : '0'}; width: {ui.showFilterSidebar
-              ? 'auto'
-              : '0'}; overflow: hidden;"
+            style="opacity: {ui.showDesktopFilterSidebar
+              ? '1'
+              : '0'}; width: {ui.showDesktopFilterSidebar ? 'auto' : '0'}; overflow: hidden;"
           >
             Filters
           </span>
           <button
             type="button"
             class="rounded p-1 text-muted-foreground transition-colors hover:text-primary"
-            onclick={ui.toggleFilterSidebar}
+            onclick={ui.toggleDesktopFilterSidebar}
             title={m.collection_toggle_filters_title()}
-            aria-expanded={ui.showFilterSidebar}
+            aria-expanded={ui.showDesktopFilterSidebar}
+            aria-label={m.collection_toggle_filters_title()}
           >
             <SlidersHorizontal size={14} />
           </button>
@@ -510,9 +659,9 @@
         <!-- Sidebar content — fades in after sidebar expands -->
         <div
           class="flex-1 overflow-y-auto transition-opacity duration-200"
-          style="opacity: {ui.showFilterSidebar ? '1' : '0'}; pointer-events: {ui.showFilterSidebar
-            ? 'auto'
-            : 'none'};"
+          style="opacity: {ui.showDesktopFilterSidebar
+            ? '1'
+            : '0'}; pointer-events: {ui.showDesktopFilterSidebar ? 'auto' : 'none'};"
         >
           <ControlPanel
             {filters}
@@ -520,14 +669,16 @@
             {availableCompanies}
             {availableCategories}
             {availableEpochs}
+            {availableTags}
             {hasActiveFilters}
             onToggleScale={handleToggleScale}
             onToggleCompany={handleToggleCompany}
             onToggleCategory={handleToggleCategory}
             onToggleEpoch={handleToggleEpoch}
+            onToggleTag={handleTag}
             onSetStatus={handleSetStatus}
             onClear={handleClear}
-            onToggleSidebar={ui.toggleFilterSidebar}
+            onToggleSidebar={ui.toggleDesktopFilterSidebar}
           />
         </div>
       </aside>
@@ -544,11 +695,32 @@
   }}
 />
 
+{#if isMobileViewport && !isCollectionEmpty}
+  <Button
+    class="safe-area-inset-bottom fixed right-4 bottom-4 z-40 min-h-11 rounded-full px-5 font-semibold shadow-xl md:hidden"
+    variant="rusty"
+    onclick={ui.startCreate}
+    aria-label={m.collection_mobile_add_fab()}
+  >
+    <TrainFront size={18} />
+    {m.collection_mobile_add_fab()}
+  </Button>
+{/if}
+
 {#snippet StatChip(label: string, count: number)}
   <div
-    class="flex flex-col justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/40"
+    class="flex flex-col justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors md:hover:bg-muted/40"
   >
-    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{label}</p>
-    <p class="mt-1 text-lg font-bold text-primary">{count}</p>
+    <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{label}</p>
+    <p class="mt-1 font-mono text-lg font-bold text-primary">{count}</p>
+  </div>
+{/snippet}
+
+{#snippet StatPill(label: string, count: number, countColorClass = 'text-primary')}
+  <div
+    class="min-h-11 shrink-0 snap-start rounded-full border border-border/60 bg-muted/30 px-3 py-2 leading-tight"
+  >
+    <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{label}</p>
+    <p class={`font-mono text-sm font-bold ${countColorClass}`}>{count}</p>
   </div>
 {/snippet}

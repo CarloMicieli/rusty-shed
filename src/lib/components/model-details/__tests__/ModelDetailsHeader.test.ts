@@ -35,7 +35,16 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   upload_error_model_not_found: () => 'Model not found',
   upload_error_unknown: () => 'An unknown error occurred',
   upload_error_multiple_files: () => 'Please upload only one file at a time',
-  railway_model_content_in_english_fallback: () => '(EN)'
+  railway_model_content_in_english_fallback: () => '(EN)',
+  upload_image_filter_name: () => 'Image Files',
+  delete_image: () => 'Delete Image',
+  deleting: () => 'Deleting...',
+  confirm_delete_image_title: () => 'Delete Image?',
+  confirm_delete_image_description: () => 'Are you sure?',
+  image_deleted: () => 'Image deleted',
+  common_cancel: () => 'Cancel',
+  image_upload_camera_fallback_notice: ({ mode, status }: any) =>
+    `Camera unavailable (${status}). Switched to ${mode}.`
 }));
 
 import ModelDetailsHeader from '../ModelDetailsHeader.svelte';

@@ -7,6 +7,144 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Feature 043: Mobile Redesign (Tauri Mobile WebView Support)
+
+#### Mobile-First Responsive Architecture
+
+- **Viewport-Gated Mobile Behavior** (< 768px):
+  - CSS-first responsive switching using Tailwind media queries
+  - Safe-area inset handling for notched devices (iOS, Android)
+  - Preservation of desktop behavior at 768px and above
+  - Zero regression for existing desktop workflows
+
+- **Safe-Area Utilities** (`src/routes/layout.css`):
+  - Tailwind v4 custom utilities for device safe areas
+  - `safe-area-pad-*` classes for padding insets
+  - `touch-hover` variant for tap feedback on mobile
+  - GPU-friendly compositor hints for smooth animations
+
+#### Mobile Navigation & Readability (US1)
+
+- **Responsive Bottom Navigation** (`src/lib/components/BottomNavigation.svelte`):
+  - 4 primary navigation items (Dashboard, Collection, Maintenance, Wishlists)
+  - "More" drawer for secondary destinations (Settings, Debug)
+  - Touch-friendly 64x64px navigation targets (well above 44px standard)
+  - Mobile-safe label truncation for Italian and other long-text languages
+  - Indicator highlight for active route with glow effect
+
+- **App Shell Updates** (`src/routes/+layout.svelte`):
+  - Dynamic page-title context for mobile header display
+  - Drawer registry with bounded stack (max depth 2)
+  - Hardware back-button synchronization with drawer state
+  - Safe-area padding for notched devices
+
+- **Mobile Page Titles** (`src/lib/state/page-title.svelte`):
+  - Context-based title management for dynamic headers
+  - Automatic title clearing on route change
+  - Integration with mobile header display
+
+#### Mobile Collection Workflow (US2)
+
+- **Touch-Optimized Collection View** (`src/lib/features/collection/CollectionDashboard.svelte`):
+  - Single-column layout enforced on mobile (`itemMinWidth=320px`)
+  - Contextual FAB for quick model additions
+  - Filter chip interface with 36x36px remove buttons (exception sizing)
+  - Touch-target compliance: 44x44px for primary controls
+  - Hide table toggle on mobile (layout inappropriate)
+
+- **Responsive Preview Cards** (`src/lib/components/RailwayModelPreviewCard.svelte`):
+  - Option B reflow for mobile: Category badge repositioning
+  - Readable typography at small viewports
+  - Proper aspect-ratio handling for images
+
+#### Mobile Editing Through Sheets (US3)
+
+- **Bottom-Sheet Drawer System** (`src/lib/components/drawer/DrawerShell.svelte`):
+  - Mobile: Full-width bottom sheets with gesture dismiss
+  - Desktop: Side-panel drawer (768px and above)
+  - Bounded stack: Parent + one child maximum
+  - GPU-optimized transform animations (`translateY`)
+  - Reduced-motion fallback for accessibility
+
+- **Unified Edit Flow**:
+  - Disable inline editing on mobile (redirects to sheet flow)
+  - Parent/child sheet nesting for detail-level actions
+  - Back-button pop behavior: Child first, then parent
+  - Camera capability probing with graceful fallback
+
+- **Media Upload Fallback** (`src/lib/components/model-details/ImageUpload.svelte`):
+  - Capability detection for camera access
+  - Automatic fallback to file picker if camera unavailable
+  - Form state preservation across fallback transitions
+  - Clear UX messaging for capability constraints
+
+#### Mobile Experience Stability (US4)
+
+- **Regression Testing**:
+  - Desktop parity tests at 1280x800
+  - Multilingual overflow tests (en/it at 375px)
+  - Startup placeholder behavior (non-blocking)
+
+- **Touch-Target Audit**:
+  - All primary controls: ≥44x44px
+  - Chip remove buttons: 36x36px (per spec exception)
+  - Navigation items: 64x64px
+  - Complete audit documented in test matrix
+
+- **Mobile Metrics & Evidence**:
+  - Success criteria validation (SC-001 through SC-006)
+  - Startup timing assertions (<1s target)
+  - Multilingual regression checklist
+  - Rollout and desktop parity verification protocol
+
+#### Localization (i18n)
+
+- **Mobile-Specific Text** (`messages/en.json`, `messages/it.json`):
+  - Bottom navigation labels (mobile-safe truncation key)
+  - More drawer labels
+  - Camera fallback notices (status + mode variables)
+  - Touch target audit exceptions documentation
+  - All strings defined in both English and Italian
+
+#### Testing
+
+- **Mobile-Specific Test Coverage**:
+  - Drawer registry: Stack bounds, dismiss order, back-pop behavior
+  - Mobile layout: Safe-area rendering, sheet interactions
+  - Touch targets: 44x44px and 36x36px verification
+  - Viewport simulation: 375x812 (baseline) and 430x932 (large)
+  - Desktop parity: No regressions at 768px+ (104 tests)
+  - Contract conformance: IPC and drawer/media operations (17 tests)
+
+- **Regression Validation**:
+  - 173 test files, 1693 tests total
+  - 2097 Rust backend tests (zero failures)
+  - Italian 375px overflow tests
+  - Startup placeholder timing tests
+
+- **Quality Gates**:
+  - svelte-check: 0 errors, 0 warnings
+  - ESLint: Pass
+  - Prettier: All formatted
+  - Cargo clippy: -D warnings (zero warnings)
+
+#### Architecture & Decisions
+
+- **CSS-First Responsive**: Avoids JS resize churn and layout thrashing
+- **Bounded Sheet Registry**: Prevents UX ambiguity with depth > 2
+- **Capability-Aware Fallback**: Camera probe with graceful file-picker fallback
+- **Compositor-Safe Animations**: GPU-friendly transforms with reduced-motion support
+- **Phased Rollout**: Milestone-based delivery with desktop parity checks
+
+#### Files Modified
+
+- **Frontend Components**: 23 files (navigation, collection, editing, drawer, media)
+- **State Management**: page-title, match-media, drawer-registry
+- **Test Infrastructure**: 16 new test files + helpers for mobile viewport simulation
+- **Documentation**: Test matrix, contract mapping, metrics protocol, regression checklist
+- **Localization**: messages/en.json, messages/it.json (new mobile-specific keys)
+- **Build Configuration**: touch-hover variant registered in Tailwind
+
 ### Added - Feature 015: Model Image Upload System
 
 #### Image Management Architecture
