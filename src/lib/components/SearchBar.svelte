@@ -5,8 +5,12 @@
   import { goto } from '$app/navigation';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
-  import { commands, type RailwayModelView } from '$lib/bindings';
+  import { type RailwayModelView } from '$lib/bindings';
   import { collectionStore } from '$lib/state/collection.svelte';
+  import {
+    searchRailwayModelIds,
+    resolveRailwayModels
+  } from '$lib/features/search/ModelSearchService';
 
   let isExpanded = $state(false);
   let query = $state('');
@@ -41,19 +45,9 @@
     isSearching = true;
     showResults = true;
     try {
-      const searchResult = await commands.searchRailwayModels({ query: q });
-      if (searchResult.status !== 'ok') {
-        results = [];
-        return;
-      }
-      const ids = searchResult.data;
+      const ids = await searchRailwayModelIds(q);
       const lang = getLocale();
-      const modelResults = await Promise.all(
-        ids.slice(0, 10).map((id) => commands.getRailwayModelById(id, lang))
-      );
-      results = modelResults
-        .filter((r) => r.status === 'ok' && r.data != null)
-        .map((r) => (r as { status: 'ok'; data: RailwayModelView }).data);
+      results = await resolveRailwayModels(ids.slice(0, 10), lang);
     } finally {
       isSearching = false;
     }

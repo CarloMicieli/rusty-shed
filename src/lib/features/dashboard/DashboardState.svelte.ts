@@ -1,6 +1,7 @@
 import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
-import { safeInvoke, getErrorMessage } from '$lib/services';
+import { safeCommand, getErrorMessage } from '$lib/services';
+import { commands } from '$lib/bindings';
 import type { DashboardSummary, QueryCriteria } from '$lib/bindings';
 import { financeState } from '$lib/state/finance.svelte';
 
@@ -55,7 +56,7 @@ export class DashboardState {
     this.#error = null;
 
     console.debug('Invoking get_dashboard_summary with criteria:', criteria);
-    const result = await safeInvoke<DashboardSummary>('get_dashboard_summary', { criteria });
+    const result = await safeCommand(commands.getDashboardSummary(criteria));
 
     if (result.ok) {
       this.#data = result.data;

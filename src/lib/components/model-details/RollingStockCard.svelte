@@ -9,7 +9,14 @@
     RollingStockView,
     TechnicalSpecifications
   } from '$lib/bindings';
-  import { commands } from '$lib/bindings';
+  import {
+    fetchRailwayModelById,
+    updateRollingStockIdentification,
+    updateRollingStockCategory,
+    updateRollingStockSubcategory,
+    updateRollingStockDcc,
+    updateRollingStockSpecifications
+  } from '$lib/features/collection/services/RollingStockUpdateService';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import RollingStockCardHeader from './components/RollingStockCardHeader.svelte';
@@ -220,10 +227,10 @@
   // ── Tech spec loading ─────────────────────────────────────────────────────────
   async function loadTechSpecs() {
     specsLoaded = true;
-    const result = await commands.getRailwayModelById(railwayModelId, getLocale());
-    if (result.status !== 'ok' || !result.data) return;
+    const modelView = await fetchRailwayModelById(railwayModelId, getLocale());
+    if (!modelView) return;
 
-    const rsView = result.data.rollingStock.find((r: RollingStockView) => {
+    const rsView = modelView.rollingStock.find((r: RollingStockView) => {
       if ('locomotive' in r && r.locomotive) return r.locomotive.id === rollingStock.rollingStockId;
       if ('electricMultipleUnit' in r && r.electricMultipleUnit)
         return r.electricMultipleUnit.id === rollingStock.rollingStockId;
@@ -317,7 +324,7 @@
     const livery = field === 'livery' ? value || null : localLivery || null;
     const depot = field === 'depot' ? value || null : localDepot || null;
 
-    const result = await commands.updateRollingStockIdentification({
+    const ok = await updateRollingStockIdentification({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       seriesCode,
@@ -326,7 +333,7 @@
       depot
     });
 
-    if (result.status === 'error') throw new Error('Failed to save');
+    if (!ok) throw new Error('Failed to save');
 
     if (field === 'series') rollingStockOverrides.series = value;
     else if (field === 'roadNumber') rollingStockOverrides.roadNumber = value;
@@ -338,12 +345,12 @@
   async function saveCategory(newCategory: RollingStockCategory) {
     const prev = localCategory;
     rollingStockOverrides.category = newCategory;
-    const result = await commands.updateRollingStockCategory({
+    const ok = await updateRollingStockCategory({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       category: newCategory
     });
-    if (result.status === 'error') {
+    if (!ok) {
       rollingStockOverrides.category = prev;
       throw new Error('Failed to save category');
     }
@@ -354,12 +361,12 @@
   async function saveSubcategory(value: string) {
     const prev = localSubcategory;
     rollingStockOverrides.subcategory = value || null;
-    const result = await commands.updateRollingStockSubcategory({
+    const ok = await updateRollingStockSubcategory({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       subcategory: value
     });
-    if (result.status === 'error') {
+    if (!ok) {
       rollingStockOverrides.subcategory = prev;
       throw new Error('Failed to save subcategory');
     }
@@ -368,7 +375,7 @@
   // ── Save: DCC / control fields ────────────────────────────────────────────────
   async function saveControl(id: string) {
     const control = id === '' ? null : (id as Control);
-    const result = await commands.updateRollingStockDcc({
+    const ok1 = await updateRollingStockDcc({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       control,
@@ -376,13 +383,13 @@
       lengthMillimeters: localLengthMm ? parseFloat(localLengthMm) : null,
       lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
     });
-    if (result.status === 'error') throw new Error('Failed to save control');
+    if (!ok1) throw new Error('Failed to save control');
     rollingStockOverrides.control = control;
   }
 
   async function saveDccInterface(id: string) {
     const dccInterface = id === '' ? null : (id as DccInterface);
-    const result = await commands.updateRollingStockDcc({
+    const ok2 = await updateRollingStockDcc({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       control: localControl,
@@ -390,7 +397,7 @@
       lengthMillimeters: localLengthMm ? parseFloat(localLengthMm) : null,
       lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
     });
-    if (result.status === 'error') throw new Error('Failed to save DCC interface');
+    if (!ok2) throw new Error('Failed to save DCC interface');
     rollingStockOverrides.dccInterface = dccInterface;
   }
 
@@ -399,7 +406,7 @@
     const isMetric = settingsState.settings.measureUnit === 'Metric';
     const lengthMillimeters = isMetric && !isNaN(num) && num > 0 ? num : null;
     const lengthInches = !isMetric && !isNaN(num) && num > 0 ? num : null;
-    const result = await commands.updateRollingStockDcc({
+    const ok3 = await updateRollingStockDcc({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       control: localControl,
@@ -407,14 +414,14 @@
       lengthMillimeters,
       lengthInches
     });
-    if (result.status === 'error') throw new Error('Failed to save length');
+    if (!ok3) throw new Error('Failed to save length');
     if (isMetric) rollingStockOverrides.lengthMm = num > 0 ? String(num) : '';
     else rollingStockOverrides.lengthInches = num > 0 ? String(num) : '';
   }
 
   // ── Save: all spec fields atomically ─────────────────────────────────────────
   async function saveAllSpecs() {
-    const result = await commands.updateRollingStockSpecifications({
+    const ok = await updateRollingStockSpecifications({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       seriesCode: localSeries || rollingStock.series || '',
@@ -436,7 +443,7 @@
       digitalShunting: featureFlagToBool(localDigitalShunting),
       isDummy: localIsDummy
     });
-    if (result.status === 'error') throw new Error('Failed to save specifications');
+    if (!ok) throw new Error('Failed to save specifications');
   }
 
   // ── Tech spec save wrappers ────────────────────────────────────────────────────

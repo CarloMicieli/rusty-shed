@@ -7,8 +7,8 @@
  */
 
 import { settingsState } from './SettingsState.svelte';
-import { commands } from '$lib/bindings';
 import { log } from '$lib/tauri-logger';
+import { safeInvoke } from '$lib/services';
 
 class RegionalManager {
   locale = $state('en-US');
@@ -31,8 +31,10 @@ class RegionalManager {
   /** Call once at app startup (after settingsState.initialize()). */
   async init(): Promise<void> {
     try {
-      const locale = await commands.getLocale();
-      if (locale) this.locale = locale;
+      const localeResult = await safeInvoke<string | null>('get_locale');
+      if (localeResult.ok && localeResult.data) {
+        this.locale = localeResult.data;
+      }
     } catch (e) {
       log.warn(`RegionalManager: could not detect OS locale, using default. ${e}`);
     }
