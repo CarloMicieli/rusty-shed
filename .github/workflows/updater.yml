@@ -34,7 +34,7 @@ jobs:
           pnpm update
 
       - name: 🦀 Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.97.0
+        uses: dtolnay/rust-toolchain@1.98.0
 
       - name: 🦀 Install cargo-edit
         uses: taiki-e/install-action@v2
@@ -42,7 +42,7 @@ jobs:
           tool: cargo-edit
 
       - name: 🦀 Upgrade dependencies
-        run: cargo upgrade --pinned # Updates Cargo.toml
+        run: cargo upgrade --pinned --recursive=false # Updates Cargo.toml only
         working-directory: src-tauri
 
       - name: 🦀 Update Cargo.lock

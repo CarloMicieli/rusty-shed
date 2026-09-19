@@ -14,6 +14,8 @@ const allowDefaultProject = [
   'eslint.config.js',
   'svelte.config.js',
   'vitest.config.ts',
+  'wdio.conf.js',
+  'test/e2e/*.js',
   'tools/*.js',
   'src/lib/types/*.d.ts'
 ];
@@ -112,6 +114,17 @@ export default defineConfig(
     files: ['**/*.d.ts'],
 
     rules: {
+      '@typescript-eslint/no-unsafe-return': 'off'
+    }
+  },
+  {
+    files: ['wdio.conf.js', 'test/e2e/**/*.js'],
+
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-return': 'off'
     }
   },

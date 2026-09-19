@@ -31,8 +31,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      $lib: resolve(__dirname, './src/lib'),
-      $app: resolve(__dirname, './src/__tests__/mocks/sveltekit')
+      $lib: resolve(import.meta.dirname, './src/lib'),
+      $app: resolve(import.meta.dirname, './src/__tests__/mocks/sveltekit')
     },
     conditions: ['browser', 'module', 'import', 'default']
   }

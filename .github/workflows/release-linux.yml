@@ -44,12 +44,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🦀 Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@1.97.0
+        uses: dtolnay/rust-toolchain@1.98.0
 
-      - name: ⚡ Rust Cache
-        uses: Swatinem/rust-cache@v2
+      - name: ⚡ Cargo Cache
+        uses: actions/cache@v5
         with:
-          workspaces: 'src-tauri -> target'
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: 🔖 Sync version from tag to tauri.conf.json
         run: |
