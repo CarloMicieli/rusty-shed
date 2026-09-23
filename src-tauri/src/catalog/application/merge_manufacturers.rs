@@ -67,7 +67,9 @@ impl MergeManufacturers {
 mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
-    use crate::catalog::domain::manufacturer::{ManufacturerStatus, MockManufacturerRepository};
+    use crate::catalog::domain::manufacturer::{
+        Manufacturer, ManufacturerStatus, MockManufacturerRepository,
+    };
     use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
