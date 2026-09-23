@@ -22,21 +22,23 @@ impl MergeManufacturers {
 
         let mut repository = unit_of_work.manufacturers_repo();
 
-        let source = repository
-            .find_by_id(source_id)
-            .await?
-            .ok_or_else(|| DomainError::NotFound {
-                resource: "Manufacturer".to_string(),
-                identifier: source_id.to_string(),
-            })?;
+        let source =
+            repository
+                .find_by_id(source_id)
+                .await?
+                .ok_or_else(|| DomainError::NotFound {
+                    resource: "Manufacturer".to_string(),
+                    identifier: source_id.to_string(),
+                })?;
 
-        let target = repository
-            .find_by_id(target_id)
-            .await?
-            .ok_or_else(|| DomainError::NotFound {
-                resource: "Manufacturer".to_string(),
-                identifier: target_id.to_string(),
-            })?;
+        let target =
+            repository
+                .find_by_id(target_id)
+                .await?
+                .ok_or_else(|| DomainError::NotFound {
+                    resource: "Manufacturer".to_string(),
+                    identifier: target_id.to_string(),
+                })?;
 
         if source.is_system_seeded || target.is_system_seeded {
             return Err(DomainError::BusinessRule(
@@ -65,7 +67,7 @@ impl MergeManufacturers {
 mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
-    use crate::catalog::domain::manufacturer::{MockManufacturerRepository, ManufacturerStatus};
+    use crate::catalog::domain::manufacturer::{ManufacturerStatus, MockManufacturerRepository};
     use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;

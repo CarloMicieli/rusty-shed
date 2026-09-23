@@ -13,13 +13,13 @@ impl DeleteManufacturer {
     {
         let mut repo = unit_of_work.manufacturers_repo();
 
-        let manufacturer =
-            repo.find_by_id(id)
-                .await?
-                .ok_or_else(|| DomainError::NotFound {
-                    resource: "Manufacturer".to_string(),
-                    identifier: id.to_string(),
-                })?;
+        let manufacturer = repo
+            .find_by_id(id)
+            .await?
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "Manufacturer".to_string(),
+                identifier: id.to_string(),
+            })?;
 
         if manufacturer.is_system_seeded {
             return Err(DomainError::BusinessRule(
@@ -50,7 +50,7 @@ impl DeleteManufacturer {
 mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
-    use crate::catalog::domain::manufacturer::{MockManufacturerRepository, ManufacturerStatus};
+    use crate::catalog::domain::manufacturer::{ManufacturerStatus, MockManufacturerRepository};
     use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
