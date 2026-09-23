@@ -1,7 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::usage_queries::canonical_party_usage_count;
 use crate::sellers::domain::seller_id::SellerId;
-use crate::sellers::infrastructure::database;
 
 /// Guard use case that validates whether a seller can be safely deleted.
 pub struct DeleteSellerWithLock;
@@ -13,15 +12,19 @@ impl DeleteSellerWithLock {
         executor: &mut sqlx::SqliteConnection,
         id: &SellerId,
     ) -> Result<(), DomainError> {
-        let seller = database::find_seller_by_id(&mut *executor, id.as_ref())
-            .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?
-            .ok_or_else(|| DomainError::NotFound {
-                resource: "Seller".to_string(),
-                identifier: id.to_string(),
-            })?;
+        let is_seeded = sqlx::query_scalar::<_, i64>(
+            r#"SELECT is_system_seeded FROM sellers WHERE id = ?1 LIMIT 1"#,
+        )
+        .bind(id.as_ref())
+        .fetch_optional(&mut *executor)
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .ok_or_else(|| DomainError::NotFound {
+            resource: "Seller".to_string(),
+            identifier: id.to_string(),
+        })?;
 
-        if seller.is_system_seeded != 0 {
+        if is_seeded != 0 {
             return Err(DomainError::BusinessRule(
                 "Protected entity cannot be deleted".to_string(),
             ));
