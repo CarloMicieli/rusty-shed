@@ -1,5 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::sellers::domain::seller_id::SellerId;
+use crate::sellers::infrastructure::database;
 
 /// Use case that merges one seller into another canonical seller entity.
 pub struct MergeSeller;
@@ -19,41 +20,23 @@ impl MergeSeller {
             ));
         }
 
-        let source_seeded = sqlx::query_scalar::<_, i64>(
-            r#"
-            SELECT is_system_seeded
-            FROM sellers
-            WHERE id = ?1
-            LIMIT 1
-            "#,
-        )
-        .bind(source_id.as_ref())
-        .fetch_optional(&mut *tx)
-        .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
-        .ok_or_else(|| DomainError::NotFound {
-            resource: "Seller".to_string(),
-            identifier: source_id.to_string(),
-        })?;
+        let source = database::find_seller_by_id(&mut *tx, source_id.as_ref())
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "Seller".to_string(),
+                identifier: source_id.to_string(),
+            })?;
 
-        let target_seeded = sqlx::query_scalar::<_, i64>(
-            r#"
-            SELECT is_system_seeded
-            FROM sellers
-            WHERE id = ?1
-            LIMIT 1
-            "#,
-        )
-        .bind(target_id.as_ref())
-        .fetch_optional(&mut *tx)
-        .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
-        .ok_or_else(|| DomainError::NotFound {
-            resource: "Seller".to_string(),
-            identifier: target_id.to_string(),
-        })?;
+        let target = database::find_seller_by_id(&mut *tx, target_id.as_ref())
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "Seller".to_string(),
+                identifier: target_id.to_string(),
+            })?;
 
-        if source_seeded != 0 || target_seeded != 0 {
+        if source.is_system_seeded != 0 || target.is_system_seeded != 0 {
             return Err(DomainError::BusinessRule(
                 "Protected entities cannot be merged".to_string(),
             ));

@@ -13,15 +13,15 @@ impl DeleteManufacturer {
     {
         let mut repo = unit_of_work.manufacturers_repo();
 
-        let is_seeded =
-            repo.find_is_system_seeded(id)
+        let manufacturer =
+            repo.find_by_id(id)
                 .await?
                 .ok_or_else(|| DomainError::NotFound {
                     resource: "Manufacturer".to_string(),
                     identifier: id.to_string(),
                 })?;
 
-        if is_seeded {
+        if manufacturer.is_system_seeded {
             return Err(DomainError::BusinessRule(
                 "Protected entity cannot be deleted".to_string(),
             ));
@@ -50,19 +50,34 @@ impl DeleteManufacturer {
 mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
-    use crate::catalog::domain::manufacturer::MockManufacturerRepository;
+    use crate::catalog::domain::manufacturer::{MockManufacturerRepository, ManufacturerStatus};
     use crate::core::domain::identifiers::Identifier;
+    use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
+
+    fn make_manufacturer(id: ManufacturerId, is_system_seeded: bool) -> Manufacturer {
+        Manufacturer {
+            id,
+            name: "Test".to_string(),
+            registered_company_name: None,
+            country_code: None,
+            status: ManufacturerStatus::Active,
+            website_url: None,
+            is_system_seeded,
+            metadata: Metadata::default(),
+        }
+    }
 
     #[tokio::test]
     async fn delete_manufacturer_happy_path() -> Result<(), DomainError> {
         let id = ManufacturerId::new_from_parts(&["m1"]);
         let mut repo = MockManufacturerRepository::new();
 
-        let id_for_seeded = id.clone();
-        repo.expect_find_is_system_seeded()
-            .with(eq(id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let id_for_find = id.clone();
+        let m = make_manufacturer(id.clone(), false);
+        repo.expect_find_by_id()
+            .with(eq(id_for_find))
+            .returning(move |_| Ok(Some(m.clone())));
 
         let id_for_usage = id.clone();
         repo.expect_find_usage_count()
@@ -85,9 +100,8 @@ mod tests {
         let id = ManufacturerId::new_from_parts(&["missing"]);
         let mut repo = MockManufacturerRepository::new();
 
-        let id_for_seeded = id.clone();
-        repo.expect_find_is_system_seeded()
-            .with(eq(id_for_seeded))
+        repo.expect_find_by_id()
+            .with(eq(id.clone()))
             .returning(|_| Ok(None));
 
         let mut uow = FakeUow::with_manufacturers_repo(repo);
@@ -101,10 +115,10 @@ mod tests {
         let id = ManufacturerId::new_from_parts(&["seeded"]);
         let mut repo = MockManufacturerRepository::new();
 
-        let id_for_seeded = id.clone();
-        repo.expect_find_is_system_seeded()
-            .with(eq(id_for_seeded))
-            .returning(|_| Ok(Some(true)));
+        let m = make_manufacturer(id.clone(), true);
+        repo.expect_find_by_id()
+            .with(eq(id.clone()))
+            .returning(move |_| Ok(Some(m.clone())));
 
         let mut uow = FakeUow::with_manufacturers_repo(repo);
         let result = DeleteManufacturer::execute(&mut uow, &id).await;
@@ -117,10 +131,10 @@ mod tests {
         let id = ManufacturerId::new_from_parts(&["in-use"]);
         let mut repo = MockManufacturerRepository::new();
 
-        let id_for_seeded = id.clone();
-        repo.expect_find_is_system_seeded()
-            .with(eq(id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let m = make_manufacturer(id.clone(), false);
+        repo.expect_find_by_id()
+            .with(eq(id.clone()))
+            .returning(move |_| Ok(Some(m.clone())));
 
         let id_for_usage = id.clone();
         repo.expect_find_usage_count()
@@ -138,10 +152,10 @@ mod tests {
         let id = ManufacturerId::new_from_parts(&["gone"]);
         let mut repo = MockManufacturerRepository::new();
 
-        let id_for_seeded = id.clone();
-        repo.expect_find_is_system_seeded()
-            .with(eq(id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let m = make_manufacturer(id.clone(), false);
+        repo.expect_find_by_id()
+            .with(eq(id.clone()))
+            .returning(move |_| Ok(Some(m.clone())));
 
         let id_for_usage = id.clone();
         repo.expect_find_usage_count()

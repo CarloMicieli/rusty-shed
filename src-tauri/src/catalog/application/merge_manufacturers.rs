@@ -22,23 +22,23 @@ impl MergeManufacturers {
 
         let mut repository = unit_of_work.manufacturers_repo();
 
-        let source_seeded = repository
-            .find_is_system_seeded(source_id)
+        let source = repository
+            .find_by_id(source_id)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "Manufacturer".to_string(),
                 identifier: source_id.to_string(),
             })?;
 
-        let target_seeded = repository
-            .find_is_system_seeded(target_id)
+        let target = repository
+            .find_by_id(target_id)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "Manufacturer".to_string(),
                 identifier: target_id.to_string(),
             })?;
 
-        if source_seeded || target_seeded {
+        if source.is_system_seeded || target.is_system_seeded {
             return Err(DomainError::BusinessRule(
                 "Protected entities cannot be merged".to_string(),
             ));
@@ -67,7 +67,26 @@ mod tests {
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::MockManufacturerRepository;
     use crate::core::domain::identifiers::Identifier;
+    mod tests {
+    use super::*;
+    use crate::catalog::application::testing::FakeUow;
+    use crate::catalog::domain::manufacturer::{MockManufacturerRepository, ManufacturerStatus};
+    use crate::core::domain::identifiers::Identifier;
+    use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
+
+    fn make_manufacturer(id: ManufacturerId, is_system_seeded: bool) -> Manufacturer {
+        Manufacturer {
+            id,
+            name: "Test".to_string(),
+            registered_company_name: None,
+            country_code: None,
+            status: ManufacturerStatus::Active,
+            website_url: None,
+            is_system_seeded,
+            metadata: Metadata::default(),
+        }
+    }
 
     #[tokio::test]
     async fn merge_manufacturers_happy_path_returns_relinked_count() -> Result<(), DomainError> {
@@ -75,15 +94,15 @@ mod tests {
         let target_id = ManufacturerId::new_from_parts(&["target"]);
         let mut mock = MockManufacturerRepository::new();
 
-        let source_id_for_seeded = source_id.clone();
-        mock.expect_find_is_system_seeded()
-            .with(eq(source_id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let source = make_manufacturer(source_id.clone(), false);
+        mock.expect_find_by_id()
+            .with(eq(source_id.clone()))
+            .returning(move |_| Ok(Some(source.clone())));
 
-        let target_id_for_seeded = target_id.clone();
-        mock.expect_find_is_system_seeded()
-            .with(eq(target_id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let target = make_manufacturer(target_id.clone(), false);
+        mock.expect_find_by_id()
+            .with(eq(target_id.clone()))
+            .returning(move |_| Ok(Some(target.clone())));
 
         let source_id_for_relink = source_id.clone();
         let target_id_for_relink = target_id.clone();
@@ -120,9 +139,8 @@ mod tests {
         let target_id = ManufacturerId::new_from_parts(&["target"]);
         let mut mock = MockManufacturerRepository::new();
 
-        let source_id_for_seeded = source_id.clone();
-        mock.expect_find_is_system_seeded()
-            .with(eq(source_id_for_seeded))
+        mock.expect_find_by_id()
+            .with(eq(source_id.clone()))
             .returning(|_| Ok(None));
 
         let mut uow = FakeUow::with_manufacturers_repo(mock);
@@ -137,15 +155,15 @@ mod tests {
         let target_id = ManufacturerId::new_from_parts(&["target"]);
         let mut mock = MockManufacturerRepository::new();
 
-        let source_id_for_seeded = source_id.clone();
-        mock.expect_find_is_system_seeded()
-            .with(eq(source_id_for_seeded))
-            .returning(|_| Ok(Some(true)));
+        let source = make_manufacturer(source_id.clone(), true);
+        mock.expect_find_by_id()
+            .with(eq(source_id.clone()))
+            .returning(move |_| Ok(Some(source.clone())));
 
-        let target_id_for_seeded = target_id.clone();
-        mock.expect_find_is_system_seeded()
-            .with(eq(target_id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let target = make_manufacturer(target_id.clone(), false);
+        mock.expect_find_by_id()
+            .with(eq(target_id.clone()))
+            .returning(move |_| Ok(Some(target.clone())));
 
         let mut uow = FakeUow::with_manufacturers_repo(mock);
         let result = MergeManufacturers::execute(&mut uow, &source_id, &target_id).await;
@@ -159,15 +177,15 @@ mod tests {
         let target_id = ManufacturerId::new_from_parts(&["target"]);
         let mut mock = MockManufacturerRepository::new();
 
-        let source_id_for_seeded = source_id.clone();
-        mock.expect_find_is_system_seeded()
-            .with(eq(source_id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let source = make_manufacturer(source_id.clone(), false);
+        mock.expect_find_by_id()
+            .with(eq(source_id.clone()))
+            .returning(move |_| Ok(Some(source.clone())));
 
-        let target_id_for_seeded = target_id.clone();
-        mock.expect_find_is_system_seeded()
-            .with(eq(target_id_for_seeded))
-            .returning(|_| Ok(Some(false)));
+        let target = make_manufacturer(target_id.clone(), false);
+        mock.expect_find_by_id()
+            .with(eq(target_id.clone()))
+            .returning(move |_| Ok(Some(target.clone())));
 
         let source_id_for_relink = source_id.clone();
         let target_id_for_relink = target_id.clone();
