@@ -32,18 +32,6 @@ pub trait ManufacturerRepository: Send + Sync {
         id: &ManufacturerId,
     ) -> Result<Option<Manufacturer>, DomainError>;
 
-    /// Returns whether a manufacturer is protected/system-seeded.
-    ///
-    /// # Returns
-    /// - `Ok(Some(true))` when the manufacturer exists and is protected.
-    /// - `Ok(Some(false))` when the manufacturer exists and is editable.
-    /// - `Ok(None)` when no manufacturer is found for the given id.
-    /// - `Err(DomainError)` when persistence access fails.
-    async fn find_is_system_seeded(
-        &mut self,
-        id: &ManufacturerId,
-    ) -> Result<Option<bool>, DomainError>;
-
     /// Returns the `(name, is_system_seeded)` pair for the given manufacturer,
     /// or `None` when no matching row exists.
     ///

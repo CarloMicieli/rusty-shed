@@ -58,6 +58,7 @@ impl UpdateSellerUseCase {
             website_url: input.website_url,
             address,
             metadata,
+            is_system_seeded: false,
             pending_events: Vec::new(),
         };
 

@@ -52,6 +52,7 @@ mod tests {
             status: ManufacturerStatus::Active,
             metadata: Metadata::default(),
             website_url: None,
+            is_system_seeded: false,
         };
 
         mock.expect_find_by_id()
