@@ -10,5 +10,8 @@ allowBuilds:
   'lightningcss': true
   'rolldown': true
 
+minimumReleaseAgeExclude:
+  - '@tauri-apps/plugin-http@2.8.0'
+
 overrides:
   typebox: 1.1.39
