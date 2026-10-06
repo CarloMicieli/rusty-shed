@@ -36,14 +36,14 @@
 <Button
   variant="ghost"
   size="icon"
-  class="-mt-1 -mr-1 h-7 w-7 shrink-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+  class="-mt-1 -mr-1 h-11 w-11 shrink-0 opacity-100 transition-all duration-150 active:scale-[0.98] active:bg-muted/50 md:h-7 md:w-7 md:opacity-0 md:group-hover:opacity-100"
   aria-label={m.components_deleteButton()}
   onclick={(e) => {
     e.stopPropagation();
     showDeleteDialog = true;
   }}
 >
-  <Trash2 class="h-3.5 w-3.5 text-zinc-500 hover:text-red-400" />
+  <Trash2 class="h-3.5 w-3.5 text-zinc-500 md:hover:text-red-400" />
 </Button>
 
 <!-- Delete confirmation dialog -->

@@ -2,6 +2,7 @@
   import { Upload } from 'lucide-svelte';
   import { listen } from '@tauri-apps/api/event';
   import { readFile } from '@tauri-apps/plugin-fs';
+  import { onMount } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { toaster } from '$lib/toaster';
   import type { RailwayModelId } from '$lib/bindings';
@@ -19,6 +20,9 @@
   const isDragging = $derived(dragCounter > 0);
   let pendingFile = $state<File | null>(null);
   let blobUrl = $state<string | null>(null);
+  let hiddenPicker = $state<HTMLInputElement | null>(null);
+  let cameraAvailable = $state(true);
+  let probeStatus = $state<'success' | 'unsupported' | 'denied' | 'error'>('success');
 
   const validMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
   const extMimeMap: Record<string, string> = {
@@ -27,6 +31,62 @@
     png: 'image/png',
     webp: 'image/webp'
   };
+
+  const useCaptureAttribute = $derived(cameraAvailable && probeStatus === 'success');
+
+  onMount(() => {
+    void probeCameraCapability();
+  });
+
+  async function probeCameraCapability() {
+    try {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) {
+        cameraAvailable = false;
+        probeStatus = 'unsupported';
+        return;
+      }
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      cameraAvailable = devices.some((device) => device.kind === 'videoinput');
+      probeStatus = cameraAvailable ? 'success' : 'unsupported';
+    } catch (err) {
+      const message = err instanceof Error ? err.message.toLowerCase() : '';
+      const denied = message.includes('denied') || message.includes('permission');
+      cameraAvailable = false;
+      probeStatus = denied ? 'denied' : 'error';
+    }
+  }
+
+  function setPendingImage(file: File) {
+    if (file.type && !validMimeTypes.includes(file.type)) {
+      toaster.error(m.upload_error_unsupported_format({ format: file.type }));
+      return;
+    }
+
+    blobUrl = URL.createObjectURL(file);
+    pendingFile = file;
+  }
+
+  function openHiddenPicker() {
+    hiddenPicker?.click();
+  }
+
+  function handleHiddenInputChange(event: Event) {
+    const target = event.currentTarget as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setPendingImage(file);
+  }
+
+  function handleDropZoneKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openHiddenPicker();
+    }
+  }
 
   // Tauri native drag-drop: on Linux/Windows the OS-level file drop is intercepted
   // by the native layer and fires tauri://drag-drop instead of HTML5 ondrop.
@@ -99,19 +159,20 @@
       return;
     }
 
-    const file = files[0];
-
-    if (file.type && !validMimeTypes.includes(file.type)) {
-      toaster.error(m.upload_error_unsupported_format({ format: file.type }));
-      return;
-    }
-
-    blobUrl = URL.createObjectURL(file);
-    pendingFile = file;
+    setPendingImage(files[0]);
   }
 </script>
 
 <div class="space-y-4">
+  <input
+    bind:this={hiddenPicker}
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    capture={useCaptureAttribute ? 'environment' : undefined}
+    class="hidden"
+    onchange={handleHiddenInputChange}
+  />
+
   <!-- Drop Zone -->
   <div
     role="button"
@@ -126,6 +187,8 @@
     ondragover={handleDragOver}
     ondragleave={handleDragLeave}
     ondrop={handleDrop}
+    onclick={openHiddenPicker}
+    onkeydown={handleDropZoneKeydown}
   >
     {#if isDragging}
       <Upload class="mb-4 h-12 w-12 text-primary" />
