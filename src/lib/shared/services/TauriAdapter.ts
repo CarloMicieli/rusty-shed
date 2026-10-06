@@ -282,3 +282,37 @@ export async function safeInvokeWithRetry<T>(
   // Return the last error
   return { ok: false, error: lastError! };
 }
+
+/**
+ * Wrap a typed `commands.*` call (which returns a `typedError` result) into a
+ * `SafeResult`, normalizing the backend error into a `NormalizedError`.
+ *
+ * This bridges the tauri-specta `{ status: "ok" | "error" }` shape that
+ * `commands.*` functions return into the application-wide `SafeResult` shape,
+ * so callers can keep using `if (result.ok)` checks and `getErrorMessage`
+ * without any further changes.
+ *
+ * @example
+ * ```typescript
+ * import { commands } from '$lib/bindings';
+ * import { safeCommand } from '$lib/shared/services/TauriAdapter';
+ *
+ * const result = await safeCommand(commands.getWishlists());
+ * if (result.ok) {
+ *   console.log(result.data);
+ * }
+ * ```
+ */
+export async function safeCommand<T, E>(
+  promise: Promise<{ status: 'ok'; data: T } | { status: 'error'; error: E }>
+): Promise<SafeResult<T>> {
+  try {
+    const result = await promise;
+    if (result.status === 'ok') {
+      return { ok: true, data: result.data };
+    }
+    return { ok: false, error: normalizeError(result.error) };
+  } catch (error) {
+    return { ok: false, error: normalizeError(error) };
+  }
+}
