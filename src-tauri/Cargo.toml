@@ -5,7 +5,7 @@ description = "The ultimate companion app for scale modelers and collectors"
 authors = ["Carlo Micieli <piovarolo@gmail.com>"]
 edition = "2024"
 license = "Apache-2.0"
-rust-version = "1.98.0"
+rust-version = "1.99.0"
 default-run = "rusty-shed"
 
 [[bin]]
@@ -20,7 +20,7 @@ name = "rusty_shed_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build                  = { version = "2.6.3", features = [] }
+tauri-build                  = { version = "2.7.1", features = [] }
 
 [dependencies]
 anyhow                       = "1.0.104"
@@ -54,27 +54,27 @@ sqlx                         = { version = "0.8.6", features = ["sqlite", "runti
 strum                        = "0.28.0"
 strum_macros                 = "0.28.0"
 tar                          = "0.4.46"
-tauri                        = { version = "2.11.5", features = ["protocol-asset", "image-png"] }
-tauri-plugin-global-shortcut = "2.3.2"
-tauri-plugin-dialog          = "2.7.3"
-tauri-plugin-fs              = "2.5.2"
-tauri-plugin-http            = "2.6.1"
-tauri-plugin-log             = "2.9.1"
+tauri                        = { version = "2.12.1", features = ["protocol-asset", "image-png"] }
+tauri-plugin-global-shortcut = "2.4.0"
+tauri-plugin-dialog          = "2.8.1"
+tauri-plugin-fs              = "2.6.0"
+tauri-plugin-http            = "2.8.0"
+tauri-plugin-log             = "2.10.0"
 tauri-plugin-mcp-bridge      = "0.10.0"
 tauri-plugin-oauth           = "2.1.0"
-tauri-plugin-opener          = "2.5.5"
-tauri-plugin-os              = "2.3.2"
-tauri-plugin-store           = "2.4.5"
-tauri-plugin-window-state    = "2.4.1"
+tauri-plugin-opener          = "2.7.0"
+tauri-plugin-os              = "2.4.0"
+tauri-plugin-store           = "2.5.0"
+tauri-plugin-window-state    = "2.5.0"
 tauri-specta                 = { version = "2.0.0-rc.25", features = ["typescript"] }
-thiserror                    = "2.0.20"
-tokio                        = { version = "1.53.1", features = ["rt-multi-thread", "macros", "fs"] }
+thiserror                    = "2.0.21"
+tokio                        = { version = "1.53.2", features = ["rt-multi-thread", "macros", "fs"] }
 tracing                      = { version = "0.1.44", features = ["log"] }
 tracing-subscriber           = { version = "0.3.23", features = ["env-filter", "fmt"] }
 url                          = { version = "2.5.8", features = ["serde"] }
 urlencoding                  = "2.1.3"
 tempfile                     = "3.27.0"
-uuid                         = { version = "1.26.1", features = ["v4", "serde", "fast-rng"] }
+uuid                         = { version = "1.27.0", features = ["v4", "serde", "fast-rng"] }
 zeroize                      = { version = "1.9.0", features = ["derive"] }
 zip                          = "8.6.0"
 
@@ -85,7 +85,7 @@ keyring                      = { version = "3", features = ["windows-native", "s
 fake                         = { version = "5.1.0", features = ["derive"] }
 mockall                      = "0.14.0"
 pretty_assertions            = "1.4.1"
-rand                         = "0.10.2"
+rand                         = "0.10.3"
 rstest                       = "0.26.1"
 serde_derive                 = "1.0.229"
 serial_test                  = "3.5.0"

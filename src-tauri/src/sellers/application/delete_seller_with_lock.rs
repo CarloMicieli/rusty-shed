@@ -12,13 +12,8 @@ impl DeleteSellerWithLock {
         executor: &mut sqlx::SqliteConnection,
         id: &SellerId,
     ) -> Result<(), DomainError> {
-        let row = sqlx::query_as::<_, (String, i64)>(
-            r#"
-            SELECT name, is_system_seeded
-            FROM sellers
-            WHERE id = ?1
-            LIMIT 1
-            "#,
+        let is_seeded = sqlx::query_scalar::<_, i64>(
+            r#"SELECT is_system_seeded FROM sellers WHERE id = ?1 LIMIT 1"#,
         )
         .bind(id.as_ref())
         .fetch_optional(&mut *executor)
@@ -29,7 +24,6 @@ impl DeleteSellerWithLock {
             identifier: id.to_string(),
         })?;
 
-        let (_name, is_seeded) = row;
         if is_seeded != 0 {
             return Err(DomainError::BusinessRule(
                 "Protected entity cannot be deleted".to_string(),

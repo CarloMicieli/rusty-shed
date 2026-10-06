@@ -39,6 +39,9 @@ pub struct Seller {
     /// Metadata about the seller (creation date, last modified, version, etc.).
     pub metadata: Metadata,
 
+    /// Whether this seller is system-seeded (protected from deletion/rename).
+    pub is_system_seeded: bool,
+
     /// Events produced by operations on the aggregate that have not yet been
     /// persisted/handled by a repository or unit of work.
     pub pending_events: Vec<SellerEvent>,

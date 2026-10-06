@@ -40,6 +40,7 @@ impl From<SellerRow> for Seller {
             website_url: row.website_url,
             address,
             metadata,
+            is_system_seeded: row.is_system_seeded != 0,
             pending_events: Vec::new(),
         }
     }

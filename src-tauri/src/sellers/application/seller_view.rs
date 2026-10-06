@@ -41,7 +41,7 @@ impl From<Seller> for SellerView {
             phone: s.phone,
             website_url: s.website_url,
             address: s.address,
-            is_system_seeded: false,
+            is_system_seeded: s.is_system_seeded,
             usage_count: 0,
         }
     }

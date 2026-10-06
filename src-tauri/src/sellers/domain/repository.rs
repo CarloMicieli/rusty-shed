@@ -32,16 +32,6 @@ pub trait SellersRepository: Send + Sync {
     /// so that `pull_events()` can clear the aggregate's pending events.
     async fn save(&mut self, seller: &mut Seller) -> Result<(), DomainError>;
 
-    /// Returns the `(name, is_system_seeded)` pair for the given seller, or
-    /// `None` when no matching row exists.
-    ///
-    /// Used to enforce business rules (e.g. seeded-name immutability) before
-    /// mutating a seller without loading the full aggregate.
-    async fn find_seeded_and_name(
-        &mut self,
-        id: &SellerId,
-    ) -> Result<Option<(String, bool)>, DomainError>;
-
     /// Returns the total number of purchase records that reference this party
     /// as either a seller or buyer.
     ///

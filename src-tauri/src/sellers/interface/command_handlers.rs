@@ -24,17 +24,11 @@ pub async fn get_sellers_inner(state: &AppState) -> Result<Vec<SellerView>, Comm
 
     for seller in &mut sellers {
         let mut repo = unit_of_work.sellers_repository();
-        let (_, is_seeded) = repo
-            .find_seeded_and_name(&seller.id)
-            .await
-            .map_err(CommandError::from)?
-            .unwrap_or_default();
         let usage_count = repo
             .find_usage_count(&seller.id)
             .await
             .map_err(CommandError::from)?;
         drop(repo);
-        seller.is_system_seeded = is_seeded;
         seller.usage_count = usage_count;
     }
 
@@ -79,17 +73,11 @@ pub async fn get_seller_by_id_inner(
     let mut result = result;
     if let Some(seller) = result.as_mut() {
         let mut repo = unit_of_work.sellers_repository();
-        let (_, is_seeded) = repo
-            .find_seeded_and_name(&seller.id)
-            .await
-            .map_err(CommandError::from)?
-            .unwrap_or_default();
         let usage_count = repo
             .find_usage_count(&seller.id)
             .await
             .map_err(CommandError::from)?;
         drop(repo);
-        seller.is_system_seeded = is_seeded;
         seller.usage_count = usage_count;
     }
 
@@ -192,10 +180,12 @@ pub async fn update_seller_inner(
 
     let (current_name, is_system_seeded) = {
         let mut repo = unit_of_work.sellers_repository();
-        repo.find_seeded_and_name(&seller_id)
+        let seller = repo
+            .get(&seller_id)
             .await
             .map_err(CommandError::from)?
-            .ok_or_else(|| CommandError::NotFound(format!("Seller '{}' not found", seller_id)))?
+            .ok_or_else(|| CommandError::NotFound(format!("Seller '{}' not found", seller_id)))?;
+        (seller.name, seller.is_system_seeded)
     };
 
     if is_system_seeded && current_name.trim() != payload.name.trim() {

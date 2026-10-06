@@ -59,12 +59,13 @@ impl TryFrom<ManufacturerRow> for Manufacturer {
             registered_company_name: row.registered_company_name,
             country_code: row.country_code,
             status: row.status,
+            website_url,
+            is_system_seeded: row.is_system_seeded != 0,
             metadata: Metadata {
                 version: row.version as u8,
                 created_at,
                 updated_at,
             },
-            website_url,
         })
     }
 }
@@ -362,6 +363,7 @@ mod tests {
                 created_at: utc_timestamp,
                 updated_at: utc_timestamp,
                 version: 0,
+                is_system_seeded: 0,
             };
 
             let domain = Manufacturer::try_from(row).expect("mapping should succeed");

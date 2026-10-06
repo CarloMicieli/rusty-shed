@@ -20,12 +20,7 @@ impl MergeSeller {
         }
 
         let source_seeded = sqlx::query_scalar::<_, i64>(
-            r#"
-            SELECT is_system_seeded
-            FROM sellers
-            WHERE id = ?1
-            LIMIT 1
-            "#,
+            r#"SELECT is_system_seeded FROM sellers WHERE id = ?1 LIMIT 1"#,
         )
         .bind(source_id.as_ref())
         .fetch_optional(&mut *tx)
@@ -37,12 +32,7 @@ impl MergeSeller {
         })?;
 
         let target_seeded = sqlx::query_scalar::<_, i64>(
-            r#"
-            SELECT is_system_seeded
-            FROM sellers
-            WHERE id = ?1
-            LIMIT 1
-            "#,
+            r#"SELECT is_system_seeded FROM sellers WHERE id = ?1 LIMIT 1"#,
         )
         .bind(target_id.as_ref())
         .fetch_optional(&mut *tx)

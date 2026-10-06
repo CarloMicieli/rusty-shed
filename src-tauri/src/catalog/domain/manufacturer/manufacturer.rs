@@ -26,6 +26,9 @@ pub struct Manufacturer {
     /// Optional website URL for the manufacturer.
     pub website_url: Option<Url>,
 
+    /// Whether this manufacturer is system-seeded (protected from deletion/rename).
+    pub is_system_seeded: bool,
+
     /// Metadata about the manufacturer (creation date, version, last updated).
     #[serde(skip)]
     pub metadata: Metadata,

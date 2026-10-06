@@ -49,6 +49,7 @@ impl CreateSeller {
             website_url: input.website_url,
             address,
             metadata: Metadata::default(),
+            is_system_seeded: false,
             pending_events: Vec::new(),
         };
 
