@@ -49,7 +49,7 @@
   let {
     value = $bindable(null),
     displayValue: bindableDisplayValue = $bindable(''),
-    hasInvalidInput: bindableHasInvalidInput = $bindable(false),
+    hasInvalidInput: _bindableHasInvalidInput = $bindable(false),
     symbol,
     label,
     id,
@@ -135,7 +135,7 @@
     let filtered = raw.replace(/[^\d.,-]/g, '');
 
     // Track if any characters were filtered out (indicating invalid input)
-    bindableHasInvalidInput = raw.length > 0 && filtered.length < raw.length;
+    _bindableHasInvalidInput = raw.length > 0 && filtered.length < raw.length;
 
     // Ensure minus sign only appears at the start
     const minusCount = (filtered.match(/-/g) || []).length;
