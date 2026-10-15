@@ -17,6 +17,8 @@
    * ```
    */
   import * as m from '$lib/paraglide/messages';
+  import { createMobileMatchMediaState } from '$lib/state/match-media.svelte';
+  import { onMount } from 'svelte';
 
   interface InPlaceEditProps {
     /** Current value displayed and edited. */
@@ -35,6 +37,10 @@
     onActivate?: () => void;
     /** Called when the user exits edit mode (for cross-card coordination). */
     onDeactivate?: () => void;
+    /** Disable inline editing for mobile and delegate to sheet flow. */
+    disableInlineOnMobile?: boolean;
+    /** Optional callback when mobile edit is requested while inline is disabled. */
+    onRequestMobileEdit?: () => void;
   }
 
   let {
@@ -45,7 +51,9 @@
     type = 'text',
     onSave,
     onActivate,
-    onDeactivate
+    onDeactivate,
+    disableInlineOnMobile = false,
+    onRequestMobileEdit
   }: InPlaceEditProps = $props();
 
   let isEditing = $state(false);
@@ -53,8 +61,27 @@
   let editValue = $state('');
   let isSaving = $state(false);
   let error = $state<string | null>(null);
+  let isMobileViewport = $state(false);
 
   let inputEl = $state<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
+  const mobileMedia = createMobileMatchMediaState();
+
+  $effect(() => {
+    const unsubscribe = mobileMedia.subscribe((matches) => {
+      isMobileViewport = matches;
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
+
+  onMount(() => {
+    return () => {
+      mobileMedia.destroy();
+    };
+  });
 
   $effect(() => {
     if (isEditing && inputEl) {
@@ -63,6 +90,11 @@
   });
 
   function startEditing() {
+    if (disableInlineOnMobile && isMobileViewport) {
+      onRequestMobileEdit?.();
+      return;
+    }
+
     editValue = value;
     error = null;
     isEditing = true;

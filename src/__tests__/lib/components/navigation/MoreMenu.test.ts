@@ -23,6 +23,12 @@ vi.mock('$app/paths', () => ({
   resolve: (path: string) => path
 }));
 
+vi.mock('$lib/paraglide/messages.js', () => ({
+  app_settings: () => 'Settings',
+  app_debug: () => 'Debug',
+  mobile_more_top_actions: () => 'Quick actions'
+}));
+
 vi.mock('$lib/components/ui/sheet', async () => ({
   Sheet: (await import('../../../stubs/SheetStub.svelte')).default
 }));

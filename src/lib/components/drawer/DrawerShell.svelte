@@ -3,6 +3,8 @@
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components/ui/button';
   import { cn } from '$lib/utils';
+  import { createMobileMatchMediaState } from '$lib/state/match-media.svelte';
+  import { onMount } from 'svelte';
 
   interface Props {
     open: boolean;
@@ -41,10 +43,23 @@
   }: Props = $props();
 
   let showDiscardDialog = $state(false);
+  let isMobileViewport = $state(false);
 
   const sizeClass = $derived(
     size === 'md' ? 'max-w-lg' : size === 'xl' ? 'max-w-3xl' : 'max-w-2xl'
   );
+
+  const mobileMedia = createMobileMatchMediaState();
+
+  $effect(() => {
+    const unsubscribe = mobileMedia.subscribe((matches) => {
+      isMobileViewport = matches;
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
 
   $effect(() => {
     if (open) {
@@ -60,6 +75,12 @@
       const mainElement = document.querySelector('main');
       document.body.style.overflow = '';
       if (mainElement) mainElement.style.overflow = '';
+    };
+  });
+
+  onMount(() => {
+    return () => {
+      mobileMedia.destroy();
     };
   });
 
@@ -99,7 +120,13 @@
 
   <!-- Drawer panel -->
   <div
-    class="fixed inset-y-0 right-0 z-50 flex w-full {sizeClass} translate-x-0 flex-col border-l-2 border-primary bg-card shadow-2xl transition-transform duration-300"
+    class={cn(
+      'fixed z-50 flex w-full flex-col border-primary bg-card shadow-2xl transition-transform motion-reduce:transition-none',
+      'transform-gpu [will-change:transform] motion-reduce:[will-change:auto]',
+      isMobileViewport
+        ? 'right-0 bottom-0 left-0 max-h-[85vh] translate-y-0 rounded-t-2xl border-t-2'
+        : `inset-y-0 right-0 ${sizeClass} translate-x-0 border-l-2`
+    )}
     role="dialog"
     aria-modal="true"
     aria-labelledby={labelledby}

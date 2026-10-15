@@ -35,7 +35,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   confirm_delete_image_title: () => 'Delete Image?',
   confirm_delete_image_description: () => 'This action cannot be undone',
   image_deleted: () => 'Image deleted successfully',
-  common_cancel: () => 'Cancel'
+  common_cancel: () => 'Cancel',
+  image_upload_camera_fallback_notice: () => 'Camera fallback'
 }));
 
 import ImageUpload from '../ImageUpload.svelte';
@@ -47,6 +48,14 @@ describe('ImageUpload - T093: File dialog filter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {
+        mediaDevices: {
+          enumerateDevices: vi.fn().mockResolvedValue([{ kind: 'videoinput' }])
+        }
+      }
+    });
   });
 
   it('should configure file dialog with correct filters (JPEG, PNG, WebP only)', async () => {
@@ -136,6 +145,14 @@ describe('ImageUpload - Delete Flow', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {
+        mediaDevices: {
+          enumerateDevices: vi.fn().mockResolvedValue([{ kind: 'videoinput' }])
+        }
+      }
+    });
   });
 
   it('should show delete button when image exists', () => {

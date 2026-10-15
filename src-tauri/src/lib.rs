@@ -258,7 +258,8 @@ fn create_specta_builder() -> Builder<tauri::Wry> {
             trains_command_handlers::get_prototypes,
             trains_command_handlers::create_custom_prototype,
             trains_command_handlers::get_formation_categories,
-            trains_command_handlers::create_formation_category
+            trains_command_handlers::create_formation_category,
+            crate::viewport::set_viewport_preset
         ])
 }
 
