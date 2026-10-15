@@ -5,7 +5,7 @@
  * including error handling and Tauri IPC communication.
  */
 
-export { safeInvoke, invokeOrThrow } from './tauri';
+export { safeInvoke, invokeOrThrow, safeInvokeWithRetry, safeCommand } from './tauri';
 export type { NormalizedError, SafeResult, ErrorKind } from './errors';
 export {
   getErrorMessage,

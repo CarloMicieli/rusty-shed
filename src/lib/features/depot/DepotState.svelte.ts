@@ -1,5 +1,6 @@
 import { setContext, getContext } from 'svelte';
-import { safeInvoke, getErrorMessage } from '$lib/services';
+import { safeCommand, getErrorMessage } from '$lib/services';
+import { commands } from '$lib/bindings';
 import type { DepotView, DepotRollingStockView } from '$lib/bindings';
 import type { Locomotive, TrainSet, Car } from './types';
 
@@ -169,7 +170,7 @@ export class DepotState {
     this.#error = null;
 
     try {
-      const result = await safeInvoke<DepotView>('get_depot');
+      const result = await safeCommand(commands.getDepot());
       if (result.ok) {
         this.#depot = result.data;
       } else {

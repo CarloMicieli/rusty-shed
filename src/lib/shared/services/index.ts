@@ -5,7 +5,7 @@
  */
 
 // Infrastructure Services
-export { safeInvoke, invokeOrThrow, safeInvokeWithRetry } from './TauriAdapter';
+export { safeInvoke, invokeOrThrow, safeInvokeWithRetry, safeCommand } from './TauriAdapter';
 export {
   ImageService,
   setImageService,
