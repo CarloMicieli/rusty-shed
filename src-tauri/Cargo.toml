@@ -20,7 +20,7 @@ name = "rusty_shed_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build                  = { version = "2.7.2", features = [] }
+tauri-build                  = { version = "2.7.3", features = [] }
 
 [dependencies]
 anyhow                       = "1.0.104"
@@ -45,8 +45,8 @@ rust_decimal                 = { version = "1.43.0", features = ["serde-with-flo
 rust_decimal_macros          = "1.40.0"
 secrecy                      = { version = "0.10", features = ["serde"] }
 serde                        = { version = "1.0.229", features = ["derive"] }
-serde_json                   = "1.0.152"
-sha2                         = "0.11.0"
+serde_json                   = "1.0.154"
+sha2                         = "0.11.1"
 slug                         = "0.1.6"
 specta                       = { version = "=2.0.0-rc.25", features = ["derive", "chrono", "rust_decimal", "uuid", "url"] }
 specta-typescript            = "=0.0.12"
@@ -54,21 +54,21 @@ sqlx                         = { version = "0.8.6", features = ["sqlite", "runti
 strum                        = "0.28.0"
 strum_macros                 = "0.28.0"
 tar                          = "0.4.46"
-tauri                        = { version = "2.12.3", features = ["protocol-asset", "image-png"] }
+tauri                        = { version = "2.12.4", features = ["protocol-asset", "image-png"] }
 tauri-plugin-global-shortcut = "2.4.1"
-tauri-plugin-dialog          = "2.8.2"
-tauri-plugin-fs              = "2.7.0"
-tauri-plugin-http            = "2.8.2"
+tauri-plugin-dialog          = "2.8.3"
+tauri-plugin-fs              = "2.7.1"
+tauri-plugin-http            = "2.8.3"
 tauri-plugin-log             = "2.10.1"
 tauri-plugin-mcp-bridge      = "0.10.0"
 tauri-plugin-oauth           = "2.1.0"
-tauri-plugin-opener          = "2.7.1"
+tauri-plugin-opener          = "2.7.2"
 tauri-plugin-os              = "2.4.0"
 tauri-plugin-store           = "2.5.0"
 tauri-plugin-window-state    = "2.5.0"
 tauri-specta                 = { version = "2.0.0-rc.25", features = ["typescript"] }
 thiserror                    = "2.0.21"
-tokio                        = { version = "1.53.2", features = ["rt-multi-thread", "macros", "fs"] }
+tokio                        = { version = "1.53.3", features = ["rt-multi-thread", "macros", "fs"] }
 tracing                      = { version = "0.1.44", features = ["log"] }
 tracing-subscriber           = { version = "0.3.23", features = ["env-filter", "fmt"] }
 url                          = { version = "2.5.8", features = ["serde"] }
