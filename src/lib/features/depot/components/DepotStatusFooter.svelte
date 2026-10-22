@@ -1,5 +1,6 @@
 <script lang="ts">
-  let { total } = $props<{ total: number }>();
+  type Props = { total: number };
+  let { total }: Props = $props();
 
   // Example "Memory" calculation (can be hardcoded or dynamic)
   const memoryUsage = 45;

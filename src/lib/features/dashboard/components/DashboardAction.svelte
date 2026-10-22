@@ -3,10 +3,11 @@
 
   // Use destructuring for props, but don't pull properties
   // out of the 'action' object into local variables.
-  let { action, isPrimary = false } = $props<{
+  type Props = {
     action: QuickAction;
     isPrimary?: boolean;
-  }>();
+  };
+  let { action, isPrimary = false }: Props = $props();
 </script>
 
 <button

@@ -3,12 +3,13 @@
   import { TableRow, TableCell, Badge, Button } from '$lib/components';
   import type { EnhancedMonthlyRecord } from '../BudgetState.svelte';
 
-  let { record, isCurrent, monthName, onExtra } = $props<{
+  type Props = {
     record: EnhancedMonthlyRecord;
     isCurrent: boolean;
     monthName: string;
     onExtra: (year: number, month: number) => void;
-  }>();
+  };
+  let { record, isCurrent, monthName, onExtra }: Props = $props();
 
   // Purely visual logic stays in the component
   const remainingColor = $derived.by(() => {

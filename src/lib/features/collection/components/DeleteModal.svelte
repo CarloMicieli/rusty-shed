@@ -5,19 +5,20 @@
   import { Button } from '$lib/components/ui/button';
   import { AlertTriangle } from 'lucide-svelte';
 
+  type Props = {
+    open?: boolean;
+    title?: string;
+    message?: string;
+    onClose?: () => void;
+    onConfirm?: () => void;
+  };
   const {
     open = false,
     title = 'Delete item',
     message = 'Are you sure?',
     onClose,
     onConfirm
-  } = $props<{
-    open?: boolean;
-    title?: string;
-    message?: string;
-    onClose?: () => void;
-    onConfirm?: () => void;
-  }>();
+  }: Props = $props();
 
   function handleOpenChange(newOpen: boolean) {
     // Only call onClose when the dialog is being closed

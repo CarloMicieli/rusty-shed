@@ -7,11 +7,12 @@
   import type { CollectionItemView } from '$lib/bindings';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
-  const { item, onDelete, onClick } = $props<{
+  type Props = {
     item: CollectionItemView;
     onDelete?: (id: string) => void;
     onClick?: (item: CollectionItemView) => void;
-  }>();
+  };
+  const { item, onDelete, onClick }: Props = $props();
 
   const primaryTag = 'default';
   const PrimaryIcon = $derived(tagIcon(primaryTag));

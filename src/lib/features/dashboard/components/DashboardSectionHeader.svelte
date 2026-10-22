@@ -3,15 +3,16 @@
   import { Badge } from '$lib/components';
   import { resolve } from '$app/paths';
 
+  type Props = {
+    title: string;
+    badgeValue?: number;
+    link?: { href: string; label: string };
+  };
   let {
     title,
     badgeValue = 0,
     link
-  } = $props<{
-    title: string;
-    badgeValue?: number;
-    link?: { href: string; label: string };
-  }>();
+  }: Props = $props();
 </script>
 
 <div class="mb-4 flex items-center justify-between">

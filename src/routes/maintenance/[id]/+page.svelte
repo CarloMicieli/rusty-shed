@@ -202,7 +202,7 @@
       </div>
       <MaintenanceEventTimeline
         events={card.events}
-        onDeleteEvent={(id) => void maintenanceDetailState.deleteEvent(id)}
+        onDeleteEvent={(id: string) => void maintenanceDetailState.deleteEvent(id)}
       />
     </div>
   {/if}

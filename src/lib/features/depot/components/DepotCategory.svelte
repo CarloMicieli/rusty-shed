@@ -5,19 +5,20 @@
   import DepotTable from './DepotTable.svelte';
   import type { IconComponent } from '$lib/config/icons';
 
+  type Props = {
+    value: string;
+    title: string;
+    icon: IconComponent;
+    items: { id: string }[];
+    categoryId: string;
+  };
   let {
     value,
     title,
     icon: Icon,
     items,
     categoryId
-  } = $props<{
-    value: string;
-    title: string;
-    icon: IconComponent;
-    items: { id: string }[];
-    categoryId: string;
-  }>();
+  }: Props = $props();
 </script>
 
 {#if items.length > 0}
