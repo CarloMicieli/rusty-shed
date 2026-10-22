@@ -14,4 +14,3 @@
 | 0010 | Enforce Strongly Typed Command Arguments                             | ✅ Accepted | 2026-03-01 |
 | 0011 | Automated Testing Strategy for the Rust Backend                      | ✅ Accepted | 2026-03-28 |
 | 0012 | Standardize Backend Structured Logging and Trace Context Propagation | ✅ Accepted | 2026-10-22 |
-

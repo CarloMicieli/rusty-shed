@@ -14,10 +14,10 @@ With the command and transport layer standardized (ADR 8) and business logic dec
 
 In a desktop Tauri environment running on client devices:
 
-* Unstructured log macros (`info!`, `error!`) cause high verbosity, lack contextual grouping, and cannot be queried effectively.
-* Auto-instrumenting commands can accidentally dump sensitive payload fields (passwords, tokens) into local log sinks.
-* Errors logged at the backend edge lack unified classification (`validation` vs `domain` vs `infrastructure`), making log analysis difficult.
-* Frontend IPC errors in Svelte cannot be easily paired with corresponding Rust async spans without explicit correlation IDs.
+- Unstructured log macros (`info!`, `error!`) cause high verbosity, lack contextual grouping, and cannot be queried effectively.
+- Auto-instrumenting commands can accidentally dump sensitive payload fields (passwords, tokens) into local log sinks.
+- Errors logged at the backend edge lack unified classification (`validation` vs `domain` vs `infrastructure`), making log analysis difficult.
+- Frontend IPC errors in Svelte cannot be easily paired with corresponding Rust async spans without explicit correlation IDs.
 
 This ADR defines standards for structured logging using `tracing`, automated error field mapping, dual-sink persistence, and frontend-to-backend trace context propagation.
 
@@ -25,11 +25,11 @@ This ADR defines standards for structured logging using `tracing`, automated err
 
 ## 2. Decision Drivers
 
-* **Security & Privacy:** Prevent leaking sensitive transport payload values (`Args`) into terminal outputs or persistent log files.
-* **IPC Trace Correlation:** Pair frontend Svelte requests with backend Rust async execution spans using explicit trace identifiers.
-* **Categorized Diagnostics:** Automatically capture error categories (`validation`, `domain`, `infrastructure`) on root spans without repeating manual span updates.
-* **Desktop Diagnostics:** Stream colored human-readable logs to stderr during development, and write non-blocking rolling logs to the platform's `app_log_dir` for production bug reports.
-* **Clean Architecture Alignment:** Maintain strict boundaries between transport edge spans, use-case logs, and infrastructure query tracing.
+- **Security & Privacy:** Prevent leaking sensitive transport payload values (`Args`) into terminal outputs or persistent log files.
+- **IPC Trace Correlation:** Pair frontend Svelte requests with backend Rust async execution spans using explicit trace identifiers.
+- **Categorized Diagnostics:** Automatically capture error categories (`validation`, `domain`, `infrastructure`) on root spans without repeating manual span updates.
+- **Desktop Diagnostics:** Stream colored human-readable logs to stderr during development, and write non-blocking rolling logs to the platform's `app_log_dir` for production bug reports.
+- **Clean Architecture Alignment:** Maintain strict boundaries between transport edge spans, use-case logs, and infrastructure query tracing.
 
 ---
 
@@ -49,27 +49,27 @@ Chosen Option: **Option 3.**
 
 #### 1. Command Edge Instrumentation
 
-* All Tauri command handlers **MUST** be annotated with `#[tracing::instrument]`.
-* Commands **MUST** specify `skip(args, state)` (or relevant payload structs) to prevent dumping sensitive transport DTOs into logs.
-* Spans **MUST** pre-declare dynamic slots for error fields: `error.type = field::Empty` and `error.message = field::Empty`.
-* High-level domain keys **MUST** use dot-notation (e.g., `user.username`, `item.id`).
+- All Tauri command handlers **MUST** be annotated with `#[tracing::instrument]`.
+- Commands **MUST** specify `skip(args, state)` (or relevant payload structs) to prevent dumping sensitive transport DTOs into logs.
+- Spans **MUST** pre-declare dynamic slots for error fields: `error.type = field::Empty` and `error.message = field::Empty`.
+- High-level domain keys **MUST** use dot-notation (e.g., `user.username`, `item.id`).
 
 #### 2. Error Categorization & Extension Trait
 
-* All `CommandError` variants **MUST** implement the `AsTraceKind` trait to map variants to standardized category strings (`validation`, `not_found`, `domain`, `infrastructure`, `internal`).
-* Handlers and use cases **MUST** use `.record_trace_err()` on `Result<T, CommandError>` pipelines to automatically populate span error fields upon failure.
+- All `CommandError` variants **MUST** implement the `AsTraceKind` trait to map variants to standardized category strings (`validation`, `not_found`, `domain`, `infrastructure`, `internal`).
+- Handlers and use cases **MUST** use `.record_trace_err()` on `Result<T, CommandError>` pipelines to automatically populate span error fields upon failure.
 
 #### 3. Log Layering & Levels
 
-* **Transport Edge (`INFO`):** Log command entry/exit, client trace IDs, and sanitized parameters.
-* **Use Cases / Domain (`DEBUG`):** Log core business state transitions and rule outcomes.
-* **Infrastructure / Repositories (`TRACE`):** Log UoW boundaries, SQL query execution, and database transaction commits/rollbacks.
+- **Transport Edge (`INFO`):** Log command entry/exit, client trace IDs, and sanitized parameters.
+- **Use Cases / Domain (`DEBUG`):** Log core business state transitions and rule outcomes.
+- **Infrastructure / Repositories (`TRACE`):** Log UoW boundaries, SQL query execution, and database transaction commits/rollbacks.
 
 #### 4. IPC Context Propagation
 
-* Client payloads (`Args`) **MAY** include a `trace_id` generated by Svelte (`crypto.randomUUID()`).
-* All Tauri command handlers **MUST** return a unified `CommandResponse<T>` envelope containing the backend tracing span ID (`trace_id`).
-* `CommandError` serialization **MUST** include the active `trace_id` when returning errors to the frontend.
+- Client payloads (`Args`) **MAY** include a `trace_id` generated by Svelte (`crypto.randomUUID()`).
+- All Tauri command handlers **MUST** return a unified `CommandResponse<T>` envelope containing the backend tracing span ID (`trace_id`).
+- `CommandError` serialization **MUST** include the active `trace_id` when returning errors to the frontend.
 
 ---
 
