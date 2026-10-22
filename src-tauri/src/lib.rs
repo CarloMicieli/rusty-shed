@@ -32,6 +32,7 @@ use crate::collecting::interface::command_handlers as collecting_command_handler
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::logging::init_tracing;
+use crate::core::infrastructure::tracing::RecordTraceErrExt;
 use crate::core::interface::command_handlers as core_command_handlers;
 use crate::core::interface::debug_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
@@ -92,6 +93,7 @@ pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError>
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
     let span = tracing::info_span!("init_database_command");
@@ -99,9 +101,11 @@ async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandE
         .instrument(span)
         .await
         .map(|_| ())
+        .record_trace_err()
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
     let span = tracing::info_span!("show_main_window");
@@ -113,7 +117,7 @@ fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
     window
         .set_focus()
         .map_err(|e| CommandError::unknown(e.to_string()))?;
-    Ok(())
+    Ok(()).record_trace_err()
 }
 
 fn create_specta_builder() -> Builder<tauri::Wry> {

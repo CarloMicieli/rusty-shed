@@ -25,6 +25,7 @@ const SQLITE_MAGIC: &[u8] = b"SQLite format 3\x00";
 /// 6. Create safety backup of current DB
 /// 7. Close DB connections and atomically replace the file
 /// 8. Emit `cloud-backup://restore-complete` event for frontend reload
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub async fn restore_backup(
     args: RestoreBackupArgs,
     db_path: &Path,

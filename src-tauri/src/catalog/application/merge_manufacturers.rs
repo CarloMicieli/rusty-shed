@@ -6,6 +6,7 @@ pub struct MergeManufacturers;
 
 impl MergeManufacturers {
     /// Merges `source_id` into `target_id` and returns the number of relinked models.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         source_id: &ManufacturerId,

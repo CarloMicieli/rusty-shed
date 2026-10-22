@@ -30,6 +30,7 @@ impl CreateWishlistUseCase {
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
     /// - `P`: Identifier provider type for `WishlistItemId`.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,

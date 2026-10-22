@@ -4,6 +4,7 @@ use crate::trains::domain::{TrainFormationSummary, TrainsUowExt};
 pub struct GetTrainFormationsUseCase;
 
 impl GetTrainFormationsUseCase {
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U: TrainsUowExt + Send>(
         uow: &mut U,
     ) -> Result<Vec<TrainFormationSummary>, DomainError> {

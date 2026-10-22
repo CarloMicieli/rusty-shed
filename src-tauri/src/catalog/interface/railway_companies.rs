@@ -17,6 +17,7 @@ pub async fn get_railway_companies_inner(
 
 /// Tauri command to retrieve all railway companies.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_railway_companies(
     state: tauri::State<'_, AppState>,
@@ -41,6 +42,7 @@ pub async fn get_railway_company_by_id_inner(
 
 /// Tauri command to retrieve a railway company by its identifier.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_railway_company_by_id(
     state: tauri::State<'_, AppState>,

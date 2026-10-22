@@ -29,6 +29,7 @@ impl GetRailwayModelImage {
     /// - `ImageError::NotFound` - No image file found for the model
     /// - `ImageError::InvalidPath` - Path validation failed
     /// - `ImageError::IoError` - Filesystem access error
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         &self,
         model_id: &RailwayModelId,

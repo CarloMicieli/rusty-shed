@@ -14,6 +14,7 @@ impl RemoveExtraBudgetUseCase {
     /// # Errors
     /// - `NotFound`: If the budget configuration or extra budget entry doesn't exist
     /// - `Infrastructure`: If database operation fails
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(unit_of_work: &mut U, id: ExtraBudgetId) -> Result<(), DomainError>
     where
         U: BudgetUowExt + Send,

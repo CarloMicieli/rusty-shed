@@ -14,6 +14,7 @@ pub async fn get_db_stats_inner(state: &AppState) -> Result<Vec<DatabaseTableSta
 
 /// Return row counts and best-effort size estimates for application tables.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_db_stats(
     state: tauri::State<'_, AppState>,
@@ -32,6 +33,7 @@ pub async fn get_recent_logs_inner(
 
 /// Return the latest persisted application log lines.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_recent_logs(
     state: tauri::State<'_, AppState>,

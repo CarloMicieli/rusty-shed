@@ -66,6 +66,7 @@ pub async fn get_manufacturers_inner(state: &AppState) -> Result<Vec<Manufacture
 
 /// Tauri command to retrieve all manufacturers.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_manufacturers(
     state: tauri::State<'_, AppState>,
@@ -101,6 +102,7 @@ pub async fn get_manufacturer_by_id_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_manufacturer_by_id(
     state: tauri::State<'_, AppState>,
@@ -161,6 +163,7 @@ pub async fn create_manufacturer_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_manufacturer(
     state: tauri::State<'_, AppState>,
@@ -226,6 +229,7 @@ pub async fn update_manufacturer_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_manufacturer(
     state: tauri::State<'_, AppState>,
@@ -247,6 +251,7 @@ pub async fn delete_manufacturer_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_manufacturer(
     state: tauri::State<'_, AppState>,
@@ -290,6 +295,7 @@ pub async fn merge_manufacturers_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn merge_manufacturers(
     state: tauri::State<'_, AppState>,

@@ -239,6 +239,7 @@ pub async fn update_wishlist_item_inner(
 
 /// Tauri command to get a wishlist by its ID.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_wishlist_by_id(
     state: tauri::State<'_, AppState>,
@@ -249,6 +250,7 @@ pub async fn get_wishlist_by_id(
 
 /// Tauri command to retrieve all wishlists.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_wishlists(
     state: tauri::State<'_, AppState>,
@@ -258,6 +260,7 @@ pub async fn get_wishlists(
 
 /// Tauri command to create a new wishlist.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_wishlist(
     state: tauri::State<'_, AppState>,
@@ -268,6 +271,7 @@ pub async fn create_wishlist(
 
 /// Tauri command to rename an existing wishlist.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn rename_wishlist(
     state: tauri::State<'_, AppState>,
@@ -278,6 +282,7 @@ pub async fn rename_wishlist(
 
 /// Tauri command to delete a wishlist by its ID.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_wishlist(
     state: tauri::State<'_, AppState>,
@@ -288,6 +293,7 @@ pub async fn delete_wishlist(
 
 /// Tauri command to set a wishlist as the default wishlist.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn set_default_wishlist(
     state: tauri::State<'_, AppState>,
@@ -298,6 +304,7 @@ pub async fn set_default_wishlist(
 
 /// Tauri command to add an item to a wishlist.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_to_wishlist(
     state: tauri::State<'_, AppState>,
@@ -308,6 +315,7 @@ pub async fn add_to_wishlist(
 
 /// Tauri command to remove an item from a wishlist.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn remove_from_wishlist(
     state: tauri::State<'_, AppState>,
@@ -318,6 +326,7 @@ pub async fn remove_from_wishlist(
 
 /// Tauri command to move an item from one wishlist to another.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn move_item_to_list(
     state: tauri::State<'_, AppState>,
@@ -328,6 +337,7 @@ pub async fn move_item_to_list(
 
 /// Tauri command to purchase a wishlist item and move it into the collection.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn purchase_wishlist_item(
     state: tauri::State<'_, AppState>,
@@ -338,6 +348,7 @@ pub async fn purchase_wishlist_item(
 
 /// Simplified flow: save (merge) the railway model and add it to the default wishlist.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_railway_model_to_wish_list(
     state: tauri::State<'_, AppState>,
@@ -348,6 +359,7 @@ pub async fn add_railway_model_to_wish_list(
 
 /// Tauri command to update one or more editable fields on a wishlist item.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_wishlist_item(
     state: tauri::State<'_, AppState>,

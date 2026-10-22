@@ -23,6 +23,7 @@ impl ValidatePackageUseCase {
     ///
     /// # Errors
     /// Returns `Err(ValidationError)` if archive cannot be read or manifest is missing.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         package_path: &Path,
     ) -> Result<(ArchiveFormat, ManifestDto, RecordCounts), ValidationError> {

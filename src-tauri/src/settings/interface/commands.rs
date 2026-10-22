@@ -5,6 +5,7 @@ use tauri::{AppHandle, command};
 
 /// Get current user settings
 #[command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_settings(app: AppHandle) -> Result<UserSettings, String> {
     application::get_settings::get_settings(&app)
@@ -12,6 +13,7 @@ pub async fn get_settings(app: AppHandle) -> Result<UserSettings, String> {
 
 /// Update user settings (partial update supported)
 #[command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_settings(
     app: AppHandle,
@@ -22,6 +24,7 @@ pub async fn update_settings(
 
 /// Initialize settings on first run
 #[command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn initialize_settings(app: AppHandle) -> Result<UserSettings, String> {
     application::initialize_settings::initialize_settings(&app)
@@ -29,6 +32,7 @@ pub async fn initialize_settings(app: AppHandle) -> Result<UserSettings, String>
 
 /// Return the OS system locale as a BCP 47 tag (e.g. "en-US", "it-IT").
 #[command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub fn get_locale() -> Option<String> {
     tauri_plugin_os::locale()
