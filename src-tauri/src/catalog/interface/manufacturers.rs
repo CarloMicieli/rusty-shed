@@ -35,7 +35,7 @@ impl From<DomainManufacturer> for Manufacturer {
             country_code: value.country_code,
             status: value.status,
             website_url: value.website_url,
-            is_system_seeded: false,
+            is_system_seeded: value.is_system_seeded,
             usage_count: 0,
         }
     }
@@ -52,11 +52,6 @@ pub async fn get_manufacturers_inner(state: &AppState) -> Result<Vec<Manufacture
         let id = m.id.clone();
         let mut dto = Manufacturer::from(m);
         let mut repo = uow.manufacturers_repo();
-        dto.is_system_seeded = repo
-            .find_is_system_seeded(&id)
-            .await
-            .map_err(CommandError::from)?
-            .unwrap_or(false);
         dto.usage_count = repo
             .find_usage_count(&id)
             .await
@@ -94,11 +89,6 @@ pub async fn get_manufacturer_by_id_inner(
     if let Some(value) = dto.as_mut() {
         let id = value.id.clone();
         let mut repo = uow.manufacturers_repo();
-        value.is_system_seeded = repo
-            .find_is_system_seeded(&id)
-            .await
-            .map_err(CommandError::from)?
-            .unwrap_or(false);
         value.usage_count = repo
             .find_usage_count(&id)
             .await
@@ -226,11 +216,6 @@ pub async fn update_manufacturer_inner(
     let id = domain.id.clone();
     let mut result = Manufacturer::from(domain);
     let mut repo = uow.manufacturers_repo();
-    result.is_system_seeded = repo
-        .find_is_system_seeded(&id)
-        .await
-        .map_err(CommandError::from)?
-        .unwrap_or(false);
     result.usage_count = repo
         .find_usage_count(&id)
         .await

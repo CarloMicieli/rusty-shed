@@ -1,12 +1,12 @@
 <script lang="ts">
   type RecentItem = {
-    id: string;
     title: string;
     subtitle?: string | null;
     imageUrl?: string | null;
   };
 
-  let { item } = $props<{ item: RecentItem }>();
+  type Props = { item: RecentItem };
+  let { item }: Props = $props();
 </script>
 
 <div

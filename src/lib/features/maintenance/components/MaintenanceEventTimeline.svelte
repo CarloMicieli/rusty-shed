@@ -4,10 +4,11 @@
   import type { MaintenanceCardEventView } from '$lib/bindings';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
-  let { events, onDeleteEvent } = $props<{
+  type Props = {
     events: MaintenanceCardEventView[];
     onDeleteEvent?: (id: string) => void;
-  }>();
+  };
+  let { events, onDeleteEvent }: Props = $props();
 
   function formatDate(dateStr: string): string {
     const date = new Date(dateStr);

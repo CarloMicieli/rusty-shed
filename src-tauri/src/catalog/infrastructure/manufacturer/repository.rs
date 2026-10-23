@@ -41,7 +41,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
     /// - Returns a [`DomainError::DatabaseError`] if the query fails.
     async fn find_all(&mut self) -> Result<Vec<Manufacturer>, DomainError> {
         let sql = r#"
-            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version
+            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version, is_system_seeded
             FROM manufacturers
             ORDER BY name
         "#;
@@ -72,7 +72,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
         id: &ManufacturerId,
     ) -> Result<Option<Manufacturer>, DomainError> {
         let sql = r#"
-            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version
+            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version, is_system_seeded
             FROM manufacturers
             WHERE id = ?1 
             LIMIT 1"#;
@@ -89,26 +89,6 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
             }
             None => Ok(None),
         }
-    }
-
-    async fn find_is_system_seeded(
-        &mut self,
-        id: &ManufacturerId,
-    ) -> Result<Option<bool>, DomainError> {
-        let sql = r#"
-            SELECT is_system_seeded
-            FROM manufacturers
-            WHERE id = ?1
-            LIMIT 1
-        "#;
-
-        let seeded = sqlx::query_scalar::<_, i64>(sql)
-            .bind(id.as_ref())
-            .fetch_optional(&mut *self.executor)
-            .await?
-            .map(|value| value != 0);
-
-        Ok(seeded)
     }
 
     async fn find_seeded_and_name(
@@ -198,7 +178,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
 
         let row = sqlx::query_as::<_, ManufacturerRow>(
             r#"SELECT id, name, registered_company_name, status, country_code, website_url,
-                      created_at, updated_at, version
+                      created_at, updated_at, version, is_system_seeded
                FROM manufacturers
                WHERE id = ?1
                LIMIT 1"#,
@@ -244,7 +224,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
 
         let row = sqlx::query_as::<_, ManufacturerRow>(
             r#"SELECT id, name, registered_company_name, status, country_code, website_url,
-                      created_at, updated_at, version
+                      created_at, updated_at, version, is_system_seeded
                FROM manufacturers
                WHERE id = ?1
                LIMIT 1"#,
@@ -384,7 +364,7 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn it_should_find_seeded_flag(pool: sqlx::SqlitePool) {
+    async fn it_should_find_by_id_with_seeded_flag(pool: sqlx::SqlitePool) {
         let mut conn = pool.acquire().await.expect("should acquire connection");
 
         let id = ManufacturerId::new_from_parts(&["seeded"]);
@@ -401,11 +381,12 @@ mod tests {
 
         let mut repository = SqliteManufacturerRepository::new(&mut conn);
         let result = repository
-            .find_is_system_seeded(&id)
+            .find_by_id(&id)
             .await
-            .expect("seeded query should succeed");
+            .expect("find_by_id should succeed");
 
-        assert_eq!(result, Some(true));
+        let manufacturer = result.expect("should find the seeded manufacturer");
+        assert!(manufacturer.is_system_seeded);
     }
 
     #[sqlx::test(migrations = "./migrations")]

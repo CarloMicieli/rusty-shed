@@ -7,6 +7,16 @@
 
   type ScaleOption = { id: string; display: string };
 
+  type Props = {
+    filters: FilterState;
+    availableTags: string[];
+    availableScales: ScaleOption[];
+    onSearch?: (query: string) => void;
+    onSetScale?: (scale: string | null) => void;
+    onToggleTag?: (tag: string) => void;
+    onClear?: () => void;
+    onToggleSidebar?: () => void;
+  };
   const {
     filters,
     availableTags,
@@ -16,16 +26,7 @@
     onToggleTag,
     onClear,
     onToggleSidebar
-  } = $props<{
-    filters: FilterState;
-    availableTags: string[];
-    availableScales: ScaleOption[];
-    onSearch?: (query: string) => void;
-    onSetScale?: (scale: string | null) => void;
-    onToggleTag?: (tag: string) => void;
-    onClear?: () => void;
-    onToggleSidebar?: () => void;
-  }>();
+  }: Props = $props();
 
   const debounceMs = 300;
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;

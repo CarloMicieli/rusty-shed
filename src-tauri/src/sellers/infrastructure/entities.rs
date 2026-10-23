@@ -17,4 +17,5 @@ pub struct SellerRow {
     pub created_at: String,
     pub updated_at: String,
     pub version: i64,
+    pub is_system_seeded: i64,
 }

@@ -21,7 +21,8 @@ pub async fn list_sellers(
             country_code,
             created_at,
             updated_at,
-            version
+            version,
+            is_system_seeded
         FROM sellers
         ORDER BY name
     "#;
@@ -54,7 +55,8 @@ pub async fn find_seller_by_id(
             country_code,
             created_at,
             updated_at,
-            version
+            version,
+            is_system_seeded
         FROM sellers
         WHERE id = ?
     "#;
@@ -142,24 +144,6 @@ pub async fn upsert_seller(
         .await?;
 
     Ok(())
-}
-
-/// Fetch only the `name` and `is_system_seeded` columns for a seller.
-///
-/// Returns `None` when no seller with that `id` exists.
-/// Used to enforce business rules (e.g. seeded-name immutability) without
-/// loading the full seller row.
-pub async fn find_seller_seeded_and_name(
-    executor: &mut sqlx::SqliteConnection,
-    id: &str,
-) -> Result<Option<(String, bool)>, sqlx::Error> {
-    sqlx::query_as::<_, (String, i64)>(
-        r#"SELECT name, is_system_seeded FROM sellers WHERE id = ? LIMIT 1"#,
-    )
-    .bind(id)
-    .fetch_optional(executor)
-    .await
-    .map(|opt| opt.map(|(name, seeded)| (name, seeded != 0)))
 }
 
 /// Delete a seller by id, returning the number of rows affected.

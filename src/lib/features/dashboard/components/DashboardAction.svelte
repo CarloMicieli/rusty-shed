@@ -3,15 +3,16 @@
 
   // Use destructuring for props, but don't pull properties
   // out of the 'action' object into local variables.
-  let { action, isPrimary = false } = $props<{
+  type Props = {
     action: QuickAction;
     isPrimary?: boolean;
-  }>();
+  };
+  let { action, isPrimary = false }: Props = $props();
 </script>
 
 <button
   type="button"
-  onclick={() => action.onClick()}
+  onclick={() => action.onClick?.()}
   class="group relative flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-border bg-card/50 p-3 text-center transition-all hover:border-amber-500/50 hover:bg-amber-500/15 {isPrimary
     ? 'border-accent-500/40 bg-accent-950/30'
     : ''}"

@@ -4,9 +4,9 @@
   "version": "0.2.0",
   "identifier": "io.github.carlomicieli.rustyshed",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "corepack pnpm dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "corepack pnpm build",
     "frontendDist": "../build"
   },
   "app": {

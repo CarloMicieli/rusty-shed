@@ -40,6 +40,9 @@ pub struct ManufacturerRow {
 
     /// Row version for optimistic concurrency control.
     pub version: i64,
+
+    /// Whether this manufacturer is system-seeded (protected from deletion/rename).
+    pub is_system_seeded: i64,
 }
 
 /// Row mapping for the `railway_companies` table.

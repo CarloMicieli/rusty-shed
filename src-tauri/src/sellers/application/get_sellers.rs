@@ -61,6 +61,7 @@ mod tests {
             website_url: None,
             address: None,
             metadata: Metadata::default(),
+            is_system_seeded: false,
             pending_events: Vec::new(),
         };
 
