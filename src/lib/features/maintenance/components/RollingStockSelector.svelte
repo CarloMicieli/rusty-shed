@@ -3,10 +3,11 @@
   import type { OwnedRollingStockView, CollectionView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
 
-  let { selectedId = $bindable(), onSelect } = $props<{
+  type Props = {
     selectedId: string | null;
     onSelect?: (id: string | null) => void;
-  }>();
+  };
+  let { selectedId = $bindable(), onSelect }: Props = $props();
 
   let rollingStocks = $state<OwnedRollingStockView[]>([]);
   let isLoading = $state(false);

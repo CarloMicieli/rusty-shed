@@ -2,7 +2,8 @@
   import MaintenanceCardItem from './MaintenanceCardItem.svelte';
   import type { MaintenanceCardView } from '$lib/bindings';
 
-  let { cards } = $props<{ cards: MaintenanceCardView[] }>();
+  type Props = { cards: MaintenanceCardView[] };
+  let { cards }: Props = $props();
 
   // Cards are already sorted by due date from backend (top 10)
   const displayCards = $derived(cards.slice(0, 10));

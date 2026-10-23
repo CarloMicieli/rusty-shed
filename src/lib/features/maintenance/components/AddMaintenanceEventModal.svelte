@@ -8,7 +8,8 @@
   import MaintenanceEventFormFields from './MaintenanceEventFormFields.svelte';
   import MaintenanceEventActions from './MaintenanceEventActions.svelte';
 
-  let { open, onClose } = $props<{ open: boolean; onClose: () => void }>();
+  type Props = { open: boolean; onClose: () => void };
+  let { open, onClose }: Props = $props();
 
   const maintenanceState = getMaintenanceState();
   const cards = $derived(maintenanceState.cards);

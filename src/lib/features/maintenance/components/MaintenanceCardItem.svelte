@@ -6,7 +6,8 @@
   import type { MaintenanceCardView } from '$lib/bindings';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
-  let { card } = $props<{ card: MaintenanceCardView }>();
+  type Props = { card: MaintenanceCardView };
+  let { card }: Props = $props();
 
   // Calculate urgency level
   const urgency = $derived(getUrgencyLevel(card.nextMaintenanceDate));

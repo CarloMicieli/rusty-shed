@@ -5,10 +5,11 @@
   import { Button } from '$lib/components';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
-  const { wishlist, onAddModel } = $props<{
+  type Props = {
     wishlist: WishlistPreview | null;
     onAddModel?: () => void;
-  }>();
+  };
+  const { wishlist, onAddModel }: Props = $props();
 
   function formatDate(value: string): string {
     const d = new Date(value);

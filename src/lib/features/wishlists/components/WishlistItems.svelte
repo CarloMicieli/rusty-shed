@@ -6,14 +6,15 @@
   import WishlistItemCard from './WishlistItemCard.svelte';
   import MoveModelModal from './MoveModelModal.svelte';
 
-  const { items, activeWishlistId, otherTargets, onRemove, onMove, onPurchase } = $props<{
+  type Props = {
     items: WishlistItem[];
     activeWishlistId: string | null;
     otherTargets: WishlistPreview[];
     onRemove?: (detail: { itemId: string; wishlistId: string }) => void;
     onMove?: (detail: { itemId: string; fromId: string; toId: string }) => void;
     onPurchase?: (itemId: string) => void;
-  }>();
+  };
+  const { items, activeWishlistId, otherTargets, onRemove, onMove, onPurchase }: Props = $props();
 
   const wishlistId = $derived(activeWishlistId ?? '');
 
