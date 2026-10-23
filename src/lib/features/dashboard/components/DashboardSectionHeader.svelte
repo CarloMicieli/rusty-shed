@@ -8,11 +8,7 @@
     badgeValue?: number;
     link?: { href: string; label: string };
   };
-  let {
-    title,
-    badgeValue = 0,
-    link
-  }: Props = $props();
+  let { title, badgeValue = 0, link }: Props = $props();
 </script>
 
 <div class="mb-4 flex items-center justify-between">

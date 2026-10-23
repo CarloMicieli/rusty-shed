@@ -12,13 +12,7 @@
     items: { id: string }[];
     categoryId: string;
   };
-  let {
-    value,
-    title,
-    icon: Icon,
-    items,
-    categoryId
-  }: Props = $props();
+  let { value, title, icon: Icon, items, categoryId }: Props = $props();
 </script>
 
 {#if items.length > 0}
