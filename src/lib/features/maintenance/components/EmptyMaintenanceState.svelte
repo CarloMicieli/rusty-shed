@@ -3,7 +3,8 @@
   import * as m from '$lib/paraglide/messages.js';
   import EmptyState from '$lib/components/EmptyState.svelte';
 
-  let { onCreate } = $props<{ onCreate: () => void }>();
+  type Props = { onCreate: () => void };
+  let { onCreate }: Props = $props();
 </script>
 
 <EmptyState
