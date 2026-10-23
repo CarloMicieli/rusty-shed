@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components';
-  import { resolve } from '$app/paths';
+  import { base } from '$app/paths';
 
   type Props = {
     title: string;
@@ -22,7 +22,7 @@
       {m.dashboard_due_soon()}
     </Badge>
   {:else if link}
-    <a href={resolve(link.href)} class="text-accent-500 text-sm font-bold hover:underline">
+    <a href={`${base}${link.href}`} class="text-accent-500 text-sm font-bold hover:underline">
       {link.label}
     </a>
   {/if}
