@@ -1,6 +1,5 @@
 <script lang="ts">
   type RecentItem = {
-    id: string;
     title: string;
     subtitle?: string | null;
     imageUrl?: string | null;
