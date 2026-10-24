@@ -117,7 +117,7 @@ mod roundtrip {
                 technical_coupling_socket, control, is_dummy) \
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
-        .bind("rs-test-001")
+        .bind("trn:rolling-stock:test-001")
         .bind("trn:railway-model:test-manufacturer:test-001")
         .bind("LOCOMOTIVES")
         .bind("trn:railway-company:test-railway")
@@ -182,7 +182,7 @@ mod roundtrip {
         sqlx::query("INSERT INTO owned_rolling_stocks (id, collection_item_id, rolling_stock_id) VALUES (?, ?, ?)")
             .bind("trn:owned-rolling-stock:test-001")
             .bind("trn:collection-item:00000000-0000-0000-0000-000000000001")
-            .bind("rs-test-001")
+            .bind("trn:rolling-stock:test-001")
             .execute(pool)
             .await
             .expect("seed owned rolling stock");
@@ -486,7 +486,7 @@ mod roundtrip {
 
         let rs_count: i64 = sqlx::query_scalar(
             "SELECT COUNT(*) FROM rolling_stocks \
-             WHERE id = 'rs-test-001' AND railway_model_id = 'trn:railway-model:test-manufacturer:test-001' \
+             WHERE id = 'trn:rolling-stock:test-001' AND railway_model_id = 'trn:railway-model:test-manufacturer:test-001' \
              AND service_level = 'FIRST_SECOND' AND CAST(length_millimeters AS REAL) = 213 \
                AND technical_coupling_socket = 'NEM_362' AND control = 'DCC_READY'",
         )
@@ -499,7 +499,7 @@ mod roundtrip {
             "SELECT COUNT(*) FROM owned_rolling_stocks \
                          WHERE id = 'trn:owned-rolling-stock:test-001' \
                AND collection_item_id = 'trn:collection-item:00000000-0000-0000-0000-000000000001' \
-               AND rolling_stock_id = 'rs-test-001'",
+               AND rolling_stock_id = 'trn:rolling-stock:test-001'",
         )
         .fetch_one(&import_pool)
         .await
