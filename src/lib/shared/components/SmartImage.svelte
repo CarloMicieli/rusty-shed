@@ -1,6 +1,6 @@
 <script lang="ts">
   import { convertFileSrc } from '@tauri-apps/api/core';
-  import { imageService } from '$lib/services/image.service.svelte';
+  import { imageService } from '$lib/shared/services/ImageService.svelte';
 
   type ImageCategory = 'static' | 'railway_model';
 

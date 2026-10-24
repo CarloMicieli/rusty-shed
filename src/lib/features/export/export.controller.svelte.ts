@@ -5,7 +5,6 @@ import { setContext, getContext } from 'svelte';
 import { safeInvoke } from '$lib/services';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
-import type { ExportResult } from '$lib/bindings';
 
 const EXPORT_CONTEXT_KEY = Symbol('export-controller');
 
@@ -34,7 +33,7 @@ export class ExportController {
     this.error = null;
 
     try {
-      const exportResult = await safeInvoke<ExportResult>('execute_export', {
+      const exportResult = await safeInvoke<{ archivePath: string }>('execute_export', {
         destinationPath
       });
 

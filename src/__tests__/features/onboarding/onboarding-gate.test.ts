@@ -89,7 +89,11 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', () => ({
 
 vi.mock('$lib/features/dashboard/DashboardState.svelte', () => ({
   createDashboardState: vi.fn(() => ({})),
-  setDashboardContext: vi.fn()
+  setDashboardContext: vi.fn(),
+  getDashboardContext: vi.fn(() => ({
+    load: vi.fn().mockResolvedValue(undefined),
+    loadBudget: vi.fn().mockResolvedValue(undefined)
+  }))
 }));
 
 vi.mock('$lib/features/budget/services/BudgetService.svelte', () => ({
@@ -149,9 +153,13 @@ function createChildrenSnippet() {
 }
 
 describe('onboarding gate integration', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     cleanup();
     vi.clearAllMocks();
+
+    const { settingsState } = await import('$lib/features/settings/SettingsState.svelte');
+    settingsState.initialize = vi.fn().mockResolvedValue(undefined);
+    settingsState.settings.has_completed_onboarding = false;
 
     mockSafeInvoke.mockImplementation(async (command: string) => {
       if (command === 'show_main_window') return { ok: true, data: undefined };

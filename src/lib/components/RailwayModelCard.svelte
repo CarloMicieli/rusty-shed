@@ -7,7 +7,13 @@
   import { homeDir } from '@tauri-apps/api/path';
   import * as m from '$lib/paraglide/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { commands, type Scale, type Category } from '$lib/bindings';
+  import {
+    updateRailwayModelClassification,
+    updateRailwayModelDeliveryDate,
+    updateRailwayModelText,
+    type Scale,
+    type Category
+  } from '$lib/features/collection/services/RailwayModelUpdateService';
   import ImageCropDialog from '$lib/components/model-details/ImageCropDialog.svelte';
   import RailwayModelCardHeader from '$lib/components/model-details/RailwayModelCardHeader.svelte';
   import RailwayModelImagePanel from '$lib/components/model-details/RailwayModelImagePanel.svelte';
@@ -192,55 +198,47 @@
   // ─────────────────────────────────────────────────────────────────────────
 
   async function saveScale(id: string) {
-    const result = await commands.updateRailwayModelClassification({
+    const ok = await updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: id as Scale,
       epoch: null,
       category: null
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save scale');
-    }
+    if (!ok) throw new Error('Failed to save scale');
     modelOverrides.scale = id;
     await onModelUpdated?.();
   }
 
   async function saveEra(id: string) {
-    const result = await commands.updateRailwayModelClassification({
+    const ok = await updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: null,
       epoch: id,
       category: null
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save era');
-    }
+    if (!ok) throw new Error('Failed to save era');
     modelOverrides.era = id;
     await onModelUpdated?.();
   }
 
   async function saveCategory(id: string) {
-    const result = await commands.updateRailwayModelClassification({
+    const ok = await updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: null,
       epoch: null,
       category: id as Category
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save category');
-    }
+    if (!ok) throw new Error('Failed to save category');
     modelOverrides.category = id;
     await onModelUpdated?.();
   }
 
   async function saveDeliveryDate(value: string) {
-    const result = await commands.updateRailwayModelDeliveryDate({
+    const ok = await updateRailwayModelDeliveryDate({
       railwayModelId: model.id,
       deliveryDate: value || null
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save delivery date');
-    }
+    if (!ok) throw new Error('Failed to save delivery date');
     modelOverrides.deliveryDate = value;
     await onModelUpdated?.();
   }
@@ -263,13 +261,13 @@
   // ─────────────────────────────────────────────────────────────────────────
 
   async function saveDescription(value: string) {
-    const result = await commands.updateRailwayModelText({
+    const ok = await updateRailwayModelText({
       railwayModelId: model.id,
       field: 'Description',
       value,
       lang: getLocale()
     });
-    if (result.status === 'error') {
+    if (!ok) {
       onError?.(m.edit_save_error());
       throw new Error('Failed to save description');
     }
