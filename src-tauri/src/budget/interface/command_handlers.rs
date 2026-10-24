@@ -395,6 +395,7 @@ async fn resolve_budget_currency(
 ///
 /// Returns `None` if no configuration has been set yet.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_budget_config(
     state: tauri::State<'_, AppState>,
@@ -404,6 +405,7 @@ pub async fn get_budget_config(
 
 /// Tauri command to set or update the budget configuration.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn set_budget_config(
     app: tauri::AppHandle,
@@ -424,6 +426,7 @@ pub async fn set_budget_config(
 /// Returns 12 monthly budget records with rollover calculations.
 /// If year is not specified, uses the current year.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_monthly_budget_records(
     state: tauri::State<'_, AppState>,
@@ -438,6 +441,7 @@ pub async fn get_monthly_budget_records(
 /// Budget-specific fields will be None if budget is not configured, but spending data
 /// will still be populated using the user's preferred currency from settings.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_budget_dashboard(
     app: tauri::AppHandle,
@@ -454,6 +458,7 @@ pub async fn get_budget_dashboard(
 /// Returns the config, dashboard summary, and selected-year monthly records in a single
 /// response so the Finance page can hydrate without a request waterfall.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_budget_bootstrap(
     app: tauri::AppHandle,
@@ -478,6 +483,7 @@ pub async fn get_budget_bootstrap(
 /// # Returns
 /// The created extra budget entry as a DTO.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_extra_budget(
     app: tauri::AppHandle,
@@ -494,6 +500,7 @@ pub async fn add_extra_budget(
 /// * `state` - App state for database access
 /// * `args` - Arguments containing the extra budget ID
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn remove_extra_budget(
     state: tauri::State<'_, AppState>,
@@ -511,6 +518,7 @@ pub async fn remove_extra_budget(
 /// # Returns
 /// List of extra budget entries for the specified year.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_extra_budgets(
     state: tauri::State<'_, AppState>,
@@ -528,6 +536,7 @@ pub async fn get_extra_budgets(
 /// # Returns
 /// List of quarterly summaries for the specified year, each with category breakdown.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_quarterly_summaries(
     app: tauri::AppHandle,

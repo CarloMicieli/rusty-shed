@@ -1,4 +1,5 @@
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::tracing::RecordTraceErrExt;
 use crate::tracks_inventory::application::UpsertTrackProductTranslationInput;
 use crate::tracks_inventory::domain::TrackProductUowExt;
 
@@ -7,6 +8,7 @@ pub struct UpsertTrackProductTranslationUseCase;
 
 impl UpsertTrackProductTranslationUseCase {
     /// Executes the use case to upsert one translation row.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         uow: &mut impl TrackProductUowExt,
         input: UpsertTrackProductTranslationInput,
@@ -21,7 +23,7 @@ impl UpsertTrackProductTranslationUseCase {
         )
         .await?;
 
-        Ok(())
+        Ok(()).record_trace_err()
     }
 }
 

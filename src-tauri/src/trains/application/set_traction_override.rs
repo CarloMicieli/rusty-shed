@@ -4,6 +4,7 @@ use crate::trains::domain::{FormationElementView, TrainsUowExt};
 pub struct SetTractionOverrideUseCase;
 
 impl SetTractionOverrideUseCase {
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U: TrainsUowExt + Send>(
         uow: &mut U,
         element_id: String,

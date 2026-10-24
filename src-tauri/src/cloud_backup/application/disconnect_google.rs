@@ -5,6 +5,7 @@ use std::sync::Arc;
 type Result<T> = std::result::Result<T, CloudBackupError>;
 
 /// Disconnect Google account and revoke tokens
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub async fn disconnect_google(user_email: String, oauth_service: Arc<OAuthService>) -> Result<()> {
     // Revoke OAuth tokens
     oauth_service.revoke_token(&user_email).await?;

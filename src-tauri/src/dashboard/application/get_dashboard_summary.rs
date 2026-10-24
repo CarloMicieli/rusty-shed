@@ -18,6 +18,7 @@ impl GetDashboardSummary {
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `DashboardUowExt` and `Send`.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         number_of_recent_items: u8,

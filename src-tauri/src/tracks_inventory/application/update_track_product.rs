@@ -1,6 +1,7 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::metadata::Metadata;
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::tracing::RecordTraceErrExt;
 use crate::tracks_inventory::application::UpdateTrackProductInput;
 use crate::tracks_inventory::domain::{TrackProduct, TrackProductUowExt};
 
@@ -9,6 +10,7 @@ pub struct UpdateTrackProductUseCase;
 
 impl UpdateTrackProductUseCase {
     /// Executes the use case to update a track product.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         uow: &mut impl TrackProductUowExt,
         input: UpdateTrackProductInput,
@@ -37,6 +39,6 @@ impl UpdateTrackProductUseCase {
 
         repo.update_track(&track_product).await?;
 
-        Ok(())
+        Ok(()).record_trace_err()
     }
 }

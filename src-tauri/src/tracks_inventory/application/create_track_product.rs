@@ -3,6 +3,7 @@ use crate::core::domain::id_provider::IdProvider;
 use crate::core::domain::length::Length;
 use crate::core::domain::metadata::Metadata;
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::tracing::RecordTraceErrExt;
 use crate::tracks_inventory::application::CreateTrackProductInput;
 use crate::tracks_inventory::domain::{
     TrackCode, TrackId, TrackProduct, TrackProductUowExt, TrackType,
@@ -21,6 +22,7 @@ impl CreateTrackProductUseCase {
     ///
     /// # Returns
     /// The `TrackId` of the newly created track product.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         uow: &mut impl TrackProductUowExt,
         id_provider: impl IdProvider<String>,
@@ -47,7 +49,7 @@ impl CreateTrackProductUseCase {
                 .await?;
         }
 
-        Ok(track_id)
+        Ok(track_id).record_trace_err()
     }
 }
 

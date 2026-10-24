@@ -22,6 +22,7 @@ fn extract_auth_code(url: &str) -> Option<String> {
 ///
 /// On desktop this starts a localhost callback server via `tauri-plugin-oauth`
 /// to receive the authorization code after the user grants consent in the browser.
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub async fn connect_google(
     app: AppHandle,
     oauth_service: Arc<OAuthService>,

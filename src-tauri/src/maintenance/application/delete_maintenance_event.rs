@@ -8,6 +8,7 @@ pub struct DeleteMaintenanceEvent;
 impl DeleteMaintenanceEvent {
     /// Remove the maintenance event identified by `event_id` and keep the
     /// owning card's projection consistent.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         event_id: MaintenanceEventId,

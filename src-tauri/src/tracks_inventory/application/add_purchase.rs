@@ -21,6 +21,7 @@ impl AddTrackPurchaseUseCase {
     ///
     /// # Type Parameters
     /// * `U` - The type of the unit of work, which must implement `TracksInventoryUowExt` and be `Send`.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,

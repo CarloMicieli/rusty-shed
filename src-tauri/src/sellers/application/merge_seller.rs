@@ -8,6 +8,7 @@ impl MergeSeller {
     /// Relinks references from `source_id` to `target_id`, then deletes the source seller.
     ///
     /// Returns the number of relinked references across seller and buyer usage fields.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         tx: &mut sqlx::SqliteConnection,
         source_id: &SellerId,

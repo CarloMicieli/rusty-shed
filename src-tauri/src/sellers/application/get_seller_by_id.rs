@@ -7,6 +7,7 @@ pub struct GetSellerById;
 
 impl GetSellerById {
     /// Retrieves a seller by its ID.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         id: &SellerId,

@@ -1,5 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::tracing::RecordTraceErrExt;
 use crate::tracks_inventory::application::DeleteTrackProductInput;
 use crate::tracks_inventory::domain::TrackProductUowExt;
 
@@ -8,6 +9,7 @@ pub struct DeleteTrackProductUseCase;
 
 impl DeleteTrackProductUseCase {
     /// Executes the use case to delete a track product.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         uow: &mut impl TrackProductUowExt,
         input: DeleteTrackProductInput,
@@ -24,7 +26,7 @@ impl DeleteTrackProductUseCase {
 
         repo.delete_track(&input.track_id).await?;
 
-        Ok(())
+        Ok(()).record_trace_err()
     }
 }
 

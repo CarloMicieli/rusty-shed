@@ -6,6 +6,7 @@ pub struct UpdateCollectionItem;
 
 impl UpdateCollectionItem {
     /// Execute a single-field update for an existing collection item.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: UpdateCollectionItemInput,

@@ -41,6 +41,7 @@ pub async fn get_maintenance_card_inner(
 /// # Returns
 /// The `MaintenanceCardView` if found, or `None`.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_maintenance_card(
     state: tauri::State<'_, AppState>,
@@ -76,6 +77,7 @@ pub async fn get_maintenance_dashboard_inner(
 /// # Returns
 /// A vector of `MaintenanceCardView` representing the due maintenance cards.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_maintenance_dashboard(
     state: tauri::State<'_, AppState>,
@@ -113,6 +115,7 @@ pub async fn add_maintenance_card_inner(
 /// # Returns
 /// The ID of the newly created maintenance card.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_maintenance_card(
     state: tauri::State<'_, AppState>,
@@ -139,6 +142,7 @@ pub async fn delete_maintenance_event_inner(
 
 /// Command handler to delete a single maintenance event.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_maintenance_event(
     state: tauri::State<'_, AppState>,
@@ -192,6 +196,7 @@ pub async fn add_maintenance_event_inner(
 /// # Returns
 /// nothing on success.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_maintenance_event(
     state: tauri::State<'_, AppState>,

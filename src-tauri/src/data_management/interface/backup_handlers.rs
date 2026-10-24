@@ -57,6 +57,7 @@ pub struct ImportDatabaseResponse {
 /// Returns [`CommandError`] if the destination path is empty, the directory does not exist,
 /// or the VACUUM INTO operation fails.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn export_database(
     args: ExportDatabaseArgs,
@@ -90,6 +91,7 @@ pub async fn export_database(
 /// Returns [`CommandError`] if the source path is empty, confirmation is wrong,
 /// the file is not a valid SQLite database, or the copy fails.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn import_database(
     app: AppHandle,

@@ -51,6 +51,7 @@ pub async fn get_sellers_inner(state: &AppState) -> Result<Vec<SellerView>, Comm
 /// - `Ok(Vec<Seller>)` when retrieval succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_sellers(
     state: tauri::State<'_, AppState>,
@@ -102,6 +103,7 @@ pub async fn get_seller_by_id_inner(
 /// - `Ok(None)` when no matching row is found
 /// - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_seller_by_id(
     state: tauri::State<'_, AppState>,
@@ -157,6 +159,7 @@ pub async fn create_seller_inner(
 /// - `Ok(Seller)` when creation succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_seller(
     state: tauri::State<'_, AppState>,
@@ -220,6 +223,7 @@ pub async fn update_seller_inner(
 /// - `Ok(Seller)` when the update succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_seller(
     state: tauri::State<'_, AppState>,
@@ -268,6 +272,7 @@ pub async fn delete_seller_inner(state: &AppState, id: SellerId) -> Result<(), C
 /// - `Ok(())` when the deletion succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_seller(
     state: tauri::State<'_, AppState>,
@@ -311,6 +316,7 @@ pub async fn merge_sellers_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn merge_sellers(
     state: tauri::State<'_, AppState>,

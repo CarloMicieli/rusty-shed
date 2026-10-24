@@ -275,6 +275,7 @@ pub async fn create_formation_category_inner(
 
 /// Create a new train formation.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_train_formation(
     state: tauri::State<'_, AppState>,
@@ -285,6 +286,7 @@ pub async fn create_train_formation(
 
 /// Update the metadata of an existing train formation.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_train_formation(
     state: tauri::State<'_, AppState>,
@@ -296,6 +298,7 @@ pub async fn update_train_formation(
 
 /// Delete a train formation by ID.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_train_formation(
     state: tauri::State<'_, AppState>,
@@ -306,6 +309,7 @@ pub async fn delete_train_formation(
 
 /// Get a single train formation with full element detail.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_train_formation(
     state: tauri::State<'_, AppState>,
@@ -316,6 +320,7 @@ pub async fn get_train_formation(
 
 /// List all train formations as summaries.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_train_formations(
     state: tauri::State<'_, AppState>,
@@ -325,6 +330,7 @@ pub async fn get_train_formations(
 
 /// Add a prototype element to a train formation.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_formation_element(
     state: tauri::State<'_, AppState>,
@@ -336,6 +342,7 @@ pub async fn add_formation_element(
 
 /// Remove an element from a train formation.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn remove_formation_element(
     state: tauri::State<'_, AppState>,
@@ -346,6 +353,7 @@ pub async fn remove_formation_element(
 
 /// Reorder the elements within a train formation.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn reorder_formation_elements(
     state: tauri::State<'_, AppState>,
@@ -357,6 +365,7 @@ pub async fn reorder_formation_elements(
 
 /// Assign or unassign an owned rolling stock to a formation element.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn assign_rolling_stock_to_element(
     state: tauri::State<'_, AppState>,
@@ -368,6 +377,7 @@ pub async fn assign_rolling_stock_to_element(
 
 /// Override the traction status of a formation element.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn set_traction_override(
     state: tauri::State<'_, AppState>,
@@ -379,6 +389,7 @@ pub async fn set_traction_override(
 
 /// Search prototypes grouped by railway company.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_prototypes(
     state: tauri::State<'_, AppState>,
@@ -389,6 +400,7 @@ pub async fn get_prototypes(
 
 /// Create a new custom prototype.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_custom_prototype(
     state: tauri::State<'_, AppState>,
@@ -399,6 +411,7 @@ pub async fn create_custom_prototype(
 
 /// List all formation categories.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_formation_categories(
     state: tauri::State<'_, AppState>,
@@ -408,6 +421,7 @@ pub async fn get_formation_categories(
 
 /// Create a new custom formation category.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_formation_category(
     state: tauri::State<'_, AppState>,

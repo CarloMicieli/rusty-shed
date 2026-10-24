@@ -48,6 +48,7 @@ impl RecordAcquisition {
     ///
     /// A single `save` on the collection repository is performed after all items
     /// are processed so that the whole batch commits atomically.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U, P, Q>(
         unit_of_work: &mut U,
         collection_item_id_provider: P,

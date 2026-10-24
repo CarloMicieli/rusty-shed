@@ -70,6 +70,7 @@ pub async fn analyze_import_package_inner(
 /// 3. Creates an import session
 /// 4. Returns validation results and record counts
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn analyze_import_package(
     args: AnalyzeImportPackageArgs,
@@ -207,6 +208,7 @@ pub async fn get_import_preview_inner(
 /// 2. Checks for duplicate records
 /// 3. Returns record counts and any validation errors
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_import_preview(
     args: GetImportPreviewArgs,
@@ -313,6 +315,7 @@ pub async fn execute_import_inner(
 /// 3. Writes new records to the database
 /// 4. Returns import results with added/skipped counts
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn execute_import(
     args: ExecuteImportArgs,
@@ -349,6 +352,7 @@ pub async fn cancel_import_session_inner(
 /// 2. Transitions it to failed state
 /// 3. Cleans up temporary files
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cancel_import_session(
     args: CancelImportSessionArgs,

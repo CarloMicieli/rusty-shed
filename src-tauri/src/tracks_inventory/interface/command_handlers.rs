@@ -48,6 +48,7 @@ pub async fn create_track_inventory_inner(
 /// # Returns
 /// the ID of the newly created track inventory.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_track_inventory(
     state: tauri::State<'_, AppState>,
@@ -82,6 +83,7 @@ pub async fn rename_track_inventory_inner(
 /// # Returns
 /// nothing on success.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn rename_track_inventory(
     state: tauri::State<'_, AppState>,
@@ -117,6 +119,7 @@ pub async fn add_track_purchase_inner(
 /// # Returns
 /// the ID of the newly added track purchase.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_track_purchase(
     state: tauri::State<'_, AppState>,
@@ -151,6 +154,7 @@ pub async fn set_track_item_quantity_inner(
 /// # Returns
 /// nothing on success.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn set_track_item_quantity(
     state: tauri::State<'_, AppState>,
@@ -183,6 +187,7 @@ pub async fn delete_track_inventory_inner(
 /// # Returns
 /// nothing on success.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_track_inventory(
     state: tauri::State<'_, AppState>,
@@ -218,6 +223,7 @@ pub async fn create_track_product_inner(
 /// # Returns
 /// the ID of the newly created track product.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_track_product(
     state: tauri::State<'_, AppState>,
@@ -245,6 +251,7 @@ pub async fn update_track_product_inner(
 
 /// Command handler to update an existing track product.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_track_product(
     state: tauri::State<'_, AppState>,
@@ -272,6 +279,7 @@ pub async fn delete_track_product_inner(
 
 /// Command handler to delete an existing track product.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_track_product(
     state: tauri::State<'_, AppState>,
@@ -299,6 +307,7 @@ pub async fn upsert_track_product_translation_inner(
 
 /// Command handler to upsert one translation for a track product.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn upsert_track_product_translation(
     state: tauri::State<'_, AppState>,
@@ -326,6 +335,7 @@ pub async fn delete_track_product_translation_inner(
 
 /// Command handler to delete one translation for a track product.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_track_product_translation(
     state: tauri::State<'_, AppState>,
@@ -378,6 +388,7 @@ pub async fn set_item_required_inner(
 /// # Returns
 /// Unit type on success.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn set_item_required(
     state: tauri::State<'_, AppState>,

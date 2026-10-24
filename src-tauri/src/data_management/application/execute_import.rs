@@ -22,6 +22,7 @@ impl ExecuteImportUseCase {
     ///
     /// # Returns
     /// An `ImportResult` with counts of added records, skipped duplicates, and image statistics.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         &self,
         session: &ImportSession,

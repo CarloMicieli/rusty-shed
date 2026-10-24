@@ -5,6 +5,7 @@ use crate::cloud_backup::infrastructure::{
     create_platform_storage,
 };
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::tracing::RecordTraceErrExt;
 use crate::state::AppState;
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -84,15 +85,19 @@ pub async fn cloud_backup_get_connection_status_inner(
 
 /// Get current Google connection status
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_get_connection_status(
     state: State<'_, AppState>,
 ) -> std::result::Result<ConnectionStatusResponse, CommandError> {
-    cloud_backup_get_connection_status_inner(&state).await
+    cloud_backup_get_connection_status_inner(&state)
+        .await
+        .record_trace_err()
 }
 
 /// Initiate Google OAuth flow
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_connect_google(
     app: AppHandle,
@@ -137,12 +142,15 @@ pub async fn cloud_backup_disconnect_google_inner(
 
 /// Disconnect Google account
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_disconnect_google(
     _app: AppHandle,
     state: State<'_, AppState>,
 ) -> std::result::Result<(), CommandError> {
-    cloud_backup_disconnect_google_inner(&state).await
+    cloud_backup_disconnect_google_inner(&state)
+        .await
+        .record_trace_err()
 }
 
 /// Inner implementation for `cloud_backup_check_connectivity`
@@ -153,10 +161,13 @@ pub async fn cloud_backup_check_connectivity_inner()
 
 /// Check internet connectivity
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_check_connectivity()
 -> std::result::Result<ConnectivityStatus, CommandError> {
-    cloud_backup_check_connectivity_inner().await
+    cloud_backup_check_connectivity_inner()
+        .await
+        .record_trace_err()
 }
 
 /// Inner implementation for `cloud_backup_sync_now`
@@ -236,12 +247,15 @@ fn finalize_sync_state(
 
 /// Sync (backup) to Google Drive
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_sync_now(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> std::result::Result<BackupListItem, CommandError> {
-    cloud_backup_sync_now_inner(&app, &state).await
+    cloud_backup_sync_now_inner(&app, &state)
+        .await
+        .record_trace_err()
 }
 
 /// Inner implementation for `cloud_backup_list_backups`
@@ -268,12 +282,15 @@ pub async fn cloud_backup_list_backups_inner(
 
 /// Get list of available backups
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_list_backups(
     _app: AppHandle,
     state: State<'_, AppState>,
 ) -> std::result::Result<BackupListResponse, CommandError> {
-    cloud_backup_list_backups_inner(&state).await
+    cloud_backup_list_backups_inner(&state)
+        .await
+        .record_trace_err()
 }
 
 /// Inner implementation for `cloud_backup_get_sync_status`
@@ -291,11 +308,14 @@ pub async fn cloud_backup_get_sync_status_inner(
 
 /// Get current sync operation status
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_get_sync_status(
     state: State<'_, AppState>,
 ) -> std::result::Result<SyncStatusResponse, CommandError> {
-    cloud_backup_get_sync_status_inner(&state).await
+    cloud_backup_get_sync_status_inner(&state)
+        .await
+        .record_trace_err()
 }
 
 fn validate_restore_confirmation(
@@ -414,6 +434,7 @@ pub async fn cloud_backup_restore_inner(
 
 /// Restore database from backup
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn cloud_backup_restore(
     app: AppHandle,
@@ -426,7 +447,9 @@ pub async fn cloud_backup_restore(
         .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
         .join("database.sqlite");
 
-    cloud_backup_restore_inner(app, &state, args, db_path).await
+    cloud_backup_restore_inner(app, &state, args, db_path)
+        .await
+        .record_trace_err()
 }
 
 #[cfg(test)]
