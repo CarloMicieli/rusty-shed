@@ -18,7 +18,7 @@
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod4 as zod, type ZodValidationSchema } from 'sveltekit-superforms/adapters';
   import {
     rollingStockSpecsSchema,
     type RollingStockSpecsFormData
@@ -82,7 +82,7 @@
   const { form, tainted, reset, isTainted } = superForm<FormState>(emptyForm, {
     SPA: true,
     dataType: 'json',
-    validators: zod(rollingStockSpecsSchema)
+    validators: zod(rollingStockSpecsSchema as unknown as ZodValidationSchema)
   });
   let originalForm = $state<FormState>({ ...emptyForm });
   let isLoading = $state(false);

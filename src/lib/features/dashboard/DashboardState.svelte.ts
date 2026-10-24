@@ -4,6 +4,23 @@ import { safeInvoke, getErrorMessage } from '$lib/services';
 import type { DashboardSummary, QueryCriteria } from '$lib/bindings';
 import { financeState } from '$lib/state/finance.svelte';
 
+function resolveMaintenanceDue(
+  totals: DashboardSummary['totals'] | Record<string, unknown> | null | undefined
+): number {
+  if (!totals) return 0;
+
+  if (typeof totals.maintenanceDue === 'number') {
+    return totals.maintenanceDue;
+  }
+
+  if ('maintenance_due' in totals) {
+    const fallback = (totals as Record<string, unknown>)['maintenance_due'];
+    return typeof fallback === 'number' ? fallback : 0;
+  }
+
+  return 0;
+}
+
 function toastError(message?: string) {
   toaster.error({
     id: 'dashboard-error',
@@ -37,12 +54,8 @@ export class DashboardState {
   }
 
   // 3. Derived Logic (equivalent to Svelte 4 derived stores)
-  hasMaintenance = $derived(
-    (this.#data?.totals?.maintenanceDue ??
-      ((this.#data?.totals as Record<string, unknown>)['maintenance_due'] as number | undefined) ??
-      0) > 0
-  );
-  recentItemsCount = $derived(this.#data?.recentItems.length ?? 0);
+  hasMaintenance = $derived(resolveMaintenanceDue(this.#data?.totals) > 0);
+  recentItemsCount = $derived(this.#data?.recentItems?.length ?? 0);
 
   /**
    * Loads dashboard data and handles state transitions

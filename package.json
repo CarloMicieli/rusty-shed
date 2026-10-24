@@ -12,13 +12,14 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "svelte-kit sync && eslint .",
+    "lint:fast": "oxlint .",
+    "lint": "svelte-kit sync && bun run lint:fast && eslint . --cache --cache-location .eslintcache --report-unused-disable-directives-severity off",
     "test:unit": "vitest --environment happy-dom",
     "test": "vitest --run --environment happy-dom",
     "test:ci": "vitest --run --environment happy-dom",
     "test:coverage": "vitest --run --environment happy-dom --coverage",
-    "test:e2e": "pnpm tauri build --debug --no-bundle && wdio run wdio.conf.js",
-    "tauri": "tauri",
+    "test:e2e": "bun run tauri build --debug --no-bundle && wdio run wdio.conf.js",
+    "tauri": "bunx tauri",
     "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
     "rust:build": "cargo build --manifest-path src-tauri/Cargo.toml",
     "rust:run": "cargo run --manifest-path src-tauri/Cargo.toml",
@@ -84,12 +85,14 @@
     "clsx": "^2.1.1",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-oxlint": "1.80.0",
     "eslint-plugin-svelte": "^3.23.1",
     "formsnap": "^2.0.1",
     "globals": "^16.5.0",
     "happy-dom": "^20.14.6",
     "lucide-svelte": "^0.562.0",
     "mode-watcher": "^1.1.0",
+    "oxlint": "1.80.0",
     "playwright": "^1.64.1",
     "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^3.5.2",
@@ -109,5 +112,8 @@
     "webdriverio": "9.31.2",
     "zod": "^4.6.7"
   },
-  "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457"
+  "packageManager": "bun@1.4.0",
+  "overrides": {
+    "typebox": "1.1.39"
+  }
 }

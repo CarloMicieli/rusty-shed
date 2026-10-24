@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [
+    ".svelte-kit/**",
+    "src-tauri/target/**",
+    "build/**",
+    "specs/**",
+    "src/lib/bindings.ts",
+    "src/lib/paraglide/**",
+    "src/paraglide/**"
+  ]
+}
