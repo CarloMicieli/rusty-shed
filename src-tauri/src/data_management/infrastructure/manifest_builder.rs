@@ -862,7 +862,8 @@ async fn export_track_inventory_if_needed(
                  FROM sellers WHERE id IN ({}) ORDER BY name",
                 placeholders
             );
-            let mut q = sqlx::query(&query);
+            let static_query: &'static str = Box::leak(query.into_boxed_str());
+            let mut q = sqlx::query(static_query);
             for id in &missing_ids {
                 q = q.bind(id.as_str());
             }

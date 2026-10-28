@@ -242,7 +242,8 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         T: Send + Sync + for<'q> sqlx::Encode<'q, sqlx::Sqlite> + sqlx::Type<sqlx::Sqlite>,
     {
         let sql = format!("UPDATE collection_items SET {field_name} = ?1 WHERE id = ?2");
-        let result = sqlx::query(&sql)
+        let static_sql: &'static str = Box::leak(sql.into_boxed_str());
+        let result = sqlx::query(static_sql)
             .bind(value)
             .bind(collection_item_id)
             .execute(&mut *self.executor)
