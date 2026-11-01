@@ -2,7 +2,7 @@
   import type { Manufacturer, RailwayCompany, SellerView } from '$lib/bindings';
   import type { AddModelFormState } from '$lib/features/collection/types/AddModelFormTypes';
   import * as m from '$lib/paraglide/messages.js';
-  import { ChevronDown, Plus, TrainFront } from 'lucide-svelte';
+  import { ChevronDown, Plus, TrainFront } from '@lucide/svelte';
   import { Collapsible as CollapsiblePrimitive } from 'bits-ui';
   import { Button } from '$lib/components';
   import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';
@@ -69,13 +69,13 @@
 
 <!-- Model Info Section (shared drawer component) -->
 <ModelInfoSection
-  bind:manufacturerId={form.manufacturerId}
-  bind:productCode={form.productCode}
-  bind:description={form.description}
-  bind:category={form.category}
-  bind:scale={form.scale}
-  bind:powerMethod={form.powerMethod}
-  bind:epoch={form.epoch}
+  bind:manufacturerId={() => form.manufacturerId, (value) => (form.manufacturerId = value)}
+  bind:productCode={() => form.productCode, (value) => (form.productCode = value)}
+  bind:description={() => form.description, (value) => (form.description = value)}
+  bind:category={() => form.category, (value) => (form.category = value)}
+  bind:scale={() => form.scale, (value) => (form.scale = value)}
+  bind:powerMethod={() => form.powerMethod, (value) => (form.powerMethod = value)}
+  bind:epoch={() => form.epoch, (value) => (form.epoch = value)}
   {manufacturers}
   {isLoading}
   {onQuickAddManufacturer}
@@ -169,7 +169,7 @@
 <!-- Purchase Section -->
 <PurchaseSection
   dark={true}
-  bind:purchase={form.purchase}
+  bind:purchase={() => form.purchase, (value) => (form.purchase = value)}
   {sellers}
   bind:expanded={showPurchaseSection}
   onToggle={onTogglePurchaseSection}

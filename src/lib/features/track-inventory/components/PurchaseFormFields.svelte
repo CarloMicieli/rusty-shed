@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { Plus, Tag, Store } from 'lucide-svelte';
+  import { Plus, Tag, Store } from '@lucide/svelte';
   import type { TrackProductView, SellerView, Currency } from '$lib/bindings';
   import type { Component } from 'svelte';
   import { Input, Button } from '$lib/components';

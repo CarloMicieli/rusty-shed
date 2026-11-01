@@ -862,7 +862,7 @@ async fn export_track_inventory_if_needed(
                  FROM sellers WHERE id IN ({}) ORDER BY name",
                 placeholders
             );
-            let mut q = sqlx::query(&query);
+            let mut q = sqlx::query(sqlx::AssertSqlSafe(query));
             for id in &missing_ids {
                 q = q.bind(id.as_str());
             }

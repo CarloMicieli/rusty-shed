@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Heart, Trash2 } from 'lucide-svelte';
+  import { Heart, Trash2 } from '@lucide/svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import { Badge } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';

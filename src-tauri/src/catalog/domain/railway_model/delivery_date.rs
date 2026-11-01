@@ -3,7 +3,7 @@ use regex::Regex;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sqlx::encode::IsNull;
 use sqlx::error::BoxDynError;
-use sqlx::sqlite::SqliteArgumentValue;
+use sqlx::sqlite::SqliteArgumentsBuffer;
 use sqlx::{Decode, Encode, Sqlite, Type};
 use std::fmt;
 use std::str;
@@ -44,16 +44,13 @@ impl Type<Sqlite> for DeliveryDate {
 
 // Manual Encode (Enum -> DB String)
 impl<'q> Encode<'q, Sqlite> for DeliveryDate {
-    fn encode_by_ref(
-        &self,
-        args: &mut Vec<SqliteArgumentValue<'q>>,
-    ) -> Result<IsNull, BoxDynError> {
+    fn encode_by_ref(&self, args: &mut SqliteArgumentsBuffer) -> Result<IsNull, BoxDynError> {
         let s = match self {
             Self::Year(y) => format!("{}", y),
             Self::YearMonth { year, month } => format!("{}-{:02}", year, month),
             Self::YearQuarter { year, quarter } => format!("{}-{}", year, quarter),
         };
-        <String as Encode<Sqlite>>::encode(s, args)
+        <String as Encode<Sqlite>>::encode_by_ref(&s, args)
     }
 }
 

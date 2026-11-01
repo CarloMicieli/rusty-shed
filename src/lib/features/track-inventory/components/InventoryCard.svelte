@@ -2,7 +2,7 @@
   import type { TrackInventoryListItem } from '$lib/features/track-inventory';
   import * as m from '$lib/paraglide/messages';
   import { resolve } from '$app/paths';
-  import { TrainTrack, ChevronRight } from 'lucide-svelte';
+  import { TrainTrack, ChevronRight } from '@lucide/svelte';
 
   interface Props {
     inventory: TrackInventoryListItem;

@@ -14,7 +14,7 @@ function mapManufacturer(row: Manufacturer): LibraryEntityRow {
   return {
     id: row.id,
     name: row.name,
-    countryCode: row.countryCode,
+    countryCode: row.countryCode ?? null,
     usageCount: row.usageCount,
     isSystemSeeded: row.isSystemSeeded
   };

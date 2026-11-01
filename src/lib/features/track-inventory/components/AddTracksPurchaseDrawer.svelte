@@ -4,7 +4,7 @@
   import { commands } from '$lib/bindings';
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
-  import { ShoppingCart } from 'lucide-svelte';
+  import { ShoppingCart } from '@lucide/svelte';
   import CreateProductDialog from './CreateProductDialog.svelte';
   import PurchaseFormFields from './PurchaseFormFields.svelte';
   import PurchaseLoadingState from './PurchaseLoadingState.svelte';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Check } from 'lucide-svelte';
+  import { Check } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import type { BudgetMode } from '../services/BudgetService.svelte';

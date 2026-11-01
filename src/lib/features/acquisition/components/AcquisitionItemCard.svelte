@@ -4,7 +4,7 @@
   import { Button, CurrencyInput } from '$lib/components';
   import { DrawerInput, EpochPicker } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
-  import { Copy, Plus, Trash2 } from 'lucide-svelte';
+  import { Copy, Plus, Trash2 } from '@lucide/svelte';
   import type { Category, Manufacturer } from '$lib/bindings';
   import type { AcquisitionItemEntry, AcquisitionItemErrors } from '../types.js';
   import { categoryOptions, categoryLabel } from '$lib/utils/enum-options';

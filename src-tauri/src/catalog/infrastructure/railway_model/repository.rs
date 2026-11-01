@@ -168,8 +168,25 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         column: &str,
         value: Option<&str>,
     ) -> Result<(), DomainError> {
-        let query = format!("UPDATE rolling_stocks SET {column} = ?1 WHERE id = ?2");
-        sqlx::query(&query)
+        let query = match column {
+            "locomotive_type" => "UPDATE rolling_stocks SET locomotive_type = ?1 WHERE id = ?2",
+            "freight_car_type" => "UPDATE rolling_stocks SET freight_car_type = ?1 WHERE id = ?2",
+            "passenger_car_type" => {
+                "UPDATE rolling_stocks SET passenger_car_type = ?1 WHERE id = ?2"
+            }
+            "electric_multiple_unit_type" => {
+                "UPDATE rolling_stocks SET electric_multiple_unit_type = ?1 WHERE id = ?2"
+            }
+            "railcar_type" => "UPDATE rolling_stocks SET railcar_type = ?1 WHERE id = ?2",
+            "service_level" => "UPDATE rolling_stocks SET service_level = ?1 WHERE id = ?2",
+            _ => {
+                return Err(DomainError::Validation(format!(
+                    "unsupported rolling-stock column update: {column}"
+                )));
+            }
+        };
+
+        sqlx::query(query)
             .bind(value)
             .bind(rolling_stock_id)
             .execute(&mut *self.executor)

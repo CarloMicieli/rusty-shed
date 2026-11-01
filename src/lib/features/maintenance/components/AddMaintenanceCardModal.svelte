@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X, Wrench } from 'lucide-svelte';
+  import { X, Wrench } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Button } from '$lib/components';

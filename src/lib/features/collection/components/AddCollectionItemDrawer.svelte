@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { TrainFront } from 'lucide-svelte';
+  import { TrainFront } from '@lucide/svelte';
   import { superForm } from 'sveltekit-superforms';
   import { zod4 as zod } from 'sveltekit-superforms/adapters';
   import { addCollectionSchema } from '$lib/schemas/collection-form';

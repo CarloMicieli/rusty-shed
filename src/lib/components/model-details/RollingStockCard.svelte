@@ -79,25 +79,28 @@
     resolveOverride(rollingStockOverrides.depot, rollingStock.depot ?? '')
   );
   const localControl = $derived.by(() =>
-    resolveOverride(rollingStockOverrides.control, rollingStock.control)
+    resolveOverride(rollingStockOverrides.control, rollingStock.control ?? null)
   );
   const localDccInterface = $derived.by(() =>
-    resolveOverride(rollingStockOverrides.dccInterface, rollingStock.dccInterface)
+    resolveOverride(rollingStockOverrides.dccInterface, rollingStock.dccInterface ?? null)
   );
   const localCategory = $derived.by(() =>
-    resolveOverride(rollingStockOverrides.category, rollingStock.category)
+    resolveOverride(rollingStockOverrides.category, rollingStock.category ?? null)
   );
   const localSubcategory = $derived.by(() =>
-    resolveOverride(rollingStockOverrides.subcategory, rollingStock.subcategory)
+    resolveOverride(rollingStockOverrides.subcategory, rollingStock.subcategory ?? null)
   );
   let localIsDummy = $state(false);
   const localLengthMm = $derived.by(() =>
-    resolveOverride(rollingStockOverrides.lengthMm, extractMm(rollingStock.lengthOverBuffers))
+    resolveOverride(
+      rollingStockOverrides.lengthMm,
+      extractMm(rollingStock.lengthOverBuffers ?? null)
+    )
   );
   const localLengthInches = $derived.by(() =>
     resolveOverride(
       rollingStockOverrides.lengthInches,
-      extractInches(rollingStock.lengthOverBuffers)
+      extractInches(rollingStock.lengthOverBuffers ?? null)
     )
   );
 
@@ -159,7 +162,7 @@
   let specsDrawerOpen = $state(false);
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
-  function extractMm(lob: LengthOverBuffers | null): string {
+  function extractMm(lob: LengthOverBuffers | null | undefined): string {
     if (!lob?.millimeters) return '';
     const val = lob.millimeters;
     // Runtime: Rust's custom serde serializes Length as a float number directly
@@ -173,7 +176,7 @@
     return '';
   }
 
-  function extractInches(lob: LengthOverBuffers | null): string {
+  function extractInches(lob: LengthOverBuffers | null | undefined): string {
     if (!lob?.inches) return '';
     const val = lob.inches;
     // Runtime: Rust's custom serde serializes Length as a float number directly
@@ -197,12 +200,12 @@
       roadNumber: stock.roadNumber ?? '',
       livery: stock.livery ?? '',
       depot: stock.depot ?? '',
-      control: stock.control,
-      dccInterface: stock.dccInterface,
-      category: stock.category,
-      subcategory: stock.subcategory,
-      lengthMm: extractMm(stock.lengthOverBuffers),
-      lengthInches: extractInches(stock.lengthOverBuffers),
+      control: stock.control ?? null,
+      dccInterface: stock.dccInterface ?? null,
+      category: stock.category ?? null,
+      subcategory: stock.subcategory ?? null,
+      lengthMm: extractMm(stock.lengthOverBuffers ?? null),
+      lengthInches: extractInches(stock.lengthOverBuffers ?? null),
       currentCouplerId: stock.currentCouplerId ?? null
     };
   }

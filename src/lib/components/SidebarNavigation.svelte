@@ -1,6 +1,6 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { Settings, Bug, ChevronsLeft, ChevronsRight } from 'lucide-svelte';
+  import { Settings, Bug, ChevronsLeft, ChevronsRight } from '@lucide/svelte';
   import { page } from '$app/stores';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';

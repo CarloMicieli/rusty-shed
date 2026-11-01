@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Wrench } from 'lucide-svelte';
+  import { Wrench } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import EmptyState from '$lib/components/EmptyState.svelte';
 

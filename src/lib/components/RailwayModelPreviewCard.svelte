@@ -86,7 +86,7 @@
   import { Card, CardHeader, CardContent } from '$lib/components/ui/card';
   import { Badge } from '$lib/components/ui/badge';
   import { Separator } from '$lib/components/ui/separator';
-  import { Volume2, Zap, TrainFront, Box, Users, Layers } from 'lucide-svelte';
+  import { Volume2, Zap, TrainFront, Box, Users, Layers } from '@lucide/svelte';
   import { format, isValid } from 'date-fns';
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';

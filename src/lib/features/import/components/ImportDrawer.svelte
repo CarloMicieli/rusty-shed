@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ArchiveRestore } from 'lucide-svelte';
+  import { ArchiveRestore } from '@lucide/svelte';
   import { DrawerShell, DrawerHeader } from '$lib/components/drawer';
   import { createImportController } from '$lib/features/import/import.controller.svelte';
   import * as m from '$lib/paraglide/messages.js';

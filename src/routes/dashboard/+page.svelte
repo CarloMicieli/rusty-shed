@@ -6,7 +6,7 @@
   import { getContext, onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Heart, ShoppingBag, RefreshCw, House, Wrench, Wallet, Train } from 'lucide-svelte';
+  import { Heart, ShoppingBag, RefreshCw, House, Wrench, Wallet, Train } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, Card, CardContent, Skeleton } from '$lib/components';
 
@@ -46,11 +46,11 @@
   const budgetChartData = $derived.by(() => {
     const budgetData = dashboard.budgetData;
     if (!budgetData) return undefined;
+    const remainingPercentage = budgetData.remainingPercentage;
 
     // Always include monthly spending data, but only include budget percentage if configured
     return {
-      budget:
-        budgetData.remainingPercentage !== null ? budgetData.remainingPercentage / 100 : undefined,
+      budget: remainingPercentage == null ? undefined : remainingPercentage / 100,
       monthlySpending: budgetData.monthlySpending.map((p) => ({
         month: p.month - 1,
         amount: Number(p.amount) / 100

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import { TableRow, TableCell, Badge, Button } from '$lib/components';
   import type { EnhancedMonthlyRecord } from '../BudgetState.svelte';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { Calendar, AlertTriangle, CheckCircle2 } from 'lucide-svelte';
+  import { Calendar, AlertTriangle, CheckCircle2 } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getUrgencyLevel } from '../utils/urgency';
   import type { MaintenanceCardView } from '$lib/bindings';
@@ -10,7 +10,7 @@
   let { card }: Props = $props();
 
   // Calculate urgency level
-  const urgency = $derived(getUrgencyLevel(card.nextMaintenanceDate));
+  const urgency = $derived(getUrgencyLevel(card.nextMaintenanceDate ?? null));
 
   // Calculate "Maintenance Health" based on time elapsed since last maintenance vs total interval
   const healthPercentage = $derived.by(() => {
@@ -43,7 +43,7 @@
   );
 
   // Format dates for display
-  const formatDate = (dateStr: string | null): string => {
+  const formatDate = (dateStr: string | null | undefined): string => {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date

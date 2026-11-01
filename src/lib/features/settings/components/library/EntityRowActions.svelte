@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Ellipsis } from 'lucide-svelte';
+  import { Ellipsis } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import type { LibraryEntityRow } from '$lib/services/entityLibrary';
 

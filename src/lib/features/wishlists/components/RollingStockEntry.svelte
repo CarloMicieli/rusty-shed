@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X } from 'lucide-svelte';
+  import { X } from '@lucide/svelte';
   import { Input, Button } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
   import { getFlag } from '$lib/utils/flags';

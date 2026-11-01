@@ -3,7 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import type { FilterState } from '$lib/features/collection/CollectionState.svelte';
   import { Input, Badge } from '$lib/components';
-  import { X } from 'lucide-svelte';
+  import { X } from '@lucide/svelte';
 
   type ScaleOption = { id: string; display: string };
 

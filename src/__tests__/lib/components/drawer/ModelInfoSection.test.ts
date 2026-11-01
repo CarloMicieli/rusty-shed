@@ -78,7 +78,7 @@ describe('ModelInfoSection', () => {
 
     render(ModelInfoSection, { props: { ...defaultProps, isLoading: false } });
     expect(screen.queryByText('Loading...')).toBeNull();
-    expect(screen.getByRole('button', { name: /manufacturer/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /manufacturer/i })).toBeInTheDocument();
   });
 
   // ── Scale display with ratio ─────────────────────────────────────────────────
@@ -151,7 +151,7 @@ describe('ModelInfoSection', () => {
     const user = userEvent.setup();
     render(ModelInfoSection, { props: defaultProps });
 
-    const trigger = screen.getByRole('button', { name: /manufacturer/i });
+    const trigger = screen.getByRole('combobox', { name: /manufacturer/i });
     await user.click(trigger);
 
     await waitFor(() => {

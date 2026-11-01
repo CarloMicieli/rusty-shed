@@ -15,7 +15,7 @@
   import { Button } from '$lib/components';
   import { getCloudBackupController } from '../controllers/cloudBackup.svelte';
   import * as m from '$lib/paraglide/messages';
-  import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-svelte';
+  import { AlertCircle, CheckCircle2, Loader2 } from '@lucide/svelte';
 
   interface Props {
     /** Optional CSS class for styling */

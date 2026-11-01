@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { RailwayModel } from '$lib/types/railway-model';
   import { Button } from '$lib/components/ui/button';
-  import { Upload, Box } from 'lucide-svelte';
+  import { Upload, Box } from '@lucide/svelte';
   import { listen } from '@tauri-apps/api/event';
   import { readFile } from '@tauri-apps/plugin-fs';
   import * as m from '$lib/paraglide/messages';

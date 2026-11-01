@@ -4,7 +4,7 @@
   // NO CSS import — v2 uses Shadow DOM styles built-in
   import { commands } from '$lib/bindings';
   import { Button } from '$lib/components/ui/button';
-  import { FlipHorizontal2, Loader2, RotateCcw, RotateCw } from 'lucide-svelte';
+  import { FlipHorizontal2, Loader2, RotateCcw, RotateCw } from '@lucide/svelte';
   import {
     Dialog,
     DialogContent,

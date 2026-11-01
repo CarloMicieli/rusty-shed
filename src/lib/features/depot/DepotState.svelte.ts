@@ -120,11 +120,11 @@ export class DepotState {
       seriesCode: item.seriesCode,
       productCode: item.productCode,
       categoryLabel: this.formatCategory(item.category),
-      roadNumber: item.roadNumber,
-      railwayCompany: item.railwayCompanyName,
-      livery: item.livery,
-      control: item.control,
-      dccAddress: item.dccAddress
+      roadNumber: item.roadNumber ?? null,
+      railwayCompany: item.railwayCompanyName ?? null,
+      livery: item.livery ?? null,
+      control: item.control ?? null,
+      dccAddress: item.dccAddress ?? null
     };
   }
 
@@ -137,11 +137,11 @@ export class DepotState {
       seriesCode: item.seriesCode,
       productCode: item.productCode,
       categoryLabel: this.formatCategory(item.category),
-      roadNumber: item.roadNumber,
-      railwayCompany: item.railwayCompanyName,
-      livery: item.livery,
-      control: item.control,
-      dccAddress: item.dccAddress
+      roadNumber: item.roadNumber ?? null,
+      railwayCompany: item.railwayCompanyName ?? null,
+      livery: item.livery ?? null,
+      control: item.control ?? null,
+      dccAddress: item.dccAddress ?? null
     };
   }
 
@@ -154,13 +154,13 @@ export class DepotState {
       seriesCode: item.seriesCode,
       productCode: item.productCode,
       categoryLabel: this.formatCategory(item.category),
-      roadNumber: item.roadNumber,
-      railwayCompany: item.railwayCompanyName,
-      livery: item.livery,
+      roadNumber: item.roadNumber ?? null,
+      railwayCompany: item.railwayCompanyName ?? null,
+      livery: item.livery ?? null,
       category: item.category === 'PASSENGER_CAR' ? 'passenger' : 'freight',
       serviceLevel: null,
-      control: item.control,
-      dccAddress: item.dccAddress
+      control: item.control ?? null,
+      dccAddress: item.dccAddress ?? null
     };
   }
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ClipboardList } from 'lucide-svelte';
+  import { ClipboardList } from '@lucide/svelte';
   import { getMaintenanceState } from '../MaintenanceState.svelte';
   import { getMaintenanceTypes } from '../utils/maintenanceTypes';
   import { toaster } from '$lib/toaster';

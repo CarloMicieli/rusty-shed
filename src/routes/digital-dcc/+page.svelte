@@ -10,7 +10,7 @@
   import DecoderInstallDrawer from '$lib/features/digital-roster/components/DecoderInstallDrawer.svelte';
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import { Button, PageHeader } from '$lib/components';
 
   // Initialize state and controller

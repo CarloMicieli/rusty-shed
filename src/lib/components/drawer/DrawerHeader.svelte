@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X } from 'lucide-svelte';
+  import { X } from '@lucide/svelte';
   import type { IconComponent } from '$lib/config/icons';
   import * as m from '$lib/paraglide/messages.js';
 

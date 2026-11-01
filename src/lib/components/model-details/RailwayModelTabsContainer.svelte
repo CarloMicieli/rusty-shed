@@ -10,7 +10,7 @@
   import RollingStockSingleUnit from './components/RollingStockSingleUnit.svelte';
   import RollingStockMultiUnit from './components/RollingStockMultiUnit.svelte';
   import { useRollingStockEditor } from './useRollingStockEditor.svelte';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import { toaster } from '$lib/toaster';
 
   interface _Props {

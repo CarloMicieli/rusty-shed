@@ -37,7 +37,7 @@ pub async fn load_database_table_stats(
             "SELECT COUNT(*) AS row_count FROM \"{}\"",
             escape_sqlite_identifier(&table_name)
         );
-        let row_count = sqlx::query_scalar::<_, i64>(&count_query)
+        let row_count = sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(count_query))
             .fetch_one(pool)
             .await
             .map_err(|error| {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { OwnedRollingStockView, RailwayModelId, RollingStockId } from '$lib/bindings';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import RollingStockCard from './RollingStockCard.svelte';
   import RollingStockCreateDrawer from '$lib/features/rolling-stock-edit/components/RollingStockCreateDrawer.svelte';

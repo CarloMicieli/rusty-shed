@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Upload } from 'lucide-svelte';
+  import { Upload } from '@lucide/svelte';
   import { listen } from '@tauri-apps/api/event';
   import { readFile } from '@tauri-apps/plugin-fs';
   import * as m from '$lib/paraglide/messages.js';
