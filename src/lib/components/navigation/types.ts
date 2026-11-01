@@ -1,4 +1,4 @@
-import type { SvelteComponent } from 'svelte';
+import type { Component } from 'svelte';
 
 /**
  * Represents a single navigation feature
@@ -20,8 +20,7 @@ export interface NavigationItem {
    * Lucide icon component
    * @example LayoutDashboard, TrainFront, Wallet
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: typeof SvelteComponent<any>;
+  icon: Component;
 
   /**
    * Route path for navigation

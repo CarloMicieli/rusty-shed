@@ -5,6 +5,61 @@ import '@testing-library/jest-dom/vitest';
 const globalWithBrowser = globalThis as typeof globalThis & { BROWSER?: boolean };
 globalWithBrowser.BROWSER = true;
 
+type StorageLike = {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+  clear: () => void;
+  key: (index: number) => string | null;
+  readonly length: number;
+};
+
+function createMemoryStorage(): StorageLike {
+  const store = new Map<string, string>();
+  return {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(key: string) {
+      return store.has(key) ? (store.get(key) ?? null) : null;
+    },
+    key(index: number) {
+      const keys = Array.from(store.keys());
+      return keys[index] ?? null;
+    },
+    removeItem(key: string) {
+      store.delete(key);
+    },
+    setItem(key: string, value: string) {
+      store.set(key, String(value));
+    }
+  };
+}
+
+function ensureWebStorage(): void {
+  const fallbackStorage = createMemoryStorage();
+  const win = globalThis.window as (Window & typeof globalThis) | undefined;
+  const windowStorage = win?.localStorage;
+
+  const localStorageRef = windowStorage ?? fallbackStorage;
+  const sessionStorageRef = win?.sessionStorage ?? fallbackStorage;
+
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: localStorageRef
+  });
+
+  Object.defineProperty(globalThis, 'sessionStorage', {
+    configurable: true,
+    value: sessionStorageRef
+  });
+}
+
+ensureWebStorage();
+
 type TauriInternals = {
   invoke: ReturnType<typeof vi.fn>;
   convertFileSrc: ReturnType<typeof vi.fn>;

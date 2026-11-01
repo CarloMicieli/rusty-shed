@@ -212,7 +212,7 @@
     return {
       id: entity.id,
       name: entity.name,
-      countryCode: entity.countryCode,
+      countryCode: entity.countryCode ?? null,
       usageCount: 0,
       isSystemSeeded: false
     };

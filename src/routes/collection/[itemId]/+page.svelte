@@ -59,10 +59,16 @@
           return info.data.seller;
         case 'sold':
           return info.data.seller;
+        default:
+          return null;
       }
     })();
 
-    const result = await commands.getCollectionItemDetails(railwayModelId, sellerId, getLocale());
+    const result = await commands.getCollectionItemDetails(
+      railwayModelId,
+      sellerId ?? null,
+      getLocale()
+    );
 
     if (result.status === 'ok') {
       model = result.data.model;

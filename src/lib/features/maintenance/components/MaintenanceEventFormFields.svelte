@@ -7,7 +7,7 @@
   interface Card {
     id: string;
     ownedRollingStockId: string;
-    nextMaintenanceDate: string | null;
+    nextMaintenanceDate?: string | null;
   }
 
   interface Props {

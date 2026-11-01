@@ -46,11 +46,11 @@
   const budgetChartData = $derived.by(() => {
     const budgetData = dashboard.budgetData;
     if (!budgetData) return undefined;
+    const remainingPercentage = budgetData.remainingPercentage;
 
     // Always include monthly spending data, but only include budget percentage if configured
     return {
-      budget:
-        budgetData.remainingPercentage !== null ? budgetData.remainingPercentage / 100 : undefined,
+      budget: remainingPercentage == null ? undefined : remainingPercentage / 100,
       monthlySpending: budgetData.monthlySpending.map((p) => ({
         month: p.month - 1,
         amount: Number(p.amount) / 100

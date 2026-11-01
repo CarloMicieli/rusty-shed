@@ -38,8 +38,11 @@ export function collectionItemToCardData(item: CollectionItemView): RailwayModel
   };
 }
 
-export function isSoldItem(purchaseInfo: PurchaseInfo | null, removedDate: string | null): boolean {
-  return purchaseInfo?.kind === 'sold' || removedDate !== null;
+export function isSoldItem(
+  purchaseInfo: PurchaseInfo | null | undefined,
+  removedDate: string | null | undefined
+): boolean {
+  return purchaseInfo?.kind === 'sold' || removedDate != null;
 }
 
 /**
@@ -97,7 +100,7 @@ export function extractDigitalFeatures(rollingStocks: OwnedRollingStockView[]): 
  *
  * Returns null for sold items, pre-orders without a date, or missing info.
  */
-export function extractPurchaseDate(purchaseInfo: PurchaseInfo | null): string | null {
+export function extractPurchaseDate(purchaseInfo: PurchaseInfo | null | undefined): string | null {
   if (!purchaseInfo) return null;
 
   switch (purchaseInfo.kind) {
@@ -112,12 +115,14 @@ export function extractPurchaseDate(purchaseInfo: PurchaseInfo | null): string |
   }
 }
 
-export function extractPurchasePrice(purchaseInfo: PurchaseInfo | null): MonetaryAmount | null {
+export function extractPurchasePrice(
+  purchaseInfo: PurchaseInfo | null | undefined
+): MonetaryAmount | null {
   if (!purchaseInfo) return null;
 
   switch (purchaseInfo.kind) {
     case 'purchased':
-      return purchaseInfo.data.price;
+      return purchaseInfo.data.price ?? null;
     case 'sold':
       return purchaseInfo.data.purchasePrice ?? purchaseInfo.data.salePrice;
     case 'preOrdered':

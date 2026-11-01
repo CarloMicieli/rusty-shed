@@ -22,7 +22,7 @@
 
   let showAddEventModal = $state(false);
 
-  const formatDate = (dateStr: string | null): string => {
+  const formatDate = (dateStr: string | null | undefined): string => {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date
