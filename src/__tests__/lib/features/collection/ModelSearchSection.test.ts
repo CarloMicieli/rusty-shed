@@ -17,10 +17,23 @@ vi.mock('$lib/paraglide/messages', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return new Proxy(actual, {
     get(target, prop) {
-      if (typeof prop === 'string') {
-        return () => prop;
+      if (typeof prop !== 'string') {
+        return Reflect.get(target, prop);
       }
-      return Reflect.get(target, prop);
+
+      if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+        return undefined;
+      }
+
+      if (Reflect.has(target, prop)) {
+        return Reflect.get(target, prop);
+      }
+
+      if (prop.startsWith('__')) {
+        return undefined;
+      }
+
+      return () => prop;
     }
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/svelte';
+import { render, screen, cleanup, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 
 vi.mock('$lib/features/settings/RegionalManager.svelte', () => ({
@@ -98,7 +98,8 @@ describe('WishlistDashboardHeader', () => {
         onSelect: vi.fn()
       }
     });
-    expect(screen.getByRole('button', { name: 'Main List' })).toBeInTheDocument();
+    const trigger = screen.getByRole('combobox');
+    expect(within(trigger).getByText('Main List')).toBeInTheDocument();
   });
 
   it('shows placeholder text when no wishlist is active', () => {
@@ -106,7 +107,8 @@ describe('WishlistDashboardHeader', () => {
     render(WishlistDashboardHeader, {
       props: { wishlists, activeWishlistId: null, items: [], onSelect: vi.fn() }
     });
-    expect(screen.getByRole('button', { name: 'Select a list…' })).toBeInTheDocument();
+    const trigger = screen.getByRole('combobox');
+    expect(within(trigger).getByText('Select a list…')).toBeInTheDocument();
   });
 
   // ── Zone A: Select options ────────────────────────────────────────────────────
@@ -118,7 +120,7 @@ describe('WishlistDashboardHeader', () => {
       props: { wishlists, activeWishlistId: null, items: [], onSelect: vi.fn() }
     });
 
-    const trigger = screen.getByRole('button', { name: 'Select a list…' });
+    const trigger = screen.getByRole('combobox');
     await user.click(trigger);
 
     await waitFor(
@@ -143,7 +145,7 @@ describe('WishlistDashboardHeader', () => {
       }
     });
 
-    const trigger = screen.getByRole('button', { name: 'Main List' });
+    const trigger = screen.getByRole('combobox');
     await user.click(trigger);
 
     await waitFor(() => expect(screen.getByText('Track Plans')).toBeInTheDocument(), {

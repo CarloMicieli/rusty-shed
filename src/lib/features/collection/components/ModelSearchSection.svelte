@@ -64,49 +64,18 @@
     onQuickAddSeller
   }: Props = $props();
 
-  let manufacturerId = $state(form.manufacturerId);
-  let productCode = $state(form.productCode);
-  let description = $state(form.description);
-  let category = $state(form.category);
-  let scale = $state(form.scale);
-  let powerMethod = $state(form.powerMethod);
-  let epoch = $state(form.epoch);
-  let purchase = $state(form.purchase);
-
-  $effect(() => {
-    if (form.manufacturerId !== manufacturerId) manufacturerId = form.manufacturerId;
-    if (form.productCode !== productCode) productCode = form.productCode;
-    if (form.description !== description) description = form.description;
-    if (form.category !== category) category = form.category;
-    if (form.scale !== scale) scale = form.scale;
-    if (form.powerMethod !== powerMethod) powerMethod = form.powerMethod;
-    if (form.epoch !== epoch) epoch = form.epoch;
-    if (form.purchase !== purchase) purchase = form.purchase;
-  });
-
-  $effect(() => {
-    form.manufacturerId = manufacturerId;
-    form.productCode = productCode;
-    form.description = description;
-    form.category = category;
-    form.scale = scale;
-    form.powerMethod = powerMethod;
-    form.epoch = epoch;
-    form.purchase = purchase;
-  });
-
   const rollingStockCountLabel = $derived(m.add_model_rolling_stock_items_label());
 </script>
 
 <!-- Model Info Section (shared drawer component) -->
 <ModelInfoSection
-  bind:manufacturerId
-  bind:productCode
-  bind:description
-  bind:category
-  bind:scale
-  bind:powerMethod
-  bind:epoch
+  bind:manufacturerId={() => form.manufacturerId, (value) => (form.manufacturerId = value)}
+  bind:productCode={() => form.productCode, (value) => (form.productCode = value)}
+  bind:description={() => form.description, (value) => (form.description = value)}
+  bind:category={() => form.category, (value) => (form.category = value)}
+  bind:scale={() => form.scale, (value) => (form.scale = value)}
+  bind:powerMethod={() => form.powerMethod, (value) => (form.powerMethod = value)}
+  bind:epoch={() => form.epoch, (value) => (form.epoch = value)}
   {manufacturers}
   {isLoading}
   {onQuickAddManufacturer}
@@ -200,7 +169,7 @@
 <!-- Purchase Section -->
 <PurchaseSection
   dark={true}
-  bind:purchase
+  bind:purchase={() => form.purchase, (value) => (form.purchase = value)}
   {sellers}
   bind:expanded={showPurchaseSection}
   onToggle={onTogglePurchaseSection}
