@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { TrainTrack } from 'lucide-svelte';
+  import { TrainTrack } from '@lucide/svelte';
   import type { TrackInventoryListItem } from '$lib/features/track-inventory';
   import * as m from '$lib/paraglide/messages';
   import { cn } from '$lib/utils';

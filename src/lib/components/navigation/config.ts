@@ -8,7 +8,7 @@ import {
   Cpu,
   TrainTrack,
   Combine
-} from 'lucide-svelte';
+} from '@lucide/svelte';
 import * as m from '$lib/paraglide/messages.js';
 import type { NavigationItem } from './types';
 

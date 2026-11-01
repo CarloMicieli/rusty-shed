@@ -1,7 +1,7 @@
 <script lang="ts">
   /** @deprecated Use RailwayModelPreviewCard with collectionItemToCardData() instead */
   import { fade } from 'svelte/transition';
-  import { Trash2 } from 'lucide-svelte';
+  import { Trash2 } from '@lucide/svelte';
   import { Badge, Button } from '$lib/components';
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import type { CollectionItemView } from '$lib/bindings';

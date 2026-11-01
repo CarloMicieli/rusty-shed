@@ -1,7 +1,7 @@
 import { render, screen, cleanup } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Wrench, Plus, Microchip } from 'lucide-svelte';
+import { Wrench, Plus, Microchip } from '@lucide/svelte';
 import EmptyState from '../EmptyState.svelte';
 
 describe('EmptyState', () => {

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
   import { page } from '$app/stores';
-  import { ChevronLeft, CalendarPlus, Calendar, CheckCircle2, History } from 'lucide-svelte';
+  import { ChevronLeft, CalendarPlus, Calendar, CheckCircle2, History } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import MaintenanceDetailState, {

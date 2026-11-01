@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import DepotCategoryWrapper from './DepotCategoryWrapper.svelte';
-import { TrainFront } from 'lucide-svelte';
+import { TrainFront } from '@lucide/svelte';
 
 // ── Mock @tauri-apps/plugin-fs ───────────────────────────────────────────────
 vi.mock('@tauri-apps/plugin-fs', () => ({

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Plus, Activity, CheckCircle2, Factory } from 'lucide-svelte';
+  import { Plus, Activity, CheckCircle2, Factory } from '@lucide/svelte';
   import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, PageHeader } from '$lib/components';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, X, Loader2 } from 'lucide-svelte';
+  import { Search, X, Loader2 } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { goto } from '$app/navigation';

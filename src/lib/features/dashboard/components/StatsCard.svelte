@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Stat } from '$lib/data/mock';
-  import { TrendingUp, TrendingDown, Minus } from 'lucide-svelte';
+  import { TrendingUp, TrendingDown, Minus } from '@lucide/svelte';
   import { Card, CardContent } from '$lib/components';
 
   type Props = { stat: Stat };

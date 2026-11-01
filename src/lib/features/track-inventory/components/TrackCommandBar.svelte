@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
   import * as Select from '$lib/components/ui/select';
-  import { Settings, Plus, Trash2, Edit2, X } from 'lucide-svelte';
+  import { Settings, Plus, Trash2, Edit2, X } from '@lucide/svelte';
   import { Button } from '$lib/components';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { TrackInventoryListItem, TrackInventoryView } from '$lib/features/track-inventory';

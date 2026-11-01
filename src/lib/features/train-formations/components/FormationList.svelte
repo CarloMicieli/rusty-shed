@@ -2,7 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { resolve } from '$app/paths';
   import { goto } from '$app/navigation';
-  import { Plus, Combine } from 'lucide-svelte';
+  import { Plus, Combine } from '@lucide/svelte';
   import { Button } from '$lib/components/ui/button';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import FormationCard from './FormationCard.svelte';

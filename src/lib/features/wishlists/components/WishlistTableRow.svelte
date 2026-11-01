@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Trash2, ShoppingCart, MoveRight, TrainFront, Box, Users, Layers } from 'lucide-svelte';
+  import { Trash2, ShoppingCart, MoveRight, TrainFront, Box, Users, Layers } from '@lucide/svelte';
   import type { WishlistItem, RailwayModelView, MonetaryAmount } from '$lib/bindings';
   import { onMount } from 'svelte';
   import { commands } from '$lib/bindings';

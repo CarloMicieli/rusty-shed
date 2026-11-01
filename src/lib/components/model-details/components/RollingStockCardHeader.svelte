@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronDown, Settings } from 'lucide-svelte';
+  import { ChevronDown, Settings } from '@lucide/svelte';
   import { getFlag } from '$lib/utils/flags';
   import * as m from '$lib/paraglide/messages.js';
   import RollingStockCardHeaderShell from './RollingStockCardHeaderShell.svelte';

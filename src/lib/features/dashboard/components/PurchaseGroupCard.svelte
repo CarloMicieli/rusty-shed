@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Calendar, Store } from 'lucide-svelte';
+  import { Calendar, Store } from '@lucide/svelte';
   import { format, isValid } from 'date-fns';
   import type { PurchaseGroup } from '$lib/bindings';
   import ModelCard from './ModelCard.svelte';

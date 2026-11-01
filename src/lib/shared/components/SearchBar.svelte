@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, X } from 'lucide-svelte';
+  import { Search, X } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, Input } from '$lib/components';
 

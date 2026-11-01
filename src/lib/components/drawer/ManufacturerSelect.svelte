@@ -2,7 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
   import { Button } from '$lib/components';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import type { Manufacturer } from '$lib/bindings';
 
   interface Props {

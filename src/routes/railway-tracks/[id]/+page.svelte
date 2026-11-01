@@ -10,7 +10,7 @@
   import AddTracksPurchaseDrawer from '$lib/features/track-inventory/components/AddTracksPurchaseDrawer.svelte';
   import DetailBackLink from '$lib/components/DetailBackLink.svelte';
   import { onMount } from 'svelte';
-  import { Settings, Plus, Trash2, Edit2 } from 'lucide-svelte';
+  import { Settings, Plus, Trash2, Edit2 } from '@lucide/svelte';
   import { Button } from '$lib/components';
 
   const service = getTrackInventoryContext();

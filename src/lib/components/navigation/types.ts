@@ -17,7 +17,7 @@ export interface NavigationItem {
   label: () => string;
 
   /**
-   * lucide-svelte icon component
+   * Lucide icon component
    * @example LayoutDashboard, TrainFront, Wallet
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

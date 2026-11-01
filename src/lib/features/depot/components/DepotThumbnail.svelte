@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { TrainFront } from 'lucide-svelte';
+  import { TrainFront } from '@lucide/svelte';
   import { readFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 
   let { railwayModelId, productCode }: { railwayModelId: string; productCode: string } = $props();

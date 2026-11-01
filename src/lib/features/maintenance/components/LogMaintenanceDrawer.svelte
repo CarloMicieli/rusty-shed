@@ -1,6 +1,6 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
-  import { Wrench } from 'lucide-svelte';
+  import { Wrench } from '@lucide/svelte';
   import {
     commands,
     type MaintenanceType,

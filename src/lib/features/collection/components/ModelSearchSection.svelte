@@ -2,7 +2,7 @@
   import type { Manufacturer, RailwayCompany, SellerView } from '$lib/bindings';
   import type { AddModelFormState } from '$lib/features/collection/types/AddModelFormTypes';
   import * as m from '$lib/paraglide/messages.js';
-  import { ChevronDown, Plus, TrainFront } from 'lucide-svelte';
+  import { ChevronDown, Plus, TrainFront } from '@lucide/svelte';
   import { Collapsible as CollapsiblePrimitive } from 'bits-ui';
   import { Button } from '$lib/components';
   import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';

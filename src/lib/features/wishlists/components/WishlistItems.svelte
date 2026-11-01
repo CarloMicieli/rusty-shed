@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Heart } from 'lucide-svelte';
+  import { Heart } from '@lucide/svelte';
   import type { WishlistItem, WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import VirtualGrid from '$lib/components/VirtualGrid.svelte';

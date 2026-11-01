@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
-  import { Search, X, Filter, Microchip, Cpu, Trash2 } from 'lucide-svelte';
+  import { Search, X, Filter, Microchip, Cpu, Trash2 } from '@lucide/svelte';
   import { Badge, Button } from '$lib/components';
   import InPlaceDccAddressEdit from './InPlaceDccAddressEdit.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';

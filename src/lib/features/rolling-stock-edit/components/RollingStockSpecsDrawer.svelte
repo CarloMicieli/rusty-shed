@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Settings } from 'lucide-svelte';
+  import { Settings } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { toaster } from '$lib/toaster';

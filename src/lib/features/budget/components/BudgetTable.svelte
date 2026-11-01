@@ -6,7 +6,7 @@
    * Shows base budget, extra budget, spending, rollover, and status for each month.
    */
 
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { BudgetState } from '../BudgetState.svelte';

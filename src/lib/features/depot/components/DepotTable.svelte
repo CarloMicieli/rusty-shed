@@ -1,5 +1,5 @@
 <script lang="ts" generics="T extends { id: string }">
-  import { ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-svelte';
+  import { ArrowUpNarrowWide, ArrowDownWideNarrow } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import DepotThumbnail from './DepotThumbnail.svelte';

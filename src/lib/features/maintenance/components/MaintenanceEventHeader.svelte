@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X, ClipboardList } from 'lucide-svelte';
+  import { X, ClipboardList } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {

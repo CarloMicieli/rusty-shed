@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Cpu } from 'lucide-svelte';
+  import { Cpu } from '@lucide/svelte';
   import { commands } from '$lib/bindings';
   import type {
     Decoder,
