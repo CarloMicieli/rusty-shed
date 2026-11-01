@@ -66,8 +66,7 @@ impl DuplicateChecker {
             ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for id in &ids {
             query_builder = query_builder.bind(id);
         }
@@ -126,8 +125,7 @@ impl DuplicateChecker {
                 .join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for key in &composite_keys {
             query_builder = query_builder.bind(key);
         }
@@ -186,8 +184,7 @@ impl DuplicateChecker {
                 .join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for key in &composite_keys {
             query_builder = query_builder.bind(key);
         }
@@ -236,8 +233,7 @@ impl DuplicateChecker {
             ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for id in &ids {
             query_builder = query_builder.bind(id);
         }
@@ -282,8 +278,7 @@ impl DuplicateChecker {
             track_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for id in &track_ids {
             query_builder = query_builder.bind(id);
         }
@@ -327,8 +322,7 @@ impl DuplicateChecker {
             ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for id in &ids {
             query_builder = query_builder.bind(id);
         }
@@ -372,8 +366,7 @@ impl DuplicateChecker {
             names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for name in &names {
             query_builder = query_builder.bind(name);
         }
@@ -417,8 +410,7 @@ impl DuplicateChecker {
             names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for name in &names {
             query_builder = query_builder.bind(name);
         }
@@ -462,8 +454,7 @@ impl DuplicateChecker {
             names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for name in &names {
             query_builder = query_builder.bind(name);
         }
@@ -521,8 +512,7 @@ impl DuplicateChecker {
                 .join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for key in &composite_keys {
             query_builder = query_builder.bind(key);
         }
@@ -570,8 +560,7 @@ impl DuplicateChecker {
             ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for id in &ids {
             query_builder = query_builder.bind(id);
         }
@@ -623,8 +612,7 @@ impl DuplicateChecker {
             owned_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for oid in &owned_ids {
             query_builder = query_builder.bind(oid);
         }

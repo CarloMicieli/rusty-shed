@@ -32,8 +32,10 @@ pub async fn export_database(
     })?;
 
     // Use VACUUM INTO to create a clean copy of the database
-    let vacuum_sql: &'static str =
-        Box::leak(format!("VACUUM INTO '{}'", dest_str.replace('\'', "''")).into_boxed_str());
+    let vacuum_sql = sqlx::AssertSqlSafe(format!(
+        "VACUUM INTO '{}'",
+        dest_str.replace('\'', "''")
+    ));
     sqlx::query(vacuum_sql)
         .execute(pool)
         .await

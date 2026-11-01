@@ -699,8 +699,7 @@ impl SqliteImportRepository {
             .collect::<Vec<_>>()
             .join(", ");
         let query = format!("SELECT id FROM railway_models WHERE id IN ({placeholders})");
-        let static_query: &'static str = Box::leak(query.into_boxed_str());
-        let mut query_builder = sqlx::query_scalar::<_, String>(static_query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for model_id in &duplicate_model_ids {
             query_builder = query_builder.bind(*model_id);
         }
