@@ -64,18 +64,49 @@
     onQuickAddSeller
   }: Props = $props();
 
+  let manufacturerId = $state(form.manufacturerId);
+  let productCode = $state(form.productCode);
+  let description = $state(form.description);
+  let category = $state(form.category);
+  let scale = $state(form.scale);
+  let powerMethod = $state(form.powerMethod);
+  let epoch = $state(form.epoch);
+  let purchase = $state(form.purchase);
+
+  $effect(() => {
+    if (form.manufacturerId !== manufacturerId) manufacturerId = form.manufacturerId;
+    if (form.productCode !== productCode) productCode = form.productCode;
+    if (form.description !== description) description = form.description;
+    if (form.category !== category) category = form.category;
+    if (form.scale !== scale) scale = form.scale;
+    if (form.powerMethod !== powerMethod) powerMethod = form.powerMethod;
+    if (form.epoch !== epoch) epoch = form.epoch;
+    if (form.purchase !== purchase) purchase = form.purchase;
+  });
+
+  $effect(() => {
+    form.manufacturerId = manufacturerId;
+    form.productCode = productCode;
+    form.description = description;
+    form.category = category;
+    form.scale = scale;
+    form.powerMethod = powerMethod;
+    form.epoch = epoch;
+    form.purchase = purchase;
+  });
+
   const rollingStockCountLabel = $derived(m.add_model_rolling_stock_items_label());
 </script>
 
 <!-- Model Info Section (shared drawer component) -->
 <ModelInfoSection
-  bind:manufacturerId={form.manufacturerId}
-  bind:productCode={form.productCode}
-  bind:description={form.description}
-  bind:category={form.category}
-  bind:scale={form.scale}
-  bind:powerMethod={form.powerMethod}
-  bind:epoch={form.epoch}
+  bind:manufacturerId
+  bind:productCode
+  bind:description
+  bind:category
+  bind:scale
+  bind:powerMethod
+  bind:epoch
   {manufacturers}
   {isLoading}
   {onQuickAddManufacturer}
@@ -169,7 +200,7 @@
 <!-- Purchase Section -->
 <PurchaseSection
   dark={true}
-  bind:purchase={form.purchase}
+  bind:purchase
   {sellers}
   bind:expanded={showPurchaseSection}
   onToggle={onTogglePurchaseSection}

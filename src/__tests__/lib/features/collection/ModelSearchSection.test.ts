@@ -11,12 +11,18 @@ vi.mock('$lib/bindings', () => ({
   }
 }));
 
-// Mock Paraglide messages - override every function to return its key name
+// Mock Paraglide messages with a proxy fallback so any message key used by nested
+// components resolves during tests, even when the generated runtime is intentionally empty.
 vi.mock('$lib/paraglide/messages', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
-  return Object.fromEntries(
-    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
-  );
+  return new Proxy(actual, {
+    get(target, prop) {
+      if (typeof prop === 'string') {
+        return () => prop;
+      }
+      return Reflect.get(target, prop);
+    }
+  });
 });
 
 import ModelSearchSection from './ModelSearchSectionHarness.svelte';
