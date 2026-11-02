@@ -16,6 +16,14 @@ vi.mock('$lib/toaster', () => ({
   toaster: { success: vi.fn(), error: vi.fn(), loading: vi.fn() }
 }));
 
+vi.mock('$lib/state/page-title.svelte', () => ({
+  getPageTitleContext: () => ({
+    title: null,
+    setTitle: vi.fn(),
+    clearTitle: vi.fn()
+  })
+}));
+
 // Provide a stable mock context so CollectionDashboard renders without the
 // full context hierarchy from the layout.
 vi.mock('$lib/features/collection/CollectionState.svelte', () => ({

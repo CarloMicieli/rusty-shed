@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-01-30
 
 ## Active Technologies
+- TypeScript (strict) + Svelte 5 (Runes), Rust 2024 for Tauri backend + SvelteKit, Tailwind CSS v4, shadcn-svelte/bits-ui, Paraglide i18n, Tauri 2 IPC/plugin stack (043-mobile-redesign)
+- Existing SQLite persistence via Rust + sqlx; no new persistence model required for this feature (043-mobile-redesign)
 
 - Rust 1.95.0 (edition 2024)
 - TypeScript 5.9.3 (strict)
@@ -42,12 +44,10 @@ pnpm vitest
 Rust 1.95.0 (backend), TypeScript 5.9.3 (frontend): Follow standard conventions
 
 ## Recent Changes
+- 043-mobile-redesign: Added TypeScript (strict) + Svelte 5 (Runes), Rust 2024 for Tauri backend + SvelteKit, Tailwind CSS v4, shadcn-svelte/bits-ui, Paraglide i18n, Tauri 2 IPC/plugin stack
 
 - 041-entity-management: Added Rust 1.95.0 (edition 2024), TypeScript 5.9.3 (strict), Svelte 5.55.7 (Runes) + Tauri 2.11.x, specta 2 RC, sqlx 0.8.x, garde, SvelteKit 2.60.x, shadcn-svelte/bits-ui, Paraglide-JS
 - 040-quick-add-entities: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 017-dashboard-redesign: Added TypeScript 5.9.3 (strict mode), Rust 1.95.0 (edition 2024) + SvelteKit (Svelte 5.48.2), Vite 8.0.13, Tauri 2.9.x, shadcn-svelte, Tailwind CSS 4.1.18
-- 010-data-import-utility: Rust 1.95.0 (backend), TypeScript 5.9.3 (frontend)
-- 008-google-drive-backup: Rust 1.95.0 (backend), TypeScript 5.9.3 (frontend)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

@@ -27,7 +27,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   railway_model_dcc_equipped_title: () => 'DCC equipped',
   railway_model_fallback_en_title: () => 'Content displayed in English (fallback)',
   depot_era: () => 'Era',
-  railway_model_image_alt: () => 'Railway model image'
+  railway_model_image_alt: () => 'Railway model image',
+  collection_stats_active: () => 'In Collection',
+  collection_stats_sold: () => 'Sold'
 }));
 
 vi.mock('$lib/bindings', () => ({
@@ -77,7 +79,7 @@ describe('RailwayModelPreviewCard', () => {
       expect(screen.getByText('Märklin')).toBeTruthy();
       expect(screen.getByText(/37586/)).toBeTruthy();
       expect(screen.getByText(/Class 66/)).toBeTruthy();
-      expect(screen.getByText('Locomotives')).toBeTruthy();
+      expect(screen.getAllByText('Locomotives').length).toBeGreaterThan(0);
     });
   });
 
@@ -101,7 +103,7 @@ describe('RailwayModelPreviewCard', () => {
     it('displays category label in specs row', () => {
       render(RailwayModelPreviewCard, { props: { model: mockModel } });
       expect(screen.getByText('Category')).toBeTruthy();
-      expect(screen.getByText('Locomotives')).toBeTruthy();
+      expect(screen.getAllByText('Locomotives').length).toBeGreaterThan(0);
     });
   });
 
@@ -110,12 +112,13 @@ describe('RailwayModelPreviewCard', () => {
       const { container, unmount } = render(RailwayModelPreviewCard, {
         props: { model: mockModel }
       });
-      expect(screen.getByText('H0')).toBeTruthy();
-      expect(screen.getByText('DCC')).toBeTruthy();
-      expect(screen.getByText(/VI/)).toBeTruthy();
-      expect(screen.getByText('PURCHASED')).toBeTruthy();
-      expect(container.querySelectorAll('[class*="sm:grid-cols-[2fr_1fr_1fr]"]').length).toBe(1);
-      expect(container.querySelectorAll('[class*="sm:grid-cols-2"]').length).toBe(1);
+      expect(screen.getAllByText('H0').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('DCC').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/VI/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText('PURCHASED').length).toBeGreaterThan(0);
+      expect(container.querySelector('[class*="grid-cols-2"][class*="md:hidden"]')).toBeTruthy();
+      expect(container.querySelector('[class*="md:grid-cols-[2fr_1fr_1fr]"]')).toBeTruthy();
+      expect(container.querySelector('[class*="md:grid-cols-2"]')).toBeTruthy();
       unmount();
 
       render(RailwayModelPreviewCard, {
@@ -145,7 +148,8 @@ describe('RailwayModelPreviewCard', () => {
       const { container } = render(RailwayModelPreviewCard, {
         props: { model: { ...mockModel, digitalFeatures: ['Sound', 'DCC', 'Light'] } }
       });
-      expect(container.querySelector('.absolute.top-2.left-2')).toBeTruthy();
+      expect(screen.getByLabelText('Digital features')).toBeTruthy();
+      expect(container.querySelector('.absolute.top-12.left-2')).toBeTruthy();
       expect(container.querySelector('.flex.gap-1')).toBeTruthy();
     });
   });
