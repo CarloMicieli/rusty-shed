@@ -5,6 +5,7 @@ use crate::settings::infrastructure::{SettingsRepository, StoreSettingsRepositor
 use tauri::AppHandle;
 
 /// Initialize settings on first run with OS language detection
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub fn initialize_settings(app: &AppHandle) -> Result<UserSettings, String> {
     let repository = StoreSettingsRepository::new();
 

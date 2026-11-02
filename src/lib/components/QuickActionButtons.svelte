@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { ComponentType } from 'svelte';
+  import type { Component } from 'svelte';
 
   export type QuickAction = {
     id: string;
     label: string;
-    icon: ComponentType;
+    icon: Component;
     onClick?: () => void;
   };
 

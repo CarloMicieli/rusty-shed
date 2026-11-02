@@ -111,8 +111,6 @@ describe('ImportController', () => {
     });
 
     it('should set isLoading to true during analysis', async () => {
-      let wasLoadingDuringOp = false;
-
       mockCommands.analyzeImportPackage.mockImplementation(
         () =>
           new Promise((resolve) => {
@@ -127,7 +125,7 @@ describe('ImportController', () => {
 
       // Give time for loading state to be set
       await new Promise((r) => setTimeout(r, 5));
-      wasLoadingDuringOp = controller.isLoading;
+      const wasLoadingDuringOp = controller.isLoading;
 
       await analysisPromise;
 

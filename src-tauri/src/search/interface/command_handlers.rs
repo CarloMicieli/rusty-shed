@@ -56,6 +56,7 @@ pub async fn global_search_inner(
 /// FTS5 BM25 relevance. A model appearing in both collection and wishlist
 /// produces two separate result entries.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn global_search(
     state: tauri::State<'_, AppState>,

@@ -37,6 +37,7 @@ impl UpdateRailwayModelText {
     /// - [`DomainError::NotFound`] when no railway model with the given id exists.
     /// - [`DomainError::Validation`] when `field == Description` and `value` is empty.
     /// - [`DomainError::Infrastructure`] on database failure.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: UpdateRailwayModelTextInput,

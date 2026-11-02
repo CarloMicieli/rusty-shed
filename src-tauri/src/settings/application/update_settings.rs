@@ -20,6 +20,7 @@ pub struct UpdateSettingsInput {
 }
 
 /// Update user settings (partial update supported)
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub fn update_settings(
     app: &AppHandle,
     input: UpdateSettingsInput,

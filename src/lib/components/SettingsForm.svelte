@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { Check } from 'lucide-svelte';
+  import { Check } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { superForm } from 'sveltekit-superforms';
   import { zodClient } from 'sveltekit-superforms/adapters';

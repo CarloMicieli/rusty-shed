@@ -34,6 +34,7 @@ impl PreviewImportUseCase {
     ///
     /// # Returns
     /// An `ImportPreview` showing record counts, duplicates, and validation errors
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         &self,
         manifest_json: Value,

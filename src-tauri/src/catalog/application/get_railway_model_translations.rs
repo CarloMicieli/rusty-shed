@@ -16,6 +16,7 @@ impl GetRailwayModelTranslations {
     /// - `Ok(Some(RailwayModelTranslations))` when the model exists with translations.
     /// - `Ok(None)` when the model does not exist.
     /// - `Err(DomainError)` on database failure.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         railway_model_id: &RailwayModelId,

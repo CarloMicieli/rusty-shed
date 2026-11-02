@@ -69,7 +69,7 @@
     {/if}
   </div>
 
-  <OwnershipBadge {ownedCount} assignedId={element.owned_rolling_stock_id} />
+  <OwnershipBadge {ownedCount} assignedId={element.owned_rolling_stock_id ?? null} />
 
   <div class="flex w-full flex-col gap-1 pt-0.5">
     {#if !element.owned_rolling_stock_id}

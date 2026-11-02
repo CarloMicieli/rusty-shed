@@ -14,7 +14,7 @@
    */
 
   import { Button } from '$lib/components';
-  import { AlertCircle, Cloud, Loader2 } from 'lucide-svelte';
+  import { AlertCircle, Cloud, Loader2 } from '@lucide/svelte';
   import { getCloudBackupController } from '../controllers/cloudBackup.svelte';
   import * as m from '$lib/paraglide/messages.js';
 

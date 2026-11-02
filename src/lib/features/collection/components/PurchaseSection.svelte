@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { ChevronDown, ReceiptText } from 'lucide-svelte';
+  import { ChevronDown, ReceiptText } from '@lucide/svelte';
   import { Textarea, CurrencyInput } from '$lib/components';
   import DatePickerInput from '$lib/components/DatePickerInput.svelte';
   import { FormSelect } from '$lib/components/drawer';

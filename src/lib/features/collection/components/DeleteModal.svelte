@@ -3,21 +3,22 @@
   import { Dialog as DialogPrimitive } from 'bits-ui';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Button } from '$lib/components/ui/button';
-  import { AlertTriangle } from 'lucide-svelte';
+  import { AlertTriangle } from '@lucide/svelte';
 
+  type Props = {
+    open?: boolean;
+    title?: string;
+    message?: string;
+    onClose?: () => void;
+    onConfirm?: () => void;
+  };
   const {
     open = false,
     title = 'Delete item',
     message = 'Are you sure?',
     onClose,
     onConfirm
-  } = $props<{
-    open?: boolean;
-    title?: string;
-    message?: string;
-    onClose?: () => void;
-    onConfirm?: () => void;
-  }>();
+  }: Props = $props();
 
   function handleOpenChange(newOpen: boolean) {
     // Only call onClose when the dialog is being closed

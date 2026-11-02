@@ -7,7 +7,7 @@
   import BottomNavigation from '$lib/components/BottomNavigation.svelte';
   import SearchBar from '$lib/components/SearchBar.svelte';
   import SignalFailureView from '$lib/components/signal-failure/SignalFailureView.svelte';
-  import { TrainFront } from 'lucide-svelte';
+  import { TrainFront } from '@lucide/svelte';
   import { fade } from 'svelte/transition';
   import { appState } from '$lib/stores/app.svelte';
   import { themeState } from '$lib/stores/themeStore.svelte';

@@ -1,17 +1,14 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components';
-  import { resolve } from '$app/paths';
+  import { base } from '$app/paths';
 
-  let {
-    title,
-    badgeValue = 0,
-    link
-  } = $props<{
+  type Props = {
     title: string;
     badgeValue?: number;
     link?: { href: string; label: string };
-  }>();
+  };
+  let { title, badgeValue = 0, link }: Props = $props();
 </script>
 
 <div class="mb-4 flex items-center justify-between">
@@ -25,7 +22,7 @@
       {m.dashboard_due_soon()}
     </Badge>
   {:else if link}
-    <a href={resolve(link.href)} class="text-accent-500 text-sm font-bold hover:underline">
+    <a href={`${base}${link.href}`} class="text-accent-500 text-sm font-bold hover:underline">
       {link.label}
     </a>
   {/if}

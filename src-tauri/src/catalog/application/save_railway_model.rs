@@ -161,6 +161,7 @@ impl SaveRailwayModel {
     /// Save or merge a simplified railway model. If a model already exists
     /// it is patched with the provided values (incoming values win). New
     /// rolling stocks are appended.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: SaveRailwayModelInput,

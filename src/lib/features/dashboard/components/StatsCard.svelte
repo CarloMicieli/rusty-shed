@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { Stat } from '$lib/data/mock';
-  import { TrendingUp, TrendingDown, Minus } from 'lucide-svelte';
+  import { TrendingUp, TrendingDown, Minus } from '@lucide/svelte';
   import { Card, CardContent } from '$lib/components';
 
-  let { stat } = $props<{ stat: Stat }>();
+  type Props = { stat: Stat };
+  let { stat }: Props = $props();
 </script>
 
 <Card class="bg-card/90 transition-colors duration-200 hover:bg-muted/30">

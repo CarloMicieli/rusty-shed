@@ -12,7 +12,7 @@
    * ```
    */
 
-  import { Wifi, WifiOff } from 'lucide-svelte';
+  import { Wifi, WifiOff } from '@lucide/svelte';
   import { connectivityStore } from '../stores/connectivity';
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';

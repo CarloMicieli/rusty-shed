@@ -48,8 +48,8 @@ export function toRailwayModel(
     delivery_date: formatDeliveryDate(modelView.deliveryDate),
     description: modelView.description,
     descriptionLang: modelView.descriptionLang,
-    details: modelView.details,
-    detailsLang: modelView.detailsLang,
+    details: modelView.details ?? null,
+    detailsLang: modelView.detailsLang ?? null,
     image_path: imagePath,
     status,
     rolling_stock: rollingStock
@@ -135,11 +135,11 @@ function transformOwnedRollingStock(
       rolling_stock_type: common?.rolling_stock_type ?? null,
       category: view ? extractCategory(view) : null,
       subcategory: view ? extractSubcategory(view) : null,
-      road_number: owned.roadNumber,
+      road_number: owned.roadNumber ?? null,
       depot: common?.depot ?? null,
       livery: common?.livery ?? null,
       length_mm: common?.length_mm ?? null,
-      control_type: owned.control,
+      control_type: owned.control ?? null,
       dcc_interface: owned.digital?.interface ?? null,
       coupling_type: common?.coupling_socket ?? null,
       close_couplers: common?.close_couplers ?? null,
@@ -151,7 +151,7 @@ function transformOwnedRollingStock(
 /**
  * Extract millimeter length from a LengthOverBuffers value.
  */
-function extractMm(len: LengthOverBuffers | null): number | null {
+function extractMm(len: LengthOverBuffers | null | undefined): number | null {
   const mm = len?.millimeters;
   if (!mm) return null;
   // Runtime: Rust's custom serde serializes Length as a number/string directly
@@ -171,7 +171,7 @@ function extractMm(len: LengthOverBuffers | null): number | null {
  * (e.g. "2026", "2026/01", "2026/Q3"), so the fast-path handles that.
  * The tagged-union branches are kept for type completeness.
  */
-function formatDeliveryDate(d: DeliveryDate | null): string | null {
+function formatDeliveryDate(d: DeliveryDate | null | undefined): string | null {
   if (!d) return null;
   // Runtime fast-path: Rust serialises DeliveryDate as a Display string.
   if (typeof d === 'string') return d;
@@ -234,15 +234,15 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.locomotive.id,
       rolling_stock_type,
       railway_company: view.locomotive.railway.display,
-      country_code: view.locomotive.railway.countryCode,
+      country_code: view.locomotive.railway.countryCode ?? null,
       series_code: view.locomotive.series_code,
-      road_number: view.locomotive.road_number,
-      depot: view.locomotive.depot,
-      livery: view.locomotive.livery,
-      length_mm: extractMm(view.locomotive.length_over_buffer),
-      control: view.locomotive.control,
-      dcc_interface: view.locomotive.dcc_interface,
-      series: view.locomotive.series,
+      road_number: view.locomotive.road_number ?? null,
+      depot: view.locomotive.depot ?? null,
+      livery: view.locomotive.livery ?? null,
+      length_mm: extractMm(view.locomotive.length_over_buffer ?? null),
+      control: view.locomotive.control ?? null,
+      dcc_interface: view.locomotive.dcc_interface ?? null,
+      series: view.locomotive.series ?? null,
       coupling_socket: ts?.coupling?.socket ?? null,
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
@@ -253,15 +253,15 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.electricMultipleUnit.id,
       rolling_stock_type,
       railway_company: view.electricMultipleUnit.railway.display,
-      country_code: view.electricMultipleUnit.railway.countryCode,
+      country_code: view.electricMultipleUnit.railway.countryCode ?? null,
       series_code: view.electricMultipleUnit.series_code,
-      road_number: view.electricMultipleUnit.road_number,
-      depot: view.electricMultipleUnit.depot,
-      livery: view.electricMultipleUnit.livery,
-      length_mm: extractMm(view.electricMultipleUnit.length_over_buffer),
-      control: view.electricMultipleUnit.control,
-      dcc_interface: view.electricMultipleUnit.dcc_interface,
-      series: view.electricMultipleUnit.series,
+      road_number: view.electricMultipleUnit.road_number ?? null,
+      depot: view.electricMultipleUnit.depot ?? null,
+      livery: view.electricMultipleUnit.livery ?? null,
+      length_mm: extractMm(view.electricMultipleUnit.length_over_buffer ?? null),
+      control: view.electricMultipleUnit.control ?? null,
+      dcc_interface: view.electricMultipleUnit.dcc_interface ?? null,
+      series: view.electricMultipleUnit.series ?? null,
       coupling_socket: ts?.coupling?.socket ?? null,
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
@@ -272,15 +272,15 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.railcar.id,
       rolling_stock_type,
       railway_company: view.railcar.railway.display,
-      country_code: view.railcar.railway.countryCode,
+      country_code: view.railcar.railway.countryCode ?? null,
       series_code: view.railcar.series_code,
-      road_number: view.railcar.road_number,
-      depot: view.railcar.depot,
-      livery: view.railcar.livery,
-      length_mm: extractMm(view.railcar.length_over_buffer),
-      control: view.railcar.control,
-      dcc_interface: view.railcar.dcc_interface,
-      series: view.railcar.series,
+      road_number: view.railcar.road_number ?? null,
+      depot: view.railcar.depot ?? null,
+      livery: view.railcar.livery ?? null,
+      length_mm: extractMm(view.railcar.length_over_buffer ?? null),
+      control: view.railcar.control ?? null,
+      dcc_interface: view.railcar.dcc_interface ?? null,
+      series: view.railcar.series ?? null,
       coupling_socket: ts?.coupling?.socket ?? null,
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
@@ -291,15 +291,15 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.passengerCar.id,
       rolling_stock_type,
       railway_company: view.passengerCar.railway.display,
-      country_code: view.passengerCar.railway.countryCode,
+      country_code: view.passengerCar.railway.countryCode ?? null,
       series_code: view.passengerCar.series_code,
-      road_number: view.passengerCar.road_number,
+      road_number: view.passengerCar.road_number ?? null,
       depot: null,
-      livery: view.passengerCar.livery,
-      length_mm: extractMm(view.passengerCar.length_over_buffer),
+      livery: view.passengerCar.livery ?? null,
+      length_mm: extractMm(view.passengerCar.length_over_buffer ?? null),
       control: null,
       dcc_interface: null,
-      series: view.passengerCar.series,
+      series: view.passengerCar.series ?? null,
       coupling_socket: ts?.coupling?.socket ?? null,
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
@@ -310,12 +310,12 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.freightCar.id,
       rolling_stock_type,
       railway_company: view.freightCar.railway.display,
-      country_code: view.freightCar.railway.countryCode,
+      country_code: view.freightCar.railway.countryCode ?? null,
       series_code: view.freightCar.series_code,
-      road_number: view.freightCar.road_number,
+      road_number: view.freightCar.road_number ?? null,
       depot: null,
-      livery: view.freightCar.livery,
-      length_mm: extractMm(view.freightCar.length_over_buffer),
+      livery: view.freightCar.livery ?? null,
+      length_mm: extractMm(view.freightCar.length_over_buffer ?? null),
       control: null,
       dcc_interface: null,
       series: null,
@@ -362,9 +362,9 @@ function extractCategory(view: RollingStockView): string | null {
   } else if ('railcar' in view && view.railcar) {
     return 'RAILCAR';
   } else if ('passengerCar' in view && view.passengerCar) {
-    return view.passengerCar.passenger_car_type;
+    return view.passengerCar.passenger_car_type ?? null;
   } else if ('freightCar' in view && view.freightCar) {
-    return view.freightCar.freight_car_type;
+    return view.freightCar.freight_car_type ?? null;
   }
   return null;
 }

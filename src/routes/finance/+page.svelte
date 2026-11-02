@@ -1,6 +1,6 @@
 <script lang="ts">
   import { browser } from '$app/environment';
-  import { CalendarDays, Gauge, TrendingUp, Wallet } from 'lucide-svelte';
+  import { CalendarDays, Gauge, TrendingUp, Wallet } from '@lucide/svelte';
   import * as Dialog from '$lib/components/ui/dialog';
   import * as m from '$lib/paraglide/messages.js';
 

@@ -35,6 +35,7 @@ impl AddExtraBudgetUseCase {
     /// - `Validation`: If year or month is invalid, or amount is not positive
     /// - `NotFound`: If no budget configuration exists yet
     /// - `Infrastructure`: If database operation fails
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         uow: &mut U,
         input: AddExtraBudgetInput,

@@ -24,7 +24,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { X } from 'lucide-svelte';
+  import { X } from '@lucide/svelte';
   import { Input, Button } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
   import type { PrototypeView, RailwayCompany, RollingStockCategory } from '$lib/bindings';

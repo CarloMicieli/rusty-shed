@@ -13,6 +13,7 @@ impl GetImagePlaceholder {
     /// ready for rendering in the frontend.
     ///
     /// This operation never fails and always returns a valid placeholder.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub fn execute(&self) -> ImagePlaceholder {
         ImagePlaceholder::generate()
     }

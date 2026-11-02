@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, ChevronDown, Check } from 'lucide-svelte';
+  import { Search, ChevronDown, Check } from '@lucide/svelte';
   import type { Component, Snippet } from 'svelte';
   import * as Popover from '$lib/components/ui/popover';
 
@@ -25,7 +25,7 @@
     disabled?: boolean;
     /** HTML id applied to the trigger button */
     id?: string;
-    /** Optional lucide-svelte icon rendered left of the selected label */
+    /** Optional Lucide icon rendered left of the selected label */
     icon?: Component<{ size?: number | undefined; class?: string | undefined }>;
     /** Optional callback fired when a selection is made */
     onSelect?: (value: string) => void;

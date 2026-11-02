@@ -5,6 +5,7 @@ use std::sync::Arc;
 type Result<T> = std::result::Result<T, CloudBackupError>;
 
 /// Get current Google connection status
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub async fn get_connection_status(
     storage: Arc<dyn SecureStorage>,
     user_email: Option<String>,

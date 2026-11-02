@@ -1,13 +1,5 @@
 <script lang="ts">
-  import {
-    TrainFront,
-    X,
-    Filter,
-    LayoutGrid,
-    Rows3,
-    SlidersHorizontal,
-    Search
-  } from 'lucide-svelte';
+  import { TrainFront, X, Filter, LayoutGrid, Rows3, SlidersHorizontal, Search } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';

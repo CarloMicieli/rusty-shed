@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { TrainFront, TramFront, Users, Box as BoxIcon } from 'lucide-svelte';
+  import { TrainFront, TramFront, Users, Box as BoxIcon } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import * as Accordion from '$lib/components/ui/accordion';
   import { PageHeader } from '$lib/components';

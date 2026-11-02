@@ -78,6 +78,7 @@ pub async fn get_collection_item_details_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_collection_item_details(
     state: tauri::State<'_, AppState>,
@@ -113,6 +114,7 @@ pub async fn get_collection_inner(state: &AppState) -> Result<CollectionView, Co
 /// - `Ok(CollectionView)` when retrieval succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_collection(
     state: tauri::State<'_, AppState>,
@@ -146,6 +148,7 @@ pub async fn get_depot_inner(state: &AppState) -> Result<DepotView, CommandError
 /// - `Ok(DepotView)` when retrieval succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, CommandError> {
     get_depot_inner(&state).await
@@ -204,6 +207,7 @@ pub async fn remove_collection_item_inner(
 /// - `Ok(CollectionItemId)` when removal succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn remove_collection_item(
     state: tauri::State<'_, AppState>,
@@ -247,6 +251,7 @@ pub async fn sell_collection_item_inner(
 
 /// Tauri command to sell an item from the collection.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn sell_collection_item(
     state: tauri::State<'_, AppState>,
@@ -306,6 +311,7 @@ pub async fn update_collection_item_inner(
 
 /// Tauri command to update mutable fields of an existing collection item.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_collection_item(
     state: tauri::State<'_, AppState>,
@@ -359,6 +365,7 @@ pub async fn add_collection_item_inner(
 /// - `Ok(CollectionItemId)` when addition succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_collection_item(
     state: tauri::State<'_, AppState>,
@@ -519,6 +526,7 @@ fn parse_optional_box_condition(raw: Option<String>) -> Result<Option<BoxConditi
 
 /// Simplified flow: save (merge) the railway model and add it to the default collection.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_railway_model_to_collection(
     state: tauri::State<'_, AppState>,
@@ -535,6 +543,7 @@ pub async fn get_collection_stats_inner(state: &AppState) -> Result<CollectionSt
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_collection_stats(
     state: tauri::State<'_, AppState>,
@@ -568,6 +577,7 @@ pub async fn receive_preorder_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn receive_preorder(
     state: tauri::State<'_, AppState>,
@@ -677,6 +687,7 @@ fn parse_acquisition_item(item: AcquisitionItemArgs) -> Result<AcquisitionItemIn
 
 /// Tauri command to record a batch acquisition: upsert catalog entries and add collection items.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn record_acquisition(
     state: tauri::State<'_, AppState>,

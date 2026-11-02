@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { commands } from '$lib/bindings';
-  import { ShoppingCart } from 'lucide-svelte';
+  import { ShoppingCart } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';

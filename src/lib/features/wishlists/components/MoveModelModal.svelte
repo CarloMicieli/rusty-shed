@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X, MoveRight } from 'lucide-svelte';
+  import { X, MoveRight } from '@lucide/svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import * as Dialog from '$lib/components/ui/dialog';

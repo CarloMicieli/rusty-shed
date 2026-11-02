@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X } from 'lucide-svelte';
+  import { X } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import type { FilterState, StatusFilter } from '$lib/features/collection/CollectionState.svelte';
   import { categoryLabel as enumCategoryLabel } from '$lib/utils/enum-options';

@@ -218,7 +218,12 @@ impl ArchiveExtractor {
                 ArchiveError::ExtractError(format!("Failed to read ZIP entry: {}", e))
             })?;
             if !file.is_dir() {
-                let name = file.name().to_string();
+                let name = file
+                    .name()
+                    .map_err(|e| {
+                        ArchiveError::ExtractError(format!("Failed to read ZIP entry name: {}", e))
+                    })?
+                    .into_owned();
                 if !Self::is_safe_archive_path(&name) {
                     return Err(ArchiveError::InvalidFormat(format!(
                         "Archive contains unsafe path: {}",

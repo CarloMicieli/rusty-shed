@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { Search, X } from 'lucide-svelte';
+  import { Search, X } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
 
-  let { searchInput = $bindable(), onClear } = $props<{
+  type Props = {
     searchInput: string;
     onClear: () => void;
-  }>();
+  };
+  let { searchInput = $bindable(), onClear }: Props = $props();
 </script>
 
 <div class="space-y-2">

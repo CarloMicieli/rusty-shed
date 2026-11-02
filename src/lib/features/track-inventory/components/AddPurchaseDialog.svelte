@@ -7,7 +7,7 @@
   import PurchaseFormFields from './PurchaseFormFields.svelte';
   import PurchaseDialogHeader from './PurchaseDialogHeader.svelte';
   import PurchaseLoadingState from './PurchaseLoadingState.svelte';
-  import { Loader2 } from 'lucide-svelte';
+  import { Loader2 } from '@lucide/svelte';
   import { Button } from '$lib/components';
   import { localeState } from '$lib/stores/locale.svelte';
 

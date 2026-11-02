@@ -103,6 +103,7 @@ pub async fn get_image_path_inner(
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_image_path(
     state: tauri::State<'_, AppState>,
@@ -135,6 +136,7 @@ pub async fn get_image_path(
 /// - I/O errors occur
 /// - Model ID is invalid
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_railway_model_image(
     state: tauri::State<'_, AppState>,
@@ -215,6 +217,7 @@ pub async fn upload_model_image_inner(
 /// - File validation fails (format, size)
 /// - Storage operations fail
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn upload_model_image(
     state: tauri::State<'_, AppState>,
@@ -278,6 +281,7 @@ pub async fn upload_model_image_bytes_inner(
 /// - File validation fails (format, size)
 /// - Storage operations fail
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn upload_model_image_bytes(
     state: tauri::State<'_, AppState>,
@@ -336,6 +340,7 @@ pub async fn delete_model_image_inner(
 /// - Model doesn't exist
 /// - Storage operations fail
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_model_image(
     state: tauri::State<'_, AppState>,

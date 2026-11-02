@@ -17,7 +17,7 @@
    * ```
    */
   import * as m from '$lib/paraglide/messages';
-  import { Pencil } from 'lucide-svelte';
+  import { Pencil } from '@lucide/svelte';
 
   interface Option {
     id: string;

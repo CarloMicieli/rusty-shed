@@ -4,7 +4,7 @@
   import { Button } from '$lib/components';
   import DatePickerInput from '$lib/components/DatePickerInput.svelte';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import { CalendarDate } from '@internationalized/date';
   import type { SellerView } from '$lib/bindings';
   import type { BatchDefaults } from '../types.js';

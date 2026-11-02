@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { TrainTrack } from 'lucide-svelte';
+  import { TrainTrack } from '@lucide/svelte';
   import type { TrackInventoryListItem } from '$lib/features/track-inventory';
   import * as m from '$lib/paraglide/messages';
   import { cn } from '$lib/utils';
 
-  const { inventories, activeId, onSelect } = $props<{
+  type Props = {
     inventories: TrackInventoryListItem[];
     activeId: string | null;
     onSelect?: (id: string) => void;
-  }>();
+  };
+  const { inventories, activeId, onSelect }: Props = $props();
 </script>
 
 <aside class="space-y-4">

@@ -1,16 +1,17 @@
 <script lang="ts">
-  import { Heart, Trash2 } from 'lucide-svelte';
+  import { Heart, Trash2 } from '@lucide/svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import { Badge } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';
   import { cn } from '$lib/utils';
 
-  const { wishlists, activeId, onSelect, onDelete } = $props<{
+  type Props = {
     wishlists: WishlistPreview[];
     activeId: string | null;
     onSelect?: (id: string) => void;
     onDelete?: (id: string) => void;
-  }>();
+  };
+  const { wishlists, activeId, onSelect, onDelete }: Props = $props();
 </script>
 
 <aside class="flex flex-col gap-4">

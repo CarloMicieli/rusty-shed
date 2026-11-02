@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { SvelteComponent } from 'svelte';
 import type { NavigationItem } from '$lib/components/navigation/types';
 import { isActive, isMoreButtonActive } from '$lib/components/navigation/utils';
-
-const IconStub = class {} as unknown as typeof SvelteComponent<Record<string, never>>;
+import IconStub from '../../../stubs/IconStub.svelte';
 
 function makeItem(overrides: Partial<NavigationItem>): NavigationItem {
   return {

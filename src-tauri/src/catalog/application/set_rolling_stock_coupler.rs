@@ -20,6 +20,7 @@ pub struct SetRollingStockCouplerInput {
 pub struct SetRollingStockCoupler;
 
 impl SetRollingStockCoupler {
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: SetRollingStockCouplerInput,

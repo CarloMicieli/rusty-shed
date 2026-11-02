@@ -46,6 +46,7 @@ pub async fn get_railway_model_by_id_inner(
 
 /// Tauri command to retrieve a railway model by its identifier.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_railway_model_by_id(
     state: tauri::State<'_, AppState>,
@@ -71,6 +72,7 @@ pub async fn create_railway_model_inner(
 
 /// Tauri command to create a new railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn create_railway_model(
     state: tauri::State<'_, AppState>,
@@ -97,6 +99,7 @@ pub async fn update_railway_model_text_inner(
 
 /// Tauri command to update a text field of a railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_railway_model_text(
     state: tauri::State<'_, AppState>,
@@ -123,6 +126,7 @@ pub async fn update_rolling_stock_identification_inner(
 
 /// Tauri command to update the identification fields of a rolling stock unit.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_rolling_stock_identification(
     state: tauri::State<'_, AppState>,
@@ -149,6 +153,7 @@ pub async fn update_railway_model_classification_inner(
 
 /// Tauri command to update the classification of a railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_railway_model_classification(
     state: tauri::State<'_, AppState>,
@@ -175,6 +180,7 @@ pub async fn update_railway_model_delivery_date_inner(
 
 /// Tauri command to update the delivery date of a railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_railway_model_delivery_date(
     state: tauri::State<'_, AppState>,
@@ -201,6 +207,7 @@ pub async fn update_rolling_stock_railway_company_inner(
 
 /// Tauri command to update the railway company of a rolling stock unit.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_rolling_stock_railway_company(
     state: tauri::State<'_, AppState>,
@@ -227,6 +234,7 @@ pub async fn update_rolling_stock_category_inner(
 
 /// Tauri command to update the category of a rolling stock unit.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_rolling_stock_category(
     state: tauri::State<'_, AppState>,
@@ -252,6 +260,7 @@ pub async fn update_rolling_stock_dcc_inner(
 
 /// Tauri command to update DCC/length fields of a rolling stock unit.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_rolling_stock_dcc(
     state: tauri::State<'_, AppState>,
@@ -278,6 +287,7 @@ pub async fn update_rolling_stock_specifications_inner(
 
 /// Tauri command to update the full technical specifications of a rolling stock unit.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_rolling_stock_specifications(
     state: tauri::State<'_, AppState>,
@@ -303,6 +313,7 @@ pub async fn get_railway_model_translations_inner(
 
 /// Tauri command to retrieve all translations for a railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_railway_model_translations(
     state: tauri::State<'_, AppState>,
@@ -330,6 +341,7 @@ pub async fn upsert_railway_model_translation_inner(
 
 /// Tauri command to upsert a language translation for a railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn upsert_railway_model_translation(
     state: tauri::State<'_, AppState>,
@@ -353,6 +365,7 @@ pub async fn search_railway_models_inner(
 
 /// Tauri command to search railway models.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn search_railway_models(
     state: tauri::State<'_, AppState>,
@@ -410,6 +423,7 @@ pub async fn add_rolling_stock_to_model_inner(
 
 /// Tauri command to add a rolling stock variant to a railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn add_rolling_stock_to_model(
     state: tauri::State<'_, AppState>,
@@ -436,6 +450,7 @@ pub async fn delete_rolling_stock_inner(
 
 /// Tauri command to delete a rolling stock variant from a railway model.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn delete_rolling_stock(
     state: tauri::State<'_, AppState>,
@@ -462,6 +477,7 @@ pub async fn update_rolling_stock_subcategory_inner(
 
 /// Tauri command to update the subcategory of a rolling stock unit.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_rolling_stock_subcategory(
     state: tauri::State<'_, AppState>,
@@ -488,6 +504,7 @@ pub async fn update_rolling_stock_service_level_inner(
 
 /// Tauri command to update the service level of a rolling stock unit.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn update_rolling_stock_service_level(
     state: tauri::State<'_, AppState>,
@@ -534,6 +551,7 @@ pub async fn get_coupler_types_inner(
 /// - `Ok(Vec<CouplerType>)` on success.
 /// - `Err(CommandError::DatabaseError)` on persistence failure.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_coupler_types(
     state: tauri::State<'_, AppState>,
@@ -555,6 +573,7 @@ pub async fn get_coupler_types(
 /// - `Ok(())` on success.
 /// - `Err(CommandError::DatabaseError)` on persistence failure.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn set_rolling_stock_coupler(
     state: tauri::State<'_, AppState>,

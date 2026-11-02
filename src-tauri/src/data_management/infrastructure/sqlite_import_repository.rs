@@ -144,7 +144,7 @@ impl SqliteImportRepository {
 
     async fn exists_by_id(
         tx: &mut Transaction<'_, Sqlite>,
-        query: &str,
+        query: &'static str,
         id: &str,
     ) -> Result<bool, DataManagementError> {
         sqlx::query_scalar(query)
@@ -699,7 +699,7 @@ impl SqliteImportRepository {
             .collect::<Vec<_>>()
             .join(", ");
         let query = format!("SELECT id FROM railway_models WHERE id IN ({placeholders})");
-        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        let mut query_builder = sqlx::query_scalar::<_, String>(sqlx::AssertSqlSafe(query));
         for model_id in &duplicate_model_ids {
             query_builder = query_builder.bind(*model_id);
         }

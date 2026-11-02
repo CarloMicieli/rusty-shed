@@ -135,6 +135,7 @@ fn emit_progress(app: &AppHandle, operation_id: &str, percent: f32, stage: &Sync
 /// # Returns
 /// * `Ok(BackupListItem)` - Details of the created backup
 /// * `Err(CloudBackupError)` - Specific error with user-friendly message
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub async fn sync_backup(
     app: &AppHandle,
     db_pool: &SqlitePool,

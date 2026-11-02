@@ -3,10 +3,11 @@
   import * as m from '$lib/paraglide/messages.js';
   import { getMaintenanceState } from '../MaintenanceState.svelte';
 
-  let { selectedId = $bindable(), onSelect } = $props<{
+  type Props = {
     selectedId: string | null;
     onSelect?: (id: string | null) => void;
-  }>();
+  };
+  let { selectedId = $bindable(), onSelect }: Props = $props();
 
   const state = getMaintenanceState();
   const cards = $derived(state.cards);

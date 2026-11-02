@@ -20,7 +20,7 @@ export default defineConfig({
       external: ['@vinejs/vine'],
       output: {
         // Split large icon library into separate chunk
-        manualChunks: (id) => (id.includes('lucide-svelte') ? 'lucide' : undefined)
+        manualChunks: (id) => (id.includes('@lucide/svelte') ? 'lucide' : undefined)
       }
     },
     // Reduce chunk size warning threshold

@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Settings, Star, Trash2, Edit2, X } from 'lucide-svelte';
+  import { Settings, Star, Trash2, Edit2, X } from '@lucide/svelte';
   import { Button, Input } from '$lib/components';
   import * as Select from '$lib/components/ui/select';
   import type { WishlistPreview, WishlistItem } from '$lib/bindings';

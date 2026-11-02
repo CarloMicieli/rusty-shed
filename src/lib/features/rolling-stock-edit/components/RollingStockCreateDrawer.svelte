@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Train } from 'lucide-svelte';
+  import { Train } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages';
   import { toaster } from '$lib/toaster';
   import {

@@ -1,4 +1,5 @@
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::tracing::RecordTraceErrExt;
 use crate::tracks_inventory::application::DeleteTrackProductTranslationInput;
 use crate::tracks_inventory::domain::TrackProductUowExt;
 
@@ -7,6 +8,7 @@ pub struct DeleteTrackProductTranslationUseCase;
 
 impl DeleteTrackProductTranslationUseCase {
     /// Executes the use case to delete one translation row.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute(
         uow: &mut impl TrackProductUowExt,
         input: DeleteTrackProductTranslationInput,
@@ -15,7 +17,7 @@ impl DeleteTrackProductTranslationUseCase {
 
         repo.delete_translation(&input.track_id, input.lang).await?;
 
-        Ok(())
+        Ok(()).record_trace_err()
     }
 }
 

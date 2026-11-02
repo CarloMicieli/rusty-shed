@@ -2,7 +2,7 @@
   import type { TrackPurchaseView } from '$lib/features/track-inventory';
   import * as m from '$lib/paraglide/messages';
   import PurchaseHistoryItem from './PurchaseHistoryItem.svelte';
-  import { History } from 'lucide-svelte';
+  import { History } from '@lucide/svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {

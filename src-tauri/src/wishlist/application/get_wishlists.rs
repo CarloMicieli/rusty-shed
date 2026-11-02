@@ -17,6 +17,7 @@ impl GetWishlistsQuery {
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<WishlistView>, DomainError>
     where
         U: WishlistUowExt + Send,

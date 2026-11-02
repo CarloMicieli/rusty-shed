@@ -19,6 +19,7 @@ pub struct UpdateManufacturer;
 impl UpdateManufacturer {
     /// Enforces the seeded-name-immutability business rule, then persists the
     /// update and returns the updated [`Manufacturer`] aggregate.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: UpdateManufacturerInput,

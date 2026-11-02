@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Heart } from 'lucide-svelte';
+  import { Heart } from '@lucide/svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { commands } from '$lib/bindings';

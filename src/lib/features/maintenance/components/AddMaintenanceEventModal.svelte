@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ClipboardList } from 'lucide-svelte';
+  import { ClipboardList } from '@lucide/svelte';
   import { getMaintenanceState } from '../MaintenanceState.svelte';
   import { getMaintenanceTypes } from '../utils/maintenanceTypes';
   import { toaster } from '$lib/toaster';
@@ -8,7 +8,8 @@
   import MaintenanceEventFormFields from './MaintenanceEventFormFields.svelte';
   import MaintenanceEventActions from './MaintenanceEventActions.svelte';
 
-  let { open, onClose } = $props<{ open: boolean; onClose: () => void }>();
+  type Props = { open: boolean; onClose: () => void };
+  let { open, onClose }: Props = $props();
 
   const maintenanceState = getMaintenanceState();
   const cards = $derived(maintenanceState.cards);

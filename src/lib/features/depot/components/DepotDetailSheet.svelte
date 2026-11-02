@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Cpu, Info, Trash2 } from 'lucide-svelte';
+  import { Cpu, Info, Trash2 } from '@lucide/svelte';
   import { Button } from '$lib/components';
   import { Sheet } from '$lib/components/ui/sheet';
   import * as m from '$lib/paraglide/messages.js';

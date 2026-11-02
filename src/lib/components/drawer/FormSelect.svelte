@@ -2,7 +2,7 @@
   import * as Select from '$lib/components/ui/select';
   import SearchableSelect, { type SelectOption } from '$lib/components/SearchableSelect.svelte';
   import { Button } from '$lib/components';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import type { Component, Snippet } from 'svelte';
 
   interface Props {

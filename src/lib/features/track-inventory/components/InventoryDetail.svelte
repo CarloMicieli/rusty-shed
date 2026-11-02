@@ -3,7 +3,7 @@
   import * as m from '$lib/paraglide/messages';
   import TrackItemCard from './TrackItemCard.svelte';
   import PurchaseHistory from './PurchaseHistory.svelte';
-  import { TrainTrack, History } from 'lucide-svelte';
+  import { TrainTrack, History } from '@lucide/svelte';
   import { Button } from '$lib/components';
 
   interface Props {

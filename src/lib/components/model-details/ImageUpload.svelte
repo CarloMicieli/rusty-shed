@@ -14,7 +14,7 @@
     DialogTitle,
     DialogTrigger
   } from '$lib/components/ui/dialog';
-  import { Upload, Loader2, Trash2 } from 'lucide-svelte';
+  import { Upload, Loader2, Trash2 } from '@lucide/svelte';
   import {
     upload_image,
     upload_image_filter_name,

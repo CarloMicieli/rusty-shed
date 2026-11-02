@@ -115,6 +115,7 @@ pub async fn get_installable_rolling_stocks_inner(
 
 /// A command handler to create a new digital rolling stock.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn new_digital_rolling_stock(
     state: tauri::State<'_, AppState>,
@@ -126,6 +127,7 @@ pub async fn new_digital_rolling_stock(
 
 /// A command handler to change the DCC address of a digital rolling stock.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn change_dcc_address(
     state: tauri::State<'_, AppState>,
@@ -137,6 +139,7 @@ pub async fn change_dcc_address(
 
 /// A command handler to change the decoder of a digital rolling stock.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn change_decoder(
     state: tauri::State<'_, AppState>,
@@ -148,6 +151,7 @@ pub async fn change_decoder(
 
 /// A command handler to retrieve all digital rolling stocks.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_digital_rolling_stocks(
     state: tauri::State<'_, AppState>,
@@ -158,6 +162,7 @@ pub async fn get_digital_rolling_stocks(
 
 /// A command handler to get the digital rolling stock summary.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_digital_summary(
     state: tauri::State<'_, AppState>,
@@ -168,6 +173,7 @@ pub async fn get_digital_summary(
 
 /// A command handler to get all available decoders.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_decoders(
     state: tauri::State<'_, AppState>,
@@ -178,6 +184,7 @@ pub async fn get_decoders(
 
 /// A command handler to check if a DCC address is a duplicate.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn check_dcc_address_duplicate(
     state: tauri::State<'_, AppState>,
@@ -189,6 +196,7 @@ pub async fn check_dcc_address_duplicate(
 
 /// A command handler to get all installable rolling stocks.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_installable_rolling_stocks(
     state: tauri::State<'_, AppState>,

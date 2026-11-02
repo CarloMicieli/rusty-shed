@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import type { SvelteComponent } from 'svelte';
 import type { NavigationItem } from '$lib/components/navigation/types';
 import MoreMenu from '$lib/components/navigation/MoreMenu.svelte';
 import IconStub from '../../../stubs/IconStub.svelte';
 
-const iconStub = IconStub as unknown as typeof SvelteComponent<Record<string, never>>;
+const iconStub = IconStub;
 
 let currentPathname = '/maintenance';
 

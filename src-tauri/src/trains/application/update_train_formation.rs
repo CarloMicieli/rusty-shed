@@ -5,6 +5,7 @@ pub struct UpdateTrainFormationUseCase;
 
 impl UpdateTrainFormationUseCase {
     #[allow(clippy::too_many_arguments)]
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U: TrainsUowExt + Send>(
         uow: &mut U,
         id: String,

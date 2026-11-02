@@ -24,6 +24,7 @@ impl NewDigitalRollingStockUseCase {
     /// # Type Parameters
     /// - `U`: Unit-of-work type that implements `DccInventoryUowExt` and `Send`.
     /// - `P`: `IdProvider` implementation that yields `DigitalRollingStockId` values.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,

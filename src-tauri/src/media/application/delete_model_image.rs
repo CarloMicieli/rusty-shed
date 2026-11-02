@@ -31,6 +31,7 @@ impl DeleteModelImage {
     /// # Errors
     /// - DomainError::NotFound: Model doesn't exist
     /// - StorageError: File deletion failed (permissions, etc.)
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         &self,
         input: DeleteImageInput,

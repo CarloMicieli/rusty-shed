@@ -242,7 +242,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         T: Send + Sync + for<'q> sqlx::Encode<'q, sqlx::Sqlite> + sqlx::Type<sqlx::Sqlite>,
     {
         let sql = format!("UPDATE collection_items SET {field_name} = ?1 WHERE id = ?2");
-        let result = sqlx::query(&sql)
+        let result = sqlx::query(sqlx::AssertSqlSafe(sql))
             .bind(value)
             .bind(collection_item_id)
             .execute(&mut *self.executor)

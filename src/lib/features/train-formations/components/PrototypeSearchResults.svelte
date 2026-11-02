@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button } from '$lib/components/ui/button';
   import { Skeleton } from '$lib/components/ui/skeleton';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import PrototypeIcon from './icons/PrototypeIcon.svelte';
   import type { PrototypeGroupView } from '$lib/bindings.js';
   import { prototypeIconType } from '../domain/prototype.js';

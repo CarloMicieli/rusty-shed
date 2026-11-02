@@ -4,6 +4,7 @@ use crate::trains::domain::{FormationCategoryView, TrainsUowExt};
 pub struct CreateFormationCategoryUseCase;
 
 impl CreateFormationCategoryUseCase {
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U: TrainsUowExt + Send>(
         uow: &mut U,
         name: String,

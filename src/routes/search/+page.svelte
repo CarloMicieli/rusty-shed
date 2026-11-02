@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import * as m from '$lib/paraglide/messages.js';
-  import { Loader2 } from 'lucide-svelte';
+  import { Loader2 } from '@lucide/svelte';
   import { setSearchContext } from '$lib/features/search';
   import SearchResultCard from '$lib/features/search/components/SearchResultCard.svelte';
   import SearchEmptyState from '$lib/features/search/components/SearchEmptyState.svelte';

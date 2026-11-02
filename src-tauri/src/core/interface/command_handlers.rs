@@ -9,12 +9,14 @@ pub fn get_app_version_inner() -> String {
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub fn is_db_initialized(state: tauri::State<'_, AppState>) -> bool {
     is_db_initialized_inner(&state)
 }
 
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub fn get_app_version() -> String {
     get_app_version_inner()

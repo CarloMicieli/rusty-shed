@@ -47,6 +47,7 @@ pub async fn get_dashboard_summary_inner(
 
 /// Tauri command to retrieve the dashboard summary.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_dashboard_summary(
     state: tauri::State<'_, AppState>,

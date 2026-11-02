@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BookOpen, Heart } from 'lucide-svelte';
+  import { BookOpen, Heart } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import type { GlobalSearchResultView } from '$lib/bindings';
 

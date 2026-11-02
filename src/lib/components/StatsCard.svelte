@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Stat } from '$lib/data/mock';
   import type { IconComponent } from '$lib/config/icons';
-  import { AlertCircle, Activity } from 'lucide-svelte';
+  import { AlertCircle, Activity } from '@lucide/svelte';
   import GaugeStatCard from './GaugeStatCard.svelte';
 
   let { stat, icon }: { stat: Stat; icon?: IconComponent } = $props();

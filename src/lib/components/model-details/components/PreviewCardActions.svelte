@@ -21,7 +21,7 @@
 
   import { Button } from '$lib/components/ui/button';
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
-  import { Trash2 } from 'lucide-svelte';
+  import { Trash2 } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   let showDeleteDialog = $state(false);

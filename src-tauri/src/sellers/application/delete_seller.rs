@@ -17,6 +17,7 @@ impl DeleteSeller {
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `SellersUowExt` and `Send`.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(unit_of_work: &mut U, id: &SellerId) -> Result<u64, DomainError>
     where
         U: SellersUowExt + Send,

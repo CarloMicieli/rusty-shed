@@ -38,6 +38,7 @@ pub async fn get_export_preview_inner(state: &AppState) -> Result<ExportPreview,
 ///
 /// Returns counts for each entity type and estimated archive size.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_export_preview(state: State<'_, AppState>) -> Result<ExportPreview, CommandError> {
     get_export_preview_inner(&state).await
@@ -66,6 +67,7 @@ where
 ///
 /// Returns the selected path as a string, or null if the user cancelled.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn open_export_file_dialog(
     app: tauri::AppHandle,
@@ -117,6 +119,7 @@ pub async fn execute_export_inner(
 /// # Arguments
 /// * `destination_path` - Full path for the output archive (e.g. `/home/user/backup.zip`)
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn execute_export(
     destination_path: String,

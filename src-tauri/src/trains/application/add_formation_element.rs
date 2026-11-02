@@ -6,6 +6,7 @@ use uuid::Uuid;
 pub struct AddFormationElementUseCase;
 
 impl AddFormationElementUseCase {
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U: TrainsUowExt + Send>(
         uow: &mut U,
         formation_id: String,

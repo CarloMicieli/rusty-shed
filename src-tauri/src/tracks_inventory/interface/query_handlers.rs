@@ -32,6 +32,7 @@ pub async fn get_track_inventories_inner(
 /// # Returns
 /// A list of track inventory summaries.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_track_inventories(
     state: tauri::State<'_, AppState>,
@@ -64,6 +65,7 @@ pub async fn get_track_inventory_inner(
 /// # Returns
 /// The complete inventory view with items and purchases.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_track_inventory(
     state: tauri::State<'_, AppState>,
@@ -96,6 +98,7 @@ pub async fn get_track_products_inner(
 /// # Returns
 /// A list of all track products available.
 #[tauri::command]
+#[tracing::instrument(level = "info", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 #[specta::specta]
 pub async fn get_track_products(
     state: tauri::State<'_, AppState>,

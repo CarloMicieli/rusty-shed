@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
-  import { AlertTriangle } from 'lucide-svelte';
+  import { AlertTriangle } from '@lucide/svelte';
   import { Button, Input } from '$lib/components';
 
   interface Props {

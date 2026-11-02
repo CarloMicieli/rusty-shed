@@ -30,6 +30,7 @@ impl UpdateRollingStockDcc {
     /// - [`DomainError::NotFound`] when no railway model with the given id exists.
     /// - [`DomainError::NotFound`] when no rolling stock with `rolling_stock_id` exists.
     /// - [`DomainError::Infrastructure`] on database failure.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: UpdateRollingStockDccInput,

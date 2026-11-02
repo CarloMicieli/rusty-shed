@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Tooltip from '$lib/components/ui/tooltip';
-  import { Zap } from 'lucide-svelte';
+  import { Zap } from '@lucide/svelte';
 
   let { hasTraction }: { hasTraction: boolean } = $props();
 </script>

@@ -17,7 +17,7 @@ vi.mock('$lib/features/settings/RegionalManager.svelte', () => ({
   }
 }));
 
-vi.mock('lucide-svelte', () => ({
+vi.mock('@lucide/svelte', () => ({
   Calendar: () => null
 }));
 

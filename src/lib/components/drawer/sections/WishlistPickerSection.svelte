@@ -3,7 +3,7 @@
   import * as Popover from '$lib/components/ui/popover';
   import { DrawerSectionCard } from '$lib/components/drawer';
   import type { WishlistPreview } from '$lib/bindings';
-  import { ChevronDown, Check, Search, Plus } from 'lucide-svelte';
+  import { ChevronDown, Check, Search, Plus } from '@lucide/svelte';
   import { tick } from 'svelte';
 
   interface Props {

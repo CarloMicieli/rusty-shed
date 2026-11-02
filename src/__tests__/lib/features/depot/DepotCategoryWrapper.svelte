@@ -3,7 +3,7 @@
   import * as Accordion from '$lib/components/ui/accordion';
   import DepotCategory from '$lib/features/depot/components/DepotCategory.svelte';
 
-  let { value, title, icon, items, categoryId } = $props<{
+  type Props = {
     value: string;
     title: string;
 
@@ -11,7 +11,8 @@
 
     items: any[];
     categoryId: string;
-  }>();
+  };
+  let { value, title, icon, items, categoryId }: Props = $props();
 </script>
 
 <Accordion.Root>

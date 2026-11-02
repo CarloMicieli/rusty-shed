@@ -3,7 +3,7 @@
   import { Input } from '$lib/components/ui/input';
   import { Button } from '$lib/components/ui/button';
   import { Sheet } from '$lib/components/ui/sheet';
-  import { Plus } from 'lucide-svelte';
+  import { Plus } from '@lucide/svelte';
   import PrototypeSearchResults from './PrototypeSearchResults.svelte';
   import CreatePrototypeForm from './CreatePrototypeForm.svelte';
   import type { TrainFormationState } from '../TrainFormationState.svelte.js';

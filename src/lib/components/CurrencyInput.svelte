@@ -195,6 +195,7 @@
     {required}
     class={cn('pr-12 text-right font-mono', inputClass)}
     aria-label={label}
+    aria-invalid={_bindableHasInvalidInput ? 'true' : undefined}
     onkeydown={handleKeyDownInternal}
     {autofocus}
   />

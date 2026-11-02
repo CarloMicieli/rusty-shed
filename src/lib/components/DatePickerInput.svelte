@@ -3,7 +3,7 @@
   import { Calendar } from '$lib/components/ui/calendar';
   import { CalendarDate } from '@internationalized/date';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
-  import { Calendar as CalendarIcon } from 'lucide-svelte';
+  import { Calendar as CalendarIcon } from '@lucide/svelte';
 
   interface Props {
     value?: string | null;

@@ -48,6 +48,7 @@ impl PurchaseWishlistItemService {
     /// 1. Load the wishlist aggregate and call `purchase_item()` to validate and emit the event.
     /// 2. Create an `AddCollectionItemInput` (with condition data) and call `AddCollectionItem::execute`.
     /// 3. Persist the modified wishlist via the wishlist repository.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U, P, Q>(
         unit_of_work: &mut U,
         collection_item_id_provider: P,

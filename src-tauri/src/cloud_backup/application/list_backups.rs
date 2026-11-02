@@ -12,6 +12,7 @@ use chrono::DateTime;
 const GOOGLE_CLIENT_ID: &str = "YOUR_CLIENT_ID_HERE"; // TODO: Load from config
 
 /// List all backups available in Google Drive
+#[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
 pub async fn list_backups(
     _args: ListBackupsArgs,
     oauth_service: &OAuthService,

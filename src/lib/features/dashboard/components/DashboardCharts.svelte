@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { BarChart2, Wallet } from 'lucide-svelte';
+  import { BarChart2, Wallet } from '@lucide/svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 

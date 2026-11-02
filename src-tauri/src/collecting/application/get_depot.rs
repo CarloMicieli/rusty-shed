@@ -16,6 +16,7 @@ impl GetDepot {
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `CollectionUowExt` and `Send`.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<DepotView, DomainError>
     where
         U: CollectionUowExt + Send,

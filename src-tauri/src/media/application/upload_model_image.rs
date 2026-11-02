@@ -88,6 +88,7 @@ impl UploadModelImage {
     /// - [`ValidationError`]: Invalid file format, size, or missing file.
     /// - [`StorageError`]: File operations failed.
     /// - [`DomainError::NotFound`]: Model doesn't exist.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         &self,
         input: UploadImageInput,
@@ -136,6 +137,7 @@ impl UploadModelImageBytes {
     /// - [`ValidationError`]: Invalid file format, size, or corrupted data.
     /// - [`StorageError`]: File operations failed.
     /// - [`DomainError::NotFound`]: Model doesn't exist.
+    #[tracing::instrument(level = "debug", skip_all, fields(error.type = tracing::field::Empty, error.message = tracing::field::Empty))]
     pub async fn execute<U>(
         &self,
         input: UploadImageBytesInput,
