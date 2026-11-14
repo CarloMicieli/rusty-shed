@@ -61,7 +61,7 @@
         "image": "images/maerklin-37710.png",
         "rollingStocks": [
           {
-            "id": "rs-rm001-001",
+            "id": "trn:rolling-stock:rs-rm001-001",
             "railwayCompanyId": "trn:railway-company:deutsche-bahn",
             "seriesCode": "ICE 3",
             "roadNumber": "403 573-0",
@@ -104,7 +104,7 @@
         "image": "images/roco-73234.jpg",
         "rollingStocks": [
           {
-            "id": "rs-rm002-001",
+            "id": "trn:rolling-stock:rs-rm002-001",
             "railwayCompanyId": "trn:railway-company:obb",
             "seriesCode": "1116",
             "roadNumber": "1116 141-5",
