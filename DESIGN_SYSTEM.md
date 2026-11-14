@@ -924,7 +924,113 @@ The decorative steampunk cues (metallic borders, rivet-like details, brass highl
 
 This ensures the same steampunk interaction language remains accessible across mouse, touch, and keyboard-driven workflows.
 
-### 5.6 Modals & Dialogs
+### 5.6 Filtering & Faceted Navigation
+
+Filtering is a core interaction pattern in rusty-shed. It allows users to efficiently navigate large collections of railway models, purchases, wishlists, and other domain entities. The filtering experience must be responsive, touch-friendly, and consistent with the Mechanical Precision design language.
+
+#### Responsive Filtering Patterns
+
+**Desktop**
+
+- Use a persistent, collapsible sidebar.
+- Keep filters visible while browsing results.
+- Display active filter selections.
+- Allow individual filters to be removed.
+- Keep sorting separate from filtering.
+
+**Tablet**
+
+- Use an overlay filter panel or side drawer.
+- Do not permanently reserve a large portion of the viewport for filters.
+- Preserve active filter visibility on the results page.
+
+**Mobile**
+
+- Never display a persistent filter sidebar.
+- Provide a prominent Filter button in the collection toolbar.
+- Open filters using a full-height bottom sheet or full-screen view.
+- Use bottom sheets for short filter configurations and full-screen presentation for complex configurations.
+- Keep active filter chips visible on the results page.
+
+The system must preserve one shared visual vocabulary: the same steampunk tokens, panel treatment, and typography are reused across devices, while the filter shell adapts to the available space and input method.
+
+#### Collection Toolbar
+
+The collection toolbar should provide:
+
+- Search input
+- Filter action with active-filter count
+- Separate sort action
+- Active-filter indicators
+
+**Suggested mobile layout:**
+
+1. Search field
+2. Filter and sort actions
+3. Horizontally scrollable active-filter chips
+4. Result count and sorting summary
+5. Collection results
+
+The toolbar must remain compact and must not unnecessarily reduce the available space for collection items.
+
+#### Filter Panel Architecture
+
+The filter panel must contain three regions.
+
+**Header**
+
+- Title: `FILTER COLLECTION.`
+- Optional subtitle
+- Close action
+- Optional reset action
+
+**Content**
+
+- Vertically scrollable filter groups
+- Collapsible sections for secondary criteria
+- Searchable options for long lists
+- Option counts where relevant
+- Clear individual filter-group selections
+
+**Footer**
+
+- Primary action: `Apply Filters`
+- Secondary action: `Clear all`
+- Optional tertiary action: `Save view` for repeatable collection states
+
+#### Filter Group Patterns
+
+Use a predictable, scannable hierarchy for filter groups.
+
+- Group by domain area (Type, Brand, Scale, Era, Condition, Budget, Status).
+- Keep the most frequently used criteria at the top of the panel.
+- Use a consistent `label + control + count` pattern for each option set.
+- Support multi-select with visible selected states and a clear “selected” affordance.
+- Use chips for high-frequency selections and checkboxes or segmented controls for nested logic.
+
+The panel should feel mechanical and precise, not chaotic or overly decorative. Functional controls must be more prominent than ornamental accents.
+
+#### Active Filters & Persistence
+
+Active filters must remain visible and easy to remove.
+
+- Render selected filters as chips above the collection results.
+- Allow each chip to be dismissed individually.
+- Maintain filter state when a collection view is re-opened or the same dataset is revisited.
+- Show a non-zero count in the filter button on mobile and tablet.
+- Distinguish between “inactive”, “selected but not applied”, and “applied” states in complex workflows.
+
+#### Accessibility Requirements
+
+- Filter panels must support keyboard navigation and focus trapping while open.
+- Touch targets must remain at least 44×44px.
+- Active states must be visibly different from default states under both themes.
+- Scrollable filter regions must remain operable with pointer, keyboard, and assistive technology.
+- All labels and counts must be exposed to screen readers without relying solely on color.
+
+**Summary:** filtering should feel like a disciplined engineer’s control panel: structured, transparent, and highly usable, rather than a decorative overlay. It must support real railway-data workflows without sacrificing the steampunk identity or mobile usability.
+
+### 5.7 Modals & Dialogs
 
 #### Dialog (Modal)
 
