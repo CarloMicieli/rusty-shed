@@ -835,7 +835,96 @@ interface NavItem {
 - **Tablet (768–1023px):** Sidebar collapses to icon rail or condensed top nav; preserve quick access without consuming the full width
 - **Mobile (<768px):** Use drawer or tabbed navigation with larger touch targets and bottom-sheet actions that remain consistent with the sidebar structure
 
-### 5.5 Modals & Dialogs
+### 5.5 Drawer & Form Interaction Patterns
+
+Drawers are a primary interaction pattern throughout rusty-shed. They provide contextual workflows for creating, editing, and managing railway models, purchases, wishlists, and other application data. All drawers must follow the Mechanical Precision visual identity while providing consistent, accessible, and responsive interaction patterns.
+
+#### Drawer Types and Usage
+
+Use the appropriate presentation pattern according to the complexity of the task.
+
+| Pattern | Recommended usage |
+|---------|-------------------|
+| Side Drawer | Creating or editing structured records |
+| Compact Drawer | Quick actions and simple attribute editing |
+| Bottom Sheet | Contextual actions, filters, and short selections on mobile |
+| Full-Screen Form | Complex data entry on mobile |
+| Confirmation Dialog | Destructive actions and simple confirmations |
+
+Do not use a full-size side drawer for simple interactions that can be handled more efficiently with a compact component.
+
+#### Drawer Dimensions and Responsive Behaviour
+
+**Desktop**
+
+- Drawers open from the right side of the application.
+- Standard width: 480px–560px.
+- Complex forms may use a width of up to 640px.
+- Drawers must not exceed the available viewport width.
+- The underlying page remains visible but visually de-emphasised.
+- Use a subtle overlay to communicate a modal interaction.
+
+**Tablet**
+
+- Use a responsive width between 420px and 560px, depending on available space.
+- Prevent the drawer from obscuring essential navigation or contextual information.
+- Use a full-width presentation when the available space is insufficient.
+
+**Mobile**
+
+- Replace side drawers with full-screen forms for complex data entry.
+- Use bottom sheets for filters, contextual actions, and short selections.
+- Respect device safe areas and the virtual keyboard.
+- Keep primary actions accessible when the keyboard is visible.
+
+A single interaction vocabulary should remain recognizable across all platforms: the steampunk visual system is shared, while the modal shell and input ergonomics vary by device and task complexity.
+
+#### Header Architecture
+
+Every drawer must have a consistent header.
+
+- **Icon:** 24px icon inside a subtle `#1F1F1F` rounded container.
+- **Title:** Primary field label or human-readable task title using the app’s heading scale.
+- **Close control:** Top-right action with clear tappable area and visible focus state.
+- **Secondary actions:** Optional inline actions (Save as draft, Duplicate, More actions) aligned to the right edge.
+- **Spacing:** 16px frame padding; 12px separation between icon, title, and controls.
+
+The drawer header is part of the functional UI and should remain visually dense enough to be legible on desktop while resizing gracefully for handheld screens.
+
+#### Body Layout and Form Composition
+
+The drawer body should use a clear, modular structure to reduce cognitive load and support quick scanning.
+
+- Use a single column for mobile and compact drawers.
+- Use a 2-column grid for wide desktop drawers when fields are logically paired.
+- Group related fields into labelled sections with consistent spacing and hierarchy.
+- Keep the most important control in the first viewport if the user is entering or editing critical data.
+- Use sticky action bars for long forms, particularly on tablet and mobile.
+- Avoid stacking more than one destructive or secondary action in the same footer row.
+
+For mobile forms, the sheet should preserve the visual identity without reproducing a desktop panel. The same form fields, label scale, and typography remain consistent; only the shell and motion differ.
+
+#### Form Behaviors and Motion
+
+- Side drawers should animate from the right using a subtle transform and low-opacity backdrop.
+- Bottom sheets should lift from the bottom with a soft overscroll and a firm but restrained ease curve.
+- Full-screen mobile forms should use a slide-up or modal-style transition, preserving context while making the form feel native.
+- Reduced-motion users should still receive a clear state change without decorative motion.
+
+The decorative steampunk cues (metallic borders, rivet-like details, brass highlights) should remain subordinate to form clarity and task completion. Decorative motifs may be softened on smaller screens, but the interaction pattern and the information hierarchy must remain obvious.
+
+#### Accessibility Requirements
+
+- Every drawer must expose a clear dialog role with modal semantics on desktop and mobile.
+- Focus must move into the drawer when opened and return to the trigger when closed.
+- Escape closes the drawer on desktop and tablet; mobile close affordances must remain visible and consistent.
+- All controls need a minimum 44×44px touch target on Android and tablet surfaces.
+- Input labels must remain visible even when the keyboard is open.
+- Dialog type, page content, and action buttons must remain reachable without accidental overlay blocking.
+
+This ensures the same steampunk interaction language remains accessible across mouse, touch, and keyboard-driven workflows.
+
+### 5.6 Modals & Dialogs
 
 #### Dialog (Modal)
 
