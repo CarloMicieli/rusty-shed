@@ -1,6 +1,6 @@
 # Design System — rusty-shed
 
-A comprehensive guide to the steampunk-themed design language for rusty-shed, a Tauri 2.0 + Svelte 5 desktop application for railway model management.
+A comprehensive guide to the steampunk-themed design language for rusty-shed, a cross-platform Tauri 2 + Svelte 5 application for railway model management across desktop and mobile form factors.
 
 ---
 
@@ -15,23 +15,34 @@ The rusty-shed design language embraces a **steampunk aesthetic** inspired by Vi
   - **Dark Theme ("Iron & Copper")**: Industrial metal surfaces with warm copper accents
   - **Light Theme ("Parchment & Brass")**: Aged paper backgrounds with warm brass metallics
 - **Material Authenticity**: Textures (parchment grain, metal finishes) enhance immersion without sacrificing clarity
+- **Shared Identity Across Form Factors**: The same steampunk vocabulary remains recognizable on desktop, tablet, and Android while the interaction model adapts to each device
 
 ### 1.2 Design Principles
 
-1. **Accessibility First**: WCAG AA compliance (4.5:1 contrast minimum for normal text)
+1. **Accessibility First**: WCAG AA compliance (4.5:1 contrast minimum for normal text), with touch-safe targets and adequate spacing for thumb reach
 2. **Clarity Over Ornamentation**: Steampunk elements support hierarchy; never obscure content
-3. **Consistency**: All UI patterns follow component specs; no ad-hoc styling
-4. **Motion with Purpose**: Animations respect `prefers-reduced-motion` and enhance mechanical feel
-5. **Desktop-Native**: Leverage Tauri 2.0 features; honor OS conventions (window controls, focus)
+3. **Consistency**: Shared visual identity and component tokens remain consistent; platform-specific behavior is intentional and documented
+4. **Motion with Purpose**: Animations respect `prefers-reduced-motion` and enhance mechanical feel across input methods
+5. **Cross-Platform by Design**: Leverage Tauri 2.0 desktop capabilities and Android mobile behavior without treating either surface as a simplified variant of the other
 6. **Internationalization**: All user-facing text via Paraglide-JS (English + Italian)
 7. **Type Safety**: tauri-specta bindings + TypeScript strictness; no manual type redefinitions
 
 ### 1.3 Design Goals
 
 - **Professional yet Playful**: Railway hobbyists deserve precision tools with personality
-- **Responsive at Scale**: Handle complex datasets (hundreds of models, rich metadata)
-- **Performant**: Svelte 5 reactivity + optimized animations
-- **Extensible**: Component library accommodates future features (export, collaboration, etc.)
+- **Responsive at Scale**: Handle complex datasets (hundreds of models, rich metadata) across wide desktop layouts and compact mobile stacks
+- **Performant**: Svelte 5 reactivity + optimized animations, with touch-first interaction patterns for mobile contexts
+- **Extensible**: Component library accommodates future features (export, collaboration, etc.) while preserving a single design language
+
+### 1.4 Cross-Platform Interaction Model
+
+The system must use a single steampunk visual language with different interaction patterns by context:
+
+- **Desktop**: Persistent navigation, multi-column layouts, keyboard-first workflows, and dense data tables with contextual actions.
+- **Tablet**: Hybrid composition with collapsible side panels, split views, and gesture-friendly controls that preserve quick navigation and contextual detail.
+- **Mobile**: Stacked content, bottom-sheet actions, thumb-reachable controls, and reduced visual density while keeping the same copper/brass identity.
+
+Decorative elements (rivets, brass inlays, gauges, metallic textures) remain recognizable everywhere, but functional controls adapt to the expected input method and screen size. The system distinguishes between ornamental identity and workflow-critical UI: decorative motifs may be toned down on smaller screens, while task-critical controls remain highly legible and consistent across Android, iOS considerations, tablet, and desktop surfaces. The same component library may expose different layout and motion behavior depending on the form factor; it must never lose the mechanical precision of the core identity.
 
 ---
 
@@ -375,11 +386,11 @@ xl: 1280px
 2xl: 1536px
 ```
 
-**Tauri Desktop Constraints:**
-- **Minimum Window:** 960×600px (landscape)
-- **Default Window:** 1200×800px
-- **Titlebar Height:** 32px (macOS), 32px (Windows)
-- **Sidebar Collapse:** Below 768px (tablet/mobile simulation)
+**Cross-Platform Layout Constraints:**
+- **Desktop (Windows/Linux):** Minimum window 960×600px, default window 1200×800px, titlebar height 32px
+- **Tablet (768px–1023px):** Use adaptive split layouts, collapsible side panels, and gesture-friendly controls while preserving the full visual language
+- **Mobile (<768px / Android):** Prioritize stacked layouts, bottom-sheet actions, and thumb-reachable controls; reduce decorative density while keeping the same steampunk identity
+- **Desktop Window Shell:** Native titlebar/window controls remain relevant on desktop; on mobile, avoid desktop chrome and use safe-area aware layouts instead
 
 ### 4.4 Padding & Gaps
 
@@ -737,7 +748,15 @@ input.error:focus {
 
 ### 5.4 Navigation & Sidebar
 
-#### Sidebar (Tauri Desktop)
+#### Navigation Patterns by Platform
+
+The app uses one navigation vocabulary with different structures by device:
+
+- **Desktop**: Persistent sidebar with multi-level navigation and quick access to dense workspaces.
+- **Tablet**: Adaptive sidebar or top-level segmented navigation with metadata-dense sections retained in a compressed layout.
+- **Mobile**: Drawer-based navigation, bottom navigation, or tabbed top navigation depending on task complexity; all actions remain gesture-friendly and thumb-reachable.
+
+#### Sidebar (Desktop / Tablet)
 
 **Structure:**
 ```
@@ -805,8 +824,8 @@ interface NavItem {
 
 **Responsive:**
 - **Desktop (≥1024px):** Sidebar visible, 280px wide
-- **Tablet (768–1023px):** Sidebar collapsed, icon-only (64px)
-- **Mobile (<768px):** Sidebar hidden, drawer toggle
+- **Tablet (768–1023px):** Sidebar collapses to icon rail or condensed top nav; preserve quick access without consuming the full width
+- **Mobile (<768px):** Use drawer or tabbed navigation with larger touch targets and bottom-sheet actions that remain consistent with the sidebar structure
 
 ### 5.5 Modals & Dialogs
 
@@ -998,11 +1017,13 @@ All interactive elements and text must meet **WCAG AA standards**:
 - **Normal Text:** 4.5:1 contrast minimum
 - **Large Text (18px+ or 14px bold+):** 3:1 contrast minimum
 - **Graphics & UI Components:** 3:1 contrast minimum
+- **Touch Targets:** Minimum 44×44px on mobile and tablet interfaces; desktop controls may use 32px minimum but should never shrink below accessible tap size in responsive layouts
 
 **Testing Tools:**
 - WebAIM Contrast Checker
 - Axe DevTools (browser extension)
 - NVDA or JAWS screen reader (Windows)
+- Android accessibility inspector for touch target and screen-reader validation
 
 ### 6.2 Keyboard Navigation
 
@@ -1067,9 +1088,9 @@ Respect `prefers-reduced-motion`:
 - Parallax scrolling
 - Auto-playing video/sound
 
-### 6.4 Tauri Window Controls
+### 6.4 Platform-Specific Shell Patterns
 
-Tauri 2.0 provides native window controls (minimize, maximize, close) positioned at top-right (Windows/Linux) or top-left (macOS).
+Tauri 2.0 provides native window controls for desktop environments (minimize, maximize, close) positioned at top-right (Windows/Linux) or top-left (macOS). These shell conventions are exclusively for desktop surfaces and should not be mirrored on Android.
 
 **Custom Styling via CSS Tokens:**
 ```css
@@ -1083,7 +1104,7 @@ Tauri 2.0 provides native window controls (minimize, maximize, close) positioned
 }
 ```
 
-**Window Control Configuration (tauri.conf.json):**
+**Desktop Window Control Configuration (tauri.conf.json):**
 ```json
 {
   "tauri": {
@@ -1100,6 +1121,11 @@ Tauri 2.0 provides native window controls (minimize, maximize, close) positioned
   }
 }
 ```
+
+**Mobile & Tablet Guidance:**
+- Use safe-area insets for status bars and notch areas; avoid assuming a desktop titlebar exists.
+- Prefer Android-native controls and bottom-sheet gestures over desktop-style floating toolbars.
+- Keep the same copper/brass palette and component language while adapting shell chrome to mobile ergonomics.
 
 ### 6.5 High Contrast Mode
 
