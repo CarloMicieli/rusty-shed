@@ -189,33 +189,40 @@ Optimized for presentations and printing; secondary theme.
 
 ### 2.3 Theme Switching & CSS Variables
 
-Themes are controlled via `.dark` class (Tailwind dark mode):
+The application resolves the user theme to a `data-theme` value on the root document element, not a `.dark` class. The actual runtime pattern is:
 
 ```html
-<!-- Dark theme active -->
-<body class="dark">
+<body data-theme="steampunk-dark">
   <!-- Uses --color-background: #1a1a1b -->
 </body>
 
-<!-- Light theme active -->
-<body>
+<body data-theme="steampunk-light">
   <!-- Uses --color-background: #f4ebd0 -->
 </body>
 ```
 
+The theme layer is defined per theme block (`[data-theme='steampunk-dark']` and `[data-theme='steampunk-light']`), with shared tokens in `:root` for typography, spacings, and theme-independent values. This matches the live app’s `themeStore` logic and avoids inverting dark/light behavior.
+
 **Implementation (CSS):**
 ```css
 :root {
-  /* Dark theme (default) */
+  --font-family-body: 'Inter', system-ui, sans-serif;
+  --font-family-heading: 'Bebas Neue', sans-serif;
+  --radius: 0.625rem;
+}
+
+[data-theme='steampunk-dark'] {
   --color-background: #1a1a1b;
   --color-primary-600: #cd7f32;
   --heading-color: #c49b6e;
-  /* ... dark tokens ... */
+  --border: hsl(240 6% 15%);
 }
 
-.dark {
-  /* Override for light theme (if needed; Tailwind handles most) */
-  /* Typically use Tailwind @apply or CSS variable overrides */
+[data-theme='steampunk-light'] {
+  --color-background: #f4ebd0;
+  --color-primary-600: #e09a34;
+  --heading-color: #b8860b;
+  --border: hsl(32 30% 60%);
 }
 ```
 
@@ -316,7 +323,7 @@ h1, h2, h3, h4, h5, h6 {
 
 ### 4.1 Spacing Scale
 
-Spacing follows an 8px base grid (8px, 16px, 24px, 32px, etc.) for consistency.
+Spacing follows an 8px base grid (8px, 16px, 24px, 32px, etc.) for consistency, while remaining compatible with Tailwind v4 defaults and the project’s existing utilities.
 
 | Token   | Value | Usage                           |
 |---------|-------|---------------------------------|
@@ -327,18 +334,19 @@ Spacing follows an 8px base grid (8px, 16px, 24px, 32px, etc.) for consistency.
 | xl      | 32px  | Large gaps, card padding        |
 | 2xl     | 40px  | Hero sections, major breaks     |
 
-**Tailwind Spacing:**
+**Tailwind-compatible token mapping:**
 ```css
-/* Configured in tailwind.config.ts */
-spacing: {
-  xs: '0.25rem',  /* 4px */
-  sm: '0.5rem',   /* 8px */
-  md: '1rem',     /* 16px */
-  lg: '1.5rem',   /* 24px */
-  xl: '2rem',     /* 32px */
-  '2xl': '2.5rem' /* 40px */
+:root {
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 2.5rem;   /* 40px */
 }
 ```
+
+This avoids ambiguous token names like `p-lg` or `text-lg` where Tailwind v4 already reserves meaning for typography and utility classes.
 
 ### 4.2 Border Radius
 
@@ -442,15 +450,15 @@ interface ButtonProps {
 
 **Variants:**
 
-| Variant       | Background         | Text Color      | Hover Effect                  | Use Case           |
-|---------------|--------------------|-----------------|-------------------------------|--------------------|
-| default       | --primary-600      | white           | Darker bg (--primary-700)    | Primary actions    |
-| destructive   | --error-600        | white           | Darker error (--error-700)   | Delete, dangerous  |
-| outline       | transparent        | --primary-600   | Border active, bg lift       | Secondary actions  |
-| secondary     | --secondary-600    | white           | Darker secondary             | Alternative action |
-| ghost         | transparent        | Inherit text    | Slight bg on hover           | Minimal, text-like |
-| link          | transparent        | --primary-600   | Underline on hover           | Inline links       |
-| rusty         | --warning-600      | white           | Darker amber                 | Special (status)   |
+| Variant       | Background                       | Text Color       | Hover Effect                         | Use Case           |
+|---------------|----------------------------------|------------------|--------------------------------------|--------------------|
+| default       | `var(--color-primary-600)`        | white            | Darker copper (`--color-primary-700`) | Primary actions    |
+| destructive   | `var(--color-error-600)`         | white            | Darker red (`--color-error-700`)      | Delete, dangerous  |
+| outline       | transparent                      | `var(--color-primary-600)` | Border active, bg lift            | Secondary actions  |
+| secondary     | `var(--color-secondary-600)`     | white            | Darker secondary                     | Alternative action |
+| ghost         | transparent                      | Inherit text     | Slight bg on hover                   | Minimal, text-like |
+| link          | transparent                      | `var(--color-primary-600)` | Underline on hover              | Inline links       |
+| rusty         | `var(--color-warning-600)`       | white            | Darker amber                         | Special (status)   |
 
 **Sizes:**
 
@@ -486,7 +494,7 @@ interface ButtonProps {
 ```svelte
 <script>
   import Button from '$lib/components/ui/button/button.svelte';
-  import { TickCircle } from 'phosphor-svelte';
+  import { CheckCircle } from '@lucide/svelte';
 
   let loading = $state(false);
 
@@ -503,7 +511,7 @@ interface ButtonProps {
   {loading}
   onclick={handleClick}
 >
-  <TickCircle size={20} />
+  <CheckCircle size={20} />
   {$m.core.actions.save()}
 </Button>
 ```
@@ -642,8 +650,8 @@ interface GaugeStatCardProps {
   height: 120px;
   border-radius: 50%;
   background: conic-gradient(
-    var(--color-primary-600) 0deg calc(var(--percentage) * 3.6deg),
-    var(--color-surface-100) calc(var(--percentage) * 3.6deg) 360deg
+    var(--color-primary-600) 0deg calc(var(--progress) * 3.6deg),
+    var(--color-surface-200) calc(var(--progress) * 3.6deg) 360deg
   );
   box-shadow: 
     inset 0 0 10px rgba(0, 0, 0, 0.3),
@@ -1369,27 +1377,27 @@ Animated percentage fill on load:
 ```svelte
 <script>
   import { animate } from 'motion';
-  
+
   interface Props {
     value: number;
     max: number;
   }
-  
+
   const { value, max } = $props();
   const percentage = $derived((value / max) * 100);
   let displayPercentage = $state(0);
 
   $effect(() => {
-    animate(0, percentage, { duration: 800 }, (v) => {
-      displayPercentage = v;
+    animate(0, percentage, {
+      duration: 0.8,
+      onUpdate: (v) => {
+        displayPercentage = v;
+      }
     });
   });
 </script>
 
-<div 
-  class="gauge"
-  style="--progress: {displayPercentage}%"
->
+<div class="gauge" style="--progress: {displayPercentage}%">
   <span>{Math.round(displayPercentage)}%</span>
 </div>
 
@@ -1397,7 +1405,7 @@ Animated percentage fill on load:
   .gauge {
     background: conic-gradient(
       var(--color-primary-600) 0deg calc(var(--progress) * 3.6deg),
-      var(--color-surface-100) calc(var(--progress) * 3.6deg) 360deg
+      var(--color-surface-200) calc(var(--progress) * 3.6deg) 360deg
     );
   }
 </style>
