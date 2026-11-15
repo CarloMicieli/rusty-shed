@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://rusty-shed.app/schemas/manifest/v1.json",
   "title": "Rusty Shed Import Manifest",
-  "description": "Schema for the manifest.json file within Rusty Shed import packages",
+  "description": "Schema for the manifest.json file within Rusty Shed import packages. Schema validation guarantees structural correctness; the importer must perform a secondary referential-integrity pass to ensure referenced IDs exist in the provided arrays.",
   "type": "object",
   "required": ["version", "data"],
   "properties": {
@@ -251,7 +251,8 @@
         },
         "deliveryDate": {
           "type": "string",
-          "description": "Release date in ISO format or 'Q1 2024' style"
+          "pattern": "^(?:\\d{4}-\\d{2}-\\d{2}|[Qq][1-4]\\s\\d{4})$",
+          "description": "Release date in YYYY-MM-DD format or quarter notation such as 'Q1 2024'"
         },
         "availabilityStatus": {
           "type": "string",
@@ -297,7 +298,7 @@
     "FeatureFlag": {
       "type": "string",
       "enum": ["YES", "NO", "NOT_APPLICABLE"],
-      "description": "Tri-state feature marker indicating presence, absence, or non-applicability"
+      "description": "Tri-state feature marker indicating presence, absence, or non-applicability. String values are used to preserve explicit semantics in import/export payloads."
     },
     "ManufacturerId": {
       "type": "string",
@@ -354,14 +355,23 @@
       "pattern": "^trn:track-purchase:[^\\s]+$",
       "description": "Track purchase TRN in the form trn:track-purchase:{uuid}"
     },
+    "RollingStockId": {
+      "type": "string",
+      "pattern": "^trn:rolling-stock:[^\\s]+$",
+      "description": "Rolling stock TRN in the form trn:rolling-stock:{uuid}"
+    },
+    "CouplerTypeId": {
+      "type": "string",
+      "pattern": "^trn:coupler:[^\\s]+$",
+      "description": "Coupler type TRN in the form trn:coupler:{manufacturer}:{slug}"
+    },
     "RollingStock": {
       "type": "object",
       "required": ["railwayCompanyId", "seriesCode"],
       "properties": {
         "id": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Stable rolling stock identifier"
+          "$ref": "#/$defs/RollingStockId",
+          "description": "Stable rolling stock identifier (globally unique TRN)"
         },
         "railwayCompanyId": {
           "$ref": "#/$defs/RailwayCompanyId",
@@ -1261,6 +1271,7 @@
     "DigitalRollingStock": {
       "type": "object",
       "required": ["id", "ownedRollingStockId", "dccAddress"],
+      "description": "Digital command-station roster entry exported for operational context. DCC and decoder fields intentionally mirror the active roster snapshot and may duplicate values from ownedRollingStocks.",
       "properties": {
         "id": {
           "type": "string",
@@ -1287,6 +1298,7 @@
     "OwnedRollingStock": {
       "type": "object",
       "required": ["id", "collectionItemId"],
+      "description": "Physical collection inventory entry. Optional digital and coupler fields capture the state currently fitted to the specific vehicle.",
       "properties": {
         "id": {
           "$ref": "#/$defs/OwnedRollingStockId",
@@ -1297,8 +1309,7 @@
           "description": "References collectionItems[].id"
         },
         "rollingStockId": {
-          "type": "string",
-          "minLength": 1,
+          "$ref": "#/$defs/RollingStockId",
           "description": "References the catalogue rolling stock entry; omitted when unknown"
         },
         "notes": {
@@ -1316,8 +1327,8 @@
           "description": "References decoders[].id for the installed decoder"
         },
         "currentCouplerId": {
-          "type": "string",
-          "description": "References coupler_types; identifies the coupler currently fitted"
+          "$ref": "#/$defs/CouplerTypeId",
+          "description": "References the built-in coupler type dictionary (not embedded in the manifest); identifies the coupler currently fitted"
         }
       },
       "additionalProperties": false
