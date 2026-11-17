@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/ci.yml'
+      - 'deny.toml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'wdio.conf.js'
@@ -16,6 +17,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/ci.yml'
+      - 'deny.toml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'wdio.conf.js'
@@ -107,6 +109,12 @@ jobs:
             git diff src/lib/bindings.ts
             exit 1
           fi
+
+      - name: 🛡️ Check Rust dependencies
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: src-tauri/Cargo.toml
+          command: check licenses sources
 
       - name: 🦀 Run rustfmt
         run: cargo fmt --all --check
