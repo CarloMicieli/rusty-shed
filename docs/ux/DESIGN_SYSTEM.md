@@ -1168,7 +1168,7 @@ interface DialogProps {
   description?: string;
   children?: Snippet;
   actions?: DialogAction[];
-  onopencange?: (open: boolean) => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface DialogAction {
