@@ -395,7 +395,8 @@ xl: 1280px
 ```
 
 **Cross-Platform Layout Constraints:**
-- **Desktop (Windows/Linux):** Minimum window 960×600px, default window 1200×800px, titlebar height 32px
+- **Desktop (Windows/Linux):** Minimum window 960×600px, default window 1200×800px, titlebar height 32px; scale cleanly across common desktop densities from 1080p to 4K and high-DPI displays
+- **Desktop Hi-DPI / 4K:** Use logical sizing and density-aware spacing rather than fixed pixel values; avoid tiny controls at 2x/3x scaling by preserving minimum tap and click targets in device-independent pixels
 - **Tablet (768px–1023px):** Use adaptive split layouts, collapsible side panels, and gesture-friendly controls while preserving the full visual language
 - **Mobile (<768px / Android):** Prioritize stacked layouts, bottom-sheet actions, and thumb-reachable controls; reduce decorative density while keeping the same steampunk identity
 - **Desktop Window Shell:** Native titlebar/window controls remain relevant on desktop; on mobile, avoid desktop chrome and use safe-area aware layouts instead
@@ -831,9 +832,15 @@ interface NavItem {
 ```
 
 **Responsive:**
-- **Desktop (≥1024px):** Sidebar visible, 280px wide
+- **Desktop (≥1024px):** Sidebar visible, 280px wide, with optional collapse to an icon rail or compact rail+label mode for denser workspaces
+- **Desktop Collapsed State:** Allow the sidebar to collapse on desktop while preserving quick access; the collapsed state may show icons only or a compact icon-plus-label pattern similar to a Slack-style rail
 - **Tablet (768–1023px):** Sidebar collapses to icon rail or condensed top nav; preserve quick access without consuming the full width
 - **Mobile (<768px):** Use drawer or tabbed navigation with larger touch targets and bottom-sheet actions that remain consistent with the sidebar structure
+
+**Navigation density rule:**
+- Keep the primary navigation limited to four core items in the mobile shell.
+- The “More” action opens a secondary submenu containing the remaining entries.
+- The same pattern may be used in compact desktop layouts when space is constrained, but the desktop shell should remain a true sidebar rather than a mobile-like bottom bar.
 
 ### 5.5 Drawer & Form Interaction Patterns
 
@@ -924,7 +931,66 @@ The decorative steampunk cues (metallic borders, rivet-like details, brass highl
 
 This ensures the same steampunk interaction language remains accessible across mouse, touch, and keyboard-driven workflows.
 
-### 5.6 Filtering & Faceted Navigation
+### 5.6 Data Validation & Dirty State
+
+Form workflows in rusty-shed must protect user intent and preserve trust. When a user edits data in a drawer, sheet, dialog, or modal, the interface must explicitly manage validation errors and unsaved changes before closing or navigating away.
+
+#### Dirty State Rules
+
+- If a form has been modified and the user attempts to close, discard, or navigate away, present a confirmation before loss of data.
+- The confirmation title should be aligned to the app’s existing discard pattern: “Discard changes?” or equivalent human-readable copy.
+- The message should clearly state that unsaved changes will be lost.
+- A destructive/secondary action should trigger the discard, while the primary action should keep the form open.
+- Dirty checks must be evaluated after user edits, not only on submit.
+
+**Pattern:**
+
+```svelte
+<script lang="ts">
+  import { isTainted } from '$lib/utils/dirty-state';
+
+  let hasChanges = $derived(isTainted($tainted));
+
+  function handleCloseRequest() {
+    if (hasChanges) {
+      // open confirmation dialog
+      return;
+    }
+
+    onClose();
+  }
+</script>
+```
+
+This matches the app’s current drawer behavior, where a form retains a `hasChanges` signal and prevents accidental close when the user has edited valid or invalid input.
+
+#### Validation State Behaviors
+
+- Validation should be shown when a field is invalid or the user has attempted to submit.
+- Errors should be clear, local, and tied to the originating field.
+- Inline validation should appear at the field, not only in a summary banner.
+- If a form is invalid and user tries to submit, the first error should be surfaced without losing the user’s typed values.
+- A closing action should not silently discard an invalid draft if the user has active or submitted changes.
+
+**Example validation rules:**
+
+- required fields must block save until completed
+- date/range validation must be checked before final submit
+- numeric constraints must display the proper field-level message without clearing the typed value
+
+#### Confirmation Flow for Dirty Forms
+
+When the user attempts to close a form with unsaved content:
+
+1. Trap the close request and evaluate dirty state.
+2. Show a confirmation dialog with clear actions.
+3. Keep focus inside the dialog until the user chooses.
+4. If the user confirms, close the form and discard the draft.
+5. If the user cancels, remain in the form and preserve the current values.
+
+This pattern is required for drawers, sheet-based editors, and large forms across desktop and mobile contexts.
+
+### 5.7 Filtering & Faceted Navigation
 
 Filtering is a core interaction pattern in rusty-shed. It allows users to efficiently navigate large collections of railway models, purchases, wishlists, and other domain entities. The filtering experience must be responsive, touch-friendly, and consistent with the Mechanical Precision design language.
 
@@ -2014,6 +2080,3 @@ When creating a new component, ensure:
 **Document Version:** 1.0  
 **Last Updated:** November 2026  
 **Maintained by:** Design Systems & Frontend Architecture Team
-
-EOF
-echo "Part 3 created successfully"
