@@ -296,9 +296,7 @@ The theme layer is defined per theme block (`[data-theme='steampunk-dark']` and 
 **Font Loading:**
 ```html
 <!-- Include in src/app.html or +layout.svelte -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Fonts are bundled offline; see src/app.css (@font-face) and /static/fonts. No external Google Fonts links are required. -->
 ```
 
 ### 3.2 Typographic Scale
