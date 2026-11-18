@@ -1858,10 +1858,10 @@ Slide-up with fade:
 
 <SteampunkCard 
   title={m.model_details_title()}
-  subtitle="Model Information"
+  subtitle={m.model_information()}
   variant="elevated"
 >
-  <p>Model details go here...</p>
+  <p>{m.model_details_placeholder()}</p>
   
   {#snippet footer()}
     <Button variant="outline">{m.cancel_button()}</Button>
