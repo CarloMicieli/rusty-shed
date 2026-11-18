@@ -226,6 +226,13 @@ The application resolves the user theme to a `data-theme` value on the root docu
 
 The theme layer is defined per theme block (`[data-theme='steampunk-dark']` and `[data-theme='steampunk-light']`), with shared tokens in `:root` for typography, spacings, and theme-independent values. This matches the live app’s `themeStore` logic and avoids inverting dark/light behavior.
 
+**Token hierarchy and naming rules:**
+
+- **Canonical theme primitives**: `--color-surface-*`, `--color-primary-*`, `--color-error-*`, and `--color-warning-*` are the source of truth for palette definitions.
+- **Semantic helpers**: `--surface-elevated`, `--surface-hover`, `--border-subtle`, `--border-strong`, and `--primary` are component-facing aliases that adapt per theme.
+- **Do not mix styles**: component CSS must prefer semantic aliases over raw numbered surface values when a border or hover state is being expressed. Raw numbered tokens remain useful for calibration, but not for general component borders.
+- **Theme safety**: the dark theme should not reuse light-theme parchment values for separators, and vice versa; borders must remain legible against each background without relying on color alone.
+
 **Implementation (CSS):**
 ```css
 :root {
@@ -876,6 +883,13 @@ interface NavItem {
 - The “More” action opens a secondary submenu containing the remaining entries.
 - The same pattern may be used in compact desktop layouts when space is constrained, but the desktop shell should remain a true sidebar rather than a mobile-like bottom bar.
 
+**Collection-scale workflows:**
+- Large railway collections must remain searchable, filterable, and scannable without replacing the full layout with a mobile-only pattern.
+- The primary action row for a collection view should remain stable: search, filter, sort, and result summary must stay visible while the list scrolls.
+- On desktop and tablet, retain a persistent results context with sticky headers and clear active filter summary.
+- On mobile, the collection toolbar may compress vertically, but the same information hierarchy must remain: search, filters, sort, and active chips.
+- Every collection view must preserve a predictable “find → filter → act” flow so users can move from a large dataset to a single item without learning a new interaction model.
+
 ### 5.5 Drawer & Form Interaction Patterns
 
 Drawers are a primary interaction pattern throughout rusty-shed. They provide contextual workflows for creating, editing, and managing railway models, purchases, wishlists, and other application data. All drawers must follow the Mechanical Precision visual identity while providing consistent, accessible, and responsive interaction patterns.
@@ -1319,7 +1333,7 @@ All interactive elements and text must meet **WCAG AA standards**:
 - **Normal Text:** 4.5:1 contrast minimum
 - **Large Text (18px+ or 14px bold+):** 3:1 contrast minimum
 - **Graphics & UI Components:** 3:1 contrast minimum
-- **Touch Targets:** Minimum 44×44px on mobile and tablet interfaces; desktop controls may use 32px minimum but should never shrink below accessible tap size in responsive layouts
+- **Touch Targets:** Minimum 44×44px for all controls intended for touch, including Android, tablet, and any control that may be used by a finger or thumb; desktop controls may use a smaller hit box only when the control is not a primary tap target and remains keyboard-accessible. In all cases, the document prefers a minimum target of 32px for mouse-driven desktop controls, but never below the safe accessibility threshold for touch-first surfaces.
 
 **Testing Tools:**
 - WebAIM Contrast Checker
