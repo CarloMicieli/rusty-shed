@@ -2118,8 +2118,9 @@ When creating a new component, ensure:
 - **shadcn-svelte:** https://www.shadcn-svelte.com/
 - **Paraglide-JS i18n:** https://inlang.com/m/gkh6pjz9/library-inlang-paraglideJs
 - **WCAG Guidelines:** https://www.w3.org/WAI/WCAG21/quickref/
+- **Lucide Icons:** https://lucide.dev/
+- **Lucide Svelte:** https://lucide.dev/guide/packages/lucide-svelte
 - **Phosphor Icons:** https://phosphoricons.com/ (recommended icon set)
-- **Storybook Steampunk Design:** https://www.smashingmagazine.com/2021/03/steampunk-style-guide/
 
 ---
 
