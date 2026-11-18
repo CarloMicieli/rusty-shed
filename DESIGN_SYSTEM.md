@@ -59,6 +59,13 @@ The primary theme, optimized for desktop use and long editing sessions.
 ```css
 --color-surface-50: #f8f7f6;      /* Lightest metal finish */
 --color-surface-100: #eae8e5;     /* Light wash */
+--color-surface-200: #dcd9d4;     /* Warm iron divider */
+--color-surface-300: #ccc6bf;     /* Subtle metal edge */
+--color-surface-400: #b8afa6;     /* Field border */
+--color-surface-500: #3a3a3b;     /* Secondary metal plate */
+--color-surface-600: #2d2d2e;     /* Surface accent */
+--color-surface-700: #242425;      /* Card / panel */
+--color-surface-800: #1e1e1f;     /* Elevation */
 --color-surface-900: #1a1a1b;     /* Dark iron */
 --color-surface-950: #0f0f10;     /* Darkest iron */
 --color-background: #1a1a1b;      /* Primary background */
@@ -72,6 +79,10 @@ The primary theme, optimized for desktop use and long editing sessions.
 --secondary: hsl(240 6% 15%);     /* Secondary surface */
 --muted: hsl(240 6% 15%);         /* Muted interactive elements */
 --muted-foreground: hsl(240 5% 65%); /* Muted text (~#a8a8a8) */
+--surface-elevated: #242425;       /* Standard card surface */
+--surface-hover: #2b2b2d;          /* Hover lift */
+--border-subtle: #2d2d2e;          /* Divider line */
+--border-strong: #3a3a3b;          /* Strong boundary */
 ```
 
 #### Primary Colors: Copper Tones
@@ -144,7 +155,15 @@ Optimized for presentations and printing; secondary theme.
 ```css
 --color-surface-50: #fffdf7;      /* Brightest parchment */
 --color-surface-100: #fef9ed;     /* Light parchment */
+--color-surface-200: #fceee0;     /* Warm parchment lift */
+--color-surface-300: #f9ddd4;     /* Soft antique tint */
+--color-surface-400: #f4c8bf;     /* Highlighted brass boundary */
+--color-surface-500: #ebaaa3;     /* Muted vintage tone */
+--color-surface-600: #d99889;     /* Aging accent */
+--color-surface-700: #c68075;     /* Dusty crimson-brown */
+--color-surface-800: #b27462;     /* Deepened panel */
 --color-surface-900: #8f5a4d;     /* Dark sepia (rare; deep text) */
+--color-surface-950: #6b3d35;     /* Very deep sepia */
 --color-background: #f4ebd0;      /* Warm parchment (primary) */
 --color-background-alt: #e8dcc0;  /* Secondary parchment (panels) */
 ```
@@ -155,6 +174,10 @@ Optimized for presentations and printing; secondary theme.
 --foreground: hsl(35 27% 13%);    /* Dark sepia (#2d2419) */
 --primary: hsl(44 88% 38%);       /* Burnished brass (#d4a54a approx) */
 --primary-text: hsl(44 92% 26%);  /* Deeper brass (#b8860b, 5:1 contrast on parchment) */
+--surface-elevated: #e8dcc0;       /* Standard card surface */
+--surface-hover: #f1e7d0;          /* Subtle hover lift */
+--border-subtle: #d7c6a3;          /* Soft parchment divider */
+--border-strong: #bfa57c;          /* Strong brass-tinted boundary */
 ```
 
 #### Primary Colors: Brass Tones
@@ -209,6 +232,10 @@ The theme layer is defined per theme block (`[data-theme='steampunk-dark']` and 
   --font-family-body: 'Inter', system-ui, sans-serif;
   --font-family-heading: 'Bebas Neue', sans-serif;
   --radius: 0.625rem;
+  --surface-elevated: var(--color-background-alt);
+  --surface-hover: color-mix(in srgb, var(--color-primary-600) 8%, var(--color-background));
+  --border-subtle: var(--color-surface-200);
+  --border-strong: var(--color-surface-400);
 }
 
 [data-theme='steampunk-dark'] {
@@ -216,6 +243,10 @@ The theme layer is defined per theme block (`[data-theme='steampunk-dark']` and 
   --color-primary-600: #cd7f32;
   --heading-color: #c49b6e;
   --border: hsl(240 6% 15%);
+  --surface-elevated: #242425;
+  --surface-hover: #2b2b2d;
+  --border-subtle: #2d2d2e;
+  --border-strong: #3a3a3b;
 }
 
 [data-theme='steampunk-light'] {
@@ -223,6 +254,10 @@ The theme layer is defined per theme block (`[data-theme='steampunk-dark']` and 
   --color-primary-600: #e09a34;
   --heading-color: #b8860b;
   --border: hsl(32 30% 60%);
+  --surface-elevated: #e8dcc0;
+  --surface-hover: #f1e7d0;
+  --border-subtle: #d7c6a3;
+  --border-strong: #bfa57c;
 }
 ```
 
@@ -496,24 +531,25 @@ interface ButtonProps {
 <script>
   import Button from '$lib/components/ui/button/button.svelte';
   import { CheckCircle } from '@lucide/svelte';
+import * as m from '$lib/paraglide/messages.js';
 
-  let loading = $state(false);
+let loading = $state(false);
 
-  const handleClick = async () => {
-    loading = true;
-    // ... perform action ...
-    loading = false;
-  };
+const handleClick = async () => {
+  loading = true;
+  // ... perform action ...
+  loading = false;
+};
 </script>
 
-<Button 
-  variant="default" 
-  size="lg"
-  {loading}
-  onclick={handleClick}
+<Button
+variant="default"
+size="lg"
+{loading}
+onclick={handleClick}
 >
-  <CheckCircle size={20} />
-  {$m.core.actions.save()}
+<CheckCircle size={20} />
+{m.save_button()}
 </Button>
 ```
 
@@ -597,7 +633,7 @@ interface StatsCardProps {
 **Styling:**
 ```css
 .stats-card {
-  @apply rounded-lg bg-surface-900 border border-surface-100 p-lg;
+  @apply rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-6;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -652,7 +688,7 @@ interface GaugeStatCardProps {
   border-radius: 50%;
   background: conic-gradient(
     var(--color-primary-600) 0deg calc(var(--progress) * 3.6deg),
-    var(--color-surface-200) calc(var(--progress) * 3.6deg) 360deg
+    var(--border-subtle) calc(var(--progress) * 3.6deg) 360deg
   );
   box-shadow: 
     inset 0 0 10px rgba(0, 0, 0, 0.3),
@@ -717,9 +753,7 @@ interface InputProps {
 **Styling:**
 ```css
 input {
-  @apply w-full px-md py-sm rounded-md;
-  border: 1px solid var(--color-surface-100);
-  background: var(--color-background-alt);
+  @apply w-full rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-4 py-2;
   color: var(--color-text-950);
   font: 400 14px Inter, system-ui;
   transition: border-color 200ms, box-shadow 200ms;
@@ -803,14 +837,14 @@ interface NavItem {
 .sidebar {
   width: var(--sidebar-width);  /* 280px */
   background: color-mix(in srgb, var(--color-primary-600) 5%, var(--color-background) 95%);
-  border-right: 1px solid var(--color-surface-100);
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   transition: width 300ms ease;
 }
 
 .sidebar-item {
-  @apply px-md py-sm flex items-center gap-sm;
+  @apply flex items-center gap-2 px-4 py-2;
   color: var(--color-text-900);
   cursor: pointer;
   transition: all 150ms;
@@ -819,12 +853,12 @@ interface NavItem {
 }
 
 .sidebar-item:hover {
-  background: var(--color-surface-100);
+  background: var(--surface-hover);
   border-left-color: var(--color-primary-600);
 }
 
 .sidebar-item.active {
-  background: var(--color-surface-100);
+  background: var(--surface-hover);
   border-left-color: var(--color-primary-600);
   color: var(--color-primary-600);
   font-weight: 500;
@@ -1142,14 +1176,13 @@ interface DialogAction {
 }
 
 .dialog-content {
-  @apply rounded-xl bg-background border border-surface-100;
+  @apply rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)];
   box-shadow: 0 20px 25px rgba(0, 0, 0, 0.3);
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
   animation: slideUp 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -1186,7 +1219,7 @@ interface ToastProps {
 **Toast Signal Styling (Steampunk):**
 ```css
 .toast {
-  @apply rounded-md px-lg py-md flex items-center gap-md;
+  @apply flex items-center gap-4 rounded-md px-6 py-4;
   border-left: 4px solid;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   animation: slideInRight 300ms ease-out;
@@ -1507,8 +1540,8 @@ if (Array.isArray(data)) {
    ```json
    {
      "core.actions.save": "Save",
-     "core.actions.delete": "Delete",
-     "core.validation.required": "This field is required"
+     "delete_button": "Delete",
+     "error_required": "This field is required"
    }
    ```
 
@@ -1516,8 +1549,8 @@ if (Array.isArray(data)) {
    ```json
    {
      "core.actions.save": "Salva",
-     "core.actions.delete": "Elimina",
-     "core.validation.required": "Questo campo è obbligatorio"
+     "delete_button": "Elimina",
+     "error_required": "Questo campo è obbligatorio"
    }
    ```
 
@@ -1527,9 +1560,8 @@ if (Array.isArray(data)) {
      import * as m from '$lib/paraglide/messages.js';
    </script>
 
-   <button>{m.core.actions.save()}</button>
+   <button>{m.save_button()}</button>
    ```
-
 3. **Use in Rust (backend):**
    ```rust
    // Messages are sync'd via tauri-specta; use message keys as constants
@@ -1666,7 +1698,7 @@ Animated percentage fill on load:
   .gauge {
     background: conic-gradient(
       var(--color-primary-600) 0deg calc(var(--progress) * 3.6deg),
-      var(--color-surface-200) calc(var(--progress) * 3.6deg) 360deg
+      var(--border-subtle) calc(var(--progress) * 3.6deg) 360deg
     );
   }
 </style>
@@ -1721,7 +1753,7 @@ Slide-up with fade:
 ```svelte
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  
+
   interface Props {
     title: string;
     subtitle?: string;
@@ -1731,11 +1763,11 @@ Slide-up with fade:
   }
 
   const { title, subtitle, variant = 'default', children, footer } = $props();
-  
+
   const variantClass = {
-    default: 'bg-surface-900 border border-surface-100',
-    elevated: 'bg-surface-900 border-0 shadow-lg',
-    blueprint: 'bg-opacity-50 border-dashed border-primary-600'
+    default: 'border border-[var(--border-subtle)] bg-[var(--surface-elevated)]',
+    elevated: 'border-0 bg-[var(--surface-elevated)] shadow-lg',
+    blueprint: 'border border-dashed border-primary-600/70 bg-[color:var(--surface-hover)]'
   }[variant];
 </script>
 
@@ -1746,11 +1778,11 @@ Slide-up with fade:
       <p class="card-subtitle">{subtitle}</p>
     {/if}
   </div>
-  
+
   <div class="card-body">
     {@render children?.()}
   </div>
-  
+
   {#if footer}
     <div class="card-footer">
       {@render footer?.()}
@@ -1760,27 +1792,27 @@ Slide-up with fade:
 
 <style>
   .card {
-    @apply rounded-lg p-lg;
+    @apply rounded-lg p-6;
     transition: all 200ms ease-out;
   }
-  
+
   .card:hover {
     border-color: var(--color-primary-600);
   }
-  
+
   .card-header {
     margin-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--color-surface-100);
+    border-bottom: 1px solid var(--border-subtle);
     padding-bottom: var(--spacing-md);
   }
-  
+
   .card-title {
     font-family: 'Bebas Neue', Georgia, serif;
     font-size: 20px;
     color: var(--heading-color);
     margin: 0;
   }
-  
+
   .card-subtitle {
     font-size: 12px;
     color: var(--color-text-900);
@@ -1788,13 +1820,13 @@ Slide-up with fade:
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  
+
   .card-body {
     margin-bottom: var(--spacing-lg);
   }
-  
+
   .card-footer {
-    border-top: 1px solid var(--color-surface-100);
+    border-top: 1px solid var(--border-subtle);
     padding-top: var(--spacing-md);
     display: flex;
     gap: var(--spacing-md);
@@ -1811,15 +1843,15 @@ Slide-up with fade:
 </script>
 
 <SteampunkCard 
-  title={$m.models.details.title()}
+  title={m.model_details_title()}
   subtitle="Model Information"
   variant="elevated"
 >
   <p>Model details go here...</p>
   
   {#snippet footer()}
-    <Button variant="outline">{m.core.actions.cancel()}</Button>
-    <Button variant="default">{m.core.actions.save()}</Button>
+    <Button variant="outline">{m.cancel_button()}</Button>
+    <Button variant="default">{m.save_button()}</Button>
   {/snippet}
 </SteampunkCard>
 ```
@@ -1874,10 +1906,10 @@ Slide-up with fade:
 
   <div class="form-actions">
     <Button variant="outline" type="button">
-      {m.core.actions.cancel()}
+      {m.cancel_button()}
     </Button>
     <Button variant="default" type="submit" loading={loading}>
-      {m.core.actions.save()}
+      {m.save_button()}
     </Button>
   </div>
 </form>
