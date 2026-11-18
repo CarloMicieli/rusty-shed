@@ -1144,7 +1144,7 @@ Active filters must remain visible and easy to remove.
 
 **Summary:** filtering should feel like a disciplined engineer’s control panel: structured, transparent, and highly usable, rather than a decorative overlay. It must support real railway-data workflows without sacrificing the steampunk identity or mobile usability.
 
-### 5.7 Modals & Dialogs
+### 5.8 Modals & Dialogs
 
 #### Dialog (Modal)
 
