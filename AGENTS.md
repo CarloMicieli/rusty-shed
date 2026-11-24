@@ -35,5 +35,6 @@ A task is **Complete** only when this sequence passes with **zero** errors/warni
 
 # 📝 Commit Convention
 
-- Use **Conventional Commits** (e.g., `feat:`, `fix:`, `refactor:`, `chore:`).
-- Only commit once the full **Workflow Protocol** has been satisfied.
+- Follow the commit conventions configured in the root `.cz.toml`.
+- Use its configured prefixes and message format; do not hardcode conventions.
+- Only commit after the full **Workflow Protocol** has been satisfied.
