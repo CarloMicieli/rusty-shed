@@ -4,7 +4,7 @@ Status: Accepted
 
 Date: 2025-12-24
 
-Decider: Project Lead
+Deciders: Project Lead
 
 ## 1. Context and Problem Statement
 
@@ -75,3 +75,10 @@ The ability to write railway simulation or logic in Rust ensures the app remains
 - _Positive_: We gain access to the entire NPM ecosystem for UI components (charts, drag-and-drop, etc.).
 - _Negative_: We must manage a "Bridge" (IPC) between the Rust backend and the JavaScript frontend.
 - _Neutral_: Developers must be comfortable context-switching between Rust and TypeScript.
+
+## 5. More Information
+
+- [Tauri 2.0 Official Documentation](https://tauri.app/)
+- [Tauri vs Electron: Comparison](https://tauri.app/en/v1/guides/faq/#how-is-tauri-different-from-electron)
+- [Web Frameworks Comparison: React, Vue, Svelte](https://www.npmtrends.com/react-vs-vue-vs-svelte)
+- [Rust Performance and Safety Benefits](https://www.rust-lang.org/)

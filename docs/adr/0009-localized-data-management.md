@@ -43,41 +43,37 @@ Separate table for strings with language codes.
 
 ## 4. Decision Outcome
 
-Chosen Option: **Chosen Option: Option A (Relational Table).** This approach is superior for a collection manager where search accuracy across different languages is a primary feature. We will use a "one-to-many" relationship coupled with SQLite FTS5 triggers
+Chosen Option: Option A (Relational Table)
+
+### Justification
+
+This approach is superior for a collection manager where search accuracy across different languages is a primary feature. We will use a "one-to-many" relationship coupled with SQLite FTS5 triggers to maintain data consistency and search performance.
 
 ### Consequences
 
-In a **MADR** format, the "Consequences" section is where you acknowledge both the positive outcomes and the trade-offs (the "price you pay") for your decision.
-
-For your model railway app, the consequences center on the shift of complexity from the UI/Domain layer into the Database/Infrastructure layer.
-
-Here is the **Consequences** section for your ADR:
-
----
-
-## Consequences
-
-### Positive (The Wins)
+Positive:
 
 - **Data Integrity:** Foreign keys ensure that no translation exists without a parent product, preventing "orphan" text.
 - **Search Performance:** By using a relational table and FTS5, searching for technical terms like "Dampflok" or "Epoche III" remains O(log N) even as the collection grows.
 - **Minimal IPC Payload:** The app only sends the strings for the active language over the Tauri bridge, keeping memory usage low on the Svelte side.
 - **Type Safety:** The `LocalizedString` type in Rust prevents developers from accidentally treating a localized object as a raw string.
 
-### Negative (The Trade-offs)
+Negative:
 
 - **Increased Write Complexity:** Every "Create Product" action now requires multiple database inserts (one for the product, at least one for the translation).
 - **Join Overhead:** Reading a product now requires a `LEFT JOIN`, which is slightly more CPU-intensive for the database than a simple single-table select.
 - **Migration Management:** Adding a new localized field (e.g., adding a `short_history` field) now requires updating both the relational table and the FTS5 virtual table/triggers.
 
-### Neutral / Risks
+Neutral / Risks:
 
 - **Fallback Maintenance:** The system assumes "en" is always present. If a product is added without an English translation, the `COALESCE` logic must be robust enough to handle nulls or return the SKU as a last resort.
 - **Trigger Maintenance:** If the database schema changes, triggers must be manually updated to keep the `product_search_idx` in sync, as SQLx cannot verify triggers at compile-time.
 
-### Technical Details
+## 5. More Information
 
-#### 1. Database Schema & FTS
+### Technical Implementation Details
+
+#### Database Schema & FTS
 
 ```sql
 -- Core Railway Model Table
@@ -119,7 +115,7 @@ AFTER INSERT ON railway_model_translations BEGIN
 END;
 ```
 
-#### 2. Domain Layer: Custom Types
+#### Domain Layer: Custom Types
 
 We define a `LocalizedString` type to ensure the business logic explicitly handles language context.
 
@@ -141,7 +137,7 @@ pub struct RailwayModel {
 
 ```
 
-#### 3. Infrastructure Layer: Fetching with Fallback
+#### Infrastructure Layer: Fetching with Fallback
 
 The Rust repository uses `COALESCE` to provide a fallback language (e.g., English) if the user's preferred language is missing.
 
@@ -175,7 +171,7 @@ pub async fn get_model(pool: &SqlitePool, id: &str, lang: &str) -> Result<Railwa
 
 ```
 
-#### 4. UI Layer: Svelte 5 Integration
+#### UI Layer: Svelte 5 Integration
 
 IPC commands send only the relevant `LocalizedString` to the Svelte frontend.
 

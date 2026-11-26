@@ -114,3 +114,10 @@ Negative (Risks & Mitigations)
 
 - Schema Rigidity: Changing a table name in the Catalog domain will break the Collection query.
   - Mitigation: We will use a SQL View (as discussed) to provide a stable interface, decoupling the Rust code from the underlying table names.
+
+## 5. More Information
+
+- [ADR 0004: Clean Architecture for Feature Implementation](0004-layered-ddd-for-feature-implementation.md)
+- [ADR 0005: Implementation of CQRS Pattern for Read Operations](0005-implementation-of-cqrs-pattern-for-read-operations.md)
+- [Clean Architecture by Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [Domain-Driven Design: Bounded Contexts](https://www.domainlanguage.com/ddd/)
