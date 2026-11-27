@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Trash2, Combine, Zap } from '@lucide/svelte';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import Combine from '@lucide/svelte/icons/combine';
+  import Zap from '@lucide/svelte/icons/zap';
   import type { TrainFormationSummary } from '$lib/bindings.js';
 
   let {

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
-  import { X, ShoppingCart, Loader2 } from '@lucide/svelte';
+  import X from '@lucide/svelte/icons/x';
+  import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
+  import Loader2 from '@lucide/svelte/icons/loader-2';
   import { commands } from '$lib/bindings';
   import type { SellerView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';

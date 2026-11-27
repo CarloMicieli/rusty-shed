@@ -1,4 +1,10 @@
-import { Flame, Fuel, Heart, PackageOpen, Tag as TagIcon, TrainFront, Zap } from '@lucide/svelte';
+import Flame from '@lucide/svelte/icons/flame';
+import Fuel from '@lucide/svelte/icons/fuel';
+import Heart from '@lucide/svelte/icons/heart';
+import PackageOpen from '@lucide/svelte/icons/package-open';
+import TagIcon from '@lucide/svelte/icons/tag';
+import TrainFront from '@lucide/svelte/icons/train-front';
+import Zap from '@lucide/svelte/icons/zap';
 
 // Lucide exports Svelte components; use a representative type alias.
 export type IconComponent = typeof Flame;

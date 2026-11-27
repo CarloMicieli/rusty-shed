@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { X, ClipboardList } from '@lucide/svelte';
+  import X from '@lucide/svelte/icons/x';
+  import ClipboardList from '@lucide/svelte/icons/clipboard-list';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {

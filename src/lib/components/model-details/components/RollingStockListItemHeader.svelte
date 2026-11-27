@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import type { RollingStock } from '$lib/types/railway-model';
-  import { Settings, Trash2 } from '@lucide/svelte';
+  import Settings from '@lucide/svelte/icons/settings';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as m from '$lib/paraglide/messages';
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
   import RollingStockIdentityCluster from './RollingStockIdentityCluster.svelte';

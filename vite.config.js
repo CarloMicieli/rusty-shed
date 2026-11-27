@@ -9,7 +9,11 @@ const host = typeof process !== 'undefined' ? process.env?.TAURI_DEV_HOST : unde
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    paraglideVitePlugin({ project: './project.inlang', outdir: './src/paraglide' }),
+    paraglideVitePlugin({
+      project: './project.inlang',
+      outdir: './src/lib/paraglide',
+      outputStructure: 'locale-modules'
+    }),
     tailwindcss(),
     sveltekit()
   ],
@@ -56,6 +60,7 @@ export default defineConfig({
 
   test: {
     expect: { requireAssertions: true },
+    execArgv: ['--no-experimental-webstorage'],
 
     projects: [
       {

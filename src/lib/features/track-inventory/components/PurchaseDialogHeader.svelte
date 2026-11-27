@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { X, ShoppingCart } from '@lucide/svelte';
+  import X from '@lucide/svelte/icons/x';
+  import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
 
   interface Props {
     onClose: () => void;

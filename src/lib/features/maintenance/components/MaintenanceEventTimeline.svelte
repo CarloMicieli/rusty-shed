@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Wrench, Trash2 } from '@lucide/svelte';
+  import Wrench from '@lucide/svelte/icons/wrench';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
   import type { MaintenanceCardEventView } from '$lib/bindings';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 

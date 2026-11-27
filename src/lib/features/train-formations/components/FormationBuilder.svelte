@@ -1,7 +1,9 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components/ui/button';
-  import { Plus, ChevronLeft, ChevronDown } from '@lucide/svelte';
+  import Plus from '@lucide/svelte/icons/plus';
+  import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+  import ChevronDown from '@lucide/svelte/icons/chevron-down';
   import * as Tooltip from '$lib/components/ui/tooltip';
   import IdentityCard from './IdentityCard.svelte';
   import FormationTrack from './FormationTrack.svelte';

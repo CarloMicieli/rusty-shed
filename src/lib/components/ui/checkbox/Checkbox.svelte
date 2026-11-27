@@ -7,7 +7,7 @@
    * Feature: 012-shadcn-migration
    */
   import { twMerge } from 'tailwind-merge';
-  import { Check } from '@lucide/svelte';
+  import Check from '@lucide/svelte/icons/check';
 
   type Props = {
     checked?: boolean;

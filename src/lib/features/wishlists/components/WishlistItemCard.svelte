@@ -1,6 +1,12 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Trash2, ShoppingCart, MoveRight, TrainFront, Box, Users, Layers } from '@lucide/svelte';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
+  import MoveRight from '@lucide/svelte/icons/move-right';
+  import TrainFront from '@lucide/svelte/icons/train-front';
+  import Box from '@lucide/svelte/icons/box';
+  import Users from '@lucide/svelte/icons/users';
+  import Layers from '@lucide/svelte/icons/layers';
   import type { WishlistItem, RailwayModelView, MonetaryAmount } from '$lib/bindings';
   import { Badge, Button, Card, CardContent, CardHeader } from '$lib/components';
   import { onMount } from 'svelte';

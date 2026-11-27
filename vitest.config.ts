@@ -1,12 +1,13 @@
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 
 export default defineConfig({
   plugins: [svelte()],
   test: {
     environment: 'happy-dom',
     globals: true,
+    execArgv: ['--no-experimental-webstorage'],
     setupFiles: ['./src/__tests__/setup.ts'],
     include: ['src/**/*.{test,spec}.{js,ts}'],
     server: {

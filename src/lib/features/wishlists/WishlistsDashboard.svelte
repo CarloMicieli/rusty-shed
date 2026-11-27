@@ -3,7 +3,11 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/stores';
   import * as m from '$lib/paraglide/messages.js';
-  import { Sparkles, Heart, LayoutGrid, Table, PackagePlus } from '@lucide/svelte';
+  import Sparkles from '@lucide/svelte/icons/sparkles';
+  import Heart from '@lucide/svelte/icons/heart';
+  import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+  import Table from '@lucide/svelte/icons/table';
+  import PackagePlus from '@lucide/svelte/icons/package-plus';
   import { onMount } from 'svelte';
   import { getWishlistContext } from './WishlistState.svelte';
   import { Button } from '$lib/components';

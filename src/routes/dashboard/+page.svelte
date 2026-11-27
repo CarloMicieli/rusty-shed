@@ -6,7 +6,13 @@
   import { getContext, onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Heart, ShoppingBag, RefreshCw, House, Wrench, Wallet, Train } from '@lucide/svelte';
+  import Heart from '@lucide/svelte/icons/heart';
+  import ShoppingBag from '@lucide/svelte/icons/shopping-bag';
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+  import House from '@lucide/svelte/icons/house';
+  import Wrench from '@lucide/svelte/icons/wrench';
+  import Wallet from '@lucide/svelte/icons/wallet';
+  import Train from '@lucide/svelte/icons/train';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, Card, CardContent, Skeleton } from '$lib/components';
 

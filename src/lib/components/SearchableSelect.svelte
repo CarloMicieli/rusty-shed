@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Search, ChevronDown, Check } from '@lucide/svelte';
+  import Search from '@lucide/svelte/icons/search';
+  import ChevronDown from '@lucide/svelte/icons/chevron-down';
+  import Check from '@lucide/svelte/icons/check';
   import type { Component, Snippet } from 'svelte';
   import * as Popover from '$lib/components/ui/popover';
 

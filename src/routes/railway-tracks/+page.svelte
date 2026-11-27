@@ -9,7 +9,8 @@
   import DeleteInventoryDialog from '$lib/features/track-inventory/components/DeleteInventoryDialog.svelte';
   import AddTracksPurchaseDrawer from '$lib/features/track-inventory/components/AddTracksPurchaseDrawer.svelte';
   import { onMount } from 'svelte';
-  import { Plus, TrainTrack } from '@lucide/svelte';
+  import Plus from '@lucide/svelte/icons/plus';
+  import TrainTrack from '@lucide/svelte/icons/train-track';
   import { Button, PageHeader, EmptyState } from '$lib/components';
 
   const service = getTrackInventoryContext();

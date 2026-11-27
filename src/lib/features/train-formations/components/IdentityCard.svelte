@@ -1,7 +1,9 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components/ui/button';
-  import { Settings2, Trash2, ZapOff } from '@lucide/svelte';
+  import Settings2 from '@lucide/svelte/icons/settings-2';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import ZapOff from '@lucide/svelte/icons/zap-off';
   import * as Dialog from '$lib/components/ui/dialog';
   import * as Tooltip from '$lib/components/ui/tooltip';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';

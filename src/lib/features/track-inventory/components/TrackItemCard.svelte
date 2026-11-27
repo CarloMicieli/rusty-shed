@@ -2,7 +2,11 @@
   import type { TrackInventoryItemView } from '$lib/features/track-inventory';
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
   import * as m from '$lib/paraglide/messages';
-  import { AlertTriangle, Edit2, Check, X, Trash2 } from '@lucide/svelte';
+  import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
+  import Edit2 from '@lucide/svelte/icons/edit-2';
+  import Check from '@lucide/svelte/icons/check';
+  import X from '@lucide/svelte/icons/x';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
   import { Input } from '$lib/components';
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { SearchX } from '@lucide/svelte';
+  import SearchX from '@lucide/svelte/icons/search-x';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {

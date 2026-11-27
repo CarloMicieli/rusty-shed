@@ -1,7 +1,10 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import type { Editor } from '@tiptap/core';
-  import { Bold, Italic, List, ListOrdered } from '@lucide/svelte';
+  import Bold from '@lucide/svelte/icons/bold';
+  import Italic from '@lucide/svelte/icons/italic';
+  import List from '@lucide/svelte/icons/list';
+  import ListOrdered from '@lucide/svelte/icons/list-ordered';
   import { Button } from '$lib/components/ui/button';
 
   let { editor }: { editor: Editor | null } = $props();
