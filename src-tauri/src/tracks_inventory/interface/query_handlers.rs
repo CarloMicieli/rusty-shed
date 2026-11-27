@@ -17,7 +17,7 @@ pub async fn get_track_inventories_inner(
     let pool = state.db_pool();
     let mut uow = SqliteUnitOfWork::new(&pool)
         .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+        .map_err(|e| CommandError::database(e.to_string()))?;
 
     let inventories = GetTrackInventoriesQuery::execute(&mut uow).await?;
 
@@ -49,7 +49,7 @@ pub async fn get_track_inventory_inner(
     let pool = state.db_pool();
     let mut uow = SqliteUnitOfWork::new(&pool)
         .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+        .map_err(|e| CommandError::database(e.to_string()))?;
 
     let inventory = GetTrackInventoryQuery::execute(&mut uow, &id).await?;
 
@@ -83,7 +83,7 @@ pub async fn get_track_products_inner(
     let pool = state.db_pool();
     let mut uow = SqliteUnitOfWork::new(&pool)
         .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+        .map_err(|e| CommandError::database(e.to_string()))?;
 
     let products = GetTrackProductsQuery::execute(&mut uow, lang).await?;
 
@@ -157,7 +157,7 @@ mod tests {
         let result = get_track_inventory_inner(&state, missing_id).await;
 
         assert!(
-            matches!(result, Err(CommandError::NotFound(_))),
+            matches!(result, Err(CommandError::NotFound { .. })),
             "{result:?}"
         );
     }

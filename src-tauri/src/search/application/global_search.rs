@@ -38,7 +38,7 @@ impl GlobalSearch {
         U: GlobalSearchUowExt + Send,
     {
         if input.query.trim().len() < 2 {
-            return Err(DomainError::Validation(
+            return Err(DomainError::validation(
                 "search query must be at least 2 characters".to_string(),
             ));
         }
@@ -89,7 +89,7 @@ mod tests {
         )
         .await;
 
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[tokio::test]

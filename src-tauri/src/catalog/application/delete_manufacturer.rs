@@ -18,19 +18,20 @@ impl DeleteManufacturer {
             .find_by_id(id)
             .await?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Manufacturer".to_string(),
                 identifier: id.to_string(),
             })?;
 
         if manufacturer.is_system_seeded {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "Protected entity cannot be deleted".to_string(),
             ));
         }
 
         let usage_count = repo.find_usage_count(id).await?;
         if usage_count > 0 {
-            return Err(DomainError::BusinessRule(format!(
+            return Err(DomainError::business_rule(format!(
                 "Entity is still in use ({usage_count})"
             )));
         }
@@ -38,6 +39,7 @@ impl DeleteManufacturer {
         let affected = repo.delete_by_id(id).await?;
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Manufacturer".to_string(),
                 identifier: id.to_string(),
             });
@@ -126,7 +128,7 @@ mod tests {
         let mut uow = FakeUow::with_manufacturers_repo(repo);
         let result = DeleteManufacturer::execute(&mut uow, &id).await;
 
-        assert!(matches!(result, Err(DomainError::BusinessRule(_))));
+        assert!(matches!(result, Err(DomainError::BusinessRule { .. })));
     }
 
     #[tokio::test]
@@ -147,7 +149,7 @@ mod tests {
         let mut uow = FakeUow::with_manufacturers_repo(repo);
         let result = DeleteManufacturer::execute(&mut uow, &id).await;
 
-        assert!(matches!(result, Err(DomainError::BusinessRule(_))));
+        assert!(matches!(result, Err(DomainError::BusinessRule { .. })));
     }
 
     #[tokio::test]

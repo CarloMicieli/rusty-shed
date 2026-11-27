@@ -327,7 +327,7 @@ mod tests {
         let state = app_state(pool);
         let result = create_manufacturer_inner(&state, minimal_args(" ")).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -344,7 +344,7 @@ mod tests {
 
         let second = create_manufacturer_inner(&state, minimal_args("acme")).await;
         assert!(
-            matches!(second, Err(CommandError::Conflict(_))),
+            matches!(second, Err(CommandError::Conflict { .. })),
             "Expected Conflict, got: {:?}",
             second
         );
@@ -412,7 +412,7 @@ mod tests {
         .await;
 
         assert!(
-            matches!(result, Err(CommandError::BusinessRule(_))),
+            matches!(result, Err(CommandError::BusinessRule { .. })),
             "Expected BusinessRule, got: {:?}",
             result
         );

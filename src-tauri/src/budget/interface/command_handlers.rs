@@ -48,9 +48,9 @@ fn map_monthly_budget_record_dto(
     };
 
     let year = Year::try_from(record.year)
-        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+        .map_err(|e| CommandError::from(DomainError::validation(e.to_string())))?;
     let month = Month::try_from(record.month)
-        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+        .map_err(|e| CommandError::from(DomainError::validation(e.to_string())))?;
 
     Ok(MonthlyBudgetRecordDto {
         year,
@@ -171,7 +171,7 @@ pub async fn get_monthly_budget_records_inner(
     let year = match args.year {
         Some(y) => y,
         None => Year::try_from(chrono::Utc::now().year())
-            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?,
+            .map_err(|e| CommandError::from(DomainError::validation(e.to_string())))?,
     };
 
     info!("Fetching monthly budget records for year {}", year.value());
@@ -211,7 +211,7 @@ pub async fn get_budget_bootstrap_inner(
     let year = match args.year {
         Some(year) => year,
         None => Year::try_from(chrono::Utc::now().year())
-            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?,
+            .map_err(|e| CommandError::from(DomainError::validation(e.to_string())))?,
     };
 
     info!(
@@ -285,7 +285,7 @@ pub async fn remove_extra_budget_inner(
     info!("Removing extra budget entry: {}", args.id);
 
     let id =
-        ExtraBudgetId::try_from(args.id).map_err(|e| DomainError::Validation(e.to_string()))?;
+        ExtraBudgetId::try_from(args.id).map_err(|e| DomainError::validation(e.to_string()))?;
 
     let mut unit_of_work = state.unit_of_work().await?;
     RemoveExtraBudgetUseCase::execute(&mut unit_of_work, id).await?;
@@ -351,7 +351,7 @@ fn resolve_quarterly_year(input: Option<Year>) -> Result<Year, CommandError> {
     match input {
         Some(year) => Ok(year),
         None => Year::try_from(chrono::Utc::now().year())
-            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string()))),
+            .map_err(|e| CommandError::from(DomainError::validation(e.to_string()))),
     }
 }
 
@@ -768,7 +768,7 @@ mod tests {
         )
         .await;
 
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -863,7 +863,7 @@ mod tests {
         };
 
         let result = map_monthly_budget_record_dto(record);
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[test]
@@ -881,7 +881,7 @@ mod tests {
         };
 
         let result = map_monthly_budget_record_dto(record);
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[test]

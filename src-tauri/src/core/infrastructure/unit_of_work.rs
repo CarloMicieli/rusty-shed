@@ -54,7 +54,7 @@ impl AppUnitOfWork for SqliteUnitOfWork {
         (*self)
             .commit()
             .await
-            .map_err(|e| CommandError::DatabaseError(e.to_string()))
+            .map_err(|error| CommandError::database(error.to_string()))
     }
 }
 
@@ -75,7 +75,7 @@ impl AppUowFactory for SqliteUowFactory {
     async fn create_uow(&self) -> Result<Box<dyn AppUnitOfWork>, CommandError> {
         let uow = SqliteUnitOfWork::new(&self.pool)
             .await
-            .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+            .map_err(|error| CommandError::database(error.to_string()))?;
         Ok(Box::new(uow))
     }
 }

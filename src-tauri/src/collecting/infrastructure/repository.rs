@@ -251,6 +251,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 
         if result.rows_affected() == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "CollectionItem".to_string(),
                 identifier: collection_item_id.to_string(),
             });
@@ -274,6 +275,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 
         if result.rows_affected() == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "PurchaseInfo".to_string(),
                 identifier: collection_item_id.to_string(),
             });
@@ -304,6 +306,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 
         if result.rows_affected() == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "PurchaseInfo".to_string(),
                 identifier: collection_item_id.to_string(),
             });
@@ -328,6 +331,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 
         if result.rows_affected() == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "PurchaseInfo".to_string(),
                 identifier: collection_item_id.to_string(),
             });
@@ -364,10 +368,11 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 
         match existing_removed_date {
             None => Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "CollectionItem".to_string(),
                 identifier: collection_item_id.to_string(),
             }),
-            Some(_) => Err(DomainError::BusinessRule(
+            Some(_) => Err(DomainError::business_rule(
                 "Collection item is already sold".to_string(),
             )),
         }
@@ -394,6 +399,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 
         if result.rows_affected() == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "PurchaseInfo".to_string(),
                 identifier: collection_item_id.to_string(),
             });
@@ -898,7 +904,7 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
             collection_row.total_value_amount,
             Some(&collection_row.total_value_currency),
         )
-        .map_err(|err| DomainError::Validation(err.to_string()))?;
+        .map_err(|err| DomainError::validation(err.to_string()))?;
 
         let summary = CollectionSummary {
             locomotives_count: collection_row.locomotives_count as u16,
@@ -950,6 +956,7 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
 
         if result.rows_affected() == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "PreorderPurchaseInfo".to_string(),
                 identifier: collection_item_id.to_string(),
             });
@@ -997,6 +1004,7 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
 
         if result.rows_affected() == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "PurchaseInfo".to_string(),
                 identifier: collection_item_id.to_string(),
             });

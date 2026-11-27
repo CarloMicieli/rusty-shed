@@ -60,7 +60,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 .bind(&formation.id)
                 .fetch_optional(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         if existing.is_some() {
             sqlx::query(
@@ -82,12 +82,12 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             .await
             .map_err(|e| {
                 if e.to_string().contains("UNIQUE") {
-                    DomainError::BusinessRule(format!(
+                    DomainError::business_rule(format!(
                         "A formation named '{}' already exists",
                         formation.name
                     ))
                 } else {
-                    DomainError::Infrastructure(e.to_string())
+                    DomainError::infrastructure(e.to_string())
                 }
             })?;
         } else {
@@ -110,12 +110,12 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             .await
             .map_err(|e| {
                 if e.to_string().contains("UNIQUE") {
-                    DomainError::BusinessRule(format!(
+                    DomainError::business_rule(format!(
                         "A formation named '{}' already exists",
                         formation.name
                     ))
                 } else {
-                    DomainError::Infrastructure(e.to_string())
+                    DomainError::infrastructure(e.to_string())
                 }
             })?;
         }
@@ -132,9 +132,10 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(id)
         .fetch_optional(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let row = row.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "TrainFormation".into(),
             identifier: id.into(),
         })?;
@@ -150,7 +151,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(id)
         .fetch_all(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let domain_elements: Vec<FormationElement> = elements
             .into_iter()
@@ -183,11 +184,12 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             .bind(id)
             .execute(&mut *self.conn)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?
             .rows_affected();
 
         if rows_affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "TrainFormation".into(),
                 identifier: id.into(),
             });
@@ -205,9 +207,10 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(id)
         .fetch_optional(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let row = row.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "TrainFormation".into(),
             identifier: id.into(),
         })?;
@@ -253,7 +256,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(id)
         .fetch_all(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let elements: Vec<FormationElementView> = element_rows
             .into_iter()
@@ -303,7 +306,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         )
         .fetch_all(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let mut summaries = Vec::with_capacity(rows.len());
         for row in rows {
@@ -334,8 +337,9 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(id)
         .fetch_optional(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "TrainFormation".into(),
             identifier: id.into(),
         })?;
@@ -346,7 +350,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 .bind(id)
                 .fetch_one(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         let has_traction = self.compute_has_traction(id).await?;
         Ok(mappers::formation_row_to_view(
             row,
@@ -369,7 +373,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(formation_id)
         .fetch_optional(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .flatten();
 
         let position = max_pos.map(|p| p + 1).unwrap_or(0);
@@ -392,7 +396,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(&now)
         .execute(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         Ok(())
     }
@@ -405,9 +409,10 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 .bind(element_id)
                 .fetch_optional(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let pos = pos.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "FormationElement".into(),
             identifier: element_id.into(),
         })?;
@@ -417,13 +422,13 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 .bind(element_id)
                 .fetch_one(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         sqlx::query("DELETE FROM formation_elements WHERE id = ?")
             .bind(element_id)
             .execute(&mut *self.conn)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         // Shift all subsequent elements down by 1
         sqlx::query(
@@ -434,7 +439,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(pos)
         .execute(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         Ok(())
     }
@@ -454,7 +459,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             .bind(formation_id)
             .execute(&mut *self.conn)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         }
         Ok(())
     }
@@ -483,7 +488,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             .bind(element_id)
             .fetch_optional(&mut *self.conn)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
             let (series_code, company_name) = snapshot.unwrap_or_default();
 
@@ -502,7 +507,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             .bind(element_id)
             .execute(&mut *self.conn)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         } else {
             sqlx::query(
                 r#"UPDATE formation_elements
@@ -516,7 +521,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             .bind(element_id)
             .execute(&mut *self.conn)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         }
 
         self.get_element_view(element_id).await
@@ -537,11 +542,12 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(element_id)
         .execute(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .rows_affected();
 
         if rows == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "FormationElement".into(),
                 identifier: element_id.into(),
             });
@@ -592,9 +598,10 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(element_id)
         .fetch_optional(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let row = row.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "FormationElement".into(),
             identifier: element_id.into(),
         })?;
@@ -631,7 +638,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 .bind(&pattern)
                 .fetch_all(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?
             } else {
                 sqlx::query_as(
                     r#"SELECT p.id, p.railway_company_id, rc.name AS company_name,
@@ -649,7 +656,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 )
                 .fetch_all(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?
             };
 
         // Group by railway company preserving ORDER BY order
@@ -725,12 +732,12 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .await
         .map_err(|e| {
             if e.to_string().contains("UNIQUE") {
-                DomainError::BusinessRule(format!(
+                DomainError::business_rule(format!(
                     "A prototype with series code '{}' already exists for this company",
                     params.series_code
                 ))
             } else {
-                DomainError::Infrastructure(e.to_string())
+                DomainError::infrastructure(e.to_string())
             }
         })?;
 
@@ -765,7 +772,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         )
         .fetch_all(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         Ok(rows
             .into_iter()
@@ -790,9 +797,9 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .await
         .map_err(|e| {
             if e.to_string().contains("UNIQUE") {
-                DomainError::BusinessRule(format!("Category '{name}' already exists"))
+                DomainError::business_rule(format!("Category '{name}' already exists"))
             } else {
-                DomainError::Infrastructure(e.to_string())
+                DomainError::infrastructure(e.to_string())
             }
         })?;
 
@@ -817,7 +824,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 .bind(id)
                 .fetch_optional(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         Ok(row.map(mappers::category_row_to_view))
     }
@@ -828,9 +835,10 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 .bind(company_id)
                 .fetch_optional(&mut *self.conn)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         name.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "RailwayCompany".into(),
             identifier: company_id.into(),
         })
@@ -854,7 +862,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         .bind(formation_id)
         .fetch_one(&mut *self.conn)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         Ok(count > 0)
     }
@@ -1096,7 +1104,7 @@ mod tests {
 
         assert!(result.is_err(), "duplicate name must fail");
         assert!(
-            matches!(result.unwrap_err(), DomainError::BusinessRule(_)),
+            matches!(result.unwrap_err(), DomainError::BusinessRule { .. }),
             "expected BusinessRule error"
         );
     }

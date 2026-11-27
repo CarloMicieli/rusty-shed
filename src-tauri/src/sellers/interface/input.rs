@@ -291,7 +291,7 @@ mod update_seller_payload_conversion_tests {
         let converted = UpdateSellerInput::try_from(payload);
 
         match converted {
-            Err(CommandError::ValidationError(map)) => {
+            Err(CommandError::ValidationError { fields: map, .. }) => {
                 assert!(map.contains_key("id"), "{map:?}");
             }
             other => panic!("expected ValidationError for id, got {other:?}"),
@@ -306,7 +306,7 @@ mod update_seller_payload_conversion_tests {
         let converted = UpdateSellerInput::try_from(payload);
 
         match converted {
-            Err(CommandError::ValidationError(map)) => {
+            Err(CommandError::ValidationError { fields: map, .. }) => {
                 assert!(map.contains_key("createdAt"), "{map:?}");
             }
             other => panic!("expected ValidationError for createdAt, got {other:?}"),

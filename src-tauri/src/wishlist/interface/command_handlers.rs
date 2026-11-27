@@ -186,7 +186,7 @@ pub async fn add_railway_model_to_wish_list_inner(
     let save_input: SaveRailwayModelInput = args.railway_model.try_into()?;
     let railway_model_id = SaveRailwayModel::execute(&mut unit_of_work, save_input).await?;
     let target_wishlist_id = WishlistId::try_from(args.wishlist_id.as_str())
-        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+        .map_err(|e| CommandError::from(DomainError::validation(e.to_string())))?;
     let id_provider = RuntimeIdProvider::new();
     let desired_price = parse_optional_desired_price(
         args.desired_price_amount,
@@ -213,7 +213,7 @@ fn parse_optional_desired_price(
     match (amount, currency_code) {
         (Some(amount), Some(code)) => {
             let currency = Currency::from_code(code)
-                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+                .map_err(|e| CommandError::from(DomainError::validation(e.to_string())))?;
             Ok(Some(MonetaryAmount::new(amount, currency)))
         }
         _ => Ok(None),

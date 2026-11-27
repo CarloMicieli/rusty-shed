@@ -60,12 +60,13 @@ impl Wishlist {
             .iter()
             .find(|i| i.id == *item_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistItem".to_string(),
                 identifier: item_id.to_string(),
             })?;
 
         if item.status != WishlistStatus::Wanted && item.status != WishlistStatus::OnOrder {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "Item is not available for purchase".to_string(),
             ));
         }
@@ -95,7 +96,7 @@ impl Wishlist {
         // At least one field must be provided.
         if priority.is_none() && status.is_none() && desired_price.is_none() && added_date.is_none()
         {
-            return Err(DomainError::Validation(
+            return Err(DomainError::validation(
                 "At least one field must be provided to update".to_string(),
             ));
         }
@@ -104,7 +105,7 @@ impl Wishlist {
         if let Some(date) = added_date {
             let today = chrono::Local::now().date_naive();
             if date > today {
-                return Err(DomainError::Validation(
+                return Err(DomainError::validation(
                     "Added date must not be in the future".to_string(),
                 ));
             }
@@ -115,6 +116,7 @@ impl Wishlist {
             .iter()
             .find(|i| i.id == *item_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistItem".to_string(),
                 identifier: item_id.to_string(),
             })?;
@@ -280,7 +282,7 @@ mod tests {
         let mut wishlist = make_wishlist(item);
 
         let result = wishlist.update_item(&item_id, None, None, None, None);
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[test]
@@ -293,7 +295,7 @@ mod tests {
         // Use a date far in the future
         let future_date = NaiveDate::from_ymd_opt(2099, 12, 31).unwrap();
         let result = wishlist.update_item(&item_id, None, None, None, Some(future_date));
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[test]

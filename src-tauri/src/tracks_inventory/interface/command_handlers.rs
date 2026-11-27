@@ -368,7 +368,7 @@ pub async fn set_item_required_inner(
     };
 
     if !updated {
-        return Err(CommandError::NotFound(format!(
+        return Err(CommandError::not_found(format!(
             "Track item {} not found in inventory {}",
             input.track_id, input.inventory_id
         )));
@@ -628,7 +628,7 @@ mod tests {
         let result = set_item_required_inner(&state, input).await;
 
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -652,7 +652,7 @@ mod tests {
         let result = set_item_required_inner(&state, input).await;
 
         assert!(
-            matches!(result, Err(CommandError::NotFound(_))),
+            matches!(result, Err(CommandError::NotFound { .. })),
             "Expected NotFound, got: {:?}",
             result
         );

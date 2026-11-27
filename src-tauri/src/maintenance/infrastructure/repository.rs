@@ -41,7 +41,7 @@ async fn load_domain_events_for_card(
         .with_domain_context("Error listing maintenance events for card")?;
 
     rows.into_iter()
-        .map(|er| MaintenanceEvent::try_from(er).map_err(DomainError::Validation))
+        .map(|er| MaintenanceEvent::try_from(er).map_err(DomainError::validation))
         .collect()
 }
 
@@ -56,10 +56,11 @@ fn map_event_rows_to_views(
     let mut events = Vec::with_capacity(rows.len());
 
     for er in rows {
-        let event_id = MaintenanceEventId::try_from(er.id.as_ref())?;
+        let event_id = MaintenanceEventId::try_from(er.id.as_ref())
+            .map_err(DomainError::invalid_identifier)?;
         let uuid_str = &event_id.as_ref()[MaintenanceEventId::PREFIX.len() + 1..];
         let evt_uuid = uuid::Uuid::parse_str(uuid_str)
-            .map_err(|_| DomainError::Infrastructure("invalid event id uuid".to_string()))?;
+            .map_err(|_| DomainError::infrastructure("invalid event id uuid".to_string()))?;
 
         let maintenance_type = er
             .maintenance_type
@@ -96,7 +97,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         let maybe_card = match row {
             Some(r) => {
                 let card_trn = r.id.clone();
-                let mut card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
+                let mut card = MaintenanceCard::try_from(r).map_err(DomainError::validation)?;
                 card.events =
                     load_domain_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
                 Some(card)
@@ -124,7 +125,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         let maybe_card = match row {
             Some(r) => {
                 let card_trn = r.id.clone();
-                let mut card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
+                let mut card = MaintenanceCard::try_from(r).map_err(DomainError::validation)?;
                 card.events =
                     load_domain_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
                 Some(card)
@@ -263,12 +264,12 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
                     if let Err(e) = insert_result {
                         if e.to_string().contains("UNIQUE constraint failed") {
-                            return Err(DomainError::Conflict(
+                            return Err(DomainError::conflict(
                                 "A maintenance card already exists for this rolling stock."
                                     .to_string(),
                             ));
                         }
-                        return Err(DomainError::Infrastructure(e.to_string()));
+                        return Err(DomainError::infrastructure(e.to_string()));
                     }
 
                     database::insert_maintenance_event(
@@ -296,7 +297,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
         let mut cards = Vec::with_capacity(rows.len());
         for r in rows {
-            let card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
+            let card = MaintenanceCard::try_from(r).map_err(DomainError::validation)?;
             cards.push(card);
         }
 
@@ -315,6 +316,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
             .await
             .with_domain_context("Error finding owning card for maintenance event")?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "MaintenanceEvent".to_string(),
                 identifier: event_trn.clone(),
             })?;
@@ -577,7 +579,7 @@ mod tests {
         assert!(
             matches!(
                 result,
-                Err(crate::core::domain::domain_error::DomainError::Conflict(_))
+                Err(crate::core::domain::domain_error::DomainError::Conflict { .. })
             ),
             "Expected DomainError::Conflict for duplicate card, got: {:?}",
             result

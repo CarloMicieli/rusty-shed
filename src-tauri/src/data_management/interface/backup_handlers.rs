@@ -196,7 +196,7 @@ mod tests {
             .await
             .expect_err("empty source path should fail");
 
-        assert!(matches!(error, CommandError::ValidationError(_)));
+        assert!(matches!(error, CommandError::ValidationError { .. }));
     }
 
     #[tokio::test]
@@ -212,7 +212,7 @@ mod tests {
             .await
             .expect_err("invalid confirmation should fail");
 
-        assert!(matches!(error, CommandError::ValidationError(_)));
+        assert!(matches!(error, CommandError::ValidationError { .. }));
     }
 
     #[tokio::test]

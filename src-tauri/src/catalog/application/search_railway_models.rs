@@ -25,7 +25,7 @@ impl SearchRailwayModels {
         U: RailwayModelUowExt + Send,
     {
         if input.query.trim().len() < 2 {
-            return Err(DomainError::Validation(
+            return Err(DomainError::validation(
                 "search query must be at least 2 characters".to_string(),
             ));
         }
@@ -83,7 +83,7 @@ mod tests {
         .expect_err("empty query should fail validation");
 
         assert!(
-            matches!(err, DomainError::Validation(_)),
+            matches!(err, DomainError::Validation { .. }),
             "expected Validation, got {err:?}"
         );
     }
@@ -103,7 +103,7 @@ mod tests {
         .expect_err("single-char query should fail validation");
 
         assert!(
-            matches!(err, DomainError::Validation(_)),
+            matches!(err, DomainError::Validation { .. }),
             "expected Validation, got {err:?}"
         );
     }

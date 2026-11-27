@@ -63,6 +63,7 @@ impl CreateWishlistUseCase {
         match maybe {
             Some(p) => Ok(p),
             None => Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistPreview".to_string(),
                 identifier: wishlist.id.to_string(),
             }),

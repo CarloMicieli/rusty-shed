@@ -45,7 +45,7 @@ where
 {
     let config = get_budget_config(unit_of_work)
         .await?
-        .ok_or_else(|| DomainError::Validation("Budget configuration not set".to_string()))?;
+        .ok_or_else(|| DomainError::validation("Budget configuration not set".to_string()))?;
 
     get_monthly_budget_records_for_config(unit_of_work, year, &config).await
 }
@@ -167,7 +167,7 @@ where
         let mut repo = unit_of_work.budget_repo();
         repo.get_monthly_spending(year, currency_code)
             .await
-            .map_err(DomainError::Infrastructure)?
+            .map_err(DomainError::infrastructure)?
     };
 
     let mut spending_totals = [0i64; 12];
@@ -371,7 +371,7 @@ where
         let mut repo = unit_of_work.budget_repo();
         repo.get_multi_year_monthly_spending(start_year, current_year, currency_code)
             .await
-            .map_err(DomainError::Infrastructure)?
+            .map_err(DomainError::infrastructure)?
     };
 
     let owned_current_year_records = if current_year_records.is_none() {
@@ -380,7 +380,7 @@ where
                 get_monthly_budget_records_for_config(
                     unit_of_work,
                     Year::try_from(current_year)
-                        .map_err(|e| DomainError::Validation(e.to_string()))?,
+                        .map_err(|e| DomainError::validation(e.to_string()))?,
                     config,
                 )
                 .await?,
@@ -399,7 +399,7 @@ where
                 .iter()
                 .find(|record| record.month == current_month)
                 .ok_or_else(|| {
-                    DomainError::BusinessRule("Current month record not found".to_string())
+                    DomainError::business_rule("Current month record not found".to_string())
                 })?;
 
             (
@@ -524,7 +524,7 @@ mod tests {
         let result = get_monthly_budget_records(&mut uow, year).await;
 
         assert!(
-            matches!(result, Err(DomainError::Validation(_))),
+            matches!(result, Err(DomainError::Validation { .. })),
             "Expected Validation error, got: {:?}",
             result
         );
@@ -912,7 +912,7 @@ mod tests {
             .await;
 
             match result {
-                Err(DomainError::BusinessRule(msg)) => {
+                Err(DomainError::BusinessRule { message: msg, .. }) => {
                     assert!(msg.contains("month record not found"))
                 }
                 _ => panic!("Expected BusinessRule error"),

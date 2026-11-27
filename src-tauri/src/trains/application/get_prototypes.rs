@@ -67,11 +67,11 @@ mod tests {
         let mut repo = MockTrainsRepository::new();
         repo.expect_find_prototypes_by_query()
             .times(1)
-            .returning(|_| Err(DomainError::Infrastructure("db down".into())));
+            .returning(|_| Err(DomainError::infrastructure("db down")));
 
         let mut uow = MockAppUow::new().with_trains_repo(repo);
         let result = GetPrototypesUseCase::execute(&mut uow, None).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

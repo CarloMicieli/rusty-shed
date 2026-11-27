@@ -24,9 +24,10 @@ impl RemoveExtraBudgetUseCase {
         let entry = repo
             .get_extra_budget_by_id(&id)
             .await
-            .map_err(DomainError::Infrastructure)?;
+            .map_err(DomainError::infrastructure)?;
         if entry.is_none() {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "ExtraBudget".to_string(),
                 identifier: id.as_ref().to_string(),
             });
@@ -34,7 +35,7 @@ impl RemoveExtraBudgetUseCase {
 
         repo.remove_extra_budget(&id)
             .await
-            .map_err(DomainError::Infrastructure)?;
+            .map_err(DomainError::infrastructure)?;
 
         Ok(())
     }
@@ -107,7 +108,7 @@ mod tests {
         let result = RemoveExtraBudgetUseCase::execute(&mut uow, id).await;
 
         assert!(
-            matches!(result, Err(DomainError::Infrastructure(_))),
+            matches!(result, Err(DomainError::Infrastructure { .. })),
             "Expected Infrastructure error, got: {:?}",
             result
         );
@@ -127,7 +128,7 @@ mod tests {
         let result = RemoveExtraBudgetUseCase::execute(&mut uow, id).await;
 
         assert!(
-            matches!(result, Err(DomainError::Infrastructure(_))),
+            matches!(result, Err(DomainError::Infrastructure { .. })),
             "Expected Infrastructure error, got: {:?}",
             result
         );

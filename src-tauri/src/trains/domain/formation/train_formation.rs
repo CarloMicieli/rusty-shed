@@ -49,7 +49,7 @@ impl TrainFormation {
     /// Returns [`DomainError::Validation`] when `name` is empty or whitespace-only.
     pub fn create(id: String, name: String) -> Result<Self, DomainError> {
         if name.trim().is_empty() {
-            return Err(DomainError::Validation("name must not be empty".into()));
+            return Err(DomainError::validation("name must not be empty"));
         }
         let mut formation = TrainFormation {
             id: id.clone(),
@@ -75,7 +75,7 @@ impl TrainFormation {
     /// Returns [`DomainError::Validation`] when the new name is empty.
     pub fn rename(&mut self, name: String) -> Result<(), DomainError> {
         if name.trim().is_empty() {
-            return Err(DomainError::Validation("name must not be empty".into()));
+            return Err(DomainError::validation("name must not be empty"));
         }
         let ev = TrainFormationEvent::Renamed { name };
         self.pending_events.push(ev.clone());
@@ -98,8 +98,8 @@ impl TrainFormation {
         if let (Some(s), Some(e)) = (start_year, end_year)
             && s > e
         {
-            return Err(DomainError::BusinessRule(
-                "start_year cannot exceed end_year".into(),
+            return Err(DomainError::business_rule(
+                "start_year cannot exceed end_year",
             ));
         }
         let ev = TrainFormationEvent::MetadataUpdated {
@@ -128,6 +128,7 @@ impl TrainFormation {
     pub fn remove_element(&mut self, element_id: &str) -> Result<(), DomainError> {
         if !self.elements.iter().any(|e| e.id == element_id) {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "FormationElement".into(),
                 identifier: element_id.into(),
             });
@@ -153,8 +154,8 @@ impl TrainFormation {
         let supplied_ids: std::collections::HashSet<_> =
             ordered_ids.iter().map(String::as_str).collect();
         if current_ids != supplied_ids {
-            return Err(DomainError::BusinessRule(
-                "ordered_element_ids must contain exactly the current element set".into(),
+            return Err(DomainError::business_rule(
+                "ordered_element_ids must contain exactly the current element set",
             ));
         }
         let ev = TrainFormationEvent::ElementsReordered {
@@ -176,6 +177,7 @@ impl TrainFormation {
     ) -> Result<(), DomainError> {
         if !self.elements.iter().any(|e| e.id == element_id) {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "FormationElement".into(),
                 identifier: element_id.into(),
             });
@@ -196,6 +198,7 @@ impl TrainFormation {
     pub fn unassign_rolling_stock(&mut self, element_id: &str) -> Result<(), DomainError> {
         if !self.elements.iter().any(|e| e.id == element_id) {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "FormationElement".into(),
                 identifier: element_id.into(),
             });
@@ -219,12 +222,13 @@ impl TrainFormation {
         traction_override: i32,
     ) -> Result<(), DomainError> {
         if ![-1, 0, 1].contains(&traction_override) {
-            return Err(DomainError::BusinessRule(
-                "traction_override must be -1, 0, or 1".into(),
+            return Err(DomainError::business_rule(
+                "traction_override must be -1, 0, or 1",
             ));
         }
         if !self.elements.iter().any(|e| e.id == element_id) {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "FormationElement".into(),
                 identifier: element_id.into(),
             });

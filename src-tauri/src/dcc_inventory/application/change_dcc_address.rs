@@ -31,7 +31,7 @@ impl ChangeDccAddressUseCase {
             .check_address_exists(input.new_dcc_address, Some(input.id.clone()))
             .await?;
         if dup.is_duplicate {
-            return Err(DomainError::Conflict(format!(
+            return Err(DomainError::conflict(format!(
                 "DCC address {} is already in use",
                 *input.new_dcc_address
             )));
@@ -39,6 +39,7 @@ impl ChangeDccAddressUseCase {
 
         let maybe = repo.find_by_id(&input.id).await?;
         let mut drs = maybe.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "DigitalRollingStock".to_string(),
             identifier: input.id.to_string(),
         })?;
@@ -164,6 +165,6 @@ mod tests {
         };
 
         let res = ChangeDccAddressUseCase::execute(&mut uow, input).await;
-        assert!(matches!(res, Err(DomainError::Conflict(_))));
+        assert!(matches!(res, Err(DomainError::Conflict { .. })));
     }
 }

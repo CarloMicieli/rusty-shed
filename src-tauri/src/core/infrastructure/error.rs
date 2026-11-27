@@ -6,46 +6,14 @@
 
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::SystemTime;
 
 use super::db::SqliteDbError;
+use crate::core::domain::ErrorId;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationError;
 use crate::data_management::domain::DataManagementError;
 use garde::Report;
 use serde::Serialize;
-
-/// A session-scoped unique identifier for errors.
-///
-/// Format: `ERR-NNNN-X` where NNNN is a 4-digit number (1000–9999)
-/// and X is an uppercase letter (A–Z).
-pub struct ErrorId(String);
-
-impl ErrorId {
-    /// Generate a new unique Error ID from the current system time.
-    ///
-    /// Combines epoch milliseconds with a monotonic counter to ensure
-    /// uniqueness even when called multiple times within the same millisecond.
-    pub fn generate() -> Self {
-        static COUNTER: AtomicU64 = AtomicU64::new(0);
-        let millis = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis() as u64;
-        let seq = COUNTER.fetch_add(1, Ordering::Relaxed);
-        let combined = millis.wrapping_mul(10_000).wrapping_add(seq);
-        let n = (combined % 9000 + 1000) as u16;
-        let c = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ"[(combined / 9000 % 26) as usize] as char;
-        ErrorId(format!("ERR-{n:04}-{c}"))
-    }
-}
-
-impl std::fmt::Display for ErrorId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
 
 /// Application-level error returned by command handlers in the core infrastructure.
 ///
@@ -58,78 +26,109 @@ pub enum CommandError {
     ///
     /// The inner `String` should contain a concise, non-sensitive description
     /// of the underlying database failure.
-    #[error("database error: {0}")]
-    DatabaseError(String),
+    #[error("database error: {message}")]
+    DatabaseError { message: String, error_id: ErrorId },
 
     /// Indicates a requested resource was not found.
     ///
     /// Use this when a query returns no results for a specific ID or criteria.
     /// The inner `String` should describe what resource was not found (e.g., "Wishlist not found").
-    #[error("not found: {0}")]
-    NotFound(String),
+    #[error("not found: {message}")]
+    NotFound { message: String, error_id: ErrorId },
 
     /// Validation error with field-specific messages.
     ///
     /// The map contains field names as keys and error messages as values.
     /// This allows the frontend to display validation errors next to the appropriate form fields.
     /// Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
-    #[error("validation error: {0:?}")]
-    ValidationError(HashMap<String, Vec<ValidationError>>),
+    #[error("validation error: {fields:?}")]
+    ValidationError {
+        fields: HashMap<String, Vec<ValidationError>>,
+        error_id: ErrorId,
+    },
 
     /// Permission denied for the requested operation.
     ///
     /// Use this when the user lacks sufficient privileges to perform an action.
-    #[error("permission denied: {0}")]
-    PermissionDenied(String),
+    #[error("permission denied: {message}")]
+    PermissionDenied { message: String, error_id: ErrorId },
 
     /// A catch-all for unexpected errors that don't map to a specific variant.
     ///
     /// Contains a human-readable message and a unique Error ID for log correlation.
     /// Always construct via [`CommandError::unknown()`] to ensure logging.
     #[error("unknown error: {message}")]
-    Unknown { message: String, error_id: String },
+    Unknown { message: String, error_id: ErrorId },
 
     /// Indicates a violation of a specific business invariant.
     ///
     /// **Source:** Triggered by Domain Entities or Use Cases (e.g.,
     /// "Cannot cancel an invoice that has already been paid").
-    #[error("Business rule violation: {0}")]
-    BusinessRule(String),
+    #[error("Business rule violation: {message}")]
+    BusinessRule { message: String, error_id: ErrorId },
 
     /// Indicates a conflict with existing data (e.g., a unique constraint violation).
-    #[error("Conflict: {0}")]
-    Conflict(String),
+    #[error("Conflict: {message}")]
+    Conflict { message: String, error_id: ErrorId },
 }
 
 impl From<DomainError> for CommandError {
     fn from(error: DomainError) -> Self {
         match error {
             DomainError::NotFound {
+                id,
                 resource,
                 identifier,
-            } => CommandError::NotFound(format!(
-                "{} with identifier '{}' not found",
-                resource, identifier
-            )),
-            DomainError::Validation(msg) => {
+            } => CommandError::NotFound {
+                message: format!("{} with identifier '{}' not found", resource, identifier),
+                error_id: id,
+            },
+            DomainError::Validation { id, message } => {
                 let mut map = HashMap::new();
                 map.insert(
                     "_general".to_string(),
                     vec![ValidationError {
                         code: Cow::Borrowed("invalid"),
-                        message: Some(Cow::Owned(msg)),
+                        message: Some(Cow::Owned(message)),
                         params: HashMap::new(),
                     }],
                 );
-                CommandError::ValidationError(map)
+                CommandError::ValidationError {
+                    fields: map,
+                    error_id: id,
+                }
             }
-            DomainError::Infrastructure(inner) => CommandError::DatabaseError(inner),
-            DomainError::BusinessRule(msg) => CommandError::BusinessRule(msg),
-            DomainError::ValidationError(errors) => CommandError::ValidationError(errors),
-            DomainError::InvalidIdentifier(e) => {
-                CommandError::validation_field("id", e.to_string())
+            DomainError::Infrastructure { id, message } => CommandError::DatabaseError {
+                message,
+                error_id: id,
+            },
+            DomainError::BusinessRule { id, message } => CommandError::BusinessRule {
+                message,
+                error_id: id,
+            },
+            DomainError::ValidationError { id, fields } => CommandError::ValidationError {
+                fields,
+                error_id: id,
+            },
+            DomainError::InvalidIdentifier { id, error } => {
+                let mut fields = HashMap::new();
+                fields.insert(
+                    "id".to_string(),
+                    vec![ValidationError {
+                        code: Cow::Borrowed("invalid"),
+                        message: Some(Cow::Owned(error.to_string())),
+                        params: HashMap::new(),
+                    }],
+                );
+                CommandError::ValidationError {
+                    fields,
+                    error_id: id,
+                }
             }
-            DomainError::Conflict(msg) => CommandError::Conflict(msg),
+            DomainError::Conflict { id, message } => CommandError::Conflict {
+                message,
+                error_id: id,
+            },
         }
     }
 }
@@ -139,7 +138,7 @@ impl From<DomainError> for CommandError {
 /// This allows using `?` operator directly on database operations without manual `.map_err()`.
 impl From<SqliteDbError> for CommandError {
     fn from(err: SqliteDbError) -> Self {
-        CommandError::DatabaseError(err.to_string())
+        CommandError::database(err.to_string())
     }
 }
 
@@ -148,7 +147,7 @@ impl From<SqliteDbError> for CommandError {
 /// This allows using `?` operator directly on sqlx operations without manual `.map_err()`.
 impl From<sqlx::Error> for CommandError {
     fn from(err: sqlx::Error) -> Self {
-        CommandError::DatabaseError(err.to_string())
+        CommandError::database(err.to_string())
     }
 }
 
@@ -165,10 +164,10 @@ impl From<anyhow::Error> for CommandError {
 impl From<DataManagementError> for CommandError {
     fn from(err: DataManagementError) -> Self {
         match err {
-            DataManagementError::DatabaseError(msg) => CommandError::DatabaseError(msg),
-            DataManagementError::NotFound(msg) => CommandError::NotFound(msg),
-            DataManagementError::SchemaViolation(msg) => CommandError::BusinessRule(msg),
-            DataManagementError::InvalidInput(msg) => CommandError::BusinessRule(msg),
+            DataManagementError::DatabaseError(msg) => CommandError::database(msg),
+            DataManagementError::NotFound(msg) => CommandError::not_found(msg),
+            DataManagementError::SchemaViolation(msg) => CommandError::business_rule(msg),
+            DataManagementError::InvalidInput(msg) => CommandError::business_rule(msg),
             DataManagementError::ArchiveError(msg)
             | DataManagementError::IoError(msg)
             | DataManagementError::Unknown(msg) => CommandError::unknown(msg),
@@ -202,7 +201,10 @@ impl From<Report> for CommandError {
                 });
         }
 
-        CommandError::ValidationError(fields)
+        CommandError::ValidationError {
+            fields,
+            error_id: ErrorId::generate(),
+        }
     }
 }
 
@@ -220,6 +222,59 @@ fn extract_machine_validation_code(input: &str) -> Option<String> {
 }
 
 impl CommandError {
+    /// Return the identifier associated with this error occurrence.
+    pub fn error_id(&self) -> ErrorId {
+        match self {
+            Self::DatabaseError { error_id, .. }
+            | Self::NotFound { error_id, .. }
+            | Self::ValidationError { error_id, .. }
+            | Self::PermissionDenied { error_id, .. }
+            | Self::Unknown { error_id, .. }
+            | Self::BusinessRule { error_id, .. }
+            | Self::Conflict { error_id, .. } => error_id.clone(),
+        }
+    }
+
+    /// Create a database error with a generated identifier.
+    pub fn database(message: impl Into<String>) -> Self {
+        Self::DatabaseError {
+            message: message.into(),
+            error_id: ErrorId::generate(),
+        }
+    }
+
+    /// Create a not-found error with a generated identifier.
+    pub fn not_found(message: impl Into<String>) -> Self {
+        Self::NotFound {
+            message: message.into(),
+            error_id: ErrorId::generate(),
+        }
+    }
+
+    /// Create a permission-denied error with a generated identifier.
+    pub fn permission_denied(message: impl Into<String>) -> Self {
+        Self::PermissionDenied {
+            message: message.into(),
+            error_id: ErrorId::generate(),
+        }
+    }
+
+    /// Create a business-rule error with a generated identifier.
+    pub fn business_rule(message: impl Into<String>) -> Self {
+        Self::BusinessRule {
+            message: message.into(),
+            error_id: ErrorId::generate(),
+        }
+    }
+
+    /// Create a conflict error with a generated identifier.
+    pub fn conflict(message: impl Into<String>) -> Self {
+        Self::Conflict {
+            message: message.into(),
+            error_id: ErrorId::generate(),
+        }
+    }
+
     /// Create an Unknown error with a generated Error ID and structured logging.
     ///
     /// This is the **only** correct way to construct `CommandError::Unknown`.
@@ -228,10 +283,9 @@ impl CommandError {
     pub fn unknown(msg: impl Into<String>) -> Self {
         let id = ErrorId::generate();
         let message = msg.into();
-        tracing::error!("Signal Fault: error_id={id}, message={message}");
         CommandError::Unknown {
             message,
-            error_id: id.to_string(),
+            error_id: id,
         }
     }
 
@@ -246,7 +300,10 @@ impl CommandError {
                 params: HashMap::new(),
             }],
         );
-        CommandError::ValidationError(fields)
+        CommandError::ValidationError {
+            fields,
+            error_id: ErrorId::generate(),
+        }
     }
 
     /// Helper to create a validation error from multiple field errors.
@@ -269,7 +326,10 @@ impl CommandError {
                 )
             })
             .collect();
-        CommandError::ValidationError(map)
+        CommandError::ValidationError {
+            fields: map,
+            error_id: ErrorId::generate(),
+        }
     }
 }
 
@@ -342,7 +402,10 @@ mod tests {
         let err = CommandError::unknown("test error");
         match err {
             CommandError::Unknown { error_id, .. } => {
-                assert!(!error_id.is_empty(), "error_id should not be empty");
+                assert!(
+                    !error_id.to_string().is_empty(),
+                    "error_id should not be empty"
+                );
             }
             _ => panic!("Expected Unknown variant"),
         }
@@ -353,13 +416,14 @@ mod tests {
     #[test]
     fn it_should_test_domain_error_to_command_error_not_found() {
         let domain_error = DomainError::NotFound {
+            id: ErrorId::generate(),
             resource: "Wishlist".to_string(),
             identifier: "123".to_string(),
         };
         let command_error: CommandError = domain_error.into();
         match command_error {
-            CommandError::NotFound(msg) => {
-                assert_eq!(msg, "Wishlist with identifier '123' not found");
+            CommandError::NotFound { message, .. } => {
+                assert_eq!(message, "Wishlist with identifier '123' not found");
             }
             _ => panic!("Expected NotFound variant"),
         }
@@ -369,9 +433,9 @@ mod tests {
     fn it_should_test_command_error_validation_field() {
         let command_error = CommandError::validation_field("email", "Invalid format");
         match command_error {
-            CommandError::ValidationError(map) => {
-                assert!(map.contains_key("email"));
-                let errs = &map["email"];
+            CommandError::ValidationError { fields, .. } => {
+                assert!(fields.contains_key("email"));
+                let errs = &fields["email"];
                 assert_eq!(errs.len(), 1);
                 assert_eq!(errs[0].message.as_deref(), Some("Invalid format"));
             }
@@ -384,12 +448,15 @@ mod tests {
         let fields = vec![("email", "Invalid format"), ("age", "Must be at least 18")];
         let command_error = CommandError::validation_fields(fields);
         match command_error {
-            CommandError::ValidationError(map) => {
-                assert!(map.contains_key("email"));
-                assert!(map.contains_key("age"));
-                assert_eq!(map["email"][0].message.as_deref(), Some("Invalid format"));
+            CommandError::ValidationError { fields, .. } => {
+                assert!(fields.contains_key("email"));
+                assert!(fields.contains_key("age"));
                 assert_eq!(
-                    map["age"][0].message.as_deref(),
+                    fields["email"][0].message.as_deref(),
+                    Some("Invalid format")
+                );
+                assert_eq!(
+                    fields["age"][0].message.as_deref(),
                     Some("Must be at least 18")
                 );
             }
@@ -399,12 +466,15 @@ mod tests {
 
     #[test]
     fn domain_validation_error_maps_to_general_key() {
-        let domain_error = DomainError::Validation("some validation message".to_string());
+        let domain_error = DomainError::validation("some validation message");
         let cmd: CommandError = domain_error.into();
         match cmd {
-            CommandError::ValidationError(map) => {
-                assert!(map.contains_key("_general"), "_general key must be present");
-                let errs = &map["_general"];
+            CommandError::ValidationError { fields, .. } => {
+                assert!(
+                    fields.contains_key("_general"),
+                    "_general key must be present"
+                );
+                let errs = &fields["_general"];
                 assert_eq!(errs.len(), 1);
                 assert_eq!(errs[0].message.as_deref(), Some("some validation message"));
             }
@@ -414,11 +484,11 @@ mod tests {
 
     #[test]
     fn it_should_test_domain_error_to_command_error_business_rule() {
-        let domain_error = DomainError::BusinessRule("Cannot delete paid invoice".to_string());
+        let domain_error = DomainError::business_rule("Cannot delete paid invoice");
         let command_error: CommandError = domain_error.into();
         match command_error {
-            CommandError::BusinessRule(msg) => {
-                assert_eq!(msg, "Cannot delete paid invoice");
+            CommandError::BusinessRule { message, .. } => {
+                assert_eq!(message, "Cannot delete paid invoice");
             }
             _ => panic!("Expected BusinessRule variant"),
         }
@@ -439,11 +509,13 @@ mod tests {
         let command_error: CommandError = source.into();
 
         match (expected_variant, command_error) {
-            ("DatabaseError", CommandError::DatabaseError(msg)) => {
-                assert!(!msg.is_empty())
+            ("DatabaseError", CommandError::DatabaseError { message, .. }) => {
+                assert!(!message.is_empty())
             }
-            ("NotFound", CommandError::NotFound(msg)) => assert!(!msg.is_empty()),
-            ("BusinessRule", CommandError::BusinessRule(msg)) => assert!(!msg.is_empty()),
+            ("NotFound", CommandError::NotFound { message, .. }) => assert!(!message.is_empty()),
+            ("BusinessRule", CommandError::BusinessRule { message, .. }) => {
+                assert!(!message.is_empty())
+            }
             ("Unknown", CommandError::Unknown { message, .. }) => {
                 assert!(!message.is_empty())
             }
@@ -460,12 +532,13 @@ mod tests {
     fn parameterized_domain_to_command_conversion(#[case] case_name: &str) {
         let domain_error = match case_name {
             "not_found" => DomainError::NotFound {
+                id: ErrorId::generate(),
                 resource: "Item".to_string(),
                 identifier: "id-42".to_string(),
             },
-            "validation" => DomainError::Validation("bad input".to_string()),
-            "infrastructure" => DomainError::Infrastructure("row not found".to_string()),
-            "business_rule" => DomainError::BusinessRule("some rule".to_string()),
+            "validation" => DomainError::validation("bad input"),
+            "infrastructure" => DomainError::infrastructure("row not found"),
+            "business_rule" => DomainError::business_rule("some rule"),
             "validation_error" => {
                 let mut map: StdHashMap<String, Vec<ValidationError>> = StdHashMap::new();
                 map.insert(
@@ -476,7 +549,10 @@ mod tests {
                         params: std::collections::HashMap::new(),
                     }],
                 );
-                DomainError::ValidationError(map)
+                DomainError::ValidationError {
+                    id: ErrorId::generate(),
+                    fields: map,
+                }
             }
             _ => panic!("unknown case"),
         };
@@ -485,28 +561,33 @@ mod tests {
 
         match case_name {
             "not_found" => match cmd {
-                CommandError::NotFound(msg) => {
-                    assert!(msg.contains("Item with identifier 'id-42' not found"))
+                CommandError::NotFound { message, .. } => {
+                    assert!(message.contains("Item with identifier 'id-42' not found"))
                 }
                 _ => panic!("expected NotFound"),
             },
             "validation" => match cmd {
-                CommandError::ValidationError(map) => {
-                    assert!(map.contains_key("_general"), "_general key must be present");
-                    assert!(!map["_general"].is_empty());
+                CommandError::ValidationError { fields, .. } => {
+                    assert!(
+                        fields.contains_key("_general"),
+                        "_general key must be present"
+                    );
+                    assert!(!fields["_general"].is_empty());
                 }
                 _ => panic!("expected ValidationError"),
             },
             "infrastructure" => match cmd {
-                CommandError::DatabaseError(s) => assert!(!s.is_empty()),
+                CommandError::DatabaseError { message, .. } => assert!(!message.is_empty()),
                 _ => panic!("expected DatabaseError"),
             },
             "business_rule" => match cmd {
-                CommandError::BusinessRule(msg) => assert_eq!(msg, "some rule"),
+                CommandError::BusinessRule { message, .. } => assert_eq!(message, "some rule"),
                 _ => panic!("expected BusinessRule"),
             },
             "validation_error" => match cmd {
-                CommandError::ValidationError(map) => assert!(map.contains_key("field")),
+                CommandError::ValidationError { fields, .. } => {
+                    assert!(fields.contains_key("field"))
+                }
                 _ => panic!("expected ValidationError"),
             },
             _ => unreachable!(),
@@ -524,12 +605,12 @@ mod tests {
         let cmd = CommandError::from(report);
 
         match cmd {
-            CommandError::ValidationError(map) => {
-                let coded = &map["coded"][0];
+            CommandError::ValidationError { fields, .. } => {
+                let coded = &fields["coded"][0];
                 assert_eq!(coded.code, "error_invalid_magic");
                 assert_eq!(coded.message, None);
 
-                let generic = &map["generic"][0];
+                let generic = &fields["generic"][0];
                 assert_eq!(generic.code, "invalid");
                 assert!(generic.message.is_some());
             }

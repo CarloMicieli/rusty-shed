@@ -124,11 +124,11 @@ mod tests {
         let mut repo = MockTrainsRepository::new();
         repo.expect_create_prototype()
             .times(1)
-            .returning(|_| Err(DomainError::Infrastructure("db down".into())));
+            .returning(|_| Err(DomainError::infrastructure("db down")));
 
         let mut uow = MockAppUow::new().with_trains_repo(repo);
         let result = execute_with_defaults(&mut uow).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

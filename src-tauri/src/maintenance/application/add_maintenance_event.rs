@@ -55,6 +55,7 @@ impl AddMaintenanceEvent {
             .find_by_id(&input.maintenance_card_id)
             .await?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "MaintenanceCard".to_string(),
                 identifier: input.maintenance_card_id.to_string(),
             })?;
@@ -64,7 +65,7 @@ impl AddMaintenanceEvent {
             .as_ref()
             .trim_start_matches("trn:maintenance-event:");
         let id =
-            Uuid::parse_str(event_uuid_str).map_err(|e| DomainError::Validation(e.to_string()))?;
+            Uuid::parse_str(event_uuid_str).map_err(|e| DomainError::validation(e.to_string()))?;
 
         card.record_maintenance(
             id,
@@ -163,7 +164,7 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(DomainError::NotFound { resource, identifier })
+            Err(DomainError::NotFound { resource, identifier, .. })
                 if resource == "MaintenanceCard" && identifier == card_id.to_string()
         ));
     }

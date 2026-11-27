@@ -34,7 +34,7 @@ impl SetBudgetUseCase {
                 existing
             }
             None => BudgetConfiguration::new(input.mode, input.base_amount)
-                .map_err(DomainError::Validation)?,
+                .map_err(DomainError::validation)?,
         };
 
         {
@@ -123,14 +123,14 @@ mod tests {
         mock_get
             .expect_get_config()
             .once()
-            .returning(|| Err(DomainError::Infrastructure("db failure".to_string())));
+            .returning(|| Err(DomainError::infrastructure("db failure".to_string())));
 
         let mut uow = FakeBudgetUow::new().with_repo(mock_get);
 
         let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
 
         assert!(
-            matches!(result, Err(DomainError::Infrastructure(_))),
+            matches!(result, Err(DomainError::Infrastructure { .. })),
             "Expected Infrastructure error, got: {:?}",
             result
         );
@@ -145,7 +145,7 @@ mod tests {
         mock_save
             .expect_save()
             .once()
-            .returning(|_| Err(DomainError::Infrastructure("write failed".to_string())));
+            .returning(|_| Err(DomainError::infrastructure("write failed".to_string())));
 
         let mut uow = FakeBudgetUow::new()
             .with_repo(mock_get)
@@ -154,7 +154,7 @@ mod tests {
         let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
 
         assert!(
-            matches!(result, Err(DomainError::Infrastructure(_))),
+            matches!(result, Err(DomainError::Infrastructure { .. })),
             "Expected Infrastructure error, got: {:?}",
             result
         );

@@ -125,7 +125,7 @@ impl RailwayModel {
     pub fn update_description(&mut self, description: String) -> Result<(), DomainError> {
         let trimmed = description.trim().to_string();
         if trimmed.is_empty() {
-            return Err(DomainError::Validation(
+            return Err(DomainError::validation(
                 "description must not be empty".to_string(),
             ));
         }
@@ -184,6 +184,7 @@ impl RailwayModel {
             .iter_mut()
             .find(|rs| rs.id_as_ref() == rolling_stock_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RollingStock".to_string(),
                 identifier: rolling_stock_id.to_string(),
             })?;
@@ -214,6 +215,7 @@ impl RailwayModel {
             .iter_mut()
             .find(|rs| rs.id_as_ref() == rolling_stock_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RollingStock".to_string(),
                 identifier: rolling_stock_id.to_string(),
             })?;
@@ -245,6 +247,7 @@ impl RailwayModel {
             .iter_mut()
             .find(|rs| rs.id_as_ref() == rolling_stock_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RollingStock".to_string(),
                 identifier: rolling_stock_id.to_string(),
             })?;
@@ -275,6 +278,7 @@ impl RailwayModel {
             .iter_mut()
             .find(|rs| rs.id_as_ref() == rolling_stock_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RollingStock".to_string(),
                 identifier: rolling_stock_id.to_string(),
             })?;
@@ -307,7 +311,7 @@ impl RailwayModel {
     ) -> Result<(), DomainError> {
         let trimmed_series = series_code.trim().to_string();
         if trimmed_series.is_empty() {
-            return Err(DomainError::Validation(
+            return Err(DomainError::validation(
                 "series_code must not be empty".to_string(),
             ));
         }
@@ -317,6 +321,7 @@ impl RailwayModel {
             .iter_mut()
             .find(|rs| rs.id_as_ref() == rolling_stock_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RollingStock".to_string(),
                 identifier: rolling_stock_id.to_string(),
             })?;
@@ -344,7 +349,7 @@ impl RailwayModel {
         spec: RollingStockSpecPatch,
     ) -> Result<(), DomainError> {
         if spec.series_code.trim().is_empty() {
-            return Err(DomainError::Validation(
+            return Err(DomainError::validation(
                 "series_code must not be empty".to_string(),
             ));
         }
@@ -354,6 +359,7 @@ impl RailwayModel {
             .iter_mut()
             .find(|rs| rs.id_as_ref() == rolling_stock_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RollingStock".to_string(),
                 identifier: rolling_stock_id.to_string(),
             })?;
@@ -387,6 +393,7 @@ impl RailwayModel {
             .iter_mut()
             .find(|rs| rs.id_as_ref() == rolling_stock_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RollingStock".to_string(),
                 identifier: rolling_stock_id.to_string(),
             })?;

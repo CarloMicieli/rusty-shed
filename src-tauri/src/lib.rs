@@ -76,7 +76,7 @@ pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError>
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "database migrations failed");
-            CommandError::DatabaseError(e.to_string())
+            CommandError::database(e.to_string())
         })?;
 
     Database::run_initial_seed(&state.db_pool())
@@ -84,7 +84,7 @@ pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError>
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "database seeding failed");
-            CommandError::DatabaseError(e.to_string())
+            CommandError::database(e.to_string())
         })?;
 
     tracing::info!("database initialized");
@@ -426,11 +426,24 @@ pub fn run() {
         .expect("Error while running tauri application");
 }
 
-pub fn generate_types() {
+pub fn generate_types() -> Result<(), String> {
     let builder = create_specta_builder();
     builder
         .export(Typescript::default(), "./src/lib/bindings.ts")
-        .expect("Failed to export typescript bindings");
+        .map_err(|error| format!("failed to export TypeScript bindings: {error}"))?;
+    normalize_generated_bindings("./src/lib/bindings.ts")
+}
+
+fn normalize_generated_bindings(path: &str) -> Result<(), String> {
+    let contents =
+        fs::read_to_string(path).map_err(|error| format!("failed to read bindings: {error}"))?;
+    let normalized = contents
+        .lines()
+        .map(str::trim_end)
+        .collect::<Vec<_>>()
+        .join("\n");
+    fs::write(path, format!("{normalized}\n"))
+        .map_err(|error| format!("failed to write bindings: {error}"))
 }
 
 const LOGO: &str = r#"

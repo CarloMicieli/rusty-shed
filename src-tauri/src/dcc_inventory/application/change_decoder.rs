@@ -29,6 +29,7 @@ impl ChangeDecoderUseCase {
 
         let maybe = repo.find_by_id(&input.id).await?;
         let mut drs = maybe.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "DigitalRollingStock".to_string(),
             identifier: input.id.to_string(),
         })?;

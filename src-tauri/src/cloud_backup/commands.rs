@@ -26,34 +26,34 @@ impl From<CloudBackupError> for CommandError {
     fn from(err: CloudBackupError) -> Self {
         match err {
             CloudBackupError::NotConnected => {
-                CommandError::BusinessRule("NOT_CONNECTED: Not connected to Google Drive".into())
+                CommandError::business_rule("NOT_CONNECTED: Not connected to Google Drive")
             }
             CloudBackupError::OfflineError => {
-                CommandError::BusinessRule("OFFLINE_ERROR: No internet connection".into())
+                CommandError::business_rule("OFFLINE_ERROR: No internet connection")
             }
             CloudBackupError::OAuthCancelled => {
-                CommandError::BusinessRule("OAUTH_CANCELLED: OAuth flow was cancelled".into())
+                CommandError::business_rule("OAUTH_CANCELLED: OAuth flow was cancelled")
             }
             CloudBackupError::OAuthTimeout => {
-                CommandError::BusinessRule("OAUTH_TIMEOUT: OAuth flow timed out".into())
+                CommandError::business_rule("OAUTH_TIMEOUT: OAuth flow timed out")
             }
-            CloudBackupError::TokenExpired => CommandError::BusinessRule(
-                "TOKEN_EXPIRED: Please reconnect your Google account".into(),
-            ),
-            CloudBackupError::ImportInProgress => CommandError::BusinessRule(
-                "IMPORT_IN_PROGRESS: Cannot backup while import is in progress".into(),
+            CloudBackupError::TokenExpired => {
+                CommandError::business_rule("TOKEN_EXPIRED: Please reconnect your Google account")
+            }
+            CloudBackupError::ImportInProgress => CommandError::business_rule(
+                "IMPORT_IN_PROGRESS: Cannot backup while import is in progress",
             ),
             CloudBackupError::InvalidConfirmation => {
                 CommandError::validation_field("confirmation", "Must type 'RESTORE' to confirm")
             }
             CloudBackupError::BackupNotFound(id) => {
-                CommandError::NotFound(format!("Backup not found: {id}"))
+                CommandError::not_found(format!("Backup not found: {id}"))
             }
             CloudBackupError::IntegrityCheckFailed(msg) => {
-                CommandError::BusinessRule(format!("INTEGRITY_ERROR: {msg}"))
+                CommandError::business_rule(format!("INTEGRITY_ERROR: {msg}"))
             }
-            CloudBackupError::NotImplemented => CommandError::BusinessRule(
-                "NOT_IMPLEMENTED: This operation is not supported on this platform".into(),
+            CloudBackupError::NotImplemented => CommandError::business_rule(
+                "NOT_IMPLEMENTED: This operation is not supported on this platform",
             ),
             other => CommandError::unknown(other.to_string()),
         }
@@ -124,7 +124,7 @@ pub async fn cloud_backup_disconnect_google_inner(
 ) -> std::result::Result<(), CommandError> {
     let user_email = state
         .connected_email()
-        .ok_or_else(|| CommandError::BusinessRule("NOT_CONNECTED: Not connected".into()))?;
+        .ok_or_else(|| CommandError::business_rule("NOT_CONNECTED: Not connected"))?;
 
     let storage = create_platform_storage(STORAGE_SERVICE.to_string());
     let oauth_service = Arc::new(OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage));
@@ -564,7 +564,7 @@ mod tests {
         let err = CloudBackupError::NotConnected;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => {
+            CommandError::BusinessRule { message: msg, .. } => {
                 assert!(msg.contains("NOT_CONNECTED"));
             }
             _ => panic!("Expected BusinessRule"),
@@ -576,7 +576,7 @@ mod tests {
         let err = CloudBackupError::InvalidConfirmation;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::ValidationError(_) => {}
+            CommandError::ValidationError { .. } => {}
             _ => panic!("Expected ValidationError"),
         }
     }
@@ -586,7 +586,9 @@ mod tests {
         let err = CloudBackupError::OfflineError;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("OFFLINE_ERROR")),
+            CommandError::BusinessRule { message: msg, .. } => {
+                assert!(msg.contains("OFFLINE_ERROR"))
+            }
             _ => panic!("Expected BusinessRule"),
         }
     }
@@ -596,7 +598,9 @@ mod tests {
         let err = CloudBackupError::OAuthCancelled;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("OAUTH_CANCELLED")),
+            CommandError::BusinessRule { message: msg, .. } => {
+                assert!(msg.contains("OAUTH_CANCELLED"))
+            }
             _ => panic!("Expected BusinessRule"),
         }
     }
@@ -606,7 +610,9 @@ mod tests {
         let err = CloudBackupError::OAuthTimeout;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("OAUTH_TIMEOUT")),
+            CommandError::BusinessRule { message: msg, .. } => {
+                assert!(msg.contains("OAUTH_TIMEOUT"))
+            }
             _ => panic!("Expected BusinessRule"),
         }
     }
@@ -616,7 +622,9 @@ mod tests {
         let err = CloudBackupError::TokenExpired;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("TOKEN_EXPIRED")),
+            CommandError::BusinessRule { message: msg, .. } => {
+                assert!(msg.contains("TOKEN_EXPIRED"))
+            }
             _ => panic!("Expected BusinessRule"),
         }
     }
@@ -626,7 +634,9 @@ mod tests {
         let err = CloudBackupError::ImportInProgress;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("IMPORT_IN_PROGRESS")),
+            CommandError::BusinessRule { message: msg, .. } => {
+                assert!(msg.contains("IMPORT_IN_PROGRESS"))
+            }
             _ => panic!("Expected BusinessRule"),
         }
     }
@@ -636,7 +646,9 @@ mod tests {
         let err = CloudBackupError::BackupNotFound("bkp-123".to_string());
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::NotFound(msg) => assert_eq!(msg, "Backup not found: bkp-123"),
+            CommandError::NotFound { message: msg, .. } => {
+                assert_eq!(msg, "Backup not found: bkp-123")
+            }
             _ => panic!("Expected NotFound"),
         }
     }
@@ -646,7 +658,7 @@ mod tests {
         let err = CloudBackupError::IntegrityCheckFailed("hash mismatch".to_string());
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => {
+            CommandError::BusinessRule { message: msg, .. } => {
                 assert!(msg.contains("INTEGRITY_ERROR"));
                 assert!(msg.contains("hash mismatch"));
             }
@@ -659,7 +671,9 @@ mod tests {
         let err = CloudBackupError::NotImplemented;
         let cmd_err = CommandError::from(err);
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("NOT_IMPLEMENTED")),
+            CommandError::BusinessRule { message: msg, .. } => {
+                assert!(msg.contains("NOT_IMPLEMENTED"))
+            }
             _ => panic!("Expected BusinessRule"),
         }
     }
@@ -678,7 +692,7 @@ mod tests {
     fn restore_validation_rejects_wrong_confirmation() {
         let args = restore_args_with_confirmation("WRONG");
         let result = validate_restore_confirmation(&args);
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[tokio::test]
@@ -688,14 +702,14 @@ mod tests {
 
         let result = prepare_restore_drive_client(&state, &args).await;
 
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[test]
     fn restore_validation_rejects_offline_mode() {
         let result = ensure_online_for_restore(false);
         match result {
-            Err(CommandError::BusinessRule(msg)) => {
+            Err(CommandError::BusinessRule { message: msg, .. }) => {
                 assert!(msg.contains("OFFLINE_ERROR"), "unexpected message: {msg}");
             }
             other => panic!("Expected offline business-rule error, got: {other:?}"),
@@ -706,7 +720,7 @@ mod tests {
     fn restore_validation_rejects_when_not_connected() {
         let result = resolve_restore_user_email(None);
         match result {
-            Err(CommandError::BusinessRule(msg)) => {
+            Err(CommandError::BusinessRule { message: msg, .. }) => {
                 assert!(msg.contains("NOT_CONNECTED"), "unexpected message: {msg}");
             }
             other => panic!("Expected not-connected business-rule error, got: {other:?}"),
@@ -773,7 +787,7 @@ mod tests {
             resolve_restore_access_token_with_storage(&storage, &refresher, "alice@example.com")
                 .await;
 
-        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+        assert!(matches!(result, Err(CommandError::BusinessRule { .. })));
     }
 
     #[tokio::test]
@@ -790,6 +804,6 @@ mod tests {
             resolve_restore_access_token_with_storage(&storage, &refresher, "alice@example.com")
                 .await;
 
-        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+        assert!(matches!(result, Err(CommandError::BusinessRule { .. })));
     }
 }

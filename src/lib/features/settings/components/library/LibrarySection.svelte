@@ -133,11 +133,12 @@
   });
 
   function getCommandErrorMessage(error: CommandError): string {
-    if ('DatabaseError' in error) return error.DatabaseError ?? m.settings_load_failed();
-    if ('NotFound' in error) return error.NotFound ?? m.settings_load_failed();
-    if ('PermissionDenied' in error) return error.PermissionDenied ?? m.settings_load_failed();
-    if ('BusinessRule' in error) return error.BusinessRule ?? m.settings_load_failed();
-    if ('Conflict' in error) return error.Conflict ?? m.settings_load_failed();
+    if ('DatabaseError' in error) return error.DatabaseError?.message ?? m.settings_load_failed();
+    if ('NotFound' in error) return error.NotFound?.message ?? m.settings_load_failed();
+    if ('PermissionDenied' in error)
+      return error.PermissionDenied?.message ?? m.settings_load_failed();
+    if ('BusinessRule' in error) return error.BusinessRule?.message ?? m.settings_load_failed();
+    if ('Conflict' in error) return error.Conflict?.message ?? m.settings_load_failed();
     if ('Unknown' in error) return error.Unknown?.message ?? m.settings_load_failed();
     return m.settings_load_failed();
   }

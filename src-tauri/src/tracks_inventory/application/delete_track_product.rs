@@ -19,6 +19,7 @@ impl DeleteTrackProductUseCase {
         let existing = repo.find_by_id(&input.track_id).await?;
         if existing.is_none() {
             return Err(CommandError::from(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "TrackProduct".to_string(),
                 identifier: input.track_id.to_string(),
             }));
@@ -89,7 +90,7 @@ mod tests {
         let result = DeleteTrackProductUseCase::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(CommandError::NotFound(_))),
+            matches!(result, Err(CommandError::NotFound { .. })),
             "{result:?}"
         );
     }
@@ -126,7 +127,7 @@ mod tests {
             .returning(|_| Ok(Some(sample_track_product())));
         repo.expect_delete_track()
             .once()
-            .returning(|_| Err(DomainError::Infrastructure("db write failed".to_string())));
+            .returning(|_| Err(DomainError::infrastructure("db write failed".to_string())));
 
         let mut uow = FakeTrackProductUow::new(repo);
         let input = DeleteTrackProductInput { track_id };
@@ -134,7 +135,7 @@ mod tests {
         let result = DeleteTrackProductUseCase::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(CommandError::DatabaseError(ref msg)) if msg.contains("db write failed")),
+            matches!(result, Err(CommandError::DatabaseError { message: ref msg, .. }) if msg.contains("db write failed")),
             "{result:?}"
         );
     }

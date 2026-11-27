@@ -952,7 +952,7 @@ impl RollingStock {
             RollingStock::Railcar { railcar_type, .. } => {
                 Self::apply_railcar_subcategory(railcar_type, subcategory)
             }
-            RollingStock::Locomotive { .. } => Err(DomainError::Validation(
+            RollingStock::Locomotive { .. } => Err(DomainError::validation(
                 "error_invalid_locomotive_subcategory".to_string(),
             )),
         }
@@ -963,7 +963,7 @@ impl RollingStock {
         subcategory: String,
     ) -> Result<serde_json::Value, DomainError> {
         let t = subcategory.parse::<LocomotiveType>().map_err(|_| {
-            DomainError::Validation(format!("invalid locomotive type: {subcategory}"))
+            DomainError::validation(format!("invalid locomotive type: {subcategory}"))
         })?;
         *locomotive_type = t;
         Ok(serde_json::json!({ "locomotive_type": subcategory }))
@@ -974,7 +974,7 @@ impl RollingStock {
         subcategory: String,
     ) -> Result<serde_json::Value, DomainError> {
         let t = subcategory.parse::<FreightCarType>().map_err(|_| {
-            DomainError::Validation(format!("invalid freight car type: {subcategory}"))
+            DomainError::validation(format!("invalid freight car type: {subcategory}"))
         })?;
         *freight_car_type = Some(t);
         Ok(serde_json::json!({ "freight_car_type": subcategory }))
@@ -985,7 +985,7 @@ impl RollingStock {
         subcategory: String,
     ) -> Result<serde_json::Value, DomainError> {
         let t = subcategory.parse::<PassengerCarType>().map_err(|_| {
-            DomainError::Validation(format!("invalid passenger car type: {subcategory}"))
+            DomainError::validation(format!("invalid passenger car type: {subcategory}"))
         })?;
         *passenger_car_type = Some(t);
         Ok(serde_json::json!({ "passenger_car_type": subcategory }))
@@ -998,7 +998,7 @@ impl RollingStock {
         let t = subcategory
             .parse::<ElectricMultipleUnitType>()
             .map_err(|_| {
-                DomainError::Validation(format!(
+                DomainError::validation(format!(
                     "invalid electric multiple unit type: {subcategory}"
                 ))
             })?;
@@ -1012,7 +1012,7 @@ impl RollingStock {
     ) -> Result<serde_json::Value, DomainError> {
         let t = subcategory
             .parse::<RailcarType>()
-            .map_err(|_| DomainError::Validation(format!("invalid railcar type: {subcategory}")))?;
+            .map_err(|_| DomainError::validation(format!("invalid railcar type: {subcategory}")))?;
         *railcar_type = t;
         Ok(serde_json::json!({ "railcar_type": subcategory }))
     }

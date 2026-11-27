@@ -39,6 +39,7 @@ impl UpdateRollingStockSpecifications {
             .find_by_id(&input.railway_model_id, Language::English)
             .await?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RailwayModel".to_string(),
                 identifier: input.railway_model_id.to_string(),
             })?;
@@ -201,7 +202,7 @@ mod tests {
         .expect_err("empty series_code should fail");
 
         assert!(
-            matches!(err, DomainError::Validation(_)),
+            matches!(err, DomainError::Validation { .. }),
             "expected Validation error, got {err:?}"
         );
     }

@@ -35,6 +35,7 @@ impl UpdateWishlistItemUseCase {
 
         let maybe = repo.find_by_id(&input.wishlist_id).await?;
         let mut wishlist = maybe.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "Wishlist".to_string(),
             identifier: input.wishlist_id.to_string(),
         })?;
@@ -54,6 +55,7 @@ impl UpdateWishlistItemUseCase {
             .iter()
             .find(|i| i.id == input.item_id)
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistItem".to_string(),
                 identifier: input.item_id.to_string(),
             })?

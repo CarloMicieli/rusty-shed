@@ -45,13 +45,14 @@ impl AddExtraBudgetUseCase {
     {
         input
             .validate()
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         let mut config = {
             let mut repo = uow.budget_repo();
             repo.get_config()
                 .await?
                 .ok_or_else(|| DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "BudgetConfiguration".to_string(),
                     identifier: "singleton".to_string(),
                 })?
@@ -133,7 +134,7 @@ mod tests {
         let result = AddExtraBudgetUseCase::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(DomainError::Validation(_))),
+            matches!(result, Err(DomainError::Validation { .. })),
             "Expected Validation error, got: {:?}",
             result
         );
@@ -150,7 +151,7 @@ mod tests {
         let result = AddExtraBudgetUseCase::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(DomainError::Validation(_))),
+            matches!(result, Err(DomainError::Validation { .. })),
             "Expected Validation error, got: {:?}",
             result
         );
@@ -168,7 +169,7 @@ mod tests {
         let result = AddExtraBudgetUseCase::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(DomainError::Validation(_))),
+            matches!(result, Err(DomainError::Validation { .. })),
             "Expected Validation error, got: {:?}",
             result
         );
@@ -223,14 +224,14 @@ mod tests {
         mock_get
             .expect_get_config()
             .once()
-            .returning(|| Err(DomainError::Infrastructure("db failure".to_string())));
+            .returning(|| Err(DomainError::infrastructure("db failure".to_string())));
 
         let mut uow = FakeBudgetUow::new().with_repo(mock_get);
 
         let result = AddExtraBudgetUseCase::execute(&mut uow, valid_input()).await;
 
         assert!(
-            matches!(result, Err(DomainError::Infrastructure(_))),
+            matches!(result, Err(DomainError::Infrastructure { .. })),
             "Expected Infrastructure error, got: {:?}",
             result
         );

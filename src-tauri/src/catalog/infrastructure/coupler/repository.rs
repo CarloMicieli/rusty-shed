@@ -55,12 +55,12 @@ impl CouplerRepository for SqliteCouplerRepository<'_> {
                 .await
             }
         }
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         rows.into_iter()
             .map(|r| {
                 CouplerTypeId::try_from(r.id.as_str())
-                    .map_err(|e| DomainError::Validation(e.to_string()))
+                    .map_err(|e| DomainError::validation(e.to_string()))
                     .map(|id| CouplerType {
                         id,
                         manufacturer: r.manufacturer,
@@ -80,7 +80,7 @@ impl CouplerRepository for SqliteCouplerRepository<'_> {
                 .bind(owned_rs_id.as_ref())
                 .fetch_optional(&mut *self.executor)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         row.and_then(|(id,)| {
             if id.is_empty() {
@@ -104,7 +104,7 @@ impl CouplerRepository for SqliteCouplerRepository<'_> {
             .execute(&mut *self.executor)
             .await
             .map(|_| ())
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))
+            .map_err(|e| DomainError::infrastructure(e.to_string()))
     }
 }
 

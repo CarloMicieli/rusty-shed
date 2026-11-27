@@ -65,7 +65,7 @@ impl UpdateSellerUseCase {
 
         let derived = SellerId::new_from_parts(&[&seller.name]);
         if seller.id != derived {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "seller id is immutable and must match slug".to_string(),
             ));
         }
@@ -156,6 +156,6 @@ mod tests {
         let mut uow = FakeUow::with_sellers_repo(Box::new(repo));
         let result = UpdateSellerUseCase::execute(&mut uow, input).await;
 
-        assert!(matches!(result, Err(DomainError::BusinessRule(_))));
+        assert!(matches!(result, Err(DomainError::BusinessRule { .. })));
     }
 }

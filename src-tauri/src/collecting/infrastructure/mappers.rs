@@ -54,7 +54,7 @@ impl CollectionMapper {
     ) -> Result<CollectionView, DomainError> {
         let total_value =
             MonetaryAmount::from_db(row.total_value_amount, Some(&row.total_value_currency))
-                .map_err(|err| DomainError::Validation(err.to_string()))?;
+                .map_err(|err| DomainError::validation(err.to_string()))?;
 
         let summary = CollectionSummary {
             locomotives_count: row.locomotives_count as u16,
@@ -127,7 +127,7 @@ impl CollectionMapper {
                         let mut ors = OwnedRollingStockView {
                             id: rs_row.id.clone(),
                             rolling_stock_id: rs_row.rolling_stock_id.clone().ok_or_else(|| {
-                                DomainError::Validation("missing rolling_stock_id".to_string())
+                                DomainError::validation("missing rolling_stock_id".to_string())
                             })?,
                             notes: rs_row.notes.clone(),
                             series: rs_row.series.clone(),
@@ -330,7 +330,7 @@ impl CollectionMapper {
         // Convert product_code string into ProductCode newtype
         let product_code =
             ProductCode::try_from(collection_item.railway_model.product_code.clone())
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
 
         Ok(crate::collecting::domain::DepotRollingStockView {
             id: owned.id.clone(),
@@ -447,7 +447,7 @@ mod tests {
 
         let result = CollectionMapper::row_to_collection(collection_row, vec![]);
 
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[test]
@@ -1042,7 +1042,7 @@ mod tests {
             &purchase_infos_map,
         );
 
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[test]

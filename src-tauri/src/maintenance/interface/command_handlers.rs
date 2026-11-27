@@ -228,7 +228,7 @@ mod tests {
         };
 
         let result = add_maintenance_event_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[sqlx::test]
@@ -243,6 +243,6 @@ mod tests {
         };
 
         let result = add_maintenance_event_inner(&state, args).await;
-        assert!(!matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(!matches!(result, Err(CommandError::ValidationError { .. })));
     }
 }

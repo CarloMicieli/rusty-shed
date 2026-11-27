@@ -34,7 +34,7 @@ impl UpsertRailwayModelTranslation {
         if input.lang == Language::English {
             let desc = input.description.as_deref().unwrap_or("").trim();
             if desc.is_empty() {
-                return Err(DomainError::Validation(
+                return Err(DomainError::validation(
                     "English description is required".to_string(),
                 ));
             }
@@ -46,6 +46,7 @@ impl UpsertRailwayModelTranslation {
             .find_by_id(&input.railway_model_id, input.lang)
             .await?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RailwayModel".to_string(),
                 identifier: input.railway_model_id.to_string(),
             })?;
@@ -167,7 +168,7 @@ mod tests {
         .expect_err("empty English description should fail validation");
 
         assert!(
-            matches!(err, DomainError::Validation(_)),
+            matches!(err, DomainError::Validation { .. }),
             "expected Validation, got {err:?}"
         );
     }

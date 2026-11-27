@@ -29,6 +29,7 @@ impl SetTrackItemQuantityUseCase {
 
         let maybe = repo.find_by_id(&input.inventory_id).await?;
         let mut inventory = maybe.ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "TrackInventory".to_string(),
             identifier: input.inventory_id.to_string(),
         })?;

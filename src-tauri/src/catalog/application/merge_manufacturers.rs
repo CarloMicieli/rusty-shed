@@ -16,7 +16,7 @@ impl MergeManufacturers {
         U: ManufacturerUowExt + Send,
     {
         if source_id == target_id {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "Source and target must be different".to_string(),
             ));
         }
@@ -28,6 +28,7 @@ impl MergeManufacturers {
                 .find_by_id(source_id)
                 .await?
                 .ok_or_else(|| DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "Manufacturer".to_string(),
                     identifier: source_id.to_string(),
                 })?;
@@ -37,12 +38,13 @@ impl MergeManufacturers {
                 .find_by_id(target_id)
                 .await?
                 .ok_or_else(|| DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "Manufacturer".to_string(),
                     identifier: target_id.to_string(),
                 })?;
 
         if source.is_system_seeded || target.is_system_seeded {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "Protected entities cannot be merged".to_string(),
             ));
         }
@@ -55,6 +57,7 @@ impl MergeManufacturers {
 
         if deleted == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Manufacturer".to_string(),
                 identifier: source_id.to_string(),
             });
@@ -130,7 +133,7 @@ mod tests {
 
         let result = MergeManufacturers::execute(&mut uow, &shared_id, &shared_id).await;
 
-        assert!(matches!(result, Err(DomainError::BusinessRule(_))));
+        assert!(matches!(result, Err(DomainError::BusinessRule { .. })));
     }
 
     #[tokio::test]
@@ -168,7 +171,7 @@ mod tests {
         let mut uow = FakeUow::with_manufacturers_repo(mock);
         let result = MergeManufacturers::execute(&mut uow, &source_id, &target_id).await;
 
-        assert!(matches!(result, Err(DomainError::BusinessRule(_))));
+        assert!(matches!(result, Err(DomainError::BusinessRule { .. })));
     }
 
     #[tokio::test]
