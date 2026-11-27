@@ -76,20 +76,13 @@ Neutral:
 
 - Continued use of specta is recommended to keep Interface types in sync with the frontend.
 
-## 5. Implementation Notes
+## 5. More Information
 
-- Define repository and output port traits in the Use Case layer (or a small `ports` module) so tests can supply fake implementations.
-- Implement a concrete `SqliteUnitOfWork` in Infrastructure that provides transaction lifecycle methods and gives access to concrete Repository implementations.
-- Tauri command handlers should:
-  - Construct the Unit of Work (or obtain it from an application-level factory),
-  - Begin a transaction, map input to Use Case input DTOs, invoke the Use Case, then commit/rollback the Unit of Work based on the result.
-- Avoid passing SQLite transaction objects into Use Cases. Instead, provide repositories that capture the transactional context via the Unit of Work.
+### Reference Implementation Examples
 
-## 6. Examples (Sketch)
+#### Use Case Signature Example
 
-- Use Case signature example:
-
-```
+```rust
 pub trait CollectionRepository: Send + Sync {
     fn find_by_id(&self, id: CollectionId) -> Result<Option<Collection>, RepoError>;
     fn save(&self, collection: &Collection) -> Result<(), RepoError>;
@@ -106,9 +99,9 @@ impl<R: CollectionRepository> CreateCollectionUseCase<R> {
 }
 ```
 
-- Unit of Work sketch:
+#### Unit of Work Sketch
 
-```
+```rust
 pub trait UnitOfWork {
     type Repos;
     fn begin(&mut self) -> Result<(), UowError>;

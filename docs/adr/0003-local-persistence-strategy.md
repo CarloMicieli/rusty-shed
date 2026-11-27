@@ -1,10 +1,10 @@
 # ADR 3: Local Persistence Strategy (SQLite & SQLx)
 
-**Status:** Accepted
+Status: Accepted
 
-**Date:** 2026-01-08
+Date: 2026-01-08
 
-**Deciders:** Project Lead
+Deciders: Project Lead
 
 ## 1. Context and Problem Statement
 
@@ -63,11 +63,24 @@ SQLite disables Foreign Key constraints by default.
 - **Requirement:** Migrations must be **embedded** in the Rust binary using `sqlx::migrate!().run(&pool).await`.
 - **Purpose:** This ensures that when a user updates the app on their phone or desktop, the database schema is automatically updated to the latest version upon launch.
 
----
+### Consequences
 
-## 5. Consequences
+Positive:
 
-- **Positive:** High confidence in data relationships via enforced FKs.
-- **Positive:** Automatic schema updates for end-users via embedded migrations.
-- **Negative:** The build process requires a `sqlx-data.json` file or an active database connection to verify queries (Offline mode is available via `SQLX_OFFLINE=true`).
-- **Neutral:** Maintenance records will be stored in a hidden `app_data_dir` to prevent users from accidentally deleting the database file.
+- High confidence in data relationships via enforced FKs.
+- Automatic schema updates for end-users via embedded migrations.
+
+Negative:
+
+- The build process requires a `sqlx-data.json` file or an active database connection to verify queries (Offline mode is available via `SQLX_OFFLINE=true`).
+
+Neutral:
+
+- Maintenance records will be stored in a hidden `app_data_dir` to prevent users from accidentally deleting the database file.
+
+## 5. More Information
+
+- [SQLx Documentation](https://docs.rs/sqlx/)
+- [SQLite Foreign Keys Documentation](https://www.sqlite.org/foreignkeys.html)
+- [SQLx Migrations Guide](https://github.com/launchbadge/sqlx/tree/main/sqlx-cli)
+- [ADR 0001: Choice of Technology Stack](0001-choice-of-technology.md)

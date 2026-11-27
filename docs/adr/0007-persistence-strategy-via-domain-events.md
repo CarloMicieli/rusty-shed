@@ -54,11 +54,15 @@ This provides the best balance of strict typing and architectural flexibility. I
 
 ### Consequences
 
-- Positive: The Domain Layer remains pure. We can trigger side effects (like UI notifications in Tauri) by observing these same events.
-- Positive: Optimized database writes—we only touch what actually changed.
+Positive:
 
-- Negative: The Repository becomes more "intelligent" and slightly harder to maintain as it must understand the mapping of every event type.
-- Negative: Potential for "out-of-sync" bugs if a developer forgets to push an event after changing a field.
+- The Domain Layer remains pure. We can trigger side effects (like UI notifications in Tauri) by observing these same events.
+- Optimized database writes—we only touch what actually changed.
+
+Negative:
+
+- The Repository becomes more "intelligent" and slightly harder to maintain as it must understand the mapping of every event type.
+- Potential for "out-of-sync" bugs if a developer forgets to push an event after changing a field.
 
 ### Technical Details
 

@@ -62,6 +62,11 @@ Chosen option: **Option 3: Automated Bridge (Specta)**, because it leverages our
 
 ## More Information
 
+- [Specta Crate Documentation](https://docs.rs/specta/)
+- [Generated TypeScript Bindings Example](../../../src-tauri/src/bindings.ts)
+- [Tauri Specta Integration Guide](https://github.com/oscartbeaumont/specta)
+- [ADR 0002: Communication Bridge (IPC) and Type Generation](0002-communication-bridge-and-type-generation.md)
+
 All new commands MUST:
 
 1. Use `#[specta::specta]` macro.

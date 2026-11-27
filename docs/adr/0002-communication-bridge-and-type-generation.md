@@ -61,7 +61,9 @@ Negative: We must manage a large `generate_handler![]` list.
 
 Mitigation: To handle the "huge list," we will group commands into Rust modules (e.g., `commands::catalog`, `commands::collection`) and use a helper function to register them cleanly in tauri::Builder.
 
-## 5. Implementation Note: Organizing 50+ Commands
+## 5. More Information
+
+### Organizing 50+ Commands
 
 To prevent main.rs from becoming unreadable, we will use the following pattern:
 Rust
