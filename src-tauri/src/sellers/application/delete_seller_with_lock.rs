@@ -18,24 +18,25 @@ impl DeleteSellerWithLock {
         .bind(id.as_ref())
         .fetch_optional(&mut *executor)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "Seller".to_string(),
             identifier: id.to_string(),
         })?;
 
         if is_seeded != 0 {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "Protected entity cannot be deleted".to_string(),
             ));
         }
 
         let usage_count = canonical_party_usage_count(&mut *executor, id.as_ref())
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         if usage_count > 0 {
-            return Err(DomainError::BusinessRule(format!(
+            return Err(DomainError::business_rule(format!(
                 "Entity is still in use ({usage_count})"
             )));
         }

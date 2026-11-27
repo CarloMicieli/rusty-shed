@@ -20,6 +20,7 @@ impl ReorderFormationElementsUseCase {
         for eid in &element_ids {
             if !existing_ids.contains(eid.as_str()) {
                 return Err(DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "FormationElement".into(),
                     identifier: eid.clone(),
                 });
@@ -27,8 +28,8 @@ impl ReorderFormationElementsUseCase {
         }
 
         if element_ids.len() != formation.elements.len() {
-            return Err(DomainError::BusinessRule(
-                "element_ids must contain exactly all elements of the formation".into(),
+            return Err(DomainError::business_rule(
+                "element_ids must contain exactly all elements of the formation",
             ));
         }
 
@@ -125,7 +126,7 @@ mod tests {
                 .await;
 
         assert!(
-            matches!(result, Err(DomainError::BusinessRule(_))),
+            matches!(result, Err(DomainError::BusinessRule { .. })),
             "partial element list must return BusinessRule, got {result:?}"
         );
     }

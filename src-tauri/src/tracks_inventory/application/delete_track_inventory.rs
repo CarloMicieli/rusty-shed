@@ -31,6 +31,7 @@ impl DeleteTrackInventoryUseCase {
             .find_by_id(id)
             .await?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "TrackInventory".to_string(),
                 identifier: id.to_string(),
             })?;

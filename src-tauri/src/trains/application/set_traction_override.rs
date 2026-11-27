@@ -77,11 +77,11 @@ mod tests {
         let mut repo = MockTrainsRepository::new();
         repo.expect_set_element_traction_override()
             .times(1)
-            .returning(|_, _| Err(DomainError::Infrastructure("write failed".into())));
+            .returning(|_, _| Err(DomainError::infrastructure("write failed")));
 
         let mut uow = MockAppUow::new().with_trains_repo(repo);
         let result = SetTractionOverrideUseCase::execute(&mut uow, "el-1".into(), 1).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

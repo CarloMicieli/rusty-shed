@@ -38,7 +38,7 @@ impl NewDigitalRollingStockUseCase {
 
         let dup = repo.check_address_exists(input.dcc_address, None).await?;
         if dup.is_duplicate {
-            return Err(DomainError::Conflict(format!(
+            return Err(DomainError::conflict(format!(
                 "DCC address {} is already in use",
                 *input.dcc_address
             )));
@@ -151,6 +151,6 @@ mod tests {
         };
 
         let res = NewDigitalRollingStockUseCase::execute(&mut uow, id_provider, input).await;
-        assert!(matches!(res, Err(DomainError::Conflict(_))));
+        assert!(matches!(res, Err(DomainError::Conflict { .. })));
     }
 }

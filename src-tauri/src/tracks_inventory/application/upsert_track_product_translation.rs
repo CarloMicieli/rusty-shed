@@ -93,7 +93,7 @@ mod tests {
         repo.expect_upsert_translation()
             .once()
             .returning(|_, _, _, _| {
-                Err(DomainError::Infrastructure("db upsert failed".to_string()))
+                Err(DomainError::infrastructure("db upsert failed".to_string()))
             });
 
         let mut uow = FakeTrackProductUow::new(repo);
@@ -107,7 +107,7 @@ mod tests {
         let result = UpsertTrackProductTranslationUseCase::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(CommandError::DatabaseError(ref msg)) if msg.contains("db upsert failed")),
+            matches!(result, Err(CommandError::DatabaseError { message: ref msg, .. }) if msg.contains("db upsert failed")),
             "{result:?}"
         );
     }

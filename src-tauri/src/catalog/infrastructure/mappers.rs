@@ -43,7 +43,7 @@ impl TryFrom<ManufacturerRow> for Manufacturer {
                 if s.trim().is_empty() {
                     None
                 } else {
-                    Some(Url::parse(&s).map_err(|e| DomainError::Validation(e.to_string()))?)
+                    Some(Url::parse(&s).map_err(|e| DomainError::validation(e.to_string()))?)
                 }
             }
             None => None,

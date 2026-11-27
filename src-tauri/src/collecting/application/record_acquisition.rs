@@ -74,7 +74,7 @@ impl RecordAcquisition {
         for item in input.items {
             // 1. Derive deterministic model ID
             let model_id = RailwayModelId::new(&item.manufacturer_id, &item.product_code)
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
 
             // 2. Upsert catalog entry (create only if absent)
             let existing = unit_of_work
@@ -84,7 +84,7 @@ impl RecordAcquisition {
 
             if existing.is_none() {
                 let product_code = ProductCode::try_from(item.product_code.as_str())
-                    .map_err(|e| DomainError::Validation(e.to_string()))?;
+                    .map_err(|e| DomainError::validation(e.to_string()))?;
 
                 let params = RailwayModelParams {
                     manufacturer_id: item.manufacturer_id.clone(),
@@ -112,6 +112,7 @@ impl RecordAcquisition {
                 .find_by_id(&model_id, Language::English)
                 .await?
                 .ok_or_else(|| DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "RailwayModel".to_string(),
                     identifier: model_id.to_string(),
                 })?;
@@ -347,6 +348,6 @@ mod tests {
         )
         .await;
 
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 }

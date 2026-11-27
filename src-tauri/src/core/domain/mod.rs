@@ -2,6 +2,7 @@ pub mod address;
 pub mod calendar;
 pub mod currency;
 pub mod domain_error;
+pub mod error_id;
 pub mod id_provider;
 pub mod identifiers;
 pub mod language;
@@ -18,6 +19,7 @@ pub mod test_utils;
 
 pub use calendar::{Month, Year};
 pub use currency::Currency;
+pub use error_id::ErrorId;
 pub use event_envelope::EventEnvelope;
 pub use id_provider::IdProvider;
 pub use language::Language;

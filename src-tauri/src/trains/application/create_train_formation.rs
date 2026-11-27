@@ -84,7 +84,7 @@ mod tests {
     async fn repo_error_propagates() {
         let mut repo = MockTrainsRepository::new();
         repo.expect_save_formation().times(1).returning(|_| {
-            Err(crate::core::domain::domain_error::DomainError::Infrastructure("db down".into()))
+            Err(crate::core::domain::domain_error::DomainError::infrastructure("db down"))
         });
 
         let mut uow = MockAppUow::new().with_trains_repo(repo);

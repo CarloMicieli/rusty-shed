@@ -452,7 +452,7 @@ mod tests {
         };
         let result = create_train_formation_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -471,7 +471,7 @@ mod tests {
         };
         let result = create_train_formation_inner(&state, args).await;
         assert!(
-            !matches!(result, Err(CommandError::ValidationError(_))),
+            !matches!(result, Err(CommandError::ValidationError { .. })),
             "Did not expect ValidationError, got: {:?}",
             result
         );
@@ -672,7 +672,7 @@ mod tests {
         };
         let result = reorder_formation_elements_inner(&state, "some-id".to_string(), args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -686,7 +686,7 @@ mod tests {
         };
         let result = set_traction_override_inner(&state, "some-element-id".to_string(), args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -702,7 +702,7 @@ mod tests {
         };
         let result = set_traction_override_inner(&state, "some-element-id".to_string(), args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -733,7 +733,7 @@ mod tests {
         };
         let result = create_custom_prototype_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -762,7 +762,7 @@ mod tests {
         };
         let result = create_custom_prototype_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -776,7 +776,7 @@ mod tests {
         };
         let result = create_formation_category_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -792,7 +792,7 @@ mod tests {
         };
         let result = create_formation_category_inner(&state, args).await;
         assert!(
-            !matches!(result, Err(CommandError::ValidationError(_))),
+            !matches!(result, Err(CommandError::ValidationError { .. })),
             "Did not expect ValidationError, got: {:?}",
             result
         );

@@ -30,14 +30,14 @@ where
         let mut repo = unit_of_work.budget_repo();
         repo.get_quarterly_spending_by_category(year.value(), currency_code)
             .await
-            .map_err(DomainError::Infrastructure)?
+            .map_err(DomainError::infrastructure)?
     };
 
     let mut quarterly_data: HashMap<i32, Vec<(Category, i64)>> = HashMap::new();
 
     for (quarter_num, category_str, amount) in rows {
         let category = Category::from_str(&category_str)
-            .map_err(|e| DomainError::Validation(format!("Invalid category: {}", e)))?;
+            .map_err(|e| DomainError::validation(format!("Invalid category: {}", e)))?;
 
         quarterly_data
             .entry(quarter_num)
@@ -96,7 +96,7 @@ fn quarter_from_number(num: i32) -> Result<BudgetQuarter, DomainError> {
         2 => Ok(BudgetQuarter::Q2),
         3 => Ok(BudgetQuarter::Q3),
         4 => Ok(BudgetQuarter::Q4),
-        _ => Err(DomainError::Validation(format!(
+        _ => Err(DomainError::validation(format!(
             "Invalid quarter number: {}",
             num
         ))),
@@ -173,7 +173,7 @@ mod tests {
         let result = get_quarterly_summaries(&mut uow, year, "EUR").await;
 
         assert!(
-            matches!(result, Err(DomainError::Validation(_))),
+            matches!(result, Err(DomainError::Validation { .. })),
             "Expected Validation error for invalid category, got: {:?}",
             result
         );
@@ -192,7 +192,7 @@ mod tests {
         let result = get_quarterly_summaries(&mut uow, year, "EUR").await;
 
         assert!(
-            matches!(result, Err(DomainError::Infrastructure(_))),
+            matches!(result, Err(DomainError::Infrastructure { .. })),
             "Expected Infrastructure error, got: {:?}",
             result
         );
@@ -244,7 +244,7 @@ mod tests {
     #[case(100)]
     fn quarter_from_number_returns_validation_error_for_invalid_numbers(#[case] input: i32) {
         match quarter_from_number(input) {
-            Err(DomainError::Validation(msg)) => {
+            Err(DomainError::Validation { message: msg, .. }) => {
                 // ensure error message contains the invalid number (keeps checks specific)
                 assert!(
                     msg.contains(&input.to_string()),

@@ -90,7 +90,7 @@ pub async fn get_image_path_inner(
                     .to_str()
                     .map(|s| s.to_string())
                     .ok_or_else(|| CommandError::unknown("Non-Unicode path"))?),
-                _ => Err(CommandError::NotFound(format!(
+                _ => Err(CommandError::not_found(format!(
                     "No image found for railway model {id}"
                 ))),
             }
@@ -158,14 +158,14 @@ pub async fn upload_model_image_inner(
     args.validate().map_err(|e| {
         let err_msg = format!("Invalid upload arguments: {}", e);
         warn!("{}", err_msg);
-        CommandError::BusinessRule(err_msg)
+        CommandError::business_rule(err_msg)
     })?;
 
     // Parse model ID
     let model_id = RailwayModelId::try_from(args.model_id.as_str()).map_err(|e| {
         let err_msg = format!("Invalid model ID: {}", e);
         warn!("{}", err_msg);
-        CommandError::BusinessRule(err_msg)
+        CommandError::business_rule(err_msg)
     })?;
 
     // Get storage directory
@@ -237,7 +237,7 @@ pub async fn upload_model_image_bytes_inner(
 
     // Parse model ID
     let model_id = RailwayModelId::try_from(args.model_id.as_str())
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid model ID: {}", e)))?;
+        .map_err(|e| CommandError::business_rule(format!("Invalid model ID: {}", e)))?;
 
     // Get storage directory
     let models_dir = state.models_dir();
@@ -301,7 +301,7 @@ pub async fn delete_model_image_inner(
 
     // Parse model ID
     let model_id = RailwayModelId::try_from(args.model_id.as_str())
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid model ID: {}", e)))?;
+        .map_err(|e| CommandError::business_rule(format!("Invalid model ID: {}", e)))?;
 
     // Get storage directory
     let models_dir = state.models_dir();
@@ -393,7 +393,7 @@ pub struct UploadModelImageBytesArgs {
 /// Map UploadError to CommandError
 fn map_upload_error(err: UploadError) -> CommandError {
     match err {
-        UploadError::ModelNotFound(msg) => CommandError::NotFound(msg),
+        UploadError::ModelNotFound(msg) => CommandError::not_found(msg),
         UploadError::Validation(e) => map_validation_error(e),
         UploadError::Storage(e) => map_storage_error(e),
         UploadError::Domain(e) => CommandError::from(e),
@@ -403,7 +403,7 @@ fn map_upload_error(err: UploadError) -> CommandError {
 /// Map DeleteError to CommandError
 fn map_delete_error(err: DeleteError) -> CommandError {
     match err {
-        DeleteError::ModelNotFound(msg) => CommandError::NotFound(msg),
+        DeleteError::ModelNotFound(msg) => CommandError::not_found(msg),
         DeleteError::Storage(e) => map_storage_error(e),
         DeleteError::Domain(e) => CommandError::from(e),
     }
@@ -415,7 +415,7 @@ fn map_validation_error(err: ValidationError) -> CommandError {
         return CommandError::unknown(msg);
     }
 
-    CommandError::BusinessRule(map_validation_error_message(&err))
+    CommandError::business_rule(map_validation_error_message(&err))
 }
 
 fn map_validation_error_message(err: &ValidationError) -> String {
@@ -451,7 +451,7 @@ fn map_storage_error(err: StorageError) -> CommandError {
         StorageError::DeleteFailed(msg) => {
             CommandError::unknown(format!("Failed to delete file: {}", msg))
         }
-        StorageError::FileNotFound(msg) => CommandError::NotFound(msg),
+        StorageError::FileNotFound(msg) => CommandError::not_found(msg),
         StorageError::IoError(msg) => CommandError::unknown(msg),
     }
 }
@@ -462,13 +462,13 @@ fn map_storage_error(err: StorageError) -> CommandError {
 /// that the frontend can understand and display to users.
 fn map_image_error(err: ImageError) -> CommandError {
     match err {
-        ImageError::NotFound(msg) => CommandError::NotFound(msg),
+        ImageError::NotFound(msg) => CommandError::not_found(msg),
         ImageError::InvalidPath(msg) => {
-            CommandError::BusinessRule(format!("Invalid image path: {}", msg))
+            CommandError::business_rule(format!("Invalid image path: {}", msg))
         }
-        ImageError::IoError(msg) => CommandError::DatabaseError(format!("I/O error: {}", msg)),
+        ImageError::IoError(msg) => CommandError::database(format!("I/O error: {}", msg)),
         ImageError::InvalidModelId(msg) => {
-            CommandError::BusinessRule(format!("Invalid model ID: {}", msg))
+            CommandError::business_rule(format!("Invalid model ID: {}", msg))
         }
     }
 }
@@ -485,7 +485,7 @@ mod tests {
         let cmd_err = map_image_error(err);
 
         match cmd_err {
-            CommandError::NotFound(msg) => assert_eq!(msg, "test.png"),
+            CommandError::NotFound { message: msg, .. } => assert_eq!(msg, "test.png"),
             _ => panic!("Expected NotFound variant"),
         }
     }
@@ -496,7 +496,9 @@ mod tests {
         let cmd_err = map_image_error(err);
 
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("Invalid image path")),
+            CommandError::BusinessRule { message: msg, .. } => {
+                assert!(msg.contains("Invalid image path"))
+            }
             _ => panic!("Expected BusinessRule variant"),
         }
     }
@@ -507,7 +509,7 @@ mod tests {
         let cmd_err = map_image_error(err);
 
         match cmd_err {
-            CommandError::DatabaseError(msg) => assert!(msg.contains("I/O error")),
+            CommandError::DatabaseError { message: msg, .. } => assert!(msg.contains("I/O error")),
             _ => panic!("Expected DatabaseError variant"),
         }
     }
@@ -574,7 +576,7 @@ mod tests {
         let cmd_err = map_storage_error(err);
 
         match cmd_err {
-            CommandError::NotFound(message) => assert_eq!(message, "missing.png"),
+            CommandError::NotFound { message, .. } => assert_eq!(message, "missing.png"),
             _ => panic!("Expected NotFound variant"),
         }
     }
@@ -595,7 +597,7 @@ mod tests {
         let cmd_err = map_validation_error(ValidationError::FileNotFound);
 
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert_eq!(msg, "File not found"),
+            CommandError::BusinessRule { message: msg, .. } => assert_eq!(msg, "File not found"),
             _ => panic!("Expected BusinessRule variant"),
         }
     }
@@ -608,7 +610,7 @@ mod tests {
         });
 
         match cmd_err {
-            CommandError::BusinessRule(msg) => {
+            CommandError::BusinessRule { message: msg, .. } => {
                 assert!(msg.contains("11"));
                 assert!(msg.contains("10"));
             }
@@ -623,7 +625,7 @@ mod tests {
         });
 
         match cmd_err {
-            CommandError::BusinessRule(msg) => {
+            CommandError::BusinessRule { message: msg, .. } => {
                 assert!(msg.contains("Unsupported format"));
                 assert!(msg.contains("gif"));
             }
@@ -636,7 +638,7 @@ mod tests {
         let cmd_err = map_validation_error(ValidationError::CorruptedImage);
 
         match cmd_err {
-            CommandError::BusinessRule(msg) => assert!(msg.contains("corrupted")),
+            CommandError::BusinessRule { message: msg, .. } => assert!(msg.contains("corrupted")),
             _ => panic!("Expected BusinessRule variant"),
         }
     }
@@ -656,7 +658,7 @@ mod tests {
         let cmd_err = map_upload_error(UploadError::ModelNotFound("missing model".to_string()));
 
         match cmd_err {
-            CommandError::NotFound(message) => assert_eq!(message, "missing model"),
+            CommandError::NotFound { message, .. } => assert_eq!(message, "missing model"),
             _ => panic!("Expected NotFound variant"),
         }
     }
@@ -666,7 +668,7 @@ mod tests {
         let cmd_err = map_upload_error(UploadError::Validation(ValidationError::FileNotFound));
 
         match cmd_err {
-            CommandError::BusinessRule(message) => assert_eq!(message, "File not found"),
+            CommandError::BusinessRule { message, .. } => assert_eq!(message, "File not found"),
             _ => panic!("Expected BusinessRule variant"),
         }
     }
@@ -678,7 +680,7 @@ mod tests {
         )));
 
         match cmd_err {
-            CommandError::NotFound(message) => assert_eq!(message, "missing.png"),
+            CommandError::NotFound { message, .. } => assert_eq!(message, "missing.png"),
             _ => panic!("Expected NotFound variant"),
         }
     }
@@ -686,11 +688,11 @@ mod tests {
     #[test]
     fn test_map_upload_error_domain() {
         let cmd_err = map_upload_error(UploadError::Domain(
-            crate::core::domain::domain_error::DomainError::BusinessRule("boom".to_string()),
+            crate::core::domain::domain_error::DomainError::business_rule("boom".to_string()),
         ));
 
         match cmd_err {
-            CommandError::BusinessRule(message) => assert_eq!(message, "boom"),
+            CommandError::BusinessRule { message, .. } => assert_eq!(message, "boom"),
             _ => panic!("Expected BusinessRule variant"),
         }
     }
@@ -752,7 +754,7 @@ mod tests {
         )
         .await;
 
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[tokio::test]
@@ -762,7 +764,7 @@ mod tests {
 
         let result = get_image_path_inner(&state, "x.png".to_string(), "other".to_string()).await;
 
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[tokio::test]
@@ -777,7 +779,7 @@ mod tests {
         )
         .await;
 
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[tokio::test]
@@ -831,7 +833,7 @@ mod tests {
         };
 
         let result = upload_model_image_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+        assert!(matches!(result, Err(CommandError::BusinessRule { .. })));
     }
 
     #[tokio::test]
@@ -845,7 +847,7 @@ mod tests {
         };
 
         let result = upload_model_image_bytes_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+        assert!(matches!(result, Err(CommandError::BusinessRule { .. })));
     }
 
     #[tokio::test]
@@ -857,6 +859,6 @@ mod tests {
         };
 
         let result = delete_model_image_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::BusinessRule(_))));
+        assert!(matches!(result, Err(CommandError::BusinessRule { .. })));
     }
 }

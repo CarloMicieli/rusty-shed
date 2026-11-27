@@ -23,14 +23,14 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
     async fn list(&mut self) -> Result<Vec<Seller>, DomainError> {
         let rows = database::list_sellers(&mut *self.executor)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         Ok(rows.into_iter().map(Into::into).collect())
     }
 
     async fn get(&mut self, id: &SellerId) -> Result<Option<Seller>, DomainError> {
         let row = database::find_seller_by_id(&mut *self.executor, &id.0)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         Ok(row.map(Into::into))
     }
 
@@ -40,7 +40,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
     ) -> Result<Option<crate::sellers::application::seller_view::SellerView>, DomainError> {
         let row = database::find_seller_by_id(&mut *self.executor, &id.0)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         Ok(row.map(|r| {
             let s: Seller = r.into();
             crate::sellers::application::seller_view::SellerView::from(s)
@@ -52,7 +52,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
         let existing_created_at =
             database::get_seller_created_at(&mut *self.executor, &seller.id.0)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         let created_at_to_use =
             existing_created_at.unwrap_or_else(|| seller.metadata.created_at.to_rfc3339());
@@ -89,13 +89,13 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
             &updated_at,
         )
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))
+        .map_err(|e| DomainError::infrastructure(e.to_string()))
     }
 
     async fn delete(&mut self, id: &SellerId) -> Result<u64, DomainError> {
         database::delete_seller(&mut *self.executor, &id.0)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))
+            .map_err(|e| DomainError::infrastructure(e.to_string()))
     }
 
     async fn save(&mut self, seller: &mut Seller) -> Result<(), DomainError> {
@@ -125,7 +125,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                     let existing_created_at =
                         database::get_seller_created_at(&mut *self.executor, &aggregate_id.0)
                             .await
-                            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                            .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
                     let created_at_to_use =
                         existing_created_at.unwrap_or_else(|| metadata.created_at.to_rfc3339());
@@ -161,12 +161,12 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                         &updated_at_to_use,
                     )
                     .await
-                    .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                    .map_err(|e| DomainError::infrastructure(e.to_string()))?;
                 }
                 SellerEvent::Deleted { aggregate_id } => {
                     database::delete_seller(&mut *self.executor, &aggregate_id.0)
                         .await
-                        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
                 }
             }
         }
@@ -177,7 +177,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
     async fn find_usage_count(&mut self, id: &SellerId) -> Result<i64, DomainError> {
         canonical_party_usage_count(&mut *self.executor, id.as_ref())
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))
+            .map_err(|e| DomainError::infrastructure(e.to_string()))
     }
 }
 

@@ -42,6 +42,7 @@ mod tests {
             .times(1)
             .returning(|_| {
                 Err(DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "FormationElement".into(),
                     identifier: "el-404".into(),
                 })

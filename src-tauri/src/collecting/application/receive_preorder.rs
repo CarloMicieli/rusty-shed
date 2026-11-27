@@ -74,6 +74,7 @@ mod tests {
             .times(1)
             .returning(|_, _| {
                 Err(DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "PreorderPurchaseInfo".to_string(),
                     identifier: "item-1".to_string(),
                 })
@@ -92,12 +93,12 @@ mod tests {
         collection_repo
             .expect_receive_preorder()
             .times(1)
-            .returning(|_, _| Err(DomainError::Infrastructure("db error".into())));
+            .returning(|_, _| Err(DomainError::infrastructure("db error")));
 
         let railway_repo = MockRailwayModelRepository::new();
         let mut uow = FakeUow::new(collection_repo, railway_repo);
         let result = ReceivePreorder::execute(&mut uow, make_input()).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

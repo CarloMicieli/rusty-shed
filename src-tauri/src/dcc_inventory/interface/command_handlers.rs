@@ -248,7 +248,7 @@ mod tests {
         let mut repo = MockDigitalRollingStockRepository::new();
         repo.expect_find_all_decoders().times(1).returning(|| {
             Err(
-                crate::core::domain::domain_error::DomainError::Infrastructure(
+                crate::core::domain::domain_error::DomainError::infrastructure(
                     "db down".to_string(),
                 ),
             )

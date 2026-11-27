@@ -54,7 +54,7 @@ impl TryFrom<TrackProductRow> for TrackProduct {
 
     fn try_from(row: TrackProductRow) -> Result<Self, Self::Error> {
         let manufacturer_id = ManufacturerId::try_from(row.manufacturer_id)
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         let length = row.length_mm.and_then(|mm| {
             Decimal::from_i64(mm as i64)
@@ -104,7 +104,7 @@ impl TryFrom<TrackPurchaseRow> for TrackPurchase {
 
     fn try_from(row: TrackPurchaseRow) -> Result<Self, Self::Error> {
         let currency = Currency::from_code(&row.price_currency)
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         Ok(TrackPurchase {
             track_purchase_id: row.id,

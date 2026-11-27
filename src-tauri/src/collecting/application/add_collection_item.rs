@@ -44,6 +44,7 @@ impl AddCollectionItem {
         };
 
         let railway_model = railway_model.ok_or(DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "RailwayModel".to_string(),
             identifier: input.railway_model_id.to_string(),
         })?;

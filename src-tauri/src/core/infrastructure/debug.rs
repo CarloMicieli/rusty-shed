@@ -41,7 +41,7 @@ pub async fn load_database_table_stats(
             .fetch_one(pool)
             .await
             .map_err(|error| {
-                CommandError::DatabaseError(format!(
+                CommandError::database(format!(
                     "failed to count rows for table '{table_name}': {error}"
                 ))
             })?;
@@ -83,7 +83,7 @@ async fn load_user_table_names(pool: &SqlitePool) -> Result<Vec<String>, Command
     )
     .fetch_all(pool)
     .await
-    .map_err(|error| CommandError::DatabaseError(format!("failed to enumerate SQLite tables: {error}")))?;
+    .map_err(|error| CommandError::database(format!("failed to enumerate SQLite tables: {error}")))?;
 
     table_names.retain(|name| !INTERNAL_TABLES.contains(&name.as_str()));
     Ok(table_names)
@@ -99,7 +99,7 @@ async fn load_table_size_map(pool: &SqlitePool) -> Result<HashMap<String, i64>, 
             return Ok(HashMap::new());
         }
         Err(error) => {
-            return Err(CommandError::DatabaseError(format!(
+            return Err(CommandError::database(format!(
                 "failed to query SQLite dbstat virtual table: {error}"
             )));
         }
@@ -108,12 +108,12 @@ async fn load_table_size_map(pool: &SqlitePool) -> Result<HashMap<String, i64>, 
     let mut sizes = HashMap::with_capacity(rows.len());
     for row in rows {
         let name = row.try_get::<String, _>("name").map_err(|error| {
-            CommandError::DatabaseError(format!("failed to decode dbstat table name: {error}"))
+            CommandError::database(format!("failed to decode dbstat table name: {error}"))
         })?;
         let size_bytes = row
             .try_get::<Option<i64>, _>("size_bytes")
             .map_err(|error| {
-                CommandError::DatabaseError(format!(
+                CommandError::database(format!(
                     "failed to decode dbstat size for '{name}': {error}"
                 ))
             })?;

@@ -8,5 +8,5 @@ pub async fn canonical_party_usage_count(
 ) -> Result<i64, DomainError> {
     usage_queries::canonical_party_usage_count(executor, party_id)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))
+        .map_err(|e| DomainError::infrastructure(e.to_string()))
 }

@@ -98,7 +98,7 @@ impl AddRailwayModel {
         let product_code_string = railway_model_params.product_code.to_string();
         let railway_model_id =
             RailwayModelId::new(&railway_model_params.manufacturer_id, &product_code_string)
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
 
         // Extract Copy fields before the move.
         let power_method = railway_model_params.power_method;
@@ -425,7 +425,7 @@ mod tests {
 
         let result = AddRailwayModel::execute(&mut unit_of_work, input).await;
 
-        if let Err(DomainError::ValidationError(e)) = result {
+        if let Err(DomainError::ValidationError { fields: e, .. }) = result {
             assert_eq!(e.len(), 8);
             let errors = e;
             assert!(errors.contains_key("product_code"));
@@ -485,7 +485,7 @@ mod tests {
         let result = AddRailwayModel::execute(&mut unit_of_work, input).await;
 
         match result {
-            Err(DomainError::ValidationError(errors)) => {
+            Err(DomainError::ValidationError { fields: errors, .. }) => {
                 assert!(errors.contains_key("railway_company_id"), "{errors:?}");
             }
             other => panic!("expected nested validation error, got {other:?}"),

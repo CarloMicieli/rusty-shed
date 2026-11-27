@@ -35,6 +35,7 @@ impl RenameWishlistUseCase {
         // the aggregate via the repository which will process events.
         let maybe = repo.find_by_id(&input.id).await?;
         let mut wishlist = maybe.ok_or(DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "Wishlist".to_string(),
             identifier: input.id.to_string(),
         })?;

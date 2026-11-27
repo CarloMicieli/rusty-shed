@@ -89,7 +89,7 @@ impl ValidationContext {
         if self.errors.is_empty() {
             Ok(())
         } else {
-            Err(DomainError::ValidationError(self.errors))
+            Err(DomainError::validation_fields(self.errors))
         }
     }
 
@@ -223,7 +223,7 @@ mod tests {
 
         let result = validation_context.finish();
         assert!(result.is_err());
-        if let Err(DomainError::ValidationError(errors)) = result {
+        if let Err(DomainError::ValidationError { fields: errors, .. }) = result {
             assert!(errors.contains_key("age"));
             let age_errors = &errors["age"];
             assert_eq!(age_errors.len(), 1);

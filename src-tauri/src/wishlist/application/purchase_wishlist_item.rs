@@ -67,6 +67,7 @@ impl PurchaseWishlistItemService {
                 .find_by_id(&cmd.wishlist_id)
                 .await?
                 .ok_or(DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "Wishlist".to_string(),
                     identifier: cmd.wishlist_id.to_string(),
                 })?
@@ -79,6 +80,7 @@ impl PurchaseWishlistItemService {
                 .iter()
                 .find(|i| i.id == cmd.wishlist_item_id)
                 .ok_or(DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "WishlistItem".to_string(),
                     identifier: cmd.wishlist_item_id.to_string(),
                 })?;
@@ -310,7 +312,7 @@ mod tests {
 
         assert!(res.is_err());
         match res.err().unwrap() {
-            DomainError::BusinessRule(_) => {}
+            DomainError::BusinessRule { .. } => {}
             other => panic!("expected BusinessRule, got: {:?}", other),
         }
     }
@@ -485,7 +487,7 @@ mod tests {
         collection_mock
             .expect_save()
             .times(1)
-            .returning(move |_c| Err(DomainError::Infrastructure("row not found".to_string())));
+            .returning(move |_c| Err(DomainError::infrastructure("row not found".to_string())));
 
         let mut railway_mock = MockRailwayModelRepository::new();
         let rm_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
@@ -523,7 +525,7 @@ mod tests {
 
         assert!(res.is_err());
         match res.err().unwrap() {
-            DomainError::Infrastructure(_) => {}
+            DomainError::Infrastructure { .. } => {}
             other => panic!("unexpected error: {:?}", other),
         }
     }

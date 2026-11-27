@@ -84,6 +84,7 @@ mod tests {
         let mut repo = MockTrainsRepository::new();
         repo.expect_get_formation_detail().times(1).returning(|id| {
             Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "TrainFormation".into(),
                 identifier: id.into(),
             })
