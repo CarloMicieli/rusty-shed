@@ -69,6 +69,17 @@ Run the frontend test suite with Vitest:
 pnpm test
 ```
 
+Run the Rust architecture safeguards independently:
+
+```bash
+pnpm rust:architecture
+```
+
+These tests enforce the backend boundaries documented in the ADRs and are
+executed automatically in CI. See
+[docs/architecture-tests.md](docs/architecture-tests.md) for the enforced rules
+and instructions for adding new checks.
+
 Run the native end-to-end test against the Tauri app bundle on Linux:
 
 ```bash
@@ -99,6 +110,7 @@ pnpm run rust:fmt     # runs `cargo fmt --manifest-path src-tauri/Cargo.toml`
 pnpm run rust:build   # runs `cargo build --manifest-path src-tauri/Cargo.toml`
 pnpm run rust:run     # runs `cargo run --manifest-path src-tauri/Cargo.toml`
 pnpm run rust:test    # runs `cargo test --manifest-path src-tauri/Cargo.toml`
+pnpm run rust:architecture # runs the dedicated ADR-based architecture tests
 pnpm run rust:clean   # runs `cargo clean --manifest-path src-tauri/Cargo.toml`
 pnpm run rust:clippy  # runs `cargo clippy --manifest-path src-tauri/Cargo.toml`
 ```

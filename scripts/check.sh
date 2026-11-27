@@ -308,6 +308,9 @@ main() {
         cargo run --manifest-path src-tauri/Cargo.toml \
             --bin gen_types
 
+    run_step "Run Rust architecture tests" \
+        pnpm rust:architecture
+
     run_step "Verify generated bindings" \
         check_bindings
 
@@ -317,7 +320,7 @@ main() {
 
     run_step "Run Clippy" \
         cargo clippy --manifest-path src-tauri/Cargo.toml \
-            --all-targets --all-features --keep-going
+            --all-targets --all-features --keep-going -- -D warnings
 
     run_step "Run Rust tests" \
         cargo test --manifest-path src-tauri/Cargo.toml \
