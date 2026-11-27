@@ -14,7 +14,10 @@ pnpm test:unit
 pnpm test
 
 # Run tests with coverage report
-pnpm test:coverage
+pnpm test:frontend:coverage
+
+# Run Rust backend coverage
+pnpm test:backend:coverage
 ```
 
 ## Test Architecture
@@ -345,13 +348,54 @@ pnpm test:ci
 
 ### Coverage
 
+Frontend coverage uses Vitest with the V8 provider. The provider is already
+installed as a development dependency.
+
 ```bash
-pnpm test:coverage
+pnpm test:frontend:coverage
 ```
 
-- Generates coverage report in `coverage/` directory
-- Opens HTML report in browser
-- Excludes: `node_modules/`, `src/__tests__/`, `**/*.d.ts`, generated files
+- Generates the HTML report at `coverage/frontend/index.html`
+- Generates the machine-readable summary at
+  `coverage/frontend/coverage-summary.json`
+- Prints line, function, statement, and branch coverage in the terminal
+- Includes TypeScript and Svelte files under `src/`, including files without
+  tests
+- Excludes test/support files, declaration files, configuration files, and
+  generated files
+- Does not enforce arbitrary coverage thresholds yet; the report establishes
+  the current baseline
+
+Backend coverage uses `cargo-llvm-cov`. The backend command fails with
+installation instructions when its required tools are unavailable:
+
+```bash
+cargo install cargo-llvm-cov --locked
+rustup component add llvm-tools-preview
+```
+
+Run backend coverage independently with:
+
+```bash
+pnpm test:backend:coverage
+```
+
+- Runs Rust unit and integration test targets once
+- Generates the HTML report at `coverage/backend/html/index.html`
+- Generates the machine-readable JSON report at
+  `coverage/backend/coverage.json`
+- Prints a coverage summary in the terminal
+- Does not silently skip coverage or enforce arbitrary thresholds
+
+The local validation script runs both coverage tasks without running the same
+test suites a second time:
+
+```bash
+scripts/check.sh
+```
+
+Coverage collection is intentionally local-only; `scripts/check.sh` and the
+coverage scripts do not modify CI/CD workflows.
 
 ## Troubleshooting
 

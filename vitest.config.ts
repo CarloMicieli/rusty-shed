@@ -19,14 +19,17 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
-      include: ['src/**/*.svelte', 'src/**/*.ts'],
+      reportsDirectory: 'coverage/frontend',
+      include: ['src/**/*.{svelte,ts}'],
       exclude: [
-        'node_modules/',
-        'src/__tests__/',
+        'node_modules/**',
+        'src/**/__tests__/**',
+        'src/**/*.{test,spec}.{js,ts}',
         '**/*.d.ts',
         '**/*.config.*',
         '**/mockData.ts',
-        'src/paraglide/**'
+        'src/lib/bindings.ts',
+        'src/lib/paraglide/**'
       ]
     }
   },

@@ -69,6 +69,28 @@ Run the frontend test suite with Vitest:
 pnpm test
 ```
 
+Run frontend and backend coverage independently:
+
+```bash
+pnpm test:frontend:coverage
+pnpm test:backend:coverage
+```
+
+Frontend reports are generated in `coverage/frontend/`. Backend coverage
+requires `cargo-llvm-cov` and the Rust `llvm-tools-preview` component, and its
+reports are generated in `coverage/backend/`.
+
+```bash
+cargo install cargo-llvm-cov --locked
+rustup component add llvm-tools-preview
+```
+
+Run the complete local validation suite, including both coverage tasks:
+
+```bash
+scripts/check.sh
+```
+
 Run the Rust architecture safeguards independently:
 
 ```bash

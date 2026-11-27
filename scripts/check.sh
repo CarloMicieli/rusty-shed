@@ -291,8 +291,8 @@ main() {
     run_step "Build frontend" \
         pnpm build
 
-    run_step "Run frontend tests" \
-        pnpm test
+    run_step "Run frontend coverage" \
+        pnpm test:frontend:coverage
 
     # --------------------------------------------------------
     # Backend
@@ -308,9 +308,6 @@ main() {
         cargo run --manifest-path src-tauri/Cargo.toml \
             --bin gen_types
 
-    run_step "Run Rust architecture tests" \
-        pnpm rust:architecture
-
     run_step "Verify generated bindings" \
         check_bindings
 
@@ -322,9 +319,8 @@ main() {
         cargo clippy --manifest-path src-tauri/Cargo.toml \
             --all-targets --all-features --keep-going -- -D warnings
 
-    run_step "Run Rust tests" \
-        cargo test --manifest-path src-tauri/Cargo.toml \
-            --workspace --no-fail-fast
+    run_step "Run backend coverage (Rust tests)" \
+        pnpm test:backend:coverage
 
     # --------------------------------------------------------
     # End-to-end
