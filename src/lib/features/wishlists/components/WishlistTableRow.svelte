@@ -31,12 +31,12 @@
         commands.getRailwayModelImage(item.railwayModelId)
       ]);
 
-      if (modelResult.status === 'ok' && modelResult.data) {
-        modelDetails = modelResult.data;
+      if (modelResult) {
+        modelDetails = modelResult;
       }
 
-      if (imageResult.status === 'ok' && imageResult.data.hasImage && imageResult.data.imagePath) {
-        const filePath = imageResult.data.imagePath;
+      if (imageResult.hasImage && imageResult.imagePath) {
+        const filePath = imageResult.imagePath;
         const ext = filePath.split('.').pop()?.toLowerCase() ?? 'jpg';
         const mimes: Record<string, string> = {
           jpg: 'image/jpeg',
@@ -105,7 +105,7 @@
   });
 
   const modelMetadata = $derived.by(() => {
-    const manufacturer = modelDetails?.manufacturer.display ?? '—';
+    const manufacturer = modelDetails?.manufacturer?.display ?? '—';
     const productCode = modelDetails?.productCode;
     return productCode ? `${manufacturer} • ${productCode}` : manufacturer;
   });

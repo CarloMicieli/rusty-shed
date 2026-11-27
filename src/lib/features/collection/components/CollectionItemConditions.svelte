@@ -86,13 +86,10 @@
   }
 
   async function saveUpdate(update: CollectionItemUpdateArgs): Promise<void> {
-    const result = await commands.updateCollectionItem({
+    await commands.updateCollectionItem({
       collectionItemId: item.id,
       update
     });
-    if (result.status === 'error') {
-      throw new Error('update_failed');
-    }
     await onItemUpdated?.();
   }
 

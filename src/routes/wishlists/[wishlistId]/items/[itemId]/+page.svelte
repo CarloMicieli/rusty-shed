@@ -46,13 +46,12 @@
   const displayModel = $derived(model ? toRailwayModel(model, null, imageResponse) : null);
 
   async function loadData() {
-    const wishlistResult = await commands.getWishlistById(wishlistId);
-    if (wishlistResult.status !== 'ok' || !wishlistResult.data) {
+    const wishlistView = await commands.getWishlistById(wishlistId);
+    if (!wishlistView) {
       notFound = true;
       return;
     }
 
-    const wishlistView = wishlistResult.data;
     wishlistName = wishlistView.name;
     const foundView = wishlistView.items?.find((i) => i.id === itemId) ?? null;
 
@@ -69,8 +68,8 @@
       commands.getRailwayModelImage(wishlistItem.railwayModelId)
     ]);
 
-    if (modelResult.status === 'ok') model = modelResult.data;
-    if (imageResult.status === 'ok') imageResponse = imageResult.data;
+    model = modelResult;
+    imageResponse = imageResult;
   }
 
   async function handleModelUpdated() {

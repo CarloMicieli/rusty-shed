@@ -109,10 +109,17 @@
 
   onMount(async () => {
     isLoadingData = true;
-    const result = await commands.getManufacturers();
-    if (result.status === 'ok') {
-      manufacturers = result.data;
-    }
+    const result: unknown = await commands.getManufacturers();
+    manufacturers = Array.isArray(result)
+      ? (result as typeof manufacturers)
+      : result !== null &&
+          typeof result === 'object' &&
+          'status' in result &&
+          result.status === 'ok' &&
+          'data' in result &&
+          Array.isArray(result.data)
+        ? (result.data as typeof manufacturers)
+        : [];
     isLoadingData = false;
   });
 

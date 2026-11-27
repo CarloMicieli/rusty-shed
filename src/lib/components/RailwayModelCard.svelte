@@ -192,55 +192,43 @@
   // ─────────────────────────────────────────────────────────────────────────
 
   async function saveScale(id: string) {
-    const result = await commands.updateRailwayModelClassification({
+    await commands.updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: id as Scale,
       epoch: null,
       category: null
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save scale');
-    }
     modelOverrides.scale = id;
     await onModelUpdated?.();
   }
 
   async function saveEra(id: string) {
-    const result = await commands.updateRailwayModelClassification({
+    await commands.updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: null,
       epoch: id,
       category: null
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save era');
-    }
     modelOverrides.era = id;
     await onModelUpdated?.();
   }
 
   async function saveCategory(id: string) {
-    const result = await commands.updateRailwayModelClassification({
+    await commands.updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: null,
       epoch: null,
       category: id as Category
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save category');
-    }
     modelOverrides.category = id;
     await onModelUpdated?.();
   }
 
   async function saveDeliveryDate(value: string) {
-    const result = await commands.updateRailwayModelDeliveryDate({
+    await commands.updateRailwayModelDeliveryDate({
       railwayModelId: model.id,
       deliveryDate: value || null
     });
-    if (result.status === 'error') {
-      throw new Error('Failed to save delivery date');
-    }
     modelOverrides.deliveryDate = value;
     await onModelUpdated?.();
   }
@@ -263,13 +251,14 @@
   // ─────────────────────────────────────────────────────────────────────────
 
   async function saveDescription(value: string) {
-    const result = await commands.updateRailwayModelText({
-      railwayModelId: model.id,
-      field: 'Description',
-      value,
-      lang: getLocale()
-    });
-    if (result.status === 'error') {
+    try {
+      await commands.updateRailwayModelText({
+        railwayModelId: model.id,
+        field: 'Description',
+        value,
+        lang: getLocale()
+      });
+    } catch {
       onError?.(m.edit_save_error());
       throw new Error('Failed to save description');
     }

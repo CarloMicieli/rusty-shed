@@ -19,7 +19,6 @@
     upload_image,
     upload_image_filter_name,
     replace_image,
-    upload_error_model_not_found,
     upload_error_unknown,
     delete_image,
     deleting,
@@ -93,27 +92,9 @@
     try {
       isDeleting = true;
 
-      const result = await commands.deleteModelImage({
+      await commands.deleteModelImage({
         modelId
       });
-
-      if (result.status === 'error') {
-        const err = result.error;
-        if (typeof err === 'object') {
-          if ('BusinessRule' in err && err.BusinessRule) {
-            error = err.BusinessRule;
-          } else if ('NotFound' in err) {
-            error = upload_error_model_not_found();
-          } else if ('Unknown' in err) {
-            error = (err.Unknown as { message: string }).message;
-          } else {
-            error = upload_error_unknown();
-          }
-        } else {
-          error = upload_error_unknown();
-        }
-        return;
-      }
 
       showDeleteSuccess = true;
       isDeleteDialogOpen = false;

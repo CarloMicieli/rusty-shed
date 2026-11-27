@@ -5,26 +5,22 @@ import type { RailwayModelView_Serialize, WishlistItem } from '$lib/bindings';
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayModelById: vi.fn().mockResolvedValue({
-      status: 'ok',
-      data: {
-        id: 'trn:railway-model:acme:37858',
-        description: 'Class 218 Diesel Locomotive',
-        descriptionLang: 'en',
-        manufacturer: { manufacturerId: 'acme', display: 'A.C.M.E.' },
-        productCode: '37858',
-        category: 'LOCOMOTIVES',
-        scale: 'H0',
-        epoch: 'IV',
-        powerMethod: 'DC',
-        deliveryDate: null,
-        availabilityStatus: null,
-        details: null
-      } as unknown as RailwayModelView_Serialize
-    }),
-    getRailwayModelImage: vi.fn().mockResolvedValue({
-      status: 'ok',
-      data: { hasImage: false, imagePath: null, placeholderHtml: null }
-    })
+      id: 'trn:railway-model:acme:37858',
+      description: 'Class 218 Diesel Locomotive',
+      descriptionLang: 'en',
+      manufacturer: { manufacturerId: 'acme', display: 'A.C.M.E.' },
+      productCode: '37858',
+      category: 'LOCOMOTIVES',
+      scale: 'H0',
+      epoch: 'IV',
+      powerMethod: 'DC',
+      deliveryDate: null,
+      availabilityStatus: null,
+      details: null
+    } as unknown as RailwayModelView_Serialize),
+    getRailwayModelImage: vi
+      .fn()
+      .mockResolvedValue({ hasImage: false, imagePath: null, placeholderHtml: null })
   }
 }));
 
@@ -83,25 +79,23 @@ describe('WishlistItemCard', () => {
     cleanup();
     vi.clearAllMocks();
     vi.mocked(commands.getRailwayModelById).mockResolvedValue({
-      status: 'ok',
-      data: {
-        id: 'trn:railway-model:acme:37858',
-        description: 'Class 218 Diesel Locomotive',
-        descriptionLang: 'en',
-        manufacturer: { manufacturerId: 'acme', display: 'A.C.M.E.' },
-        productCode: '37858',
-        category: 'LOCOMOTIVES',
-        scale: 'H0',
-        epoch: 'IV',
-        powerMethod: 'DC',
-        deliveryDate: null,
-        availabilityStatus: null,
-        details: null
-      } as unknown as RailwayModelView_Serialize
-    });
+      id: 'trn:railway-model:acme:37858',
+      description: 'Class 218 Diesel Locomotive',
+      descriptionLang: 'en',
+      manufacturer: { manufacturerId: 'acme', display: 'A.C.M.E.' },
+      productCode: '37858',
+      category: 'LOCOMOTIVES',
+      scale: 'H0',
+      epoch: 'IV',
+      powerMethod: 'DC',
+      deliveryDate: null,
+      availabilityStatus: null,
+      details: null
+    } as unknown as RailwayModelView_Serialize);
     vi.mocked(commands.getRailwayModelImage).mockResolvedValue({
-      status: 'ok',
-      data: { hasImage: false, imagePath: null, placeholderHtml: null }
+      hasImage: false,
+      imagePath: null,
+      placeholderHtml: null
     });
   });
 

@@ -5,6 +5,7 @@
     LengthOverBuffers,
     OwnedRollingStockView,
     RailwayModelId,
+    RailwayModelView_Serialize,
     RollingStockCategory,
     RollingStockView,
     TechnicalSpecifications
@@ -223,10 +224,18 @@
   // ── Tech spec loading ─────────────────────────────────────────────────────────
   async function loadTechSpecs() {
     specsLoaded = true;
-    const result = await commands.getRailwayModelById(railwayModelId, getLocale());
-    if (result.status !== 'ok' || !result.data) return;
+    const commandResult: unknown = await commands.getRailwayModelById(railwayModelId, getLocale());
+    const result =
+      commandResult !== null &&
+      typeof commandResult === 'object' &&
+      'status' in commandResult &&
+      commandResult.status === 'ok' &&
+      'data' in commandResult
+        ? (commandResult.data as RailwayModelView_Serialize | null)
+        : (commandResult as RailwayModelView_Serialize | null);
+    if (!result) return;
 
-    const rsView = result.data.rollingStock.find((r: RollingStockView) => {
+    const rsView = result.rollingStock.find((r: RollingStockView) => {
       if ('locomotive' in r && r.locomotive) return r.locomotive.id === rollingStock.rollingStockId;
       if ('electricMultipleUnit' in r && r.electricMultipleUnit)
         return r.electricMultipleUnit.id === rollingStock.rollingStockId;
@@ -320,7 +329,7 @@
     const livery = field === 'livery' ? value || null : localLivery || null;
     const depot = field === 'depot' ? value || null : localDepot || null;
 
-    const result = await commands.updateRollingStockIdentification({
+    await commands.updateRollingStockIdentification({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       seriesCode,
@@ -328,8 +337,6 @@
       livery,
       depot
     });
-
-    if (result.status === 'error') throw new Error('Failed to save');
 
     if (field === 'series') rollingStockOverrides.series = value;
     else if (field === 'roadNumber') rollingStockOverrides.roadNumber = value;
@@ -341,12 +348,13 @@
   async function saveCategory(newCategory: RollingStockCategory) {
     const prev = localCategory;
     rollingStockOverrides.category = newCategory;
-    const result = await commands.updateRollingStockCategory({
-      railwayModelId,
-      rollingStockId: rollingStock.rollingStockId,
-      category: newCategory
-    });
-    if (result.status === 'error') {
+    try {
+      await commands.updateRollingStockCategory({
+        railwayModelId,
+        rollingStockId: rollingStock.rollingStockId,
+        category: newCategory
+      });
+    } catch {
       rollingStockOverrides.category = prev;
       throw new Error('Failed to save category');
     }
@@ -357,12 +365,13 @@
   async function saveSubcategory(value: string) {
     const prev = localSubcategory;
     rollingStockOverrides.subcategory = value || null;
-    const result = await commands.updateRollingStockSubcategory({
-      railwayModelId,
-      rollingStockId: rollingStock.rollingStockId,
-      subcategory: value
-    });
-    if (result.status === 'error') {
+    try {
+      await commands.updateRollingStockSubcategory({
+        railwayModelId,
+        rollingStockId: rollingStock.rollingStockId,
+        subcategory: value
+      });
+    } catch {
       rollingStockOverrides.subcategory = prev;
       throw new Error('Failed to save subcategory');
     }
@@ -371,7 +380,7 @@
   // ── Save: DCC / control fields ────────────────────────────────────────────────
   async function saveControl(id: string) {
     const control = id === '' ? null : (id as Control);
-    const result = await commands.updateRollingStockDcc({
+    await commands.updateRollingStockDcc({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       control,
@@ -379,13 +388,12 @@
       lengthMillimeters: localLengthMm ? parseFloat(localLengthMm) : null,
       lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
     });
-    if (result.status === 'error') throw new Error('Failed to save control');
     rollingStockOverrides.control = control;
   }
 
   async function saveDccInterface(id: string) {
     const dccInterface = id === '' ? null : (id as DccInterface);
-    const result = await commands.updateRollingStockDcc({
+    await commands.updateRollingStockDcc({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       control: localControl,
@@ -393,7 +401,6 @@
       lengthMillimeters: localLengthMm ? parseFloat(localLengthMm) : null,
       lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
     });
-    if (result.status === 'error') throw new Error('Failed to save DCC interface');
     rollingStockOverrides.dccInterface = dccInterface;
   }
 
@@ -402,7 +409,7 @@
     const isMetric = settingsState.settings.measureUnit === 'Metric';
     const lengthMillimeters = isMetric && !isNaN(num) && num > 0 ? num : null;
     const lengthInches = !isMetric && !isNaN(num) && num > 0 ? num : null;
-    const result = await commands.updateRollingStockDcc({
+    await commands.updateRollingStockDcc({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       control: localControl,
@@ -410,14 +417,13 @@
       lengthMillimeters,
       lengthInches
     });
-    if (result.status === 'error') throw new Error('Failed to save length');
     if (isMetric) rollingStockOverrides.lengthMm = num > 0 ? String(num) : '';
     else rollingStockOverrides.lengthInches = num > 0 ? String(num) : '';
   }
 
   // ── Save: all spec fields atomically ─────────────────────────────────────────
   async function saveAllSpecs() {
-    const result = await commands.updateRollingStockSpecifications({
+    await commands.updateRollingStockSpecifications({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       seriesCode: localSeries || rollingStock.series || '',
@@ -439,7 +445,6 @@
       digitalShunting: featureFlagToBool(localDigitalShunting),
       isDummy: localIsDummy
     });
-    if (result.status === 'error') throw new Error('Failed to save specifications');
   }
 
   // ── Tech spec save wrappers ────────────────────────────────────────────────────

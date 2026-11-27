@@ -26,9 +26,20 @@
   let contentWidth = $state(280);
 
   onMount(async () => {
-    const result = await commands.getPrototypes(null);
-    if (result.status === 'ok') {
-      groups = result.data;
+    const result: unknown = await commands.getPrototypes(null);
+    if (Array.isArray(result)) {
+      groups = result;
+    } else if (
+      result !== null &&
+      typeof result === 'object' &&
+      'status' in result &&
+      result.status === 'ok' &&
+      'data' in result &&
+      Array.isArray(result.data)
+    ) {
+      groups = result.data as typeof groups;
+    } else {
+      groups = [];
     }
   });
 

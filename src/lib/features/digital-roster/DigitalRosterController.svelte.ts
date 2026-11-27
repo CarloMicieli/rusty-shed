@@ -20,12 +20,7 @@ export class DigitalRosterController {
       this.state.clearError();
 
       const result = await commands.getDigitalSummary();
-
-      if (result.status === 'ok') {
-        this.state.setSummary(result.data);
-      } else {
-        toaster.error({ title: 'Failed to load digital summary', duration: 5000 });
-      }
+      this.state.setSummary(result);
     } catch (error) {
       console.error('Error loading summary:', error);
       toaster.error({ title: 'An error occurred while loading the summary', duration: 5000 });
@@ -43,12 +38,7 @@ export class DigitalRosterController {
       this.state.clearError();
 
       const result = await commands.getDigitalRollingStocks();
-
-      if (result.status === 'ok') {
-        this.state.setRollingStocks(result.data);
-      } else {
-        toaster.error({ title: 'Failed to load digital rolling stocks', duration: 5000 });
-      }
+      this.state.setRollingStocks(result);
     } catch (error) {
       console.error('Error loading rolling stocks:', error);
       toaster.error({ title: 'An error occurred while loading rolling stocks', duration: 5000 });
@@ -69,34 +59,8 @@ export class DigitalRosterController {
         this.commands.getDigitalSummary(),
         this.commands.getDigitalRollingStocks()
       ]);
-
-      let hasError = false;
-
-      if (summaryResult.status === 'ok') {
-        this.state.setSummary(summaryResult.data);
-      } else {
-        console.error('Failed to load digital summary:', JSON.stringify(summaryResult, null, 2));
-        hasError = true;
-      }
-
-      if (rollingStocksResult.status === 'ok') {
-        this.state.setRollingStocks(rollingStocksResult.data);
-      } else {
-        console.error(
-          'Failed to load digital rolling stocks:',
-          JSON.stringify(rollingStocksResult, null, 2)
-        );
-        hasError = true;
-      }
-
-      // Only show error toast if we actually had a failure
-      if (hasError) {
-        toaster.error({
-          title: 'Failed to load digital roster data',
-          description: 'Please check the console for more details',
-          duration: 5000
-        });
-      }
+      this.state.setSummary(summaryResult);
+      this.state.setRollingStocks(rollingStocksResult);
     } catch (error) {
       console.error('Error loading data:', error);
       toaster.error({
@@ -131,17 +95,10 @@ export class DigitalRosterController {
       this.state.setLoading(true);
       this.state.clearError();
 
-      const result = await commands.changeDccAddress({ id, newDccAddress: newAddress });
-
-      if (result.status === 'ok') {
-        // Reload the list to reflect changes
-        await this.loadRollingStocks();
-        toaster.success({ title: 'DCC address updated successfully', duration: 2000 });
-        return true;
-      } else {
-        toaster.error({ title: 'Failed to change DCC address', duration: 5000 });
-        return false;
-      }
+      await commands.changeDccAddress({ id, newDccAddress: newAddress });
+      await this.loadRollingStocks();
+      toaster.success({ title: 'DCC address updated successfully', duration: 2000 });
+      return true;
     } catch (error) {
       console.error('Error changing DCC address:', error);
       toaster.error({ title: 'An error occurred while changing the DCC address', duration: 5000 });
@@ -163,14 +120,10 @@ export class DigitalRosterController {
         dccAddress: address,
         excludeId: excludeId ?? null
       });
-
-      if (result.status === 'ok') {
-        return {
-          isDuplicate: result.data.is_duplicate,
-          existingId: result.data.existing_rolling_stock_id ?? undefined
-        };
-      }
-      return { isDuplicate: false };
+      return {
+        isDuplicate: result.is_duplicate,
+        existingId: result.existing_rolling_stock_id ?? undefined
+      };
     } catch (error) {
       console.error('Error checking duplicate address:', error);
       return { isDuplicate: false };
@@ -189,21 +142,14 @@ export class DigitalRosterController {
       this.state.setLoading(true);
       this.state.clearError();
 
-      const result = await commands.newDigitalRollingStock({
+      await commands.newDigitalRollingStock({
         ownedRollingStockId,
         decoderId,
         dccAddress
       });
-
-      if (result.status === 'ok') {
-        // Reload both summary and rolling stocks
-        await this.loadAll();
-        toaster.success({ title: 'Decoder installed successfully', duration: 2000 });
-        return true;
-      } else {
-        toaster.error({ title: 'Failed to install decoder', duration: 5000 });
-        return false;
-      }
+      await this.loadAll();
+      toaster.success({ title: 'Decoder installed successfully', duration: 2000 });
+      return true;
     } catch (error) {
       console.error('Error installing decoder:', error);
       toaster.error({ title: 'An error occurred while installing the decoder', duration: 5000 });
@@ -221,20 +167,13 @@ export class DigitalRosterController {
       this.state.setLoading(true);
       this.state.clearError();
 
-      const result = await commands.changeDecoder({
+      await commands.changeDecoder({
         id: digitalRollingStockId,
         decoderId: newDecoderId
       });
-
-      if (result.status === 'ok') {
-        // Reload both summary and rolling stocks
-        await this.loadAll();
-        toaster.success({ title: 'Decoder replaced successfully', duration: 2000 });
-        return true;
-      } else {
-        toaster.error({ title: 'Failed to replace decoder', duration: 5000 });
-        return false;
-      }
+      await this.loadAll();
+      toaster.success({ title: 'Decoder replaced successfully', duration: 2000 });
+      return true;
     } catch (error) {
       console.error('Error replacing decoder:', error);
       toaster.error({ title: 'An error occurred while replacing the decoder', duration: 5000 });

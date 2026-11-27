@@ -217,8 +217,7 @@
               ? await pathToBlobUrl(photoUrl)
               : photoUrl;
         } else {
-          const result = await commands.getRailwayModelImage(modelId);
-          const imageData = result.status === 'ok' ? result.data : null;
+          const imageData = await commands.getRailwayModelImage(modelId);
           if (imageData?.hasImage && imageData.imagePath) {
             newUrl = await pathToBlobUrl(imageData.imagePath);
           }

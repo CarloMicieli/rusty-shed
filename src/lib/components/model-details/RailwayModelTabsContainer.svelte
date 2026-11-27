@@ -93,13 +93,14 @@
   ];
 
   async function saveDetails(value: string) {
-    const result = await commands.updateRailwayModelText({
-      railwayModelId: model.id,
-      field: 'Details',
-      value,
-      lang: getLocale()
-    });
-    if (result.status === 'error') {
+    try {
+      await commands.updateRailwayModelText({
+        railwayModelId: model.id,
+        field: 'Details',
+        value,
+        lang: getLocale()
+      });
+    } catch {
       onError?.(m.details_save_failed());
       throw new Error('Failed to save details');
     }

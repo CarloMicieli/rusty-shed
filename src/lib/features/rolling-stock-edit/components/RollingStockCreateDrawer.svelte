@@ -9,6 +9,7 @@
     type DccInterface,
     type FeatureFlag,
     type PrototypeView,
+    type RailwayCompany,
     type RailwayModelId,
     type RollingStockCategory,
     type RollingStockId
@@ -98,21 +99,36 @@
   const hasChanges = $derived(isTainted($tainted));
 
   onMount(async () => {
-    const [companiesResult, couplersResult] = await Promise.all([
+    const [companiesResult, couplersResult]: [unknown, unknown] = await Promise.all([
       commands.getRailwayCompanies(),
       commands.getCouplerTypes(null)
     ]);
-    if (companiesResult.status === 'ok') {
-      companyOptions = companiesResult.data.map((c) => ({
-        value: c.id,
-        label: c.name,
-        countryCode: c.countryCode,
-        registeredCompanyName: c.registeredCompanyName
-      }));
-    }
-    if (couplersResult.status === 'ok') {
-      allCouplers = couplersResult.data;
-    }
+    const companies: RailwayCompany[] = Array.isArray(companiesResult)
+      ? (companiesResult as RailwayCompany[])
+      : companiesResult !== null &&
+          typeof companiesResult === 'object' &&
+          'status' in companiesResult &&
+          companiesResult.status === 'ok' &&
+          'data' in companiesResult &&
+          Array.isArray(companiesResult.data)
+        ? (companiesResult.data as RailwayCompany[])
+        : [];
+    companyOptions = companies.map((c) => ({
+      value: c.id,
+      label: c.name,
+      countryCode: c.countryCode,
+      registeredCompanyName: c.registeredCompanyName
+    }));
+    allCouplers = Array.isArray(couplersResult)
+      ? (couplersResult as CouplerType[])
+      : couplersResult !== null &&
+          typeof couplersResult === 'object' &&
+          'status' in couplersResult &&
+          couplersResult.status === 'ok' &&
+          'data' in couplersResult &&
+          Array.isArray(couplersResult.data)
+        ? (couplersResult.data as CouplerType[])
+        : [];
   });
 
   // ── Reset form when drawer opens ────────────────────────────────────────────
@@ -270,13 +286,7 @@
         isDummy: $form.isDummy === 'YES' ? true : $form.isDummy === 'NO' ? false : null
       } as Parameters<typeof commands.addRollingStockToModel>[0]);
 
-      if (result.status === 'error') {
-        console.error('[RollingStockCreateDrawer] addRollingStockToModel error:', result.error);
-        inlineError = m.rolling_stock_create_error();
-        return;
-      }
-
-      const { rollingStockId: newId, ownedRollingStockId } = result.data;
+      const { rollingStockId: newId, ownedRollingStockId } = result;
 
       // Save extended technical specs if any are filled
       const hasExtendedSpecs =
@@ -290,7 +300,7 @@
         $form.series;
 
       if (hasExtendedSpecs) {
-        const specsResult = await commands.updateRollingStockSpecifications({
+        await commands.updateRollingStockSpecifications({
           railwayModelId,
           rollingStockId: newId,
           seriesCode: ($form.seriesCode as string).trim(),
@@ -322,10 +332,6 @@
             $form.digitalShunting === 'YES' ? true : $form.digitalShunting === 'NO' ? false : null,
           isDummy: $form.isDummy === 'YES' ? true : $form.isDummy === 'NO' ? false : null
         });
-        if (specsResult.status === 'error') {
-          inlineError = m.rolling_stock_create_error();
-          return;
-        }
       }
 
       // Save length if provided
@@ -342,19 +348,18 @@
 
       // Save coupler type if selected
       if ($form.selectedCouplerTypeId && ownedRollingStockId !== null) {
-        const couplerResult = await commands.setRollingStockCoupler({
+        await commands.setRollingStockCoupler({
           ownedRollingStockId,
           couplerTypeId: $form.selectedCouplerTypeId as string
         });
-        if (couplerResult.status === 'error') {
-          inlineError = m.rolling_stock_create_error();
-          return;
-        }
       }
 
       toaster.success(m.rolling_stock_create_success());
       onCreated?.(newId);
       onClose();
+    } catch (error) {
+      console.error('[RollingStockCreateDrawer] handleSave error:', error);
+      inlineError = m.rolling_stock_create_error();
     } finally {
       isSaving = false;
     }

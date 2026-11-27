@@ -147,9 +147,9 @@
         commands.getSellers()
       ]);
 
-      manufacturers = mfgResult.status === 'ok' ? mfgResult.data : [];
-      railwayCompanies = rcResult.status === 'ok' ? rcResult.data : [];
-      sellers = sellerResult.status === 'ok' ? sellerResult.data : [];
+      manufacturers = mfgResult;
+      railwayCompanies = rcResult;
+      sellers = sellerResult;
     } catch (e) {
       console.error('Error loading reference data:', e);
     } finally {

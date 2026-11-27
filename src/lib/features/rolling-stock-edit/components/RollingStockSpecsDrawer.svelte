@@ -226,26 +226,22 @@
         commands.getCouplerTypes(null)
       ]);
 
-      if (modelResult.status === 'error' || !modelResult.data) {
+      if (!modelResult) {
         toaster.error(m.specs_drawer_save_error());
         onClose();
         return;
       }
 
-      if (companiesResult.status === 'ok' && companiesResult.data) {
-        companyOptions = companiesResult.data.map((c) => ({
-          value: c.id,
-          label: c.name,
-          registeredCompanyName: c.registeredCompanyName,
-          countryCode: c.countryCode
-        }));
-      }
+      companyOptions = companiesResult.map((c) => ({
+        value: c.id,
+        label: c.name,
+        registeredCompanyName: c.registeredCompanyName,
+        countryCode: c.countryCode
+      }));
 
-      if (couplersResult.status === 'ok' && couplersResult.data) {
-        allCouplers = couplersResult.data;
-      }
+      allCouplers = couplersResult;
 
-      const rs = modelResult.data.rollingStock.find((r) => {
+      const rs = modelResult.rollingStock.find((r) => {
         if ('locomotive' in r && r.locomotive) return r.locomotive.id === rollingStockId;
         if ('electricMultipleUnit' in r && r.electricMultipleUnit)
           return r.electricMultipleUnit.id === rollingStockId;
@@ -285,7 +281,7 @@
     isSaving = true;
     inlineError = null;
     try {
-      const result = await commands.updateRollingStockSpecifications({
+      await commands.updateRollingStockSpecifications({
         railwayModelId,
         rollingStockId,
         seriesCode: $form.seriesCode as string,
@@ -317,39 +313,26 @@
         isDummy: $form.isDummy === 'YES' ? true : $form.isDummy === 'NO' ? false : null
       });
 
-      if (result.status === 'error') {
-        inlineError = m.specs_drawer_save_error();
-        return;
-      }
-
       // Save railway company separately if it changed.
       if ($form.railwayCompanyId && $form.railwayCompanyId !== originalForm.railwayCompanyId) {
-        const companyResult = await commands.updateRollingStockRailwayCompany({
+        await commands.updateRollingStockRailwayCompany({
           railwayModelId,
           rollingStockId,
           railwayCompanyId: $form.railwayCompanyId as RailwayCompanyId
         });
-        if (companyResult.status === 'error') {
-          inlineError = m.specs_drawer_save_error();
-          return;
-        }
       }
 
       // Save coupler type if it changed.
       if ($form.selectedCouplerTypeId !== originalForm.selectedCouplerTypeId) {
-        const couplerResult = await commands.setRollingStockCoupler({
+        await commands.setRollingStockCoupler({
           ownedRollingStockId,
           couplerTypeId: $form.selectedCouplerTypeId as string | null
         });
-        if (couplerResult.status === 'error') {
-          inlineError = m.specs_drawer_save_error();
-          return;
-        }
       }
 
       // Save length if it changed.
       if ($form.lengthMm !== originalForm.lengthMm) {
-        const dccResult = await commands.updateRollingStockDcc({
+        await commands.updateRollingStockDcc({
           railwayModelId,
           rollingStockId,
           control: (($form.control as string) || null) as Control | null,
@@ -357,10 +340,6 @@
           lengthMillimeters: $form.lengthMm as number | null,
           lengthInches: null
         });
-        if (dccResult.status === 'error') {
-          inlineError = m.specs_drawer_save_error();
-          return;
-        }
       }
 
       toaster.success(m.specs_drawer_save_success());
@@ -368,6 +347,9 @@
       originalForm = { ...$form };
       onSaved?.();
       onClose();
+    } catch (error) {
+      console.error('[RollingStockSpecsDrawer] handleSave error:', error);
+      inlineError = m.specs_drawer_save_error();
     } finally {
       isSaving = false;
     }

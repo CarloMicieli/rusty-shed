@@ -73,11 +73,7 @@
           if (hasMaintenanceCard && existingCardForLoco) {
             cardId = existingCardForLoco.id;
           } else {
-            const cardResult = await commands.addMaintenanceCard(locoId);
-            if (cardResult.status !== 'ok') {
-              throw new Error(JSON.stringify(cardResult.error));
-            }
-            cardId = cardResult.data;
+            cardId = await commands.addMaintenanceCard(locoId);
           }
 
           const trimmedCondition = !hasMaintenanceCard
@@ -91,16 +87,13 @@
           const nextMaintenanceDate =
             (($form.nextMaintenanceDate as string | null) ?? '').trim() || null;
 
-          const eventResult = await commands.addMaintenanceEvent({
+          await commands.addMaintenanceEvent({
             maintenanceCardId: cardId,
             datePerformed: $form.datePerformed as string,
             maintenanceType: $form.maintenanceType as MaintenanceType | null,
             notes: notesText || null,
             nextMaintenanceDate
           });
-          if (eventResult.status !== 'ok') {
-            throw new Error(JSON.stringify(eventResult.error));
-          }
 
           toaster.success({
             id: crypto.randomUUID(),
@@ -182,10 +175,7 @@
   }
 
   async function loadMaintenanceCards() {
-    const result = await commands.getMaintenanceDashboard();
-    if (result.status === 'ok') {
-      maintenanceCards = result.data;
-    }
+    maintenanceCards = await commands.getMaintenanceDashboard();
   }
 
   function handleSubmit() {

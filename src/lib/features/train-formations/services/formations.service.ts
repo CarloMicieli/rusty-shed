@@ -1,7 +1,7 @@
 /**
  * Formations service — typed wrappers around the tauri-specta bindings.
  *
- * Uses a `safeCmd` helper to convert tauri-specta `Result<T, CommandError>`
+ * Uses a `safeCmd` helper to convert tauri-specta command responses
  * to the application `SafeResult<T>` (`{ ok: true, data } | { ok: false, error }`).
  */
 
@@ -26,8 +26,6 @@ import type {
 } from '$lib/bindings';
 import type { NormalizedError, SafeResult } from '$lib/services';
 
-type CommandResult<T, E> = { status: 'ok'; data: T } | { status: 'error'; error: E };
-
 function fromCommandError(err: CommandError): NormalizedError {
   if ('DatabaseError' in err && err.DatabaseError)
     return { kind: 'database', message: err.DatabaseError };
@@ -43,14 +41,14 @@ function fromCommandError(err: CommandError): NormalizedError {
   return { kind: 'unknown', message: 'Unknown error' };
 }
 
-async function safeCmd<T>(
-  fn: () => Promise<CommandResult<T, CommandError>>
-): Promise<SafeResult<T>> {
+async function safeCmd<T>(fn: () => Promise<T>): Promise<SafeResult<T>> {
   try {
     const result = await fn();
-    if (result.status === 'ok') return { ok: true, data: result.data };
-    return { ok: false, error: fromCommandError(result.error) };
+    return { ok: true, data: result };
   } catch (e) {
+    if (e !== null && typeof e === 'object') {
+      return { ok: false, error: fromCommandError(e as CommandError) };
+    }
     return {
       ok: false,
       error: { kind: 'unknown', message: e instanceof Error ? e.message : String(e) }

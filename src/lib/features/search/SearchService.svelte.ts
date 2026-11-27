@@ -50,11 +50,31 @@ export class SearchService {
     this.#lastQuery = trimmed;
 
     try {
-      const result = await commands.globalSearch({ query: trimmed, lang });
-      if (result.status === 'ok') {
-        this.#results = result.data;
-      } else {
+      const result: unknown = await commands.globalSearch({ query: trimmed, lang });
+      if (Array.isArray(result)) {
+        this.#results = result as GlobalSearchResultView[];
+        return;
+      }
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'ok' &&
+        'data' in result &&
+        Array.isArray(result.data)
+      ) {
+        this.#results = result.data as GlobalSearchResultView[];
+      } else if (
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'error' &&
+        'error' in result
+      ) {
         this.#error = typeof result.error === 'string' ? result.error : 'Search failed.';
+        this.#results = [];
+      } else {
+        this.#error = 'Search failed.';
         this.#results = [];
       }
     } catch (err) {

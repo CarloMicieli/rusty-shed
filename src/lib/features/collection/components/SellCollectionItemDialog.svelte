@@ -61,17 +61,13 @@
     isSubmitting = true;
 
     try {
-      const result = await commands.sellCollectionItem({
+      await commands.sellCollectionItem({
         itemId,
         saleDate,
         amount: amountCents,
         currency,
         buyerId: buyerId.trim().length > 0 ? buyerId.trim() : null
       });
-
-      if (result.status === 'error') {
-        throw new Error('sell_failed');
-      }
 
       if (onSold) {
         await onSold();

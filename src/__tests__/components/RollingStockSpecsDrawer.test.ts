@@ -7,13 +7,13 @@ import type { RailwayModelId, RollingStockId } from '$lib/bindings';
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayModelById: vi.fn(),
-    getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
-    getCouplerTypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
-    getPrototypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    getRailwayCompanies: vi.fn().mockResolvedValue([]),
+    getCouplerTypes: vi.fn().mockResolvedValue([]),
+    getPrototypes: vi.fn().mockResolvedValue([]),
     updateRollingStockSpecifications: vi.fn(),
     updateRollingStockRailwayCompany: vi.fn(),
-    updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
-    setRollingStockCoupler: vi.fn().mockResolvedValue({ status: 'ok', data: null })
+    updateRollingStockDcc: vi.fn().mockResolvedValue(null),
+    setRollingStockCoupler: vi.fn().mockResolvedValue(null)
   }
 }));
 
@@ -186,14 +186,8 @@ const mockRailwayModelView = {
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 beforeEach(() => {
-  vi.mocked(commands.getRailwayModelById).mockResolvedValue({
-    status: 'ok',
-    data: mockRailwayModelView as never
-  });
-  vi.mocked(commands.updateRollingStockSpecifications).mockResolvedValue({
-    status: 'ok',
-    data: null
-  });
+  vi.mocked(commands.getRailwayModelById).mockResolvedValue(mockRailwayModelView as never);
+  vi.mocked(commands.updateRollingStockSpecifications).mockResolvedValue(null);
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -361,10 +355,9 @@ describe('RollingStockSpecsDrawer', () => {
 
   describe('FR-028: Save failure keeps drawer open with values preserved', () => {
     it('shows inline error, keeps drawer open, and preserves values when updateRollingStockSpecifications rejects', async () => {
-      vi.mocked(commands.updateRollingStockSpecifications).mockResolvedValue({
-        status: 'error',
-        error: { kind: 'validation', message: 'series_code required' }
-      } as never);
+      vi.mocked(commands.updateRollingStockSpecifications).mockRejectedValue(
+        new Error('series_code required')
+      );
 
       const onClose = vi.fn();
       const { container } = render(RollingStockSpecsDrawer, {

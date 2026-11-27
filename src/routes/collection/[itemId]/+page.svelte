@@ -70,11 +70,9 @@
       getLocale()
     );
 
-    if (result.status === 'ok') {
-      model = result.data.model;
-      imageResponse = result.data.image;
-      seller = result.data.seller;
-    }
+    model = result.model;
+    imageResponse = result.image;
+    seller = result.seller;
   }
 
   async function handleModelUpdated() {

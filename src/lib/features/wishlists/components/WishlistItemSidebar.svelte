@@ -104,19 +104,28 @@
     activeField = null;
     datePopoverOpen = false;
 
-    const result = await commands.updateWishlistItem({
-      wishlistId,
-      itemId: item.id,
-      priority: partialArgs.priority ?? null,
-      status: partialArgs.status ?? null,
-      desiredPriceAmount: partialArgs.desiredPriceAmount,
-      desiredPriceCurrency: partialArgs.desiredPriceCurrency ?? null,
-      addedDate: partialArgs.addedDate ?? null
-    });
-
-    if (result.status !== 'ok') {
+    try {
+      const result: unknown = await commands.updateWishlistItem({
+        wishlistId,
+        itemId: item.id,
+        priority: partialArgs.priority ?? null,
+        status: partialArgs.status ?? null,
+        desiredPriceAmount: partialArgs.desiredPriceAmount,
+        desiredPriceCurrency: partialArgs.desiredPriceCurrency ?? null,
+        addedDate: partialArgs.addedDate ?? null
+      });
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'error' &&
+        'error' in result
+      ) {
+        throw result.error;
+      }
+    } catch {
       rollback();
-      toaster.error(typeof result.error === 'string' ? result.error : m.wishlist_item_error());
+      toaster.error(m.wishlist_item_error());
       return;
     }
 

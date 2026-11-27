@@ -156,11 +156,9 @@
         commands.getManufacturers()
       ]);
 
-      if (installableResult.status === 'ok') installableRollingStocks = installableResult.data;
-      if (decodersResult.status === 'ok') {
-        decoders = decodersResult.data.filter((d) => d.decoderType !== 'FUNCTION');
-      }
-      if (manufacturersResult.status === 'ok') manufacturers = manufacturersResult.data;
+      installableRollingStocks = installableResult;
+      decoders = decodersResult.filter((d) => d.decoderType !== 'FUNCTION');
+      manufacturers = manufacturersResult;
     } catch (error) {
       console.error('Error loading reference data:', error);
     } finally {

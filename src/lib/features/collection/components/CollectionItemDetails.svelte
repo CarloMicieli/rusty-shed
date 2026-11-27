@@ -65,10 +65,17 @@
 
   onMount(async () => {
     console.log('[CollectionItemDetails] Mounted with item:', JSON.parse(JSON.stringify(item)));
-    const result = await commands.getSellers();
-    if (result.status === 'ok') {
-      sellers = result.data;
-    }
+    const result: unknown = await commands.getSellers();
+    sellers = Array.isArray(result)
+      ? (result as typeof sellers)
+      : result !== null &&
+          typeof result === 'object' &&
+          'status' in result &&
+          result.status === 'ok' &&
+          'data' in result &&
+          Array.isArray(result.data)
+        ? (result.data as typeof sellers)
+        : [];
   });
 
   async function saveUpdate(update: CollectionItemUpdateArgs): Promise<void> {
@@ -77,14 +84,10 @@
       JSON.parse(JSON.stringify(update))
     );
     try {
-      const result = await commands.updateCollectionItem({
+      await commands.updateCollectionItem({
         collectionItemId: item.id,
         update
       });
-      if (result.status === 'error') {
-        console.error('[CollectionItemDetails] Update failed with error:', result.error);
-        throw new Error('update_failed');
-      }
       console.log('[CollectionItemDetails] Update reported success from backend');
       if (onItemUpdated) {
         console.log('[CollectionItemDetails] Triggering onItemUpdated callback...');

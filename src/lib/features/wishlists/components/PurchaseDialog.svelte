@@ -48,12 +48,33 @@
   onMount(async () => {
     loadingSellers = true;
     try {
-      const [sellersResult, settingsResult] = await Promise.all([
+      const [sellersResult, settingsResult]: [unknown, unknown] = await Promise.all([
         commands.getSellers(),
         commands.getSettings()
       ]);
-      if (sellersResult.status === 'ok') sellers = sellersResult.data;
-      if (settingsResult.status === 'ok') priceCurrency = settingsResult.data.currency ?? 'EUR';
+      if (Array.isArray(sellersResult)) {
+        sellers = sellersResult;
+      } else if (
+        sellersResult &&
+        typeof sellersResult === 'object' &&
+        'status' in sellersResult &&
+        sellersResult.status === 'ok' &&
+        'data' in sellersResult &&
+        Array.isArray(sellersResult.data)
+      ) {
+        sellers = sellersResult.data as SellerView[];
+      } else {
+        sellers = [];
+      }
+      const settings =
+        settingsResult &&
+        typeof settingsResult === 'object' &&
+        'status' in settingsResult &&
+        settingsResult.status === 'ok' &&
+        'data' in settingsResult
+          ? (settingsResult.data as { currency?: string })
+          : (settingsResult as { currency?: string });
+      priceCurrency = settings.currency ?? 'EUR';
     } catch (e) {
       console.warn('Failed to load purchase dialog data', e);
     } finally {
@@ -104,7 +125,7 @@
 
     isSubmitting = true;
     try {
-      const result = await commands.purchaseWishlistItem({
+      const result: unknown = await commands.purchaseWishlistItem({
         wishlistId,
         wishlistItemId,
         priceAmount: amountCents as number,
@@ -115,10 +136,14 @@
         modelCondition: selectedModelCondition || null,
         boxCondition: selectedBoxCondition || null
       });
-
-      if (result.status === 'error') {
-        error = m.purchase_dialog_error_save_failed();
-        return;
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'error' &&
+        'error' in result
+      ) {
+        throw result.error;
       }
 
       resetForm();

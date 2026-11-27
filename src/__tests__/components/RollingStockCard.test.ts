@@ -7,15 +7,15 @@ import type { OwnedRollingStockView, RailwayModelId, RollingStockId } from '$lib
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayCompanies: vi.fn(),
-    getPrototypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    getPrototypes: vi.fn().mockResolvedValue([]),
     updateRollingStockIdentification: vi.fn(),
     updateRollingStockRailwayCompany: vi.fn(),
     updateRollingStockDcc: vi.fn(),
     updateRollingStockCategory: vi.fn(),
     getRailwayModelById: vi.fn(),
     updateRollingStockSpecifications: vi.fn(),
-    getCouplerTypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
-    setRollingStockCoupler: vi.fn().mockResolvedValue({ status: 'ok', data: null })
+    getCouplerTypes: vi.fn().mockResolvedValue([]),
+    setRollingStockCoupler: vi.fn().mockResolvedValue(null)
   }
 }));
 
@@ -241,20 +241,11 @@ const mockRailwayModelView = {
 // ── Setup ─────────────────────────────────────────────────────────────────────
 beforeEach(() => {
   cleanup();
-  vi.mocked(commands.getRailwayCompanies).mockResolvedValue({ status: 'ok', data: [] });
-  vi.mocked(commands.updateRollingStockIdentification).mockResolvedValue({
-    status: 'ok',
-    data: null
-  });
-  vi.mocked(commands.updateRollingStockDcc).mockResolvedValue({ status: 'ok', data: null });
-  vi.mocked(commands.getRailwayModelById).mockResolvedValue({
-    status: 'ok',
-    data: mockRailwayModelView as never
-  });
-  vi.mocked(commands.updateRollingStockSpecifications).mockResolvedValue({
-    status: 'ok',
-    data: null
-  });
+  vi.mocked(commands.getRailwayCompanies).mockResolvedValue([]);
+  vi.mocked(commands.updateRollingStockIdentification).mockResolvedValue(null);
+  vi.mocked(commands.updateRollingStockDcc).mockResolvedValue(null);
+  vi.mocked(commands.getRailwayModelById).mockResolvedValue(mockRailwayModelView as never);
+  vi.mocked(commands.updateRollingStockSpecifications).mockResolvedValue(null);
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -358,10 +349,7 @@ describe('RollingStockCard', () => {
     });
 
     it('keeps editing state and does not update local value when save fails', async () => {
-      vi.mocked(commands.updateRollingStockIdentification).mockResolvedValue({
-        status: 'error',
-        error: { kind: 'validation', message: 'invalid' }
-      } as never);
+      vi.mocked(commands.updateRollingStockIdentification).mockRejectedValue(new Error('invalid'));
 
       const { container } = await renderExpandedCard();
 
@@ -398,10 +386,7 @@ describe('RollingStockCard', () => {
           }
         ]
       };
-      vi.mocked(commands.getRailwayModelById).mockResolvedValue({
-        status: 'ok',
-        data: updatedModelView as never
-      });
+      vi.mocked(commands.getRailwayModelById).mockResolvedValue(updatedModelView as never);
 
       const { container } = await renderExpandedCard();
 

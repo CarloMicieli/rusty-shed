@@ -125,10 +125,7 @@
   });
 
   async function loadCollectionStats() {
-    const result = await commands.getCollectionStats();
-    if (result.status === 'ok') {
-      collectionStats = result.data;
-    }
+    collectionStats = await commands.getCollectionStats();
   }
 
   function handleSearch(query: string) {

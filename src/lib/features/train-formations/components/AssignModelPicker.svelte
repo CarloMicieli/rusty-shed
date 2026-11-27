@@ -31,17 +31,24 @@
 
   async function loadStocks() {
     isLoading = true;
-    const result = await commands.getCollection();
+    const result: unknown = await commands.getCollection();
     isLoading = false;
-    if (result.status === 'ok') {
-      const all: OwnedRollingStockView[] = result.data.items.flatMap((item: CollectionItemView) =>
+    const collection =
+      result !== null &&
+      typeof result === 'object' &&
+      'status' in result &&
+      result.status === 'ok' &&
+      'data' in result
+        ? (result.data as { items: CollectionItemView[] })
+        : (result as { items: CollectionItemView[] });
+    const all: OwnedRollingStockView[] = (collection?.items ?? []).flatMap(
+      (item: CollectionItemView) =>
         item.rollingStocks.filter(
           (rs: OwnedRollingStockView) =>
             rs.series?.toLowerCase().includes(prototypeSeriesCode.toLowerCase()) ?? false
         )
-      );
-      matchingStocks = all;
-    }
+    );
+    matchingStocks = all;
   }
 </script>
 

@@ -106,11 +106,8 @@
           websiteUrl: websiteUrl.trim() || null,
           countryCode: countryCode.trim().toUpperCase() || null
         });
-
-        if (result.status === 'ok') {
-          onSuccess(result.data);
-          return;
-        }
+        onSuccess(result);
+        return;
       } else if (target === 'seller') {
         const result = await commands.createSeller({
           name: name.trim(),
@@ -125,11 +122,8 @@
           postalCode: null,
           countryCode: countryCode.trim().toUpperCase() || null
         });
-
-        if (result.status === 'ok') {
-          onSuccess(result.data);
-          return;
-        }
+        onSuccess(result);
+        return;
       } else {
         const result = await commands.createSeller({
           name: name.trim(),
@@ -144,18 +138,13 @@
           postalCode: null,
           countryCode: countryCode.trim().toUpperCase() || null
         });
-
-        if (result.status === 'ok') {
-          onSuccess(result.data);
-          return;
-        }
+        onSuccess(result);
+        return;
       }
-
-      saveError = m.quick_add_save_failed();
-      onError?.(saveError);
     } catch {
-      saveError = m.quick_add_save_failed();
-      onError?.(saveError);
+      const message = m.quick_add_save_failed();
+      saveError = message;
+      onError?.(message);
     } finally {
       isSaving = false;
     }

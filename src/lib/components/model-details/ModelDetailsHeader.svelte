@@ -94,7 +94,7 @@
       {/if}
     </h1>
     <p class="text-lg text-muted-foreground">
-      {model.manufacturer.display} | {model.productCode}
+      {model.manufacturer?.display ?? '—'} | {model.productCode}
     </p>
   </div>
 

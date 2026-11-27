@@ -19,11 +19,9 @@ class CollectionStore {
     if (this.loading) return;
     this.loading = true;
     try {
-      const result = await commands.getCollection();
-      if (result.status === 'ok') {
-        this.collection = result.data;
-        this.items = result.data.items;
-      }
+      const collection = await commands.getCollection();
+      this.collection = collection;
+      this.items = collection.items;
     } finally {
       this.loading = false;
     }

@@ -80,11 +80,9 @@ class CollectionStore {
     if (this.loading) return;
     this.loading = true;
     try {
-      const result = await commands.getCollection();
-      if (result.status === 'ok') {
-        this.collection = result.data;
-        this.items = result.data.items;
-      }
+      const collection = await commands.getCollection();
+      this.collection = collection;
+      this.items = collection.items;
     } finally {
       this.loading = false;
     }
@@ -102,10 +100,7 @@ describe('CollectionStore', () => {
   describe('fetch() — cache behaviour', () => {
     it('calls getCollection only once when called twice and data is already loaded', async () => {
       const collection = makeCollection([makeItem('1')]);
-      vi.mocked(commands.getCollection).mockResolvedValueOnce({
-        status: 'ok',
-        data: collection
-      });
+      vi.mocked(commands.getCollection).mockResolvedValueOnce(collection);
 
       // First call — should fetch
       await store.fetch();
@@ -119,10 +114,7 @@ describe('CollectionStore', () => {
 
     it('does not fetch when items are already populated', async () => {
       const collection = makeCollection([makeItem('1'), makeItem('2')]);
-      vi.mocked(commands.getCollection).mockResolvedValueOnce({
-        status: 'ok',
-        data: collection
-      });
+      vi.mocked(commands.getCollection).mockResolvedValueOnce(collection);
 
       await store.fetch(); // First fetch
       await store.fetch(); // Should be a no-op
@@ -134,10 +126,7 @@ describe('CollectionStore', () => {
   describe('refresh() — always fetches', () => {
     it('always calls getCollection regardless of cache state', async () => {
       const collection = makeCollection([makeItem('1')]);
-      vi.mocked(commands.getCollection).mockResolvedValue({
-        status: 'ok',
-        data: collection
-      });
+      vi.mocked(commands.getCollection).mockResolvedValue(collection);
 
       await store.refresh(); // First fetch
       expect(commands.getCollection).toHaveBeenCalledTimes(1);
@@ -150,9 +139,7 @@ describe('CollectionStore', () => {
       const v1 = makeCollection([makeItem('a')]);
       const v2 = makeCollection([makeItem('a'), makeItem('b')]);
 
-      vi.mocked(commands.getCollection)
-        .mockResolvedValueOnce({ status: 'ok', data: v1 })
-        .mockResolvedValueOnce({ status: 'ok', data: v2 });
+      vi.mocked(commands.getCollection).mockResolvedValueOnce(v1).mockResolvedValueOnce(v2);
 
       await store.refresh();
       expect(store.items).toHaveLength(1);
@@ -165,10 +152,7 @@ describe('CollectionStore', () => {
   describe('getItemById()', () => {
     beforeEach(async () => {
       const collection = makeCollection([makeItem('alpha'), makeItem('beta'), makeItem('gamma')]);
-      vi.mocked(commands.getCollection).mockResolvedValueOnce({
-        status: 'ok',
-        data: collection
-      });
+      vi.mocked(commands.getCollection).mockResolvedValueOnce(collection);
       await store.fetch();
     });
 
@@ -191,10 +175,7 @@ describe('CollectionStore', () => {
 
   describe('loading state', () => {
     it('sets loading to false after successful fetch', async () => {
-      vi.mocked(commands.getCollection).mockResolvedValueOnce({
-        status: 'ok',
-        data: makeCollection()
-      });
+      vi.mocked(commands.getCollection).mockResolvedValueOnce(makeCollection());
 
       await store.fetch();
       expect(store.loading).toBe(false);

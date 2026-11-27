@@ -120,11 +120,7 @@ export class CloudBackupController {
 
     try {
       const result = await commands.cloudBackupConnectGoogle();
-      if (result.status === 'ok') {
-        this.#state.connectionStatus = result.data;
-      } else {
-        this.#state.error = String(JSON.stringify(result.error));
-      }
+      this.#state.connectionStatus = result;
     } catch (err) {
       this.#state.error = err instanceof Error ? err.message : String(err);
       throw err;
@@ -143,18 +139,14 @@ export class CloudBackupController {
     this.#state.error = null;
 
     try {
-      const result = await commands.cloudBackupDisconnectGoogle();
-      if (result.status === 'ok') {
-        this.#state.connectionStatus = {
-          isConnected: false,
-          email: null,
-          connectedAt: null,
-          lastSyncAt: null
-        };
-        this.#state.backups = [];
-      } else {
-        this.#state.error = String(JSON.stringify(result.error));
-      }
+      await commands.cloudBackupDisconnectGoogle();
+      this.#state.connectionStatus = {
+        isConnected: false,
+        email: null,
+        connectedAt: null,
+        lastSyncAt: null
+      };
+      this.#state.backups = [];
     } catch (err) {
       this.#state.error = err instanceof Error ? err.message : String(err);
       throw err;
@@ -178,19 +170,10 @@ export class CloudBackupController {
 
     try {
       const result = await commands.cloudBackupSyncNow();
-      if (result.status === 'ok') {
-        // Update last sync timestamp
-        this.#state.lastSyncAt = result.data.createdAt;
-        this.#state.syncStatusMessage = m.cloud_backup_sync_success();
-        this.#state.syncProgress = 100;
-
-        // Refresh backup list
-        await this.loadBackups();
-      } else {
-        const errorStr = String(JSON.stringify(result.error));
-        this.#state.error = errorStr;
-        this.#state.syncStatusMessage = m.cloud_backup_sync_failed({ error: errorStr });
-      }
+      this.#state.lastSyncAt = result.createdAt;
+      this.#state.syncStatusMessage = m.cloud_backup_sync_success();
+      this.#state.syncProgress = 100;
+      await this.loadBackups();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       this.#state.error = errorMsg;
@@ -210,11 +193,7 @@ export class CloudBackupController {
 
     try {
       const result = await commands.cloudBackupListBackups();
-      if (result.status === 'ok') {
-        this.#state.backups = result.data.backups;
-      } else {
-        console.error('Failed to load backups:', result.error);
-      }
+      this.#state.backups = result.backups;
     } catch (err) {
       console.error('Failed to load backups:', err);
     }
@@ -243,19 +222,11 @@ export class CloudBackupController {
     this.#state.error = null;
 
     try {
-      const result = await commands.cloudBackupRestore({
+      await commands.cloudBackupRestore({
         backup_id: backupId,
         confirmation
       });
-
-      if (result.status === 'ok') {
-        // Restore successful - app will need to reload
-        return;
-      } else {
-        const errorStr = String(JSON.stringify(result.error));
-        this.#state.error = errorStr;
-        throw new Error(errorStr);
-      }
+      return;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       this.#state.error = errorMsg;
@@ -291,16 +262,11 @@ export class CloudBackupController {
   async #refreshConnectionStatus(): Promise<void> {
     try {
       const result = await commands.cloudBackupGetConnectionStatus();
-      if (result.status === 'ok') {
-        this.#state.connectionStatus = result.data;
-        this.#state.error = null;
+      this.#state.connectionStatus = result;
+      this.#state.error = null;
 
-        // If connected, load backups
-        if (result.data.isConnected) {
-          await this.loadBackups();
-        }
-      } else {
-        this.#state.error = String(JSON.stringify(result.error));
+      if (result.isConnected) {
+        await this.loadBackups();
       }
     } catch (err) {
       this.#state.error = err instanceof Error ? err.message : String(err);
@@ -310,14 +276,8 @@ export class CloudBackupController {
   async #checkConnectivity(): Promise<void> {
     try {
       const result = await commands.cloudBackupCheckConnectivity();
-      if (result.status === 'ok') {
-        this.#state.isOnline = result.data.isOnline;
-        setConnectivityStatus(result.data);
-      } else {
-        console.error('Failed to check connectivity:', result.error);
-        this.#state.isOnline = false;
-        setConnectivityOffline();
-      }
+      this.#state.isOnline = result.isOnline;
+      setConnectivityStatus(result);
     } catch (err) {
       console.error('Failed to check connectivity:', err);
       this.#state.isOnline = false;

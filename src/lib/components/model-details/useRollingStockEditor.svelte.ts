@@ -140,13 +140,13 @@ export function useRollingStockEditor(
     const model = getModel();
     try {
       const result = await commands.getRailwayModelById(model.id, getLocale());
-      if (result.status === 'error' || !result.data) {
+      if (!result) {
         formState.set(unitId, getEmptyRsForm());
         specLoaded.add(unitId);
         return;
       }
 
-      const rsView = result.data.rollingStock.find((r) => {
+      const rsView = result.rollingStock.find((r) => {
         if ('locomotive' in r && r.locomotive) return r.locomotive.id === unitId;
         if ('electricMultipleUnit' in r && r.electricMultipleUnit)
           return r.electricMultipleUnit.id === unitId;
@@ -178,7 +178,7 @@ export function useRollingStockEditor(
     const livery = field === 'livery' ? value || null : currentForm.livery || unit.livery || null;
     const depot = field === 'depot' ? value || null : currentForm.depot || unit.depot || null;
 
-    const result = await commands.updateRollingStockIdentification({
+    await commands.updateRollingStockIdentification({
       railwayModelId: model.id,
       rollingStockId: unitId,
       seriesCode,
@@ -186,8 +186,6 @@ export function useRollingStockEditor(
       livery,
       depot
     });
-
-    if (result.status === 'error') throw new Error('Failed to save');
 
     const form = formState.get(unitId) ?? getEmptyRsForm();
     if (!formState.has(unitId)) formState.set(unitId, form);
@@ -205,7 +203,7 @@ export function useRollingStockEditor(
     const trimmed = rawValue.trim();
     const lengthMm = trimmed ? parseFloat(trimmed) : null;
 
-    const result = await commands.updateRollingStockDcc({
+    await commands.updateRollingStockDcc({
       railwayModelId: model.id,
       rollingStockId: unitId,
       control: (form?.control || null) as Parameters<
@@ -217,8 +215,6 @@ export function useRollingStockEditor(
       lengthMillimeters: Number.isFinite(lengthMm) ? lengthMm : null,
       lengthInches: null
     });
-
-    if (result.status === 'error') throw new Error('Failed to save length');
 
     await onModelUpdated();
   }
@@ -234,7 +230,7 @@ export function useRollingStockEditor(
 
     form[field] = value;
 
-    const result = await commands.updateRollingStockSpecifications({
+    await commands.updateRollingStockSpecifications({
       railwayModelId: model.id,
       rollingStockId: unitId,
       seriesCode: form.seriesCode,
@@ -260,8 +256,6 @@ export function useRollingStockEditor(
       digitalShunting: form.digitalShunting,
       isDummy: form.isDummy
     });
-
-    if (result.status === 'error') throw new Error('Failed to save');
 
     await onModelUpdated();
   }
@@ -273,7 +267,7 @@ export function useRollingStockEditor(
 
     (form as unknown as Record<string, string | boolean | null>)[field] = value;
 
-    const result = await commands.updateRollingStockSpecifications({
+    await commands.updateRollingStockSpecifications({
       railwayModelId: model.id,
       rollingStockId: unitId,
       seriesCode: form.seriesCode,
@@ -300,19 +294,16 @@ export function useRollingStockEditor(
       isDummy: form.isDummy
     });
 
-    if (result.status === 'error') throw new Error('Failed to save');
-
     await onModelUpdated();
   }
 
   async function saveCategory(unitId: string, newCategory: string) {
     const model = getModel();
-    const result = await commands.updateRollingStockCategory({
+    await commands.updateRollingStockCategory({
       railwayModelId: model.id,
       rollingStockId: unitId,
       category: newCategory as Parameters<typeof commands.updateRollingStockCategory>[0]['category']
     });
-    if (result.status === 'error') throw new Error('Failed to save category');
 
     const form = formState.get(unitId) ?? getEmptyRsForm();
     if (!formState.has(unitId)) formState.set(unitId, form);
@@ -330,12 +321,11 @@ export function useRollingStockEditor(
 
   async function saveSubcategory(unitId: string, subcategory: string) {
     const model = getModel();
-    const result = await commands.updateRollingStockSubcategory({
+    await commands.updateRollingStockSubcategory({
       railwayModelId: model.id,
       rollingStockId: unitId,
       subcategory
     });
-    if (result.status === 'error') throw new Error('Failed to save subcategory');
 
     const form = formState.get(unitId);
     if (form) form.subcategory = subcategory;
@@ -345,14 +335,13 @@ export function useRollingStockEditor(
 
   async function saveServiceLevel(unitId: string, serviceLevel: string | null) {
     const model = getModel();
-    const result = await commands.updateRollingStockServiceLevel({
+    await commands.updateRollingStockServiceLevel({
       railwayModelId: model.id,
       rollingStockId: unitId,
       serviceLevel: (serviceLevel || null) as Parameters<
         typeof commands.updateRollingStockServiceLevel
       >[0]['serviceLevel']
     });
-    if (result.status === 'error') throw new Error('Failed to save service level');
 
     const form = formState.get(unitId);
     if (form) form.serviceLevel = serviceLevel || null;
@@ -362,12 +351,10 @@ export function useRollingStockEditor(
 
   async function deleteUnit(unitId: string) {
     const model = getModel();
-    const result = await commands.deleteRollingStock({
+    await commands.deleteRollingStock({
       railwayModelId: model.id,
       rollingStockId: unitId
     });
-
-    if (result.status === 'error') throw new Error('Failed to delete rolling stock');
 
     await onModelUpdated();
   }

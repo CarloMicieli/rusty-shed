@@ -23,23 +23,28 @@
   const selectedCoupler = $derived(couplers.find((c) => c.id === currentCouplerTypeId) ?? null);
 
   onMount(async () => {
-    const result = await commands.getCouplerTypes(compatibleSocket);
-    if (result.status === 'ok') {
-      couplers = result.data;
-    }
+    const result: unknown = await commands.getCouplerTypes(compatibleSocket);
+    couplers = Array.isArray(result)
+      ? result
+      : result !== null &&
+          typeof result === 'object' &&
+          'status' in result &&
+          result.status === 'ok' &&
+          'data' in result &&
+          Array.isArray(result.data)
+        ? (result.data as typeof couplers)
+        : [];
   });
 
   async function handleChange(value: string | undefined) {
     const newId = value || null;
     saving = true;
     try {
-      const result = await commands.setRollingStockCoupler({
+      await commands.setRollingStockCoupler({
         ownedRollingStockId,
         couplerTypeId: newId
       });
-      if (result.status === 'ok') {
-        onChange?.(newId);
-      }
+      onChange?.(newId);
     } finally {
       saving = false;
     }

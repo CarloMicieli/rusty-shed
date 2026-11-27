@@ -186,7 +186,7 @@ describe('ImageUpload - Delete Flow', () => {
   });
 
   it('should call deleteModelImage and show success on delete', async () => {
-    vi.mocked(commands.deleteModelImage).mockResolvedValue({ status: 'ok', data: null });
+    vi.mocked(commands.deleteModelImage).mockResolvedValue(null);
     const onUploadSuccess = vi.fn();
 
     const { container } = render(ImageUpload, {

@@ -314,12 +314,12 @@
 
     const source = pendingMergeSourceRow;
     const targetId = pendingMergeTargetId;
-    const result =
-      settingsState.libraryActiveTab === 'manufacturers'
-        ? await commands.mergeManufacturers({ sourceId: source.id, targetId })
-        : await commands.mergeSellers({ sourceId: source.id, targetId });
+    try {
+      const result =
+        settingsState.libraryActiveTab === 'manufacturers'
+          ? await commands.mergeManufacturers({ sourceId: source.id, targetId })
+          : await commands.mergeSellers({ sourceId: source.id, targetId });
 
-    if (result.status === 'ok') {
       if (settingsState.libraryActiveTab === 'manufacturers') {
         settingsState.mergeLibraryManufacturer(source.id);
       } else {
@@ -329,7 +329,7 @@
       toaster.success(
         m.settings_library_merge_success({
           source: source.name,
-          count: result.data.relinkedCount
+          count: result.relinkedCount
         })
       );
 
@@ -337,12 +337,13 @@
       merging = false;
       await loadLibraryRows();
       return;
+    } catch (error) {
+      toaster.signal(m.signal_toast_title(), {
+        description: toMergeErrorMessage(error as CommandError)
+      });
+      merging = false;
+      return;
     }
-
-    toaster.signal(m.signal_toast_title(), {
-      description: toMergeErrorMessage(result.error)
-    });
-    merging = false;
   }
 
   async function handleDeleteConfirm(): Promise<void> {
@@ -353,12 +354,13 @@
     deleting = true;
 
     const row = pendingDeleteRow;
-    const result =
-      settingsState.libraryActiveTab === 'manufacturers'
-        ? await commands.deleteManufacturer(row.id)
-        : await commands.deleteSeller(row.id);
+    try {
+      if (settingsState.libraryActiveTab === 'manufacturers') {
+        await commands.deleteManufacturer(row.id);
+      } else {
+        await commands.deleteSeller(row.id);
+      }
 
-    if (result.status === 'ok') {
       if (settingsState.libraryActiveTab === 'manufacturers') {
         settingsState.removeLibraryManufacturer(row.id);
       } else {
@@ -368,12 +370,13 @@
       pendingDeleteRow = null;
       deleting = false;
       return;
+    } catch (error) {
+      toaster.signal(m.signal_toast_title(), {
+        description: toDeleteErrorMessage(error as CommandError)
+      });
+      deleting = false;
+      return;
     }
-
-    toaster.signal(m.signal_toast_title(), {
-      description: toDeleteErrorMessage(result.error)
-    });
-    deleting = false;
   }
 
   async function handleQuickSubmit(values: {
@@ -387,18 +390,28 @@
     }
 
     if (quickAddTarget === 'manufacturer') {
-      const result = await commands.updateManufacturer({
+      const result: unknown = await commands.updateManufacturer({
         id: editingRow.id,
         name: values.name.trim(),
         websiteUrl: values.websiteUrl.trim() || null,
         countryCode: values.countryCode.trim().toUpperCase() || null
       });
-
-      if (result.status === 'ok') {
-        return result.data;
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'error' &&
+        'error' in result
+      ) {
+        throw result.error;
       }
-
-      throw new Error(getCommandErrorMessage(result.error));
+      return result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'ok' &&
+        'data' in result
+        ? (result.data as Manufacturer)
+        : (result as Manufacturer);
     }
 
     const payload = {
@@ -417,13 +430,23 @@
       createdAt: null
     };
 
-    const result = await commands.updateSeller(payload);
-
-    if (result.status === 'ok') {
-      return result.data;
+    const result: unknown = await commands.updateSeller(payload);
+    if (
+      result !== null &&
+      typeof result === 'object' &&
+      'status' in result &&
+      result.status === 'error' &&
+      'error' in result
+    ) {
+      throw result.error;
     }
-
-    throw new Error(getCommandErrorMessage(result.error));
+    return result !== null &&
+      typeof result === 'object' &&
+      'status' in result &&
+      result.status === 'ok' &&
+      'data' in result
+      ? (result.data as Seller)
+      : (result as Seller);
   }
 
   onMount(() => {

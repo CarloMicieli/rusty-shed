@@ -125,7 +125,7 @@ describe('ImageCropDialog', () => {
   });
 
   it('confirm calls uploadModelImageBytes with correct modelId', async () => {
-    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue({ status: 'ok', data: null });
+    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue(null);
 
     render(ImageCropDialog, {
       props: {
@@ -147,7 +147,7 @@ describe('ImageCropDialog', () => {
   });
 
   it('confirm calls onSaveSuccess on backend success', async () => {
-    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue({ status: 'ok', data: null });
+    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue(null);
     const onSaveSuccess = vi.fn();
 
     render(ImageCropDialog, {

@@ -63,14 +63,10 @@
         isSubmitting = true;
         try {
           const args = toRecordAcquisitionArgs($form as AcquisitionFormState, currency);
-          const result = await commands.recordAcquisition(args);
-          if (result.status === 'ok') {
-            toaster.success(m.acquisition_toast_success());
-            onSuccess();
-            onClose();
-          } else {
-            toaster.error(m.acquisition_error_finalize());
-          }
+          await commands.recordAcquisition(args);
+          toaster.success(m.acquisition_toast_success());
+          onSuccess();
+          onClose();
         } catch (e) {
           console.error('Error saving acquisition:', e);
           toaster.error(m.acquisition_error_finalize());
@@ -108,8 +104,8 @@
         commands.getManufacturers(),
         commands.getSellers()
       ]);
-      manufacturers = mfgResult.status === 'ok' ? mfgResult.data : [];
-      sellers = sellerResult.status === 'ok' ? sellerResult.data : [];
+      manufacturers = mfgResult;
+      sellers = sellerResult;
     } catch (e) {
       console.error('Error loading reference data:', e);
     } finally {

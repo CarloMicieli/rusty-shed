@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { PrototypeView as CachedPrototypeView } from '$lib/bindings';
+  import type { PrototypeView as CachedPrototypeView, PrototypeGroupView } from '$lib/bindings';
   import { commands } from '$lib/bindings';
 
   let cachedPrototypes: CachedPrototypeView[] | null = null;
@@ -8,12 +8,19 @@
   async function loadPrototypes(): Promise<CachedPrototypeView[]> {
     if (cachedPrototypes) return cachedPrototypes;
     if (!prototypeRequest) {
-      prototypeRequest = commands.getPrototypes(null).then((result) => {
-        if (result.status === 'ok') {
-          cachedPrototypes = result.data.flatMap((group) => group.prototypes);
-          return cachedPrototypes;
-        }
-        return [];
+      prototypeRequest = commands.getPrototypes(null).then((result: unknown) => {
+        const groups: PrototypeGroupView[] = Array.isArray(result)
+          ? (result as PrototypeGroupView[])
+          : result !== null &&
+              typeof result === 'object' &&
+              'status' in result &&
+              result.status === 'ok' &&
+              'data' in result &&
+              Array.isArray(result.data)
+            ? (result.data as PrototypeGroupView[])
+            : [];
+        cachedPrototypes = groups.flatMap((group) => group.prototypes);
+        return cachedPrototypes;
       });
     }
 

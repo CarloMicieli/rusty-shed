@@ -39,7 +39,7 @@ export function toRailwayModel(
 
   return {
     id: modelView.id,
-    manufacturer: modelView.manufacturer.display,
+    manufacturer: modelView.manufacturer?.display ?? '—',
     product_code: modelView.productCode,
     scale: modelView.scale,
     era: modelView.epoch,

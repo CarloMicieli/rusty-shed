@@ -30,12 +30,12 @@
         commands.getRailwayModelImage(item.railwayModelId)
       ]);
 
-      if (modelResult.status === 'ok' && modelResult.data) {
-        modelDetails = modelResult.data;
+      if (modelResult) {
+        modelDetails = modelResult;
       }
 
-      if (imageResult.status === 'ok' && imageResult.data.hasImage && imageResult.data.imagePath) {
-        const filePath = imageResult.data.imagePath;
+      if (imageResult.hasImage && imageResult.imagePath) {
+        const filePath = imageResult.imagePath;
         const ext = filePath.split('.').pop()?.toLowerCase() ?? 'jpg';
         const mimes: Record<string, string> = {
           jpg: 'image/jpeg',
@@ -86,7 +86,7 @@
           <span
             class="truncate text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
           >
-            {modelDetails?.manufacturer.display ?? m.wishlist_item_card_searching()}
+            {modelDetails?.manufacturer?.display ?? m.wishlist_item_card_searching()}
           </span>
         </div>
         <h3 class="truncate text-sm font-bold text-foreground">

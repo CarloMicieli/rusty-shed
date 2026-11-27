@@ -41,19 +41,47 @@
     isSearching = true;
     showResults = true;
     try {
-      const searchResult = await commands.searchRailwayModels({ query: q });
-      if (searchResult.status !== 'ok') {
-        results = [];
-        return;
+      const searchResult: unknown = await commands.searchRailwayModels({ query: q });
+      if (
+        searchResult !== null &&
+        typeof searchResult === 'object' &&
+        'status' in searchResult &&
+        searchResult.status === 'error'
+      ) {
+        throw new Error('Search failed');
       }
-      const ids = searchResult.data;
+      const ids =
+        searchResult !== null &&
+        typeof searchResult === 'object' &&
+        'status' in searchResult &&
+        searchResult.status === 'ok' &&
+        'data' in searchResult &&
+        Array.isArray(searchResult.data)
+          ? (searchResult.data as string[])
+          : Array.isArray(searchResult)
+            ? (searchResult as string[])
+            : [];
       const lang = getLocale();
-      const modelResults = await Promise.all(
-        ids.slice(0, 10).map((id) => commands.getRailwayModelById(id, lang))
+      const modelResults = await Promise.allSettled(
+        ids.slice(0, 10).map(async (id) => {
+          const result: unknown = await commands.getRailwayModelById(id, lang);
+          if (
+            result !== null &&
+            typeof result === 'object' &&
+            'status' in result &&
+            result.status === 'ok' &&
+            'data' in result
+          ) {
+            return result.data as RailwayModelView | null;
+          }
+          return result as RailwayModelView | null;
+        })
       );
-      results = modelResults
-        .filter((r) => r.status === 'ok' && r.data != null)
-        .map((r) => (r as { status: 'ok'; data: RailwayModelView }).data);
+      results = modelResults.flatMap((result) =>
+        result.status === 'fulfilled' && result.value ? [result.value] : []
+      );
+    } catch {
+      results = [];
     } finally {
       isSearching = false;
     }
@@ -127,7 +155,7 @@
             <div class="min-w-0 flex-1">
               <p class="truncate text-xs font-semibold text-zinc-200">{model.description}</p>
               <p class="truncate text-xs text-zinc-500">
-                {model.manufacturer.display} · {model.productCode}
+                {model.manufacturer?.display ?? '—'} · {model.productCode}
               </p>
             </div>
           </button>
@@ -178,7 +206,7 @@
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-semibold text-zinc-200">{model.description}</p>
                 <p class="truncate text-xs text-zinc-500">
-                  {model.manufacturer.display} · {model.productCode}
+                  {model.manufacturer?.display ?? '—'} · {model.productCode}
                 </p>
               </div>
             </button>

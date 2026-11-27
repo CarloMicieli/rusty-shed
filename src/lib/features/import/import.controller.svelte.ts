@@ -1,20 +1,22 @@
 import { setContext, getContext } from 'svelte';
 import type {
+  AnalyzeImportPackageResponse,
   RecordCounts,
   ImportValidationError,
   ImportWarning,
   ImportPreviewResponse,
-  ImportResultResponse,
-  CommandError
+  ImportResultResponse
 } from '$lib/bindings';
 import type { ImportProgress } from './types';
 import * as m from '$lib/paraglide/messages.js';
 
 const IMPORT_CONTEXT_KEY = Symbol('import-controller');
 
-function extractErrorMessage(error: CommandError): string {
-  if ('NotFound' in error) return m['import.error.manifestMissing']();
-  if ('DatabaseError' in error) return m['import.error.importFailed']();
+function extractErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object') {
+    if ('NotFound' in error) return m['import.error.manifestMissing']();
+    if ('DatabaseError' in error) return m['import.error.importFailed']();
+  }
   return m['import.error.analyzeFailed']();
 }
 
@@ -35,19 +37,30 @@ export class ImportController {
     this.isLoading = true;
     try {
       const { commands } = await import('$lib/bindings');
-      const result = await commands.analyzeImportPackage({ filePath });
-
-      if (result.status === 'ok') {
-        this.sessionId = result.data.sessionId;
-        this.recordCounts = result.data.recordCounts;
-        this.canImport = result.data.validationStatus === 'valid';
-      } else {
-        console.error('Failed to analyze package:', result.error);
-        this.fatalError = extractErrorMessage(result.error);
+      const commandResult: unknown = await commands.analyzeImportPackage({ filePath });
+      if (
+        commandResult !== null &&
+        typeof commandResult === 'object' &&
+        'status' in commandResult &&
+        commandResult.status === 'error' &&
+        'error' in commandResult
+      ) {
+        throw commandResult.error;
       }
+      const result =
+        commandResult !== null &&
+        typeof commandResult === 'object' &&
+        'status' in commandResult &&
+        commandResult.status === 'ok' &&
+        'data' in commandResult
+          ? (commandResult.data as AnalyzeImportPackageResponse)
+          : (commandResult as AnalyzeImportPackageResponse);
+      this.sessionId = result.sessionId;
+      this.recordCounts = result.recordCounts;
+      this.canImport = result.validationStatus === 'valid';
     } catch (error) {
       console.error('Failed to analyze package:', error);
-      this.fatalError = m['import.error.analyzeFailed']();
+      this.fatalError = extractErrorMessage(error);
     } finally {
       this.isLoading = false;
     }
@@ -59,21 +72,31 @@ export class ImportController {
     this.isLoading = true;
     try {
       const { commands } = await import('$lib/bindings');
-      const result = await commands.getImportPreview({ sessionId: this.sessionId });
-
-      if (result.status === 'ok') {
-        this.preview = result.data;
-        this.errors = result.data.errors;
-        this.warnings = result.data.warnings;
-        this.canImport = result.data.canImport;
-      } else {
-        console.error('Failed to get preview:', result.error);
-        this.fatalError = extractErrorMessage(result.error);
-        this.sessionId = null;
+      const commandResult: unknown = await commands.getImportPreview({ sessionId: this.sessionId });
+      if (
+        commandResult !== null &&
+        typeof commandResult === 'object' &&
+        'status' in commandResult &&
+        commandResult.status === 'error' &&
+        'error' in commandResult
+      ) {
+        throw commandResult.error;
       }
+      const result =
+        commandResult !== null &&
+        typeof commandResult === 'object' &&
+        'status' in commandResult &&
+        commandResult.status === 'ok' &&
+        'data' in commandResult
+          ? (commandResult.data as ImportPreviewResponse)
+          : (commandResult as ImportPreviewResponse);
+      this.preview = result;
+      this.errors = result.errors;
+      this.warnings = result.warnings;
+      this.canImport = result.canImport;
     } catch (error) {
       console.error('Failed to get preview:', error);
-      this.fatalError = m['import.error.analyzeFailed']();
+      this.fatalError = extractErrorMessage(error);
       this.sessionId = null;
     } finally {
       this.isLoading = false;
@@ -86,21 +109,30 @@ export class ImportController {
     this.isLoading = true;
     try {
       const { commands } = await import('$lib/bindings');
-      const result = await commands.executeImport({ sessionId: this.sessionId });
-
-      if (result.status === 'ok') {
-        this.result = result.data;
-        this.warnings = result.data.warnings;
-        this.canImport = false;
-      } else {
-        console.error('Failed to execute import:', result.error);
-        this.fatalError = extractErrorMessage(result.error);
-        this.sessionId = null;
-        this.preview = null;
+      const commandResult: unknown = await commands.executeImport({ sessionId: this.sessionId });
+      if (
+        commandResult !== null &&
+        typeof commandResult === 'object' &&
+        'status' in commandResult &&
+        commandResult.status === 'error' &&
+        'error' in commandResult
+      ) {
+        throw commandResult.error;
       }
+      const result =
+        commandResult !== null &&
+        typeof commandResult === 'object' &&
+        'status' in commandResult &&
+        commandResult.status === 'ok' &&
+        'data' in commandResult
+          ? (commandResult.data as ImportResultResponse)
+          : (commandResult as ImportResultResponse);
+      this.result = result;
+      this.warnings = result.warnings;
+      this.canImport = false;
     } catch (error) {
       console.error('Failed to execute import:', error);
-      this.fatalError = m['import.error.importFailed']();
+      this.fatalError = extractErrorMessage(error);
       this.sessionId = null;
       this.preview = null;
     } finally {

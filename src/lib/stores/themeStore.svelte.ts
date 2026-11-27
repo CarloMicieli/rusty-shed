@@ -34,13 +34,23 @@ class ThemeStateClass {
     try {
       // Import commands from generated bindings
       const { commands } = await import('$lib/bindings');
-      const result = await commands.getSettings();
-
-      if (result.status !== 'ok') {
+      const result: unknown = await commands.getSettings();
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'error'
+      ) {
         throw new Error('Failed to get settings');
       }
-
-      const settings: UserSettings = result.data;
+      const settings: UserSettings =
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'ok' &&
+        'data' in result
+          ? (result.data as UserSettings)
+          : (result as UserSettings);
       const theme = settings.theme ?? 'system';
       const resolved = resolveTheme(theme);
       this.current = theme;
@@ -69,21 +79,26 @@ class ThemeStateClass {
   async setTheme(theme: ThemeValue): Promise<void> {
     try {
       const { commands } = await import('$lib/bindings');
-      const getResult = await commands.getSettings();
-
-      if (getResult.status !== 'ok') {
-        throw new Error('Failed to get settings');
-      }
+      await commands.getSettings();
 
       const updatePayload: UpdateSettingsInput = { theme };
-
-      const updateResult = await commands.updateSettings(updatePayload);
-
-      if (updateResult.status !== 'ok') {
+      const result: unknown = await commands.updateSettings(updatePayload);
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'error'
+      ) {
         throw new Error('Failed to update settings');
       }
-
-      const updated: UserSettings = updateResult.data;
+      const updated: UserSettings =
+        result !== null &&
+        typeof result === 'object' &&
+        'status' in result &&
+        result.status === 'ok' &&
+        'data' in result
+          ? (result.data as UserSettings)
+          : (result as UserSettings);
       const updatedTheme = updated.theme ?? theme;
       const resolved = resolveTheme(updatedTheme);
       this.current = updatedTheme;

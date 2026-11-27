@@ -117,9 +117,9 @@
         commands.getManufacturers()
       ]);
 
-      if (productsResult.status === 'ok') products = productsResult.data;
-      if (sellersResult.status === 'ok') sellers = sellersResult.data;
-      if (manufacturersResult.status === 'ok') manufacturers = manufacturersResult.data;
+      products = productsResult;
+      sellers = sellersResult;
+      manufacturers = manufacturersResult;
       dataFetched = true;
     } catch (err) {
       console.error('Failed to load data:', err);
