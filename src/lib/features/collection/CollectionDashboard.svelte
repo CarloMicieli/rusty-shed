@@ -181,7 +181,10 @@
 {#snippet LoadingSkeleton()}
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
     {#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
-      <div class="h-56 animate-pulse rounded-xl bg-muted" aria-label={`loading-card-${i}`}></div>
+      <div
+        class="h-56 animate-pulse rounded-xl bg-muted"
+        aria-label={m.collection_loading_card()}
+      ></div>
     {/each}
   </div>
 {/snippet}
@@ -268,7 +271,7 @@
           <div class="mb-4 flex flex-wrap gap-2">
             <button
               type="button"
-              class="rounded-full border border-amber-500/30 bg-amber-500/8 px-3 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-500/14"
+              class="border-warning-600/30 bg-warning-600/10 text-warning-700 hover:bg-warning-600/20 min-h-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:min-h-9"
               onclick={() => handleLifecycleChipClick('preordered')}
             >
               {collectionStats.preorderedCount}
@@ -276,7 +279,7 @@
             </button>
             <button
               type="button"
-              class="rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 py-1.5 text-xs font-medium text-emerald-300 transition-colors hover:bg-emerald-500/14"
+              class="border-success-600/30 bg-success-600/10 text-success-700 hover:bg-success-600/20 min-h-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:min-h-9"
               onclick={() => handleLifecycleChipClick('active')}
             >
               {collectionStats.activeCount}
@@ -284,7 +287,7 @@
             </button>
             <button
               type="button"
-              class="rounded-full border border-rose-500/30 bg-rose-500/8 px-3 py-1.5 text-xs font-medium text-rose-300 transition-colors hover:bg-rose-500/14"
+              class="min-h-11 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20 sm:min-h-9"
               onclick={() => handleLifecycleChipClick('sold')}
             >
               {collectionStats.soldCount}
@@ -313,7 +316,7 @@
                       type="button"
                       onclick={() => collectionService.toggleScale(scale)}
                       class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
-                      aria-label={`Remove scale filter: ${scale}`}
+                      aria-label={m.collection_remove_filter({ filter: scale })}
                     >
                       <X size={14} />
                     </button>
@@ -330,7 +333,7 @@
                       type="button"
                       onclick={() => collectionService.toggleEpoch(epoch)}
                       class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
-                      aria-label={`Remove epoch filter: ${epoch}`}
+                      aria-label={m.collection_remove_filter({ filter: `Epoch ${epoch}` })}
                     >
                       <X size={14} />
                     </button>
@@ -347,7 +350,7 @@
                       type="button"
                       onclick={() => collectionService.toggleCategory(category)}
                       class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
-                      aria-label={`Remove category filter: ${category}`}
+                      aria-label={m.collection_remove_filter({ filter: category })}
                     >
                       <X size={14} />
                     </button>
@@ -364,7 +367,7 @@
                       type="button"
                       onclick={() => collectionService.toggleCompany(company)}
                       class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
-                      aria-label={`Remove company filter: ${company}`}
+                      aria-label={m.collection_remove_filter({ filter: company })}
                     >
                       <X size={14} />
                     </button>
@@ -381,7 +384,7 @@
                       type="button"
                       onclick={() => collectionService.toggleTag(tag)}
                       class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
-                      aria-label={`Remove tag filter: ${tag}`}
+                      aria-label={m.collection_remove_filter({ filter: tag })}
                     >
                       <X size={14} />
                     </button>

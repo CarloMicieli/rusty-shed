@@ -65,6 +65,7 @@ vi.mock('$lib/bindings', () => ({
 
 // Mock Paraglide messages
 vi.mock('$lib/paraglide/messages', () => ({
+  common_close: () => 'Close',
   railway_model_details: () => 'Railway Model Details',
   rolling_stock_list: () => 'Rolling Stock List',
   upload_image: () => 'Upload Image',

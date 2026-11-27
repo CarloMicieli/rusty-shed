@@ -54,7 +54,7 @@
           {/if}
           <a
             href={resolve(item.href as '/dashboard')}
-            class="flex w-full items-center rounded-lg py-2.5 text-sm font-medium transition-colors {collapsed
+            class="flex min-h-11 w-full items-center rounded-lg py-2.5 text-sm font-medium transition-colors {collapsed
               ? 'justify-center px-2'
               : 'justify-start gap-3 px-4'} {navLinkClass(isActive(item, pathname))}"
             aria-current={isActive(item, pathname) ? 'page' : undefined}
@@ -77,10 +77,10 @@
       <!-- Toggle button -->
       <button
         onclick={onToggle}
-        class="mb-2 flex w-full items-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground {collapsed
+        class="mb-2 flex min-h-11 w-full items-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground {collapsed
           ? 'justify-center'
           : 'justify-end px-4'}"
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? m.app_sidebar_expand() : m.app_sidebar_collapse()}
       >
         {#if collapsed}
           <ChevronsRight size={16} />
@@ -96,7 +96,7 @@
         {/if}
         <a
           href={resolve('/settings')}
-          class="flex w-full items-center rounded-lg py-2.5 text-sm font-medium transition-colors {collapsed
+          class="flex min-h-11 w-full items-center rounded-lg py-2.5 text-sm font-medium transition-colors {collapsed
             ? 'justify-center px-2'
             : 'justify-start gap-3 px-4'} {navLinkClass(pathname === '/settings')}"
           aria-current={pathname === '/settings' ? 'page' : undefined}
@@ -116,7 +116,7 @@
         {/if}
         <a
           href={resolve('/debug')}
-          class="flex w-full items-center rounded-lg py-2.5 text-sm font-medium transition-colors {collapsed
+          class="flex min-h-11 w-full items-center rounded-lg py-2.5 text-sm font-medium transition-colors {collapsed
             ? 'justify-center px-2'
             : 'justify-start gap-3 px-4'} {navLinkClass(pathname === '/debug')}"
           aria-current={pathname === '/debug' ? 'page' : undefined}

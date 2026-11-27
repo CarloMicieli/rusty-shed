@@ -24,11 +24,12 @@
     'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
 
   const variantStyles: Record<BadgeVariant, string> = {
-    default: 'border-transparent bg-primary-600 text-white hover:bg-primary-700',
-    secondary: 'border-transparent bg-secondary-600 text-white hover:bg-secondary-700',
-    destructive: 'border-transparent bg-error-600 text-white hover:bg-error-700',
-    outline: 'border-border text-surface-100',
-    success: 'border-transparent bg-green-600 text-white hover:bg-green-700'
+    default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/90',
+    secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+    destructive:
+      'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/90',
+    outline: 'border-border text-foreground',
+    success: 'border-transparent bg-success-600 text-white'
   };
 
   const badgeClass = $derived(twMerge(baseStyles, variantStyles[variant], className));

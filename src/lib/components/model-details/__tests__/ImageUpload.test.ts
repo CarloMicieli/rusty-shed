@@ -35,7 +35,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   confirm_delete_image_title: () => 'Delete Image?',
   confirm_delete_image_description: () => 'This action cannot be undone',
   image_deleted: () => 'Image deleted successfully',
-  common_cancel: () => 'Cancel'
+  common_cancel: () => 'Cancel',
+  common_close: () => 'Close'
 }));
 
 import ImageUpload from '../ImageUpload.svelte';

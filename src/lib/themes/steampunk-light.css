@@ -212,6 +212,12 @@
   --border: hsl(32 30% 60%); /* Aged Brass      #a8906b */
   --input: hsl(32 30% 60%);
   --ring: hsl(44 88% 38%);
+  --surface-elevated: var(--color-surface-100);
+  --surface-hover: var(--color-surface-50);
+  --border-subtle: var(--color-surface-300);
+  --border-strong: var(--color-surface-400);
+  --brass: var(--color-brass-600);
+  --copper: var(--color-copper-600);
 
   /* Sidebar — "Deep Parchment" with baked-in brass tint */
   --sidebar: color-mix(in srgb, hsl(40 40% 80%), var(--color-primary-600) 5%);

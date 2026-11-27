@@ -16,16 +16,17 @@
   }: Props = $props();
 
   const sideVariants: Record<SheetSide, string> = {
-    right: 'right-0 top-0 h-full w-3/4 sm:w-96 translate-x-full data-[state=open]:translate-x-0',
-    left: 'left-0 top-0 h-full w-3/4 sm:w-96 -translate-x-full data-[state=open]:translate-x-0',
-    top: 'top-0 left-0 w-full h-3/4 sm:h-96 -translate-y-full data-[state=open]:translate-y-0',
-    bottom: 'bottom-0 left-0 w-full h-3/4 sm:h-96 translate-y-full data-[state=open]:translate-y-0'
+    right:
+      'right-0 top-0 h-full w-3/4 border-l sm:w-96 translate-x-full data-[state=open]:translate-x-0',
+    left: 'left-0 top-0 h-full w-3/4 border-r sm:w-96 -translate-x-full data-[state=open]:translate-x-0',
+    top: 'top-0 left-0 h-3/4 w-full border-b sm:h-96 -translate-y-full data-[state=open]:translate-y-0',
+    bottom:
+      'bottom-0 left-0 h-3/4 w-full border-t rounded-t-lg sm:h-96 translate-y-full data-[state=open]:translate-y-0'
   };
 
   const sheetClass = $derived(
     twMerge(
-      'fixed z-50 bg-[var(--color-surface-100)] shadow-lg transition-transform duration-300 ease-in-out',
-      'border-l border-[var(--color-surface-300)]',
+      'fixed z-50 border-border-subtle bg-card shadow-lg transition-transform duration-300 ease-in-out',
       sideVariants[side],
       className
     )

@@ -34,7 +34,7 @@
     onclick={onClose}
     {disabled}
     aria-label={m.action_close()}
-    class="flex h-8 w-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    class="flex size-11 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:size-9"
   >
     <X size={16} />
   </button>
