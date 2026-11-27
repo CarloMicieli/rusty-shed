@@ -78,12 +78,12 @@ mod tests {
         collection_repo
             .expect_sell_item()
             .times(1)
-            .returning(|_, _, _, _| Err(DomainError::Infrastructure("write failed".into())));
+            .returning(|_, _, _, _| Err(DomainError::infrastructure("write failed")));
 
         let railway_repo = MockRailwayModelRepository::new();
         let mut uow = FakeUow::new(collection_repo, railway_repo);
         let result = SellCollectionItem::execute(&mut uow, make_input()).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

@@ -51,7 +51,7 @@ impl From<DatabaseBackupError> for CommandError {
             DatabaseBackupError::ConfirmationFailed(msg) => {
                 CommandError::validation_field("confirmation", msg)
             }
-            DatabaseBackupError::PermissionDenied(msg) => CommandError::PermissionDenied(msg),
+            DatabaseBackupError::PermissionDenied(msg) => CommandError::permission_denied(msg),
             _ => CommandError::unknown(err.to_string()),
         }
     }
@@ -68,7 +68,7 @@ mod tests {
         let err: CommandError = DatabaseBackupError::InvalidPath(msg.clone()).into();
 
         match err {
-            CommandError::ValidationError(fields) => {
+            CommandError::ValidationError { fields, .. } => {
                 let errors = fields
                     .get("destination_path")
                     .expect("destination_path field should exist");
@@ -85,7 +85,7 @@ mod tests {
         let err: CommandError = DatabaseBackupError::InvalidDatabase(msg.clone()).into();
 
         match err {
-            CommandError::ValidationError(fields) => {
+            CommandError::ValidationError { fields, .. } => {
                 let errors = fields
                     .get("source_path")
                     .expect("source_path field should exist");
@@ -102,7 +102,7 @@ mod tests {
         let err: CommandError = DatabaseBackupError::IncompatibleSchema(msg.clone()).into();
 
         match err {
-            CommandError::ValidationError(fields) => {
+            CommandError::ValidationError { fields, .. } => {
                 let errors = fields
                     .get("source_path")
                     .expect("source_path field should exist");
@@ -119,7 +119,7 @@ mod tests {
         let err: CommandError = DatabaseBackupError::ConfirmationFailed(msg.clone()).into();
 
         match err {
-            CommandError::ValidationError(fields) => {
+            CommandError::ValidationError { fields, .. } => {
                 let errors = fields
                     .get("confirmation")
                     .expect("confirmation field should exist");
@@ -136,7 +136,9 @@ mod tests {
         let err: CommandError = DatabaseBackupError::PermissionDenied(msg.clone()).into();
 
         match err {
-            CommandError::PermissionDenied(actual) => assert_eq!(actual, msg),
+            CommandError::PermissionDenied {
+                message: actual, ..
+            } => assert_eq!(actual, msg),
             other => panic!("expected PermissionDenied, got {other:?}"),
         }
     }

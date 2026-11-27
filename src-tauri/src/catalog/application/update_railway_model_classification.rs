@@ -39,7 +39,7 @@ impl UpdateRailwayModelClassification {
         U: RailwayModelUowExt + Send,
     {
         if input.scale.is_none() && input.epoch.is_none() && input.category.is_none() {
-            return Err(DomainError::Validation(
+            return Err(DomainError::validation(
                 "at least one of scale, epoch, or category must be provided".to_string(),
             ));
         }
@@ -50,6 +50,7 @@ impl UpdateRailwayModelClassification {
             .find_by_id(&input.railway_model_id, Language::English)
             .await?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RailwayModel".to_string(),
                 identifier: input.railway_model_id.to_string(),
             })?;
@@ -190,7 +191,7 @@ mod tests {
         .expect_err("should fail");
 
         assert!(
-            matches!(err, DomainError::Validation(_)),
+            matches!(err, DomainError::Validation { .. }),
             "expected Validation error, got {err:?}"
         );
     }

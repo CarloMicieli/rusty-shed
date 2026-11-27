@@ -183,7 +183,7 @@ mod tests {
             .expect_set_current_coupler()
             .times(1)
             .returning(|_, _| {
-                Err(DomainError::Infrastructure(
+                Err(DomainError::infrastructure(
                     "db connection lost".to_string(),
                 ))
             });
@@ -202,7 +202,7 @@ mod tests {
         .expect_err("coupler persistence failure should propagate");
 
         assert!(
-            matches!(err, DomainError::Infrastructure(_)),
+            matches!(err, DomainError::Infrastructure { .. }),
             "expected Infrastructure error, got {err:?}"
         );
     }

@@ -447,9 +447,9 @@ fn build_locomotive_params(
     let specs = validate_specs(&mut ctx, input.technical_specifications, true);
     ctx.finish()?;
     let railway_company_id = company_id
-        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+        .ok_or_else(|| DomainError::validation("invalid railway_company_id".to_string()))?;
     let locomotive_type = locomotive_type
-        .ok_or_else(|| DomainError::Validation("invalid locomotive_type".to_string()))?;
+        .ok_or_else(|| DomainError::validation("invalid locomotive_type".to_string()))?;
 
     Ok(RollingStockParams::LocomotiveParams {
         railway_company_id,
@@ -485,9 +485,9 @@ fn build_electric_multiple_unit_params(
     let specs = validate_specs(&mut ctx, input.technical_specifications, true);
     ctx.finish()?;
     let railway_company_id = company_id
-        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+        .ok_or_else(|| DomainError::validation("invalid railway_company_id".to_string()))?;
     let electric_multiple_unit_type = emu_type.ok_or_else(|| {
-        DomainError::Validation("invalid electric_multiple_unit_type".to_string())
+        DomainError::validation("invalid electric_multiple_unit_type".to_string())
     })?;
 
     Ok(RollingStockParams::ElectricMultipleUnitParams {
@@ -521,9 +521,9 @@ fn build_railcar_params(
     let specs = validate_specs(&mut ctx, input.technical_specifications, true);
     ctx.finish()?;
     let railway_company_id = company_id
-        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+        .ok_or_else(|| DomainError::validation("invalid railway_company_id".to_string()))?;
     let railcar_type =
-        railcar_type.ok_or_else(|| DomainError::Validation("invalid railcar_type".to_string()))?;
+        railcar_type.ok_or_else(|| DomainError::validation("invalid railcar_type".to_string()))?;
 
     Ok(RollingStockParams::RailcarParams {
         railway_company_id,
@@ -558,7 +558,7 @@ fn build_passenger_car_params(
         .and_then(|s| ctx.collect("service_level", s.parse::<ServiceLevel>()));
     ctx.finish()?;
     let railway_company_id = company_id
-        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+        .ok_or_else(|| DomainError::validation("invalid railway_company_id".to_string()))?;
 
     Ok(RollingStockParams::PassengerCarParams {
         railway_company_id,
@@ -586,7 +586,7 @@ fn build_freight_car_params(
     let specs = validate_specs(&mut ctx, input.technical_specifications, true);
     ctx.finish()?;
     let railway_company_id = company_id
-        .ok_or_else(|| DomainError::Validation("invalid railway_company_id".to_string()))?;
+        .ok_or_else(|| DomainError::validation("invalid railway_company_id".to_string()))?;
 
     Ok(RollingStockParams::FreightCarParams {
         railway_company_id,
@@ -880,7 +880,7 @@ mod tests {
 
         let res = RollingStockParams::try_from(input);
         assert!(res.is_err());
-        if let Err(DomainError::ValidationError(map)) = res {
+        if let Err(DomainError::ValidationError { fields: map, .. }) = res {
             assert!(map.contains_key("railway_company_id"));
             assert!(map.contains_key("locomotive_type"));
             assert!(map.contains_key("control"));

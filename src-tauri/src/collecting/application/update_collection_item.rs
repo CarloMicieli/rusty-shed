@@ -58,12 +58,12 @@ mod tests {
         collection_repo
             .expect_update_item()
             .times(1)
-            .returning(|_| Err(DomainError::Infrastructure("write failed".into())));
+            .returning(|_| Err(DomainError::infrastructure("write failed")));
 
         let railway_repo = MockRailwayModelRepository::new();
         let mut uow = FakeUow::new(collection_repo, railway_repo);
         let result = UpdateCollectionItem::execute(&mut uow, make_input()).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

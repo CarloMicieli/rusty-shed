@@ -1,3 +1,4 @@
+use crate::core::domain::ErrorId;
 use crate::core::domain::identifiers::IdParseError;
 use crate::core::domain::validation::ValidationError;
 use std::borrow::Cow;
@@ -15,8 +16,8 @@ pub enum DomainError {
     /// Prefer [`DomainError::validation_general`] for new code, which stores the
     /// message in the structured `ValidationError` map under `_general` and is
     /// consistent with the field-level `ValidationError` shape the frontend expects.
-    #[error("Validation failed: {0}")]
-    Validation(String),
+    #[error("Validation failed: {message}")]
+    Validation { id: ErrorId, message: String },
 
     /// Indicates a failure within the persistence or infrastructure layer.
     ///
@@ -25,8 +26,8 @@ pub enum DomainError {
     ///
     /// *Note:* In production, the raw error should be logged, but a generic
     /// message may be shown to the user for security.
-    #[error("Internal persistence error: {0}")]
-    Infrastructure(String),
+    #[error("Internal persistence error: {message}")]
+    Infrastructure { id: ErrorId, message: String },
 
     /// Indicates that a requested resource was not found.
     ///
@@ -34,6 +35,7 @@ pub enum DomainError {
     /// ID does not exist in the system.
     #[error("Resource not found: {resource}")]
     NotFound {
+        id: ErrorId,
         /// The type of resource (e.g., "Invoice")
         resource: String,
         /// The identifier that was searched for
@@ -44,36 +46,109 @@ pub enum DomainError {
     ///
     /// **Source:** Triggered by Domain Entities or Use Cases (e.g.,
     /// "Cannot cancel an invoice that has already been paid").
-    #[error("Business rule violation: {0}")]
-    BusinessRule(String),
+    #[error("Business rule violation: {message}")]
+    BusinessRule { id: ErrorId, message: String },
 
     /// Validation error with field-specific messages.
     ///
     /// The map contains field names as keys and error messages as values.
     /// This allows the frontend to display validation errors next to the appropriate form fields.
     /// Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
-    #[error("validation error: {0:?}")]
-    ValidationError(HashMap<String, Vec<ValidationError>>),
+    #[error("validation error: {fields:?}")]
+    ValidationError {
+        id: ErrorId,
+        fields: HashMap<String, Vec<ValidationError>>,
+    },
 
     /// Indicates an invalid identifier format or parsing error.
     ///
     /// **Source:** Triggered when attempting to parse a string into an identifier
     /// and the format is invalid or the prefix doesn't match.
-    #[error("Invalid identifier: {0}")]
-    InvalidIdentifier(#[from] IdParseError),
+    #[error("Invalid identifier: {error}")]
+    InvalidIdentifier { id: ErrorId, error: IdParseError },
 
     /// Indicates a conflict with existing data (e.g., a unique constraint violation).
     ///
     /// **Source:** Triggered when an operation would produce a duplicate entry.
-    #[error("Conflict: {0}")]
-    Conflict(String),
+    #[error("Conflict: {message}")]
+    Conflict { id: ErrorId, message: String },
 }
 
 impl DomainError {
+    /// Return the identifier associated with this error occurrence.
+    pub fn error_id(&self) -> ErrorId {
+        match self {
+            Self::Validation { id, .. }
+            | Self::Infrastructure { id, .. }
+            | Self::NotFound { id, .. }
+            | Self::BusinessRule { id, .. }
+            | Self::ValidationError { id, .. }
+            | Self::InvalidIdentifier { id, .. }
+            | Self::Conflict { id, .. } => id.clone(),
+        }
+    }
+
+    /// Create a general validation error.
+    pub fn validation(message: impl Into<String>) -> Self {
+        Self::Validation {
+            id: ErrorId::generate(),
+            message: message.into(),
+        }
+    }
+
+    /// Create an infrastructure error.
+    pub fn infrastructure(message: impl Into<String>) -> Self {
+        Self::Infrastructure {
+            id: ErrorId::generate(),
+            message: message.into(),
+        }
+    }
+
+    /// Create a not-found error.
+    pub fn not_found(resource: impl Into<String>, identifier: impl Into<String>) -> Self {
+        Self::NotFound {
+            id: ErrorId::generate(),
+            resource: resource.into(),
+            identifier: identifier.into(),
+        }
+    }
+
+    /// Create a business-rule violation.
+    pub fn business_rule(message: impl Into<String>) -> Self {
+        Self::BusinessRule {
+            id: ErrorId::generate(),
+            message: message.into(),
+        }
+    }
+
+    /// Create a conflict error.
+    pub fn conflict(message: impl Into<String>) -> Self {
+        Self::Conflict {
+            id: ErrorId::generate(),
+            message: message.into(),
+        }
+    }
+
+    /// Create field-specific validation errors.
+    pub fn validation_fields(fields: HashMap<String, Vec<ValidationError>>) -> Self {
+        Self::ValidationError {
+            id: ErrorId::generate(),
+            fields,
+        }
+    }
+
+    /// Create an invalid-identifier error.
+    pub fn invalid_identifier(error: IdParseError) -> Self {
+        Self::InvalidIdentifier {
+            id: ErrorId::generate(),
+            error,
+        }
+    }
+
     /// Creates a structured validation error with a single general message stored
     /// under the `_general` sentinel key.
     ///
-    /// Prefer this over `DomainError::Validation(msg)` for new code: it produces
+    /// Prefer this over `DomainError::Validation { message: msg, .. }` for new code: it produces
     /// a `ValidationError` map that the frontend can display consistently alongside
     /// field-specific validation errors.
     pub fn validation_general(msg: impl Into<String>) -> Self {
@@ -86,7 +161,10 @@ impl DomainError {
                 params: HashMap::new(),
             }],
         );
-        DomainError::ValidationError(map)
+        DomainError::ValidationError {
+            id: ErrorId::generate(),
+            fields: map,
+        }
     }
 }
 
@@ -116,7 +194,10 @@ impl From<garde::Report> for DomainError {
                 });
         }
 
-        DomainError::ValidationError(fields)
+        DomainError::ValidationError {
+            id: ErrorId::generate(),
+            fields,
+        }
     }
 }
 
@@ -165,12 +246,12 @@ mod tests {
         let err = DomainError::from(report);
 
         match err {
-            DomainError::ValidationError(map) => {
-                assert_eq!(map["coded"][0].code, "error_invalid_magic");
-                assert!(map["coded"][0].message.is_none());
+            DomainError::ValidationError { fields, .. } => {
+                assert_eq!(fields["coded"][0].code, "error_invalid_magic");
+                assert!(fields["coded"][0].message.is_none());
 
-                assert_eq!(map["generic"][0].code, "invalid");
-                assert!(map["generic"][0].message.is_some());
+                assert_eq!(fields["generic"][0].code, "invalid");
+                assert!(fields["generic"][0].message.is_some());
             }
             other => panic!("expected ValidationError, got {other:?}"),
         }

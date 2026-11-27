@@ -14,10 +14,10 @@ impl TryFrom<DigitalRollingStockRow> for DigitalRollingStock {
 
     fn try_from(row: DigitalRollingStockRow) -> Result<Self, Self::Error> {
         let dcc_address =
-            DccAddress::new(row.dcc_address).map_err(|e| DomainError::Validation(e.to_string()))?;
+            DccAddress::new(row.dcc_address).map_err(|e| DomainError::validation(e.to_string()))?;
 
         let decoder_id = row.installed_decoder_id.ok_or_else(|| {
-            DomainError::Validation("missing decoder for digital rolling stock".to_string())
+            DomainError::validation("missing decoder for digital rolling stock".to_string())
         })?;
 
         Ok(DigitalRollingStock::reconstitute(
@@ -47,7 +47,7 @@ impl TryFrom<EnrichedRow> for DigitalRollingStockView {
 
     fn try_from(row: EnrichedRow) -> Result<Self, Self::Error> {
         let dcc_address =
-            DccAddress::new(row.dcc_address).map_err(|e| DomainError::Validation(e.to_string()))?;
+            DccAddress::new(row.dcc_address).map_err(|e| DomainError::validation(e.to_string()))?;
 
         let decoder = DecoderView {
             id: row.decoder_id,
@@ -63,11 +63,11 @@ impl TryFrom<EnrichedRow> for DigitalRollingStockView {
         let category = row
             .category
             .ok_or_else(|| {
-                DomainError::Validation("missing category for digital rolling stock".to_string())
+                DomainError::validation("missing category for digital rolling stock".to_string())
             })
             .and_then(|c| {
                 c.parse::<RollingStockCategory>().map_err(|_| {
-                    DomainError::Validation(format!("unknown rolling stock category: {c}"))
+                    DomainError::validation(format!("unknown rolling stock category: {c}"))
                 })
             })?;
 

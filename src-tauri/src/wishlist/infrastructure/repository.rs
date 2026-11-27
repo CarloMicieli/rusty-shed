@@ -89,10 +89,10 @@ impl<'conn> SqliteWishlistRepository<'conn> {
 
             let amount = amount_str
                 .parse::<i64>()
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
 
             let currency = Currency::from_code(currency_code)
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
 
             totals.insert(currency, amount);
         }
@@ -162,6 +162,7 @@ impl<'conn> SqliteWishlistRepository<'conn> {
 
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Wishlist".to_string(),
                 identifier: wishlist_id.to_string(),
             });
@@ -181,6 +182,7 @@ impl<'conn> SqliteWishlistRepository<'conn> {
             .with_domain_context("Error renaming wishlist from event")?;
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Wishlist".to_string(),
                 identifier: wishlist_id.to_string(),
             });
@@ -198,6 +200,7 @@ impl<'conn> SqliteWishlistRepository<'conn> {
             .with_domain_context("Error marking wishlist item as purchased")?;
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistItem".to_string(),
                 identifier: item_id.to_string(),
             });
@@ -241,6 +244,7 @@ impl<'conn> SqliteWishlistRepository<'conn> {
 
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistItem".to_string(),
                 identifier: item_id.to_string(),
             });
@@ -286,11 +290,11 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             .with_domain_context("Error finding wishlist items by wishlist id")?;
 
         let mut wishlist = Wishlist::try_from(wishlist_row.unwrap())
-            .map_err(|e: AnyhowError| DomainError::Validation(e.to_string()))?;
+            .map_err(|e: AnyhowError| DomainError::validation(e.to_string()))?;
 
         for item_row in wishlist_item_rows {
             let item = WishlistItem::try_from(item_row)
-                .map_err(|e: AnyhowError| DomainError::Validation(e.to_string()))?;
+                .map_err(|e: AnyhowError| DomainError::validation(e.to_string()))?;
             wishlist.add_item(item);
         }
 
@@ -311,7 +315,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
 
         for row in rows {
             let wishlist_id = WishlistId::try_from(row.wishlist_id.as_str())
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
 
             previews.push(WishlistPreview {
                 id: wishlist_id,
@@ -365,6 +369,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
 
         if !exists {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Wishlist".to_string(),
                 identifier: wishlist.id.to_string(),
             });
@@ -384,6 +389,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             .with_domain_context("Error renaming wishlist")?;
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Wishlist".to_string(),
                 identifier: id.to_string(),
             });
@@ -397,6 +403,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             .with_domain_context("Error deleting wishlist")?;
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Wishlist".to_string(),
                 identifier: id.to_string(),
             });
@@ -467,6 +474,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             .with_domain_context("Error deleting wishlist item")?;
         if affected == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistItem".to_string(),
                 identifier: item_id.to_string(),
             });
@@ -489,13 +497,14 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
 
         let Some(source_wishlist_id) = source_wishlist_id else {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "WishlistItem".to_string(),
                 identifier: item_id.to_string(),
             });
         };
 
         let source_wishlist = WishlistId::try_from(source_wishlist_id.as_str())
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         database::touch_wishlist_updated_at(&mut *self.executor, &source_wishlist)
             .await

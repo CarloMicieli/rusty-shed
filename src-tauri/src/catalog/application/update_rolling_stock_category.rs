@@ -38,6 +38,7 @@ impl UpdateRollingStockCategory {
             .find_by_id(&input.railway_model_id, Language::English)
             .await?
             .ok_or_else(|| DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "RailwayModel".to_string(),
                 identifier: input.railway_model_id.to_string(),
             })?;

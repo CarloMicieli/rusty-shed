@@ -15,7 +15,7 @@ impl MergeSeller {
         target_id: &SellerId,
     ) -> Result<i64, DomainError> {
         if source_id == target_id {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "Source and target must be different".to_string(),
             ));
         }
@@ -26,8 +26,9 @@ impl MergeSeller {
         .bind(source_id.as_ref())
         .fetch_optional(&mut *tx)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "Seller".to_string(),
             identifier: source_id.to_string(),
         })?;
@@ -38,14 +39,15 @@ impl MergeSeller {
         .bind(target_id.as_ref())
         .fetch_optional(&mut *tx)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .ok_or_else(|| DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "Seller".to_string(),
             identifier: target_id.to_string(),
         })?;
 
         if source_seeded != 0 || target_seeded != 0 {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "Protected entities cannot be merged".to_string(),
             ));
         }
@@ -61,7 +63,7 @@ impl MergeSeller {
         .bind(target_id.as_ref())
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .rows_affected() as i64;
 
         let buyer_relinked = sqlx::query(
@@ -75,7 +77,7 @@ impl MergeSeller {
         .bind(target_id.as_ref())
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .rows_affected() as i64;
 
         let deleted = sqlx::query(
@@ -87,11 +89,12 @@ impl MergeSeller {
         .bind(source_id.as_ref())
         .execute(&mut *tx)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?
         .rows_affected();
 
         if deleted == 0 {
             return Err(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "Seller".to_string(),
                 identifier: source_id.to_string(),
             });

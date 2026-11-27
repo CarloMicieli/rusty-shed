@@ -145,7 +145,7 @@ mod tests {
     async fn get_dashboard_summary_inner_maps_domain_infrastructure_error() {
         let mut repo = MockDashboardRepository::new();
         repo.expect_find_summary().once().returning(|_| {
-            Err(DomainError::Infrastructure(
+            Err(DomainError::infrastructure(
                 "dashboard query failed".to_string(),
             ))
         });
@@ -155,7 +155,7 @@ mod tests {
         let result = get_dashboard_summary_inner(&state, None).await;
 
         assert!(
-            matches!(result, Err(CommandError::DatabaseError(ref msg)) if msg.contains("dashboard query failed")),
+            matches!(result, Err(CommandError::DatabaseError { message: ref msg, .. }) if msg.contains("dashboard query failed")),
             "{result:?}"
         );
     }

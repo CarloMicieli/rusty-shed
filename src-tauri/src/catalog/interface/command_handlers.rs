@@ -622,7 +622,7 @@ mod tests {
         };
         let result = create_railway_model_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -647,7 +647,7 @@ mod tests {
         };
         let result = create_railway_model_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -672,7 +672,7 @@ mod tests {
         };
         let result = create_railway_model_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -702,7 +702,7 @@ mod tests {
         };
 
         let result = add_rolling_stock_to_model_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -717,7 +717,7 @@ mod tests {
         };
 
         let result = update_railway_model_text_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -734,7 +734,7 @@ mod tests {
         };
 
         let result = update_rolling_stock_identification_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -749,7 +749,7 @@ mod tests {
         };
 
         let result = update_railway_model_classification_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -769,7 +769,7 @@ mod tests {
         };
 
         let result = update_rolling_stock_railway_company_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -783,7 +783,7 @@ mod tests {
         };
 
         let result = update_rolling_stock_category_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -798,7 +798,7 @@ mod tests {
         };
 
         let result = upsert_railway_model_translation_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -809,7 +809,7 @@ mod tests {
         };
 
         let result = search_railway_models_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -822,7 +822,7 @@ mod tests {
         };
 
         let result = delete_rolling_stock_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -836,7 +836,7 @@ mod tests {
         };
 
         let result = update_rolling_stock_subcategory_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -850,14 +850,14 @@ mod tests {
         };
 
         let result = update_rolling_stock_service_level_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::NotFound(_))));
+        assert!(matches!(result, Err(CommandError::NotFound { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
     async fn get_coupler_types_inner_invalid_socket_returns_validation_error(pool: SqlitePool) {
         let state = app_state(pool);
         let result = get_coupler_types_inner(&state, Some("not-a-socket".to_string())).await;
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -879,7 +879,7 @@ mod tests {
         };
 
         let result = update_railway_model_delivery_date_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[sqlx::test(migrations = "./migrations")]
@@ -912,6 +912,6 @@ mod tests {
         };
 
         let result = update_rolling_stock_specifications_inner(&state, args).await;
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 }

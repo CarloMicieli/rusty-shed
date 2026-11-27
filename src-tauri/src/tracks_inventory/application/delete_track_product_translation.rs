@@ -79,7 +79,7 @@ mod tests {
         let mut repo = MockTrackProductRepository::new();
         repo.expect_delete_translation()
             .once()
-            .returning(|_, _| Err(DomainError::Infrastructure("db delete failed".to_string())));
+            .returning(|_, _| Err(DomainError::infrastructure("db delete failed".to_string())));
 
         let mut uow = FakeTrackProductUow::new(repo);
         let input = DeleteTrackProductTranslationInput {
@@ -90,7 +90,7 @@ mod tests {
         let result = DeleteTrackProductTranslationUseCase::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(CommandError::DatabaseError(ref msg)) if msg.contains("db delete failed")),
+            matches!(result, Err(CommandError::DatabaseError { message: ref msg, .. }) if msg.contains("db delete failed")),
             "{result:?}"
         );
     }

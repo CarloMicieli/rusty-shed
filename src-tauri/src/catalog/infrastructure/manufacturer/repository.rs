@@ -102,7 +102,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
         .fetch_optional(&mut *self.executor)
         .await
         .map(|opt| opt.map(|(name, seeded)| (name, seeded != 0)))
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))
+        .map_err(|e| DomainError::infrastructure(e.to_string()))
     }
 
     async fn relink_railway_models(
@@ -144,7 +144,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
     async fn find_usage_count(&mut self, id: &ManufacturerId) -> Result<i64, DomainError> {
         manufacturer_usage_count(&mut *self.executor, id.as_ref())
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))
+            .map_err(|e| DomainError::infrastructure(e.to_string()))
     }
 
     async fn insert(
@@ -169,11 +169,11 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
             if let sqlx::Error::Database(db_err) = &err
                 && db_err.is_unique_violation()
             {
-                return Err(DomainError::Conflict(
+                return Err(DomainError::conflict(
                     "A manufacturer with this name already exists".to_string(),
                 ));
             }
-            return Err(DomainError::Infrastructure(err.to_string()));
+            return Err(DomainError::infrastructure(err.to_string()));
         }
 
         let row = sqlx::query_as::<_, ManufacturerRow>(
@@ -186,7 +186,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
         .bind(id.as_ref())
         .fetch_one(&mut *self.executor)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         Manufacturer::try_from(row)
     }
@@ -215,11 +215,11 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
             if let sqlx::Error::Database(db_err) = &err
                 && db_err.is_unique_violation()
             {
-                return Err(DomainError::Conflict(
+                return Err(DomainError::conflict(
                     "A manufacturer with this name already exists".to_string(),
                 ));
             }
-            return Err(DomainError::Infrastructure(err.to_string()));
+            return Err(DomainError::infrastructure(err.to_string()));
         }
 
         let row = sqlx::query_as::<_, ManufacturerRow>(
@@ -232,7 +232,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
         .bind(id.as_ref())
         .fetch_one(&mut *self.executor)
         .await
-        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        .map_err(|e| DomainError::infrastructure(e.to_string()))?;
 
         Manufacturer::try_from(row)
     }
@@ -527,6 +527,6 @@ mod tests {
             )
             .await;
 
-        assert!(matches!(result, Err(DomainError::Conflict(_))));
+        assert!(matches!(result, Err(DomainError::Conflict { .. })));
     }
 }

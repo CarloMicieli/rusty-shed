@@ -85,12 +85,12 @@ mod tests {
         let mut repo = MockTrainsRepository::new();
         repo.expect_assign_rolling_stock_to_element()
             .times(1)
-            .returning(|_, _| Err(DomainError::Infrastructure("db down".into())));
+            .returning(|_, _| Err(DomainError::infrastructure("db down")));
 
         let mut uow = MockAppUow::new().with_trains_repo(repo);
         let result =
             AssignRollingStockToElementUseCase::execute(&mut uow, "el-1".into(), None).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

@@ -180,7 +180,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             "railcar_type" => "UPDATE rolling_stocks SET railcar_type = ?1 WHERE id = ?2",
             "service_level" => "UPDATE rolling_stocks SET service_level = ?1 WHERE id = ?2",
             _ => {
-                return Err(DomainError::Validation(format!(
+                return Err(DomainError::validation(format!(
                     "unsupported rolling-stock column update: {column}"
                 )));
             }
@@ -491,7 +491,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         "#;
 
         let id = RailwayModelId::new(&railway_model.manufacturer_id, &railway_model.product_code)
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         sqlx::query(insert_cmd)
             .bind(&id)
@@ -882,7 +882,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
 
         if let Some(serde_json::Value::String(scale_str)) = map.get("scale") {
             let scale = Scale::try_from(scale_str.as_str())
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
             let update_cmd = r#"UPDATE railway_models SET scale = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
             sqlx::query(update_cmd)
                 .bind(&scale)
@@ -1152,7 +1152,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 .bind(id.as_ref())
                 .fetch_one(&mut *self.executor)
                 .await
-                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                .map_err(|e| DomainError::infrastructure(e.to_string()))?;
         Ok(count > 0)
     }
 
@@ -1342,7 +1342,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
             .map(|row| {
                 let id_str: String = row.get("railway_model_id");
                 RailwayModelId::try_from(id_str.as_str())
-                    .map_err(|e| DomainError::Validation(e.to_string()))
+                    .map_err(|e| DomainError::validation(e.to_string()))
             })
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -1573,7 +1573,7 @@ mod tests {
 
         let result = repo.save(&mut aggregate).await;
 
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[sqlx::test(

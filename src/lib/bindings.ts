@@ -66,14 +66,14 @@ export const commands = {
 	getCouplerTypes: (socket: string | null, options?: InvokeOptions) => __TAURI_INVOKE<CouplerType[]>("get_coupler_types", { socket }, options),
 	/**
 	 *  Set (or clear) the installed coupler on an owned rolling stock.
-	 * 
+	 *
 	 *  After updating `current_coupler_id`, a `CouplerChange` maintenance event is
 	 *  automatically recorded on the rolling stock's maintenance card if one exists.
-	 * 
+	 *
 	 *  # Arguments
 	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
 	 *  * `args` - The owned rolling stock id and the coupler type id to install (or `null`).
-	 * 
+	 *
 	 *  # Returns
 	 *  - `Ok(())` on success.
 	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
@@ -87,16 +87,16 @@ export const commands = {
 	updateCollectionItem: (args: UpdateCollectionItemArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<null>("update_collection_item", { args }, options),
 	/**
 	 *  Tauri command to remove an item from the collection.
-	 * 
+	 *
 	 *  This handler constructs the repository and command handler, executes the command
 	 *  asynchronously and returns the removed `CollectionItemId` on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 * 
+	 *
 	 *  Parameters:
 	 *  * `state`: Tauri-managed application state which provides a database pool.
 	 *  * `args`: Input parameters for removing the collection item.
-	 * 
+	 *
 	 *  Returns:
 	 *  - `Ok(CollectionItemId)` when removal succeeds.
 	 *  - `Err(CommandError)` when the use-case returns an error.
@@ -111,15 +111,15 @@ export const commands = {
 	addRailwayModelToWishList: (args: AddRailwayModelToWishListArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<null>("add_railway_model_to_wish_list", { args }, options),
 	/**
 	 *  Tauri command to retrieve the default collection.
-	 * 
+	 *
 	 *  This handler constructs the repository and query handler, executes the query
 	 *  asynchronously and returns the `CollectionView` on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 * 
+	 *
 	 *  Parameters:
 	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 * 
+	 *
 	 *  Returns:
 	 *  - `Ok(CollectionView)` when retrieval succeeds.
 	 *  - `Err(CommandError)` when the use-case returns an error.
@@ -128,15 +128,15 @@ export const commands = {
 	/**
 	 *  Tauri command to retrieve the current depot view: which is the list
 	 *  of rolling stocks part of the collection.
-	 * 
+	 *
 	 *  This handler constructs the repository and query handler, executes the query
 	 *  asynchronously and returns the `DepotView` on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 * 
+	 *
 	 *  Parameters:
 	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 * 
+	 *
 	 *  Returns:
 	 *  - `Ok(DepotView)` when retrieval succeeds.
 	 *  - `Err(CommandError)` when the use-case returns an error.
@@ -168,43 +168,43 @@ export const commands = {
 	updateWishlistItem: (args: UpdateWishlistItemArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<WishlistItem_Serialize>("update_wishlist_item", { args }, options),
 	/**
 	 *  Command handler to retrieve maintenance cards that are due or overdue.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
-	 * 
+	 *
 	 *  # Returns
 	 *  A vector of `MaintenanceCardView` representing the due maintenance cards.
 	 */
 	getMaintenanceDashboard: (options?: InvokeOptions) => __TAURI_INVOKE<MaintenanceCardView_Serialize[]>("get_maintenance_dashboard", undefined, options),
 	/**
 	 *  Command handler to retrieve a single maintenance card by its ID.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `card_id`: The ID of the maintenance card to retrieve.
-	 * 
+	 *
 	 *  # Returns
 	 *  The `MaintenanceCardView` if found, or `None`.
 	 */
 	getMaintenanceCard: (cardId: MaintenanceCardId, options?: InvokeOptions) => __TAURI_INVOKE<MaintenanceCardView_Serialize | null>("get_maintenance_card", { cardId }, options),
 	/**
 	 *  Command handler to add a maintenance event and update the card.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `input`: The arguments required to add a maintenance event.
-	 * 
+	 *
 	 *  # Returns
 	 *  nothing on success.
 	 */
 	addMaintenanceEvent: (input: AddMaintenanceArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<null>("add_maintenance_event", { input }, options),
 	/**
 	 *  Command handler to create a new maintenance card for the given owned rolling stock.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `owned_rolling_stock_id`: The ID of the owned rolling stock.
-	 * 
+	 *
 	 *  # Returns
 	 *  The ID of the newly created maintenance card.
 	 */
@@ -213,15 +213,15 @@ export const commands = {
 	deleteMaintenanceEvent: (eventId: string, options?: InvokeOptions) => __TAURI_INVOKE<null>("delete_maintenance_event", { eventId }, options),
 	/**
 	 *  Command handler to retrieve all sellers.
-	 * 
+	 *
 	 *  This handler constructs the repository and query handler, executes the query
 	 *  asynchronously and returns the list of `Seller` on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 * 
+	 *
 	 *  Parameters:
 	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 * 
+	 *
 	 *  Returns:
 	 *  - `Ok(Vec<Seller>)` when retrieval succeeds.
 	 *  - `Err(CommandError)` when the use-case returns an error.
@@ -229,16 +229,16 @@ export const commands = {
 	getSellers: (options?: InvokeOptions) => __TAURI_INVOKE<SellerView_Serialize[]>("get_sellers", undefined, options),
 	/**
 	 *  Command handler to retrieve a seller by its identifier.
-	 * 
+	 *
 	 *  This handler constructs the repository and query handler, executes the query
 	 *  asynchronously and returns the `Seller` on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 *     
+	 *
 	 *  Parameters:
 	 *  * `state`: Tauri-managed application state which provides a database pool.
 	 *  * `id`: The identifier of the seller to retrieve.
-	 *          
+	 *
 	 *  Returns:
 	 *  - `Ok(Some(Seller))` when a matching seller exists,
 	 *  - `Ok(None)` when no matching row is found
@@ -247,15 +247,15 @@ export const commands = {
 	getSellerById: (id: SellerId, options?: InvokeOptions) => __TAURI_INVOKE<SellerView_Serialize | null>("get_seller_by_id", { id }, options),
 	/**
 	 *  Command handler to create a new seller.
-	 * 
+	 *
 	 *  This handler constructs the repository and command handler, executes the command
 	 *  asynchronously and returns the created `Seller` on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 * 
+	 *
 	 *  * `state`: Tauri-managed application state which provides a database pool.
 	 *  * `payload`: The payload containing new seller information.
-	 * 
+	 *
 	 *  Returns:
 	 *  - `Ok(Seller)` when creation succeeds.
 	 *  - `Err(CommandError)` when the use-case returns an error.
@@ -263,17 +263,17 @@ export const commands = {
 	createSeller: (payload: CreateSellerPayload_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<Seller_Serialize>("create_seller", { payload }, options),
 	/**
 	 *  Command handler to update an existing seller.
-	 * 
+	 *
 	 *  This handler constructs the repository and command handler, executes the command
 	 *  asynchronously and returns the updated `
 	 *  Seller` on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 * 
+	 *
 	 *  Parameters:
 	 *  * `state`: Tauri-managed application state which provides a database pool.
 	 *  * `payload`: The payload containing updated seller information.
-	 * 
+	 *
 	 *  Returns:
 	 *  - `Ok(Seller)` when the update succeeds.
 	 *  - `Err(CommandError)` when the use-case returns an error.
@@ -281,16 +281,16 @@ export const commands = {
 	updateSeller: (payload: UpdateSellerPayload_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<Seller_Serialize>("update_seller", { payload }, options),
 	/**
 	 *  Command handler to delete a seller by ID.
-	 * 
+	 *
 	 *  This handler constructs the repository and command handler, executes the command
 	 *  asynchronously and returns the number of deleted records on success. On failure, it
 	 *  converts the error into a `CommandError` preserving the error
 	 *  message for logging/debugging.
-	 * 
+	 *
 	 *  Parameters:
 	 *  * `state`: Tauri-managed application state which provides a database pool.
 	 *  * `id`: The identifier of the seller to delete.
-	 *          
+	 *
 	 *  Returns:
 	 *  - `Ok(())` when the deletion succeeds.
 	 *  - `Err(CommandError)` when the use-case returns an error.
@@ -299,77 +299,77 @@ export const commands = {
 	mergeSellers: (args: MergeSellerArgs, options?: InvokeOptions) => __TAURI_INVOKE<SellerMergeResult>("merge_sellers", { args }, options),
 	/**
 	 *  Command handler to create a new track inventory.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `input`: The arguments required to create a new track inventory.
-	 * 
+	 *
 	 *  # Returns
 	 *  the ID of the newly created track inventory.
 	 */
 	createTrackInventory: (input: NewTrackInventoryArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<TrackInventoryId>("create_track_inventory", { input }, options),
 	/**
 	 *  Command handler to rename an existing track inventory.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `input`: The arguments required to rename a track inventory.
-	 * 
+	 *
 	 *  # Returns
 	 *  nothing on success.
 	 */
 	renameTrackInventory: (input: RenameTrackInventoryArgs, options?: InvokeOptions) => __TAURI_INVOKE<null>("rename_track_inventory", { input }, options),
 	/**
 	 *  Command handler to add a purchase to an existing track inventory.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `input`: The arguments required to add a track purchase.
-	 * 
+	 *
 	 *  # Returns
 	 *  the ID of the newly added track purchase.
 	 */
 	addTrackPurchase: (input: AddTrackPurchaseArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<TrackPurchaseId>("add_track_purchase", { input }, options),
 	/**
 	 *  Command handler to set quantity for a track item in an inventory.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `input`: The arguments required to set the track item quantity.
-	 * 
+	 *
 	 *  # Returns
 	 *  nothing on success.
 	 */
 	setTrackItemQuantity: (input: SetTrackItemQuantityArgs, options?: InvokeOptions) => __TAURI_INVOKE<null>("set_track_item_quantity", { input }, options),
 	/**
 	 *  Command handler to set the required quantity for a track item.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `input`: The arguments specifying inventory, track, and required quantity.
-	 * 
+	 *
 	 *  # Returns
 	 *  Unit type on success.
 	 */
 	setItemRequired: (input: SetItemRequiredArgs, options?: InvokeOptions) => __TAURI_INVOKE<null>("set_item_required", { input }, options),
 	/**
 	 *  Command handler to delete a track inventory.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `id`: The ID of the inventory to delete.
-	 * 
+	 *
 	 *  # Returns
 	 *  nothing on success.
 	 */
 	deleteTrackInventory: (id: TrackInventoryId, options?: InvokeOptions) => __TAURI_INVOKE<null>("delete_track_inventory", { id }, options),
 	/**
 	 *  Command handler to create a new track product.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `input`: The arguments required to create a new track product.
-	 * 
+	 *
 	 *  # Returns
 	 *  the ID of the newly created track product.
 	 */
@@ -384,31 +384,31 @@ export const commands = {
 	deleteTrackProductTranslation: (input: DeleteTrackProductTranslationArgs, options?: InvokeOptions) => __TAURI_INVOKE<null>("delete_track_product_translation", { input }, options),
 	/**
 	 *  Query handler to fetch all track inventories with summary information.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
-	 * 
+	 *
 	 *  # Returns
 	 *  A list of track inventory summaries.
 	 */
 	getTrackInventories: (options?: InvokeOptions) => __TAURI_INVOKE<TrackInventoryListItem_Serialize[]>("get_track_inventories", undefined, options),
 	/**
 	 *  Query handler to fetch a single track inventory with full details.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
 	 *  - `id`: The ID of the inventory to fetch.
-	 * 
+	 *
 	 *  # Returns
 	 *  The complete inventory view with items and purchases.
 	 */
 	getTrackInventory: (id: TrackInventoryId, options?: InvokeOptions) => __TAURI_INVOKE<TrackInventoryView_Serialize>("get_track_inventory", { id }, options),
 	/**
 	 *  Query handler to fetch all track products.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state`: The application state.
-	 * 
+	 *
 	 *  # Returns
 	 *  A list of all track products available.
 	 */
@@ -431,28 +431,28 @@ export const commands = {
 	getInstallableRollingStocks: (options?: InvokeOptions) => __TAURI_INVOKE<InstallableRollingStockView_Serialize[]>("get_installable_rolling_stocks", undefined, options),
 	/**
 	 *  Get a preview of what will be included in the export.
-	 * 
+	 *
 	 *  Returns counts for each entity type and estimated archive size.
 	 */
 	getExportPreview: (options?: InvokeOptions) => __TAURI_INVOKE<ExportPreview>("get_export_preview", undefined, options),
 	/**
 	 *  Open the native file save dialog to select where to save the export.
-	 * 
+	 *
 	 *  Returns the selected path as a string, or null if the user cancelled.
 	 */
 	openExportFileDialog: (options?: InvokeOptions) => __TAURI_INVOKE<string | null>("open_export_file_dialog", undefined, options),
 	/**
 	 *  Execute the export operation.
-	 * 
+	 *
 	 *  Exports all collection data to a ZIP archive at the specified path.
-	 * 
+	 *
 	 *  # Arguments
 	 *  * `destination_path` - Full path for the output archive (e.g. `/home/user/backup.zip`)
 	 */
 	executeExport: (destinationPath: string, options?: InvokeOptions) => __TAURI_INVOKE<ExportResult>("execute_export", { destinationPath }, options),
 	/**
 	 *  Analyze an import package archive.
-	 * 
+	 *
 	 *  This command:
 	 *  1. Validates the archive format
 	 *  2. Extracts and validates the manifest
@@ -462,7 +462,7 @@ export const commands = {
 	analyzeImportPackage: (args: AnalyzeImportPackageArgs, options?: InvokeOptions) => __TAURI_INVOKE<AnalyzeImportPackageResponse>("analyze_import_package", { args }, options),
 	/**
 	 *  Get a preview of the import before execution.
-	 * 
+	 *
 	 *  This command:
 	 *  1. Loads the existing session
 	 *  2. Checks for duplicate records
@@ -471,7 +471,7 @@ export const commands = {
 	getImportPreview: (args: GetImportPreviewArgs, options?: InvokeOptions) => __TAURI_INVOKE<ImportPreviewResponse_Serialize>("get_import_preview", { args }, options),
 	/**
 	 *  Execute the import operation.
-	 * 
+	 *
 	 *  This command:
 	 *  1. Loads the validated session and manifest
 	 *  2. Checks for duplicates and skips them
@@ -481,7 +481,7 @@ export const commands = {
 	executeImport: (args: ExecuteImportArgs, options?: InvokeOptions) => __TAURI_INVOKE<ImportResultResponse_Serialize>("execute_import", { args }, options),
 	/**
 	 *  Cancel an import session.
-	 * 
+	 *
 	 *  This command:
 	 *  1. Finds the session
 	 *  2. Transitions it to failed state
@@ -490,7 +490,7 @@ export const commands = {
 	cancelImportSession: (args: CancelImportSessionArgs, options?: InvokeOptions) => __TAURI_INVOKE<CancelImportSessionResponse>("cancel_import_session", { args }, options),
 	/**
 	 *  Tauri command to get the current budget configuration.
-	 * 
+	 *
 	 *  Returns `None` if no configuration has been set yet.
 	 */
 	getBudgetConfig: (options?: InvokeOptions) => __TAURI_INVOKE<BudgetConfigDto | null>("get_budget_config", undefined, options),
@@ -498,14 +498,14 @@ export const commands = {
 	setBudgetConfig: (args: SetBudgetConfigArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<BudgetConfigDto>("set_budget_config", { args }, options),
 	/**
 	 *  Tauri command to get monthly budget records for a year.
-	 * 
+	 *
 	 *  Returns 12 monthly budget records with rollover calculations.
 	 *  If year is not specified, uses the current year.
 	 */
 	getMonthlyBudgetRecords: (args: GetMonthlyBudgetRecordsArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<MonthlyBudgetRecordDto[]>("get_monthly_budget_records", { args }, options),
 	/**
 	 *  Tauri command to get budget dashboard summary.
-	 * 
+	 *
 	 *  Returns dashboard data for widgets (donut, bar chart, heatmap).
 	 *  Budget-specific fields will be None if budget is not configured, but spending data
 	 *  will still be populated using the user's preferred currency from settings.
@@ -513,25 +513,25 @@ export const commands = {
 	getBudgetDashboard: (options?: InvokeOptions) => __TAURI_INVOKE<BudgetDashboardSummary_Serialize>("get_budget_dashboard", undefined, options),
 	/**
 	 *  Tauri command to get the Finance page bootstrap payload.
-	 * 
+	 *
 	 *  Returns the config, dashboard summary, and selected-year monthly records in a single
 	 *  response so the Finance page can hydrate without a request waterfall.
 	 */
 	getBudgetBootstrap: (args: GetBudgetBootstrapArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<BudgetBootstrapDto_Serialize>("get_budget_bootstrap", { args }, options),
 	/**
 	 *  Tauri command to add a one-time budget injection.
-	 * 
+	 *
 	 *  # Arguments
 	 *  * `state` - App state for database access
 	 *  * `args` - Arguments containing year, month, amount, and optional reason
-	 * 
+	 *
 	 *  # Returns
 	 *  The created extra budget entry as a DTO.
 	 */
 	addExtraBudget: (args: AddExtraBudgetArgs_Deserialize, options?: InvokeOptions) => __TAURI_INVOKE<ExtraBudgetDto_Serialize>("add_extra_budget", { args }, options),
 	/**
 	 *  Tauri command to remove an extra budget entry.
-	 * 
+	 *
 	 *  # Arguments
 	 *  * `state` - App state for database access
 	 *  * `args` - Arguments containing the extra budget ID
@@ -539,22 +539,22 @@ export const commands = {
 	removeExtraBudget: (args: RemoveExtraBudgetArgs, options?: InvokeOptions) => __TAURI_INVOKE<null>("remove_extra_budget", { args }, options),
 	/**
 	 *  Tauri command to get all extra budget entries for a specific year.
-	 * 
+	 *
 	 *  # Arguments
 	 *  * `state` - App state for database access
 	 *  * `args` - Arguments containing the year
-	 * 
+	 *
 	 *  # Returns
 	 *  List of extra budget entries for the specified year.
 	 */
 	getExtraBudgets: (args: GetExtraBudgetsArgs, options?: InvokeOptions) => __TAURI_INVOKE<ExtraBudgetDto_Serialize[]>("get_extra_budgets", { args }, options),
 	/**
 	 *  Tauri command to get quarterly summaries with category breakdown.
-	 * 
+	 *
 	 *  # Arguments
 	 *  * `state` - App state for database access
 	 *  * `args` - Arguments containing year and optional currency
-	 * 
+	 *
 	 *  # Returns
 	 *  List of quarterly summaries for the specified year, each with category breakdown.
 	 */
@@ -577,23 +577,23 @@ export const commands = {
 	cloudBackupGetSyncStatus: (options?: InvokeOptions) => __TAURI_INVOKE<SyncStatusResponse_Serialize>("cloud_backup_get_sync_status", undefined, options),
 	/**
 	 *  Get the image for a railway model.
-	 * 
+	 *
 	 *  Returns either the path to the image file (if found) or an HTML/CSS
 	 *  placeholder (if no image exists).
-	 * 
+	 *
 	 *  # Arguments
-	 * 
+	 *
 	 *  * `state` - Application state containing models directory path
 	 *  * `railway_model_id` - The model ID to retrieve an image for
-	 * 
+	 *
 	 *  # Returns
-	 * 
+	 *
 	 *  Returns `RailwayModelImageResponse` with either:
 	 *  - `image_path` set if image found
 	 *  - `placeholder_html` set if no image found
-	 * 
+	 *
 	 *  # Errors
-	 * 
+	 *
 	 *  Returns `CommandError` if:
 	 *  - Path validation fails (security)
 	 *  - I/O errors occur
@@ -602,18 +602,18 @@ export const commands = {
 	getRailwayModelImage: (railwayModelId: RailwayModelId, options?: InvokeOptions) => __TAURI_INVOKE<RailwayModelImageResponse_Serialize>("get_railway_model_image", { railwayModelId }, options),
 	/**
 	 *  Upload a model image from a file path (file explorer selection).
-	 * 
+	 *
 	 *  # Arguments
-	 * 
+	 *
 	 *  * `state` - Application state containing models directory path
 	 *  * `args` - Upload arguments (model ID and file path)
-	 * 
+	 *
 	 *  # Returns
-	 * 
+	 *
 	 *  Returns `Ok(())` on success
-	 * 
+	 *
 	 *  # Errors
-	 * 
+	 *
 	 *  Returns `CommandError` if:
 	 *  - Model doesn't exist
 	 *  - File validation fails (format, size)
@@ -622,18 +622,18 @@ export const commands = {
 	uploadModelImage: (args: UploadModelImageArgs, options?: InvokeOptions) => __TAURI_INVOKE<null>("upload_model_image", { args }, options),
 	/**
 	 *  Upload a model image from bytes (drag & drop).
-	 * 
+	 *
 	 *  # Arguments
-	 * 
+	 *
 	 *  * `state` - Application state containing models directory path
 	 *  * `args` - Upload arguments (model ID, filename, file data)
-	 * 
+	 *
 	 *  # Returns
-	 * 
+	 *
 	 *  Returns `Ok(())` on success
-	 * 
+	 *
 	 *  # Errors
-	 * 
+	 *
 	 *  Returns `CommandError` if:
 	 *  - Model doesn't exist
 	 *  - File validation fails (format, size)
@@ -642,18 +642,18 @@ export const commands = {
 	uploadModelImageBytes: (args: UploadModelImageBytesArgs, options?: InvokeOptions) => __TAURI_INVOKE<null>("upload_model_image_bytes", { args }, options),
 	/**
 	 *  Delete a model image.
-	 * 
+	 *
 	 *  # Arguments
-	 * 
+	 *
 	 *  * `state` - Application state containing models directory path
 	 *  * `args` - Delete arguments (model ID)
-	 * 
+	 *
 	 *  # Returns
-	 * 
+	 *
 	 *  Returns `Ok(())` on success (idempotent - no error if image doesn't exist)
-	 * 
+	 *
 	 *  # Errors
-	 * 
+	 *
 	 *  Returns `CommandError` if:
 	 *  - Model doesn't exist
 	 *  - Storage operations fail
@@ -670,7 +670,7 @@ export const commands = {
 	getLocale: (options?: InvokeOptions) => __TAURI_INVOKE<string | null>("get_locale", undefined, options),
 	/**
 	 *  Export the database to a user-selected file location.
-	 * 
+	 *
 	 *  # Errors
 	 *  Returns [`CommandError`] if the destination path is empty, the directory does not exist,
 	 *  or the VACUUM INTO operation fails.
@@ -678,7 +678,7 @@ export const commands = {
 	exportDatabase: (args: ExportDatabaseArgs, options?: InvokeOptions) => __TAURI_INVOKE<ExportDatabaseResponse>("export_database", { args }, options),
 	/**
 	 *  Import (restore) the database from a user-selected backup file.
-	 * 
+	 *
 	 *  # Errors
 	 *  Returns [`CommandError`] if the source path is empty, confirmation is wrong,
 	 *  the file is not a valid SQLite database, or the copy fails.
@@ -686,11 +686,11 @@ export const commands = {
 	importDatabase: (args: ImportDatabaseArgs, options?: InvokeOptions) => __TAURI_INVOKE<ImportDatabaseResponse>("import_database", { args }, options),
 	/**
 	 *  Perform a cross-domain full-text search over the user's collection and wishlist.
-	 * 
+	 *
 	 *  # Arguments
 	 *  - `state` - Tauri-managed application state providing the DB pool.
 	 *  - `args`  - Validated search input (query string and locale).
-	 * 
+	 *
 	 *  # Returns
 	 *  An ordered list of at most 50 `GlobalSearchResultView` items, ranked by
 	 *  FTS5 BM25 relevance. A model appearing in both collection and wishlist
@@ -946,7 +946,7 @@ export type AddRailwayModelToWishListArgs_Serialize = {
 
 /**
  *  Result returned by `add_rolling_stock_to_model`.
- * 
+ *
  *  Contains the catalog rolling stock ID and, when the model is part of a
  *  collection, the owned rolling stock ID created for that collection item.
  *  When the model exists only in a wishlist there is no collection ownership
@@ -956,7 +956,7 @@ export type AddRollingStockResult = AddRollingStockResult_Serialize | AddRolling
 
 /**
  *  Result returned by `add_rolling_stock_to_model`.
- * 
+ *
  *  Contains the catalog rolling stock ID and, when the model is part of a
  *  collection, the owned rolling stock ID created for that collection item.
  *  When the model exists only in a wishlist there is no collection ownership
@@ -971,7 +971,7 @@ export type AddRollingStockResult_Deserialize = {
 
 /**
  *  Result returned by `add_rolling_stock_to_model`.
- * 
+ *
  *  Contains the catalog rolling stock ID and, when the model is part of a
  *  collection, the owned rolling stock ID created for that collection item.
  *  When the model exists only in a wishlist there is no collection ownership
@@ -986,14 +986,14 @@ export type AddRollingStockResult_Serialize = {
 
 /**
  *  Arguments for adding a new rolling stock variant to an existing Railway Model.
- * 
+ *
  *  Follows ADR-8: Args suffix, derives Debug/Clone/Validate/Type/Deserialize.
  */
 export type AddRollingStockToModelArgs = AddRollingStockToModelArgs_Serialize | AddRollingStockToModelArgs_Deserialize;
 
 /**
  *  Arguments for adding a new rolling stock variant to an existing Railway Model.
- * 
+ *
  *  Follows ADR-8: Args suffix, derives Debug/Clone/Validate/Type/Deserialize.
  */
 export type AddRollingStockToModelArgs_Deserialize = {
@@ -1033,7 +1033,7 @@ export type AddRollingStockToModelArgs_Deserialize = {
 
 /**
  *  Arguments for adding a new rolling stock variant to an existing Railway Model.
- * 
+ *
  *  Follows ADR-8: Args suffix, derives Debug/Clone/Validate/Type/Deserialize.
  */
 export type AddRollingStockToModelArgs_Serialize = {
@@ -1229,22 +1229,22 @@ export type AssignRollingStockToElementArgs_Serialize = {
 
 /**
  *  Lifecycle availability status of a railway model.
- * 
+ *
  *  The enum variants represent common product lifecycle states. When
  *  serialized via `serde` the variants use SCREAMING_SNAKE_CASE; likewise
  *  string parsing via `strum` expects SCREAMING_SNAKE_CASE but is
  *  case-insensitive.
  */
-export type AvailabilityStatus = 
+export type AvailabilityStatus =
 /**  The railway model is just announced and not yet available. */
-"ANNOUNCED" | 
+"ANNOUNCED" |
 /**  The railway model is available for purchase. */
-"AVAILABLE" | 
+"AVAILABLE" |
 /**
  *  The railway model production / release has been cancelled or delayed
  *  (not proceeding as previously announced).
  */
-"CANCELLED" | 
+"CANCELLED" |
 /**  The railway model has been discontinued and is no longer produced. */
 "DISCONTINUED";
 
@@ -1267,33 +1267,33 @@ export type BackupListResponse = {
 
 /**
  *  The construction type of rolling stock's body shell.
- * 
+ *
  *  This enum describes the material / manufacturing technique used for the outer
  *  body shell of a model (for example, a plastic injection-moulded shell vs a
  *  metal die-cast shell). It is used in technical specifications to describe
  *  the build of the vehicle's exterior.
  */
-export type BodyShellType = 
+export type BodyShellType =
 /**  Plastic body shell construction (typically injection moulded plastic). */
-"PLASTIC" | 
+"PLASTIC" |
 /**  Metal die-cast body shell construction (heavier, metal cast components). */
 "METAL_DIE_CAST";
 
 /**
  *  The condition of the original packaging box for a collectible item.
- * 
+ *
  *  ### Notes
  *  In the railway hobby, the box can sometimes represent 30%–50% of the total value, especially for vintage brands like Hornby Dublo or Lionel.
  */
-export type BoxCondition = 
+export type BoxCondition =
 /**  Box is crisp, no tears, no "shelf wear." */
-"ORIGINAL_MINT" | 
+"ORIGINAL_MINT" |
 /**  Some corner scuffing or minor creases. */
-"ORIGINAL_GOOD" | 
+"ORIGINAL_GOOD" |
 /**  Significant tears, tape repairs, or faded colors. */
-"ORIGINAL_WORN" | 
+"ORIGINAL_WORN" |
 /**  Not the original box, but a suitable storage box. */
-"REPLACEMENT_BOX" | 
+"REPLACEMENT_BOX" |
 /**  "Loose" model with no packaging at all. */
 "NO_BOX";
 
@@ -1354,9 +1354,9 @@ export type BudgetDashboardSummary_Serialize = {
 };
 
 /**  Budget mode - determines how the budget is set (yearly or monthly). */
-export type BudgetMode = 
+export type BudgetMode =
 /**  Budget is configured as a yearly amount (divided by 12 for monthly). */
-"YEARLY" | 
+"YEARLY" |
 /**  Budget is configured as a monthly amount (multiplied by 12 for yearly). */
 "MONTHLY";
 
@@ -1375,37 +1375,37 @@ export type CancelImportSessionResponse = {
 };
 
 /**  The enumeration of the railway model categories. */
-export type Category = 
+export type Category =
 /**
  *  Independent traction units powered by steam, diesel, or electricity
  *  used to pull unpowered vehicles.
  */
-"LOCOMOTIVES" | 
+"LOCOMOTIVES" |
 /**
  *  Pre-configured groups of permanently or semi-permanently coupled
  *  vehicles, such as high-speed trains.
  */
-"TRAIN_SETS" | 
+"TRAIN_SETS" |
 /**
  *  All-in-one entry-level packages typically including a train,
  *  track, and a power controller.
  */
-"STARTER_SETS" | 
+"STARTER_SETS" |
 /**
  *  Vehicles designed for the transport of physical goods,
  *  raw materials, or equipment.
  */
-"FREIGHT_CARS" | 
+"FREIGHT_CARS" |
 /**
  *  Vehicles designed for the transport of people, typically
  *  including seating, lighting, and climate control.
  */
-"PASSENGER_CARS" | 
+"PASSENGER_CARS" |
 /**
  *  Self-propelled train sets consisting of multiple carriages
  *  using electricity as their motive power.
  */
-"ELECTRIC_MULTIPLE_UNITS" | 
+"ELECTRIC_MULTIPLE_UNITS" |
 /**
  *  Lightweight, self-propelled vehicles (usually a single unit)
  *  designed for passenger service on branch lines.
@@ -1435,15 +1435,15 @@ export type ChangeDecoderArgs = {
 
 /**
  *  The construction type of a rolling stock's chassis.
- * 
+ *
  *  This enum indicates the material or manufacturing technique used for the
  *  chassis (the structural frame and underbody) of a model. It is part of
  *  the technical specifications describing the build quality and expected
  *  properties of the model's underframe.
  */
-export type ChassisType = 
+export type ChassisType =
 /**  Plastic chassis construction (typically injection-moulded plastic). */
-"PLASTIC" | 
+"PLASTIC" |
 /**  Metal die-cast chassis construction (heavier, metal cast chassis parts). */
 "METAL_DIE_CAST";
 
@@ -1487,7 +1487,7 @@ export type CheckDuplicateAddressResult_Serialize = {
 
 /**
  *  Identifier for a collection.
- * 
+ *
  *  This newtype wraps a `String` containing a TRN of the form
  *  `trn:collection:{id}`. The identifier follows standard TRN conventions.
  */
@@ -1495,7 +1495,7 @@ export type CollectionId = string;
 
 /**
  *  Identifier for a single item in a collection.
- * 
+ *
  *  This newtype wraps a `String` containing a TRN of the form
  *  `trn:collection-item:{uuid}`. The UUID suffix is validated on construction.
  */
@@ -1505,72 +1505,72 @@ export type CollectionItemId = string;
 export type CollectionItemUpdateArgs = CollectionItemUpdateArgs_Serialize | CollectionItemUpdateArgs_Deserialize;
 
 /**  Tagged payload for a collection item update operation. */
-export type CollectionItemUpdateArgs_Deserialize = 
+export type CollectionItemUpdateArgs_Deserialize =
 /**  Set or clear seller id in purchase info. */
 { kind: "seller"; data: {
 	seller_id?: string | null,
-} } | 
+} } |
 /**  Set or clear purchased price in minor units. */
 { kind: "price"; data: {
 	amount?: number | null,
 	currency?: string | null,
-} } | 
+} } |
 /**  Set or clear purchase date. */
 { kind: "purchaseDate"; data: {
 	purchase_date?: string | null,
-} } | 
+} } |
 /**  Set or clear added date. */
 { kind: "addedDate"; data: {
 	added_date?: string | null,
-} } | 
+} } |
 /**  Set or clear notes. */
 { kind: "notes"; data: {
 	notes?: string | null,
-} } | 
+} } |
 /**  Set or clear purchase condition. */
 { kind: "purchaseCondition"; data: {
 	purchase_condition?: string | null,
-} } | 
+} } |
 /**  Set or clear model condition. */
 { kind: "modelCondition"; data: {
 	model_condition?: string | null,
-} } | 
+} } |
 /**  Set or clear box condition. */
 { kind: "boxCondition"; data: {
 	box_condition?: string | null,
 } };
 
 /**  Tagged payload for a collection item update operation. */
-export type CollectionItemUpdateArgs_Serialize = 
+export type CollectionItemUpdateArgs_Serialize =
 /**  Set or clear seller id in purchase info. */
 { kind: "seller"; data: {
 	seller_id: string | null,
-} } | 
+} } |
 /**  Set or clear purchased price in minor units. */
 { kind: "price"; data: {
 	amount: number | null,
 	currency: string | null,
-} } | 
+} } |
 /**  Set or clear purchase date. */
 { kind: "purchaseDate"; data: {
 	purchase_date: string | null,
-} } | 
+} } |
 /**  Set or clear added date. */
 { kind: "addedDate"; data: {
 	added_date: string | null,
-} } | 
+} } |
 /**  Set or clear notes. */
 { kind: "notes"; data: {
 	notes: string | null,
-} } | 
+} } |
 /**  Set or clear purchase condition. */
 { kind: "purchaseCondition"; data: {
 	purchase_condition: string | null,
-} } | 
+} } |
 /**  Set or clear model condition. */
 { kind: "modelCondition"; data: {
 	model_condition: string | null,
-} } | 
+} } |
 /**  Set or clear box condition. */
 { kind: "boxCondition"; data: {
 	box_condition: string | null,
@@ -1578,11 +1578,11 @@ export type CollectionItemUpdateArgs_Serialize =
 
 /**
  *  A single item view within a user's collection.
- * 
+ *
  *  A `CollectionItemView` represents a reference to a catalog `RailwayModel` along
  *  with ownership-specific data such as the rolling stock instances owned by
  *  the collector and purchase information.
- * 
+ *
  *  It captures the state and details of a specific model as it exists within
  *  the collector's personal collection.
  */
@@ -1590,11 +1590,11 @@ export type CollectionItemView = CollectionItemView_Serialize | CollectionItemVi
 
 /**
  *  A single item view within a user's collection.
- * 
+ *
  *  A `CollectionItemView` represents a reference to a catalog `RailwayModel` along
  *  with ownership-specific data such as the rolling stock instances owned by
  *  the collector and purchase information.
- * 
+ *
  *  It captures the state and details of a specific model as it exists within
  *  the collector's personal collection.
  */
@@ -1623,11 +1623,11 @@ export type CollectionItemView_Deserialize = {
 
 /**
  *  A single item view within a user's collection.
- * 
+ *
  *  A `CollectionItemView` represents a reference to a catalog `RailwayModel` along
  *  with ownership-specific data such as the rolling stock instances owned by
  *  the collector and purchase information.
- * 
+ *
  *  It captures the state and details of a specific model as it exists within
  *  the collector's personal collection.
  */
@@ -1656,7 +1656,7 @@ export type CollectionItemView_Serialize = {
 
 /**
  *  A lightweight representation of a railway model for collection display purposes.
- * 
+ *
  *  This struct captures the essential details of a railway model as needed
  *  for displaying in a collection context, omitting extraneous catalog information.
  */
@@ -1681,7 +1681,7 @@ export type CollectionRailwayModel = {
 
 /**
  *  Lifecycle statistics for the model railway collection.
- * 
+ *
  *  Provides three distinct counts reflecting each lifecycle state, plus
  *  financial aggregates useful for dashboard summaries.
  */
@@ -1689,7 +1689,7 @@ export type CollectionStats = CollectionStats_Serialize | CollectionStats_Deseri
 
 /**
  *  Lifecycle statistics for the model railway collection.
- * 
+ *
  *  Provides three distinct counts reflecting each lifecycle state, plus
  *  financial aggregates useful for dashboard summaries.
  */
@@ -1712,7 +1712,7 @@ export type CollectionStats_Deserialize = {
 
 /**
  *  Lifecycle statistics for the model railway collection.
- * 
+ *
  *  Provides three distinct counts reflecting each lifecycle state, plus
  *  financial aggregates useful for dashboard summaries.
  */
@@ -1735,7 +1735,7 @@ export type CollectionStats_Serialize = {
 
 /**
  *  A statistical summary of a model railway collection.
- * 
+ *
  *  This struct provides a high-level overview of the total quantities
  *  of different types of rolling stock within a specific inventory or sub-collection.
  */
@@ -1748,7 +1748,7 @@ export type CollectionSummary = {
 	freightCarsCount: number,
 	/**
 	 *  The number of complete train sets (e.g., starter sets or fixed formations).
-	 * 
+	 *
 	 *  Note: Depending on implementation, the individual cars within these sets
 	 *  may or may not be included in the other specific counts.
 	 */
@@ -1762,11 +1762,11 @@ export type CollectionSummary = {
 
 /**
  *  Represents a user-owned collection of items.
- * 
+ *
  *  A `Collection` contains identifying information, a few aggregated summary
  *  values and the list of `CollectionItem` entries that make up the
  *  collection. It is intentionally lightweight to keep IPC payloads small.
- * 
+ *
  *  Default behavior:
  *  - `Collection::default()` returns an empty collection with a generated id,
  *    the name "My Collection", a `CollectionSummary::default()` and no
@@ -1777,11 +1777,11 @@ export type CollectionView = CollectionView_Serialize | CollectionView_Deseriali
 
 /**
  *  Represents a user-owned collection of items.
- * 
+ *
  *  A `Collection` contains identifying information, a few aggregated summary
  *  values and the list of `CollectionItem` entries that make up the
  *  collection. It is intentionally lightweight to keep IPC payloads small.
- * 
+ *
  *  Default behavior:
  *  - `Collection::default()` returns an empty collection with a generated id,
  *    the name "My Collection", a `CollectionSummary::default()` and no
@@ -1806,11 +1806,11 @@ export type CollectionView_Deserialize = {
 
 /**
  *  Represents a user-owned collection of items.
- * 
+ *
  *  A `Collection` contains identifying information, a few aggregated summary
  *  values and the list of `CollectionItem` entries that make up the
  *  collection. It is intentionally lightweight to keep IPC payloads small.
- * 
+ *
  *  Default behavior:
  *  - `Collection::default()` returns an empty collection with a generated id,
  *    the name "My Collection", a `CollectionSummary::default()` and no
@@ -1835,7 +1835,7 @@ export type CollectionView_Serialize = {
 
 /**
  *  Application-level error returned by command handlers in the core infrastructure.
- * 
+ *
  *  This enum provides structured error variants that allow the frontend to react
  *  intelligently to different error conditions. Each variant is serializable and
  *  includes enough context for appropriate UI rendering.
@@ -1844,115 +1844,151 @@ export type CommandError = CommandError_Serialize | CommandError_Deserialize;
 
 /**
  *  Application-level error returned by command handlers in the core infrastructure.
- * 
+ *
  *  This enum provides structured error variants that allow the frontend to react
  *  intelligently to different error conditions. Each variant is serializable and
  *  includes enough context for appropriate UI rendering.
  */
-export type CommandError_Deserialize = 
+export type CommandError_Deserialize =
 /**
  *  Represents an error coming from the database layer.
- * 
+ *
  *  The inner `String` should contain a concise, non-sensitive description
  *  of the underlying database failure.
  */
-({ DatabaseError: string }) & { BusinessRule?: never; Conflict?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } | 
+({ DatabaseError: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } |
 /**
  *  Indicates a requested resource was not found.
- * 
+ *
  *  Use this when a query returns no results for a specific ID or criteria.
  *  The inner `String` should describe what resource was not found (e.g., "Wishlist not found").
  */
-({ NotFound: string }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } | 
+({ NotFound: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } |
 /**
  *  Validation error with field-specific messages.
- * 
+ *
  *  The map contains field names as keys and error messages as values.
  *  This allows the frontend to display validation errors next to the appropriate form fields.
  *  Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
  */
-({ ValidationError: { [key in string]: ValidationError_Deserialize[] } }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never } | 
+({ ValidationError: {
+	fields: { [key in string]: ValidationError_Deserialize[] },
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never } |
 /**
  *  Permission denied for the requested operation.
- * 
+ *
  *  Use this when the user lacks sufficient privileges to perform an action.
  */
-({ PermissionDenied: string }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; Unknown?: never; ValidationError?: never } | 
+({ PermissionDenied: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; Unknown?: never; ValidationError?: never } |
 /**
  *  A catch-all for unexpected errors that don't map to a specific variant.
- * 
+ *
  *  Contains a human-readable message and a unique Error ID for log correlation.
  *  Always construct via [`CommandError::unknown()`] to ensure logging.
  */
 ({ Unknown: {
 	message: string,
-	error_id: string,
-} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; ValidationError?: never } | 
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; ValidationError?: never } |
 /**
  *  Indicates a violation of a specific business invariant.
- * 
+ *
  *  **Source:** Triggered by Domain Entities or Use Cases (e.g.,
  *  "Cannot cancel an invoice that has already been paid").
  */
-({ BusinessRule: string }) & { Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } | 
+({ BusinessRule: {
+	message: string,
+	error_id: ErrorId,
+} }) & { Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } |
 /**  Indicates a conflict with existing data (e.g., a unique constraint violation). */
-({ Conflict: string }) & { BusinessRule?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never };
+({ Conflict: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never };
 
 /**
  *  Application-level error returned by command handlers in the core infrastructure.
- * 
+ *
  *  This enum provides structured error variants that allow the frontend to react
  *  intelligently to different error conditions. Each variant is serializable and
  *  includes enough context for appropriate UI rendering.
  */
-export type CommandError_Serialize = 
+export type CommandError_Serialize =
 /**
  *  Represents an error coming from the database layer.
- * 
+ *
  *  The inner `String` should contain a concise, non-sensitive description
  *  of the underlying database failure.
  */
-({ DatabaseError: string }) & { BusinessRule?: never; Conflict?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } | 
+({ DatabaseError: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } |
 /**
  *  Indicates a requested resource was not found.
- * 
+ *
  *  Use this when a query returns no results for a specific ID or criteria.
  *  The inner `String` should describe what resource was not found (e.g., "Wishlist not found").
  */
-({ NotFound: string }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } | 
+({ NotFound: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } |
 /**
  *  Validation error with field-specific messages.
- * 
+ *
  *  The map contains field names as keys and error messages as values.
  *  This allows the frontend to display validation errors next to the appropriate form fields.
  *  Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
  */
-({ ValidationError: { [key in string]: ValidationError_Serialize[] } }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never } | 
+({ ValidationError: {
+	fields: { [key in string]: ValidationError_Serialize[] },
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never } |
 /**
  *  Permission denied for the requested operation.
- * 
+ *
  *  Use this when the user lacks sufficient privileges to perform an action.
  */
-({ PermissionDenied: string }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; Unknown?: never; ValidationError?: never } | 
+({ PermissionDenied: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; Unknown?: never; ValidationError?: never } |
 /**
  *  A catch-all for unexpected errors that don't map to a specific variant.
- * 
+ *
  *  Contains a human-readable message and a unique Error ID for log correlation.
  *  Always construct via [`CommandError::unknown()`] to ensure logging.
  */
 ({ Unknown: {
 	message: string,
-	error_id: string,
-} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; ValidationError?: never } | 
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; ValidationError?: never } |
 /**
  *  Indicates a violation of a specific business invariant.
- * 
+ *
  *  **Source:** Triggered by Domain Entities or Use Cases (e.g.,
  *  "Cannot cancel an invoice that has already been paid").
  */
-({ BusinessRule: string }) & { Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } | 
+({ BusinessRule: {
+	message: string,
+	error_id: ErrorId,
+} }) & { Conflict?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never } |
 /**  Indicates a conflict with existing data (e.g., a unique constraint violation). */
-({ Conflict: string }) & { BusinessRule?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never };
+({ Conflict: {
+	message: string,
+	error_id: ErrorId,
+} }) & { BusinessRule?: never; DatabaseError?: never; NotFound?: never; PermissionDenied?: never; Unknown?: never; ValidationError?: never };
 
 /**  Connection status response */
 export type ConnectionStatusResponse = ConnectionStatusResponse_Serialize | ConnectionStatusResponse_Deserialize;
@@ -1981,10 +2017,10 @@ export type ConnectivityStatus = {
 
 /**
  *  The control method for this railway model.
- * 
+ *
  *  The `Control` enum captures whether a model is DCC-ready, has a decoder
  *  fitted, has a sound-equipped decoder, or has no DCC support at all.
- * 
+ *
  *  Variants:
  *  - `DccReady`: The model is prepared for a DCC decoder (e.g. a standard
  *    decoder plug is present) but no decoder is installed.
@@ -1993,19 +2029,19 @@ export type ConnectivityStatus = {
  *  - `NoDcc`: The model does not support DCC (no standard interface present);
  *    installation may require model-specific wiring or a hardwired decoder.
  */
-export type Control = 
+export type Control =
 /**  The model can be fitted with a dcc decoder. */
-"DCC_READY" | 
+"DCC_READY" |
 /**  The model has a dcc decoder installed. */
-"DCC_FITTED" | 
+"DCC_FITTED" |
 /**  The model has a dcc decoder installed with the sound module. */
-"DCC_SOUND" | 
+"DCC_SOUND" |
 /**  The model has no dcc support (like no standard decoder plug) */
 "NO_DCC";
 
 /**
  *  A physical coupler product that can be installed on owned rolling stock.
- * 
+ *
  *  `CouplerType` is a reference/lookup entity — rows are seeded from `couplers.csv`
  *  and are keyed by `CouplerTypeId`.  The `compatible_socket` field drives UI
  *  filtering so only couplers that fit the vehicle's socket are shown.
@@ -2023,7 +2059,7 @@ export type CouplerType = {
 
 /**
  *  Strongly-typed identifier for a coupler type (master record).
- * 
+ *
  *  URNs are of the form `trn:coupler:{manufacturer}:{slug}`.
  */
 export type CouplerTypeId = string;
@@ -2054,19 +2090,19 @@ export type CouplingArgs_Serialize = {
 	digitalShunting: string | null,
 };
 
-export type CouplingSocket = "NONE" | 
+export type CouplingSocket = "NONE" |
 /**  Receptacle for Replaceable Coupling Heads in Scales TT and N */
-"NEM_355" | 
+"NEM_355" |
 /**  Coupler Head for Scale N */
-"NEM_356" | 
+"NEM_356" |
 /**  Coupler Head for Scale N */
-"NEM_357" | 
+"NEM_357" |
 /**  Coupler Head for Scale TT */
-"NEM_359" | 
+"NEM_359" |
 /**  Standard Coupling for Scale H0 */
-"NEM_360" | 
+"NEM_360" |
 /**  NEM shaft 362 with close coupling mechanism */
-"NEM_362" | 
+"NEM_362" |
 /**  Coupler Head for Scale 0 */
 "NEM_365";
 
@@ -2368,18 +2404,18 @@ export type CreateWishlistArgs_Serialize = {
 
 /**
  *  Currency codes supported by the application.
- * 
+ *
  *  The enum uses a small, explicit set of currencies for now. Use
  *  `Currency::from_code` to obtain a `Currency` value from an ISO-style
  *  currency code (case-insensitive).
  */
-export type Currency = 
+export type Currency =
 /**  Euro */
-"EUR" | 
+"EUR" |
 /**  United States Dollar */
-"USD" | 
+"USD" |
 /**  Great Britain Pound */
-"GBP" | 
+"GBP" |
 /**  Japanese Yen */
 "JPY";
 
@@ -2436,14 +2472,14 @@ export type DashboardSummary_Serialize = {
 
 /**
  *  Aggregated totals for the user's dashboard.
- * 
+ *
  *  Fields represent various summary statistics about the user's collection.
  */
 export type DashboardTotals = DashboardTotals_Serialize | DashboardTotals_Deserialize;
 
 /**
  *  Aggregated totals for the user's dashboard.
- * 
+ *
  *  Fields represent various summary statistics about the user's collection.
  */
 export type DashboardTotals_Deserialize = {
@@ -2459,7 +2495,7 @@ export type DashboardTotals_Deserialize = {
 
 /**
  *  Aggregated totals for the user's dashboard.
- * 
+ *
  *  Fields represent various summary statistics about the user's collection.
  */
 export type DashboardTotals_Serialize = {
@@ -2504,36 +2540,36 @@ export type DccAddress = number;
 
 /**
  *  The NMRA and NEM Connectors for digital control (DCC)
- * 
+ *
  *  # Description
  *  The NMRA and NEM adopted standard mechanical and electrical interfaces to connect Multifunction
  *  Decoders to a locomotive's electrical system. These plugs and sockets make it simpler to install
  *  a decoder into a suitably equipped locomotive.
- * 
+ *
  *  In many cases a blanking plug must be removed before installing the decoder. If a locomotive
  *  is not DCC-Ready it will lack an interface and must use a Hardwired Decoder or a drop-in
  *  replacement DCC control board (if available) for that specific model.
  */
-export type DccInterface = 
+export type DccInterface =
 /**  6 Pin standard mechanical and electrical interfaces (NMRA Small) */
-"NEM_651" | 
+"NEM_651" |
 /**  8 Pin standard mechanical and electrical interfaces (NMRA Medium) */
-"NEM_652" | 
+"NEM_652" |
 /**  4 Pin standard mechanical and electrical interfaces (NMRA Large) */
-"NEM_654" | 
+"NEM_654" |
 /**  The PluX8 connector consists of two rows of 4 pins. */
-"PLUX_8" | "PLUX_12" | 
+"PLUX_8" | "PLUX_12" |
 /**  The PluX16 connector consists of two rows of 8 pins. */
-"PLUX_16" | 
+"PLUX_16" |
 /**  The PluX22 connector consists of two rows of 11 pins. */
-"PLUX_22" | 
+"PLUX_22" |
 /**  standard connector for extremely tight applications, such as TT and N scale locomotives (NEM 662) */
-"NEXT_18" | "NEXT_18_S" | 
+"NEXT_18" | "NEXT_18_S" |
 /**
  *  21MTC Connector interface is a standard adopted by both the NMRA and NEM (NEM 660).
  *  Its name comes from 21 pin Marklin/Trix Connector, developed by Marklin and ESU.
  */
-"MTC_21" | 
+"MTC_21" |
 /**  Hardwired decoder without a plug/socket interface. */
 "WIRES";
 
@@ -2549,20 +2585,20 @@ export type Decoder = {
 
 /**
  *  Strongly-typed identifier for a decoder (master record).
- * 
+ *
  *  This newtype is `#[repr(transparent)]` and serializes as a plain string.
  *  URNs are of the form `trn:decoder:{manufacturer}:{product_code}`.
  */
 export type DecoderId = string;
 
 /**  Represents the type of a DCC decoder. */
-export type DecoderType = 
+export type DecoderType =
 /**  Plain decoder without sound or function capabilities. */
-"PLAIN" | 
+"PLAIN" |
 /**  Decoder with sound capabilities. */
-"SOUND" | 
+"SOUND" |
 /**  Decoder with function capabilities. */
-"FUNCTION" | 
+"FUNCTION" |
 /**  MultiProtocol decoder. */
 "MULTI_PROTOCOL";
 
@@ -2611,20 +2647,20 @@ export type DeleteTrackProductTranslationArgs = {
 
 /**
  *  Represents the expected delivery timeframe for a railway model.
- * 
+ *
  *  This enum allows for varying levels of precision depending on how
  *  much information the manufacturer has provided about the release schedule.
  */
-export type DeliveryDate = 
+export type DeliveryDate =
 /**  Delivery is expected within a specific calendar year. */
-({ Year: number }) & { YearMonth?: never; YearQuarter?: never } | 
+({ Year: number }) & { YearMonth?: never; YearQuarter?: never } |
 /**  Delivery is expected within a specific month of a year. */
 ({ YearMonth: {
 	/**  The calendar year (e.g., 2024). */
 	year: number,
 	/**  The month of the year (1 for January, 12 for December). */
 	month: number,
-} }) & { Year?: never; YearQuarter?: never } | 
+} }) & { Year?: never; YearQuarter?: never } |
 /**  Delivery is expected within a specific fiscal or calendar quarter. */
 ({ YearQuarter: {
 	/**  The calendar year (e.g., 2024). */
@@ -2635,7 +2671,7 @@ export type DeliveryDate =
 
 /**
  *  Compact information about a single owned rolling stock instance.
- * 
+ *
  *  The struct is intentionally small and focused on presentation needs:
  *  identity, human-friendly labels, classification and a few display hints
  *  (like livery and depot location) used by the frontend.
@@ -2644,7 +2680,7 @@ export type DepotRollingStockView = DepotRollingStockView_Serialize | DepotRolli
 
 /**
  *  Compact information about a single owned rolling stock instance.
- * 
+ *
  *  The struct is intentionally small and focused on presentation needs:
  *  identity, human-friendly labels, classification and a few display hints
  *  (like livery and depot location) used by the frontend.
@@ -2684,7 +2720,7 @@ export type DepotRollingStockView_Deserialize = {
 
 /**
  *  Compact information about a single owned rolling stock instance.
- * 
+ *
  *  The struct is intentionally small and focused on presentation needs:
  *  identity, human-friendly labels, classification and a few display hints
  *  (like livery and depot location) used by the frontend.
@@ -2724,7 +2760,7 @@ export type DepotRollingStockView_Serialize = {
 
 /**
  *  A read-only representation of the depot contents.
- * 
+ *
  *  This view is intended for use by the interface layer (API/IPC/UI) and
  *  serializes the minimal information required to display the depot and its
  *  rolling stock entries.
@@ -2733,7 +2769,7 @@ export type DepotView = DepotView_Serialize | DepotView_Deserialize;
 
 /**
  *  A read-only representation of the depot contents.
- * 
+ *
  *  This view is intended for use by the interface layer (API/IPC/UI) and
  *  serializes the minimal information required to display the depot and its
  *  rolling stock entries.
@@ -2745,7 +2781,7 @@ export type DepotView_Deserialize = {
 
 /**
  *  A read-only representation of the depot contents.
- * 
+ *
  *  This view is intended for use by the interface layer (API/IPC/UI) and
  *  serializes the minimal information required to display the depot and its
  *  rolling stock entries.
@@ -2774,7 +2810,7 @@ export type DigitalProtocol = "DCC" | "MFX" | "SELECTRIX" | "MOTOROLA" | "FMZ" |
 
 /**
  *  Strongly-typed identifier for a digital rolling stock entry.
- * 
+ *
  *  URNs are of the form `trn:owned-rolling-stock:{UUID}` where the UUID
  *  portion is a valid RFC4122 UUID (v4 typically).
  */
@@ -2882,47 +2918,54 @@ export type DuplicateDetails = {
 /**
  *  The cars that form a complete EMU set can usually be separated by function into four types:
  *  power car, motor car, driving car, and trailer car.
- * 
+ *
  *  Each car can have more than one function, such as a motor-driving car or power-driving car.
  */
-export type ElectricMultipleUnitType = 
+export type ElectricMultipleUnitType =
 /**
  *  Driving cars are similar to a cab car, containing a driver's cab for controlling the train.
  *  An EMU will usually have two driving cars at its outer ends.
  */
-"DRIVING_CAR" | 
+"DRIVING_CAR" |
 /**
  *  High-speed rail is a type of rail system that runs significantly faster than traditional
  *  rail, using an integrated system of specialised rolling stock and dedicated tracks.
  */
-"HIGH_SPEED_TRAIN" | 
+"HIGH_SPEED_TRAIN" |
 /**
  *  Motor cars carry the traction motors to move the train, and are often combined with the
  *  power car to avoid high-voltage inter-car connections.
  */
-"MOTOR_CAR" | 
+"MOTOR_CAR" |
 /**
  *  A power car carries the necessary equipment to draw power from the electrified
  *  infrastructure, such as pickup shoes for third rail systems and pantographs for
  *  overhead systems, and transformers.
  */
-"POWER_CAR" | 
+"POWER_CAR" |
 /**
  *  Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
  *  traction or power related equipment, and are similar to passenger cars in a
  *  locomotive-hauled train.
  */
-"TRAILER_CAR" | 
+"TRAILER_CAR" |
 /**  A trainset is working as whole unit */
 "TRAIN_SET";
 
 /**
  *  Backwards-compatible wrapper used across the codebase and DB rows.
- * 
+ *
  *  This preserves the original `Epoch(pub String)` API while providing
  *  conversions to the structured `EpochKind` for validation and richer handling.
  */
 export type Epoch = string;
+
+/**
+ *  A stable identifier for one backend error occurrence.
+ *
+ *  The wire and display format is `ERR-NNNN-X`.
+ */
+export type ErrorId = string;
 
 /**  Arguments for execute_import command */
 export type ExecuteImportArgs = {
@@ -3003,22 +3046,22 @@ export type ExtraBudgetDto_Serialize = {
 
 /**
  *  Represents the availability or relevance of a specific model feature.
- * 
+ *
  *  This is often used for technical specifications where a feature might
  *  exist, be intentionally absent, or simply not be relevant to that
  *  specific class of locomotive or rolling stock.
  */
-export type FeatureFlag = 
+export type FeatureFlag =
 /**  The feature is present and functional on the model. */
-"YES" | 
+"YES" |
 /**
  *  The feature is not present on the model, though it might be
  *  expected or available on similar models.
  */
-"NO" | 
+"NO" |
 /**
  *  The feature is not relevant for this type of equipment.
- * 
+ *
  *  For example, a "Pantograph Type" flag would be `NotApplicable`
  *  for a Steam Locomotive.
  */
@@ -3074,109 +3117,109 @@ export type FormationElementView_Serialize = {
 
 /**
  *  Represents the various types of freight rolling stock used in rail transport.
- * 
+ *
  *  These classifications are based on the physical design and the specific
  *  cargo requirements, such as climate control, weather protection, or
  *  specialized loading mechanisms.
  */
-export type FreightCarType = 
+export type FreightCarType =
 /**  Specialized wagons for transporting motor vehicles, often multi-deck. */
-"AUTO_TRANSPORT_CARS" | 
+"AUTO_TRANSPORT_CARS" |
 /**
  *  A wagon equipped with a handbrake or a cabin for a brakeman,
  *  historically used to assist in braking the train.
  */
-"BRAKE_WAGON" | 
+"BRAKE_WAGON" |
 /**
  *  Wagons designed specifically for carrying cargo that
  *  requires full enclosure and protection from the elements.
  */
-"CLOSED_CARGO_VEHICLE" | 
+"CLOSED_CARGO_VEHICLE" |
 /**
  *  Flat or skeleton-framed wagons designed specifically to carry
  *  standardized shipping containers (ISO containers).
  */
-"CONTAINER_CARS" | 
+"CONTAINER_CARS" |
 /**
  *  Fully enclosed wagons used for goods that must be protected
  *  from weather and theft.
  */
-"COVERED_FREIGHT_CARS" | 
+"COVERED_FREIGHT_CARS" |
 /**
  *  Wagons with a lowered center section designed to carry tall
  *  loads like intermodal trailers or containers within height clearances.
  */
-"DEEP_WELL_FLAT_CARS" | 
+"DEEP_WELL_FLAT_CARS" |
 /**
  *  Open-top wagons with a mechanism to tilt the body to unload
  *  bulk materials like sand or gravel.
  */
-"DUMP_CARS" | 
+"DUMP_CARS" |
 /**
  *  These wagons are the "blank canvas" of the railway, used to transport everything from
  *  logs and steel beams to military vehicles and shipping containers.
  */
-"FLAT_WAGON" | 
+"FLAT_WAGON" |
 /**
  *  Open-topped rail vehicles used for transporting loose bulk
  *  materials such as coal, ore, or scrap metal.
  */
-"GONDOLA" | 
+"GONDOLA" |
 /**
  *  Heavy-duty flat wagons designed for extremely heavy or
  *  oversized loads, often featuring many axles.
  */
-"HEAVY_GOODS_WAGONS" | 
+"HEAVY_GOODS_WAGONS" |
 /**
  *  Wagons with a roof that is hinged on one side, allowing
  *  for top-loading of weather-sensitive bulk goods.
  */
-"HINGED_COVER_WAGONS" | 
+"HINGED_COVER_WAGONS" |
 /**
  *  Wagons with a floor that slopes toward one or more discharge
  *  doors, used for the rapid unloading of bulk materials.
  */
-"HOPPER_WAGON" | 
+"HOPPER_WAGON" |
 /**
  *  Insulated wagons equipped with cooling systems for
  *  transporting perishable goods.
  */
-"REFRIGERATOR_CARS" | 
+"REFRIGERATOR_CARS" |
 /**
  *  Specialized wagons for transporting pressurized or
  *  non-pressurized powders and granulated materials in silos.
  */
-"SILO_CONTAINER_CARS" | 
+"SILO_CONTAINER_CARS" |
 /**
  *  Wagons with a flexible tarpaulin cover that slides open
  *  for easy side-loading of palletized goods.
  */
-"SLIDE_TARPAULIN_WAGON" | 
+"SLIDE_TARPAULIN_WAGON" |
 /**
  *  Boxcars with large sliding doors that make up the entire
  *  side of the wagon, allowing for forklift access.
  */
-"SLIDING_WALL_BOXCARS" | 
+"SLIDING_WALL_BOXCARS" |
 /**
  *  Wagons designed for niche cargo that does not fit
  *  into standard classifications.
  */
-"SPECIAL_TRANSPORT" | 
+"SPECIAL_TRANSPORT" |
 /**
  *  Flat wagons equipped with vertical posts (stakes) along
  *  the sides to secure long loads like timber or pipes.
  */
-"STAKE_WAGONS" | 
+"STAKE_WAGONS" |
 /**
  *  Wagons with a roof that swings to the side to provide
  *  a wide opening for top-loading bulk cargo.
  */
-"SWING_ROOF_WAGON" | 
+"SWING_ROOF_WAGON" |
 /**
  *  Enclosed pressurized or non-pressurized vessels for
  *  transporting liquids, gases, or chemicals.
  */
-"TANK_CARS" | 
+"TANK_CARS" |
 /**
  *  Wagons with several overlapping "hoods" that slide
  *  over each other, used for protecting steel coils or heavy machinery.
@@ -3246,7 +3289,7 @@ export type GetQuarterlySummariesArgs_Serialize = {
 
 /**
  *  Transport arguments for the `global_search` Tauri command.
- * 
+ *
  *  Validated with `garde` at the transport boundary before any database access.
  */
 export type GlobalSearchArgs = {
@@ -3258,7 +3301,7 @@ export type GlobalSearchArgs = {
 
 /**
  *  A single search result item returned by the `global_search` command.
- * 
+ *
  *  Contains enough information for the frontend to render a result card
  *  and navigate to the correct detail page.
  */
@@ -3266,7 +3309,7 @@ export type GlobalSearchResultView = GlobalSearchResultView_Serialize | GlobalSe
 
 /**
  *  A single search result item returned by the `global_search` command.
- * 
+ *
  *  Contains enough information for the frontend to render a result card
  *  and navigate to the correct detail page.
  */
@@ -3287,7 +3330,7 @@ export type GlobalSearchResultView_Deserialize = {
 
 /**
  *  A single search result item returned by the `global_search` command.
- * 
+ *
  *  Contains enough information for the frontend to render a result card
  *  and navigate to the correct detail page.
  */
@@ -3335,11 +3378,11 @@ export type ImportDatabaseResponse = {
 };
 
 /**  Import outcome */
-export type ImportOutcome = 
+export type ImportOutcome =
 /**  All operations succeeded */
-"success" | 
+"success" |
 /**  Import completed with some warnings */
-"successWithWarnings" | 
+"successWithWarnings" |
 /**  Import failed and was rolled back */
 { failed: {
 	reason: string,
@@ -3508,31 +3551,31 @@ export type Language = "en" | "it";
 
 /**
  *  A physical length value paired with its measure unit.
- * 
+ *
  *  The `Length` enum is the canonical representation for lengths in the
  *  domain. Each variant stores a `Decimal` quantity for a specific unit.
- * 
+ *
  *  Invariants:
  *  - Quantities must be non-negative. Use `Length::try_new` to validate
  *    input without panicking.
  *  - Equality and ordering compare values after converting to the left-hand
  *    side's unit (so comparisons are unit-agnostic but deterministic).
  */
-export type Length = 
+export type Length =
 /**  A length expressed in inches. */
-({ Inches: string }) & { Kilometers?: never; Meters?: never; Miles?: never; Millimeters?: never } | 
+({ Inches: string }) & { Kilometers?: never; Meters?: never; Miles?: never; Millimeters?: never } |
 /**  A length expressed in kilometers. */
-({ Kilometers: string }) & { Inches?: never; Meters?: never; Miles?: never; Millimeters?: never } | 
+({ Kilometers: string }) & { Inches?: never; Meters?: never; Miles?: never; Millimeters?: never } |
 /**  A length expressed in meters. */
-({ Meters: string }) & { Inches?: never; Kilometers?: never; Miles?: never; Millimeters?: never } | 
+({ Meters: string }) & { Inches?: never; Kilometers?: never; Miles?: never; Millimeters?: never } |
 /**  A length expressed in miles. */
-({ Miles: string }) & { Inches?: never; Kilometers?: never; Meters?: never; Millimeters?: never } | 
+({ Miles: string }) & { Inches?: never; Kilometers?: never; Meters?: never; Millimeters?: never } |
 /**  A length expressed in millimeters. */
 ({ Millimeters: string }) & { Inches?: never; Kilometers?: never; Meters?: never; Miles?: never };
 
 /**
  *  The rail vehicle measurement method expressed as the length over buffers
- * 
+ *
  *  `LengthOverBuffers` holds an optional length in both inches and
  *  millimeters. When both values are provided they must represent the same
  *  physical measure (the constructor will validate that). Values must be
@@ -3562,7 +3605,7 @@ export type LengthOverBuffersArgs_Serialize = {
 
 /**
  *  The rail vehicle measurement method expressed as the length over buffers
- * 
+ *
  *  `LengthOverBuffers` holds an optional length in both inches and
  *  millimeters. When both values are provided they must represent the same
  *  physical measure (the constructor will validate that). Values must be
@@ -3578,7 +3621,7 @@ export type LengthOverBuffers_Deserialize = {
 
 /**
  *  The rail vehicle measurement method expressed as the length over buffers
- * 
+ *
  *  `LengthOverBuffers` holds an optional length in both inches and
  *  millimeters. When both values are provided they must represent the same
  *  physical measure (the constructor will validate that). Values must be
@@ -3594,21 +3637,21 @@ export type LengthOverBuffers_Serialize = {
 
 /**
  *  Specifies the primary motive power source for a locomotive.
- * 
+ *
  *  This classification determines the operational requirements, such as
  *  fueling infrastructure or overhead electrification.
  */
-export type LocomotiveType = 
+export type LocomotiveType =
 /**
  *  Locomotives powered by an external combustion engine, typically
  *  using a boiler to produce steam from coal, wood, or oil.
  */
-"STEAM_LOCOMOTIVE" | 
+"STEAM_LOCOMOTIVE" |
 /**
  *  Locomotives powered by an internal combustion engine, usually
  *  driving an electric generator or a hydraulic transmission.
  */
-"DIESEL_LOCOMOTIVE" | 
+"DIESEL_LOCOMOTIVE" |
 /**
  *  Locomotives that draw power from external sources, such as
  *  overhead catenary wires or a third rail.
@@ -3696,39 +3739,39 @@ export type MaintenanceCardView_Serialize = {
 };
 
 /**  Types of maintenance tasks commonly performed on rolling stock. */
-export type MaintenanceType = 
+export type MaintenanceType =
 /**  Cleaning the electrical contact surfaces of the wheels to ensure steady power pickup. */
-"WHEEL_CLEANING" | 
+"WHEEL_CLEANING" |
 /**  Removing dust, oxidation, or "black gunk" from the rails of the layout. */
-"TRACK_CLEANING" | 
+"TRACK_CLEANING" |
 /**  Cleaning internal electrical wipers or brass pick-ups that transfer power from wheels to the motor. */
-"CONTACT_CLEANING" | 
+"CONTACT_CLEANING" |
 /**  Applying light plastic-safe oil to axles, bearings, or motor shafts. */
-"LUBRICATION" | 
+"LUBRICATION" |
 /**  Applying heavy-duty grease to gear towers and worm gears within the drivetrain. */
-"GEAR_GREASE" | 
+"GEAR_GREASE" |
 /**  Replacing the carbon brushes and springs within a DC motor to restore performance. */
-"MOTOR_BRUSH_REPLACEMENT" | 
+"MOTOR_BRUSH_REPLACEMENT" |
 /**  Replacing the rubber traction tires on driving wheels to restore pulling power. */
-"TRACTION_TIRE_REPLACEMENT" | 
+"TRACTION_TIRE_REPLACEMENT" |
 /**  Installing a new DCC (Digital Command Control) decoder, including hard-wiring or plug-and-play. */
-"DECODER_INSTALL" | 
+"DECODER_INSTALL" |
 /**  Updating the internal software/firmware of a digital decoder via a programmer. */
-"FIRMWARE_UPDATE" | 
+"FIRMWARE_UPDATE" |
 /**  Replacing or upgrading the speaker or enclosure for sound-enabled locomotives. */
-"SPEAKER_REPAIR" | 
+"SPEAKER_REPAIR" |
 /**  Installing capacitors (PowerPacks) to prevent stalling over dirty track or insulated frogs. */
-"STAY_ALIVE_INSTALL" | 
+"STAY_ALIVE_INSTALL" |
 /**  Adjusting coupler height, centering springs, or replacing trip pins for reliable switching. */
-"COUPLER_ADJUSTMENT" | 
+"COUPLER_ADJUSTMENT" |
 /**  Replacing the physical coupler head on a piece of rolling stock. */
-"COUPLER_CHANGE" | 
+"COUPLER_CHANGE" |
 /**  Re-attaching or replacing fine scale details like handrails, whistles, or air hoses. */
-"DETAIL_REPAIR" | 
+"DETAIL_REPAIR" |
 /**  Applying powders, airbrushing, or washes to simulate real-world grime and age. */
-"WEATHERING" | 
+"WEATHERING" |
 /**  A standard "check-up" involving a visual inspection and a short test run. */
-"GENERAL_INSPECTION" | 
+"GENERAL_INSPECTION" |
 /**  Any maintenance task not covered by the standard categories. */
 "OTHER";
 
@@ -3737,12 +3780,12 @@ export type Manufacturer = Manufacturer_Serialize | Manufacturer_Deserialize;
 
 /**
  *  Strongly-typed identifier for a manufacturer in the catalog domain.
- * 
+ *
  *  `ManufacturerId` wraps a `String` and enforces that values constructed via
  *  the fallible `TryFrom` implementations are TRNs of the form
  *  `trn:manufacturer:{slug}` where `{slug}` is a lowercase ASCII slug made of
  *  letters, digits and hyphens (no leading/trailing hyphens, no uppercase).
- * 
+ *
  *  The type serializes and deserializes as a plain string (`serde(transparent)`)
  *  and implementing this invariant at construction time avoids accidental use
  *  of invalid identifiers across the codebase.
@@ -3757,7 +3800,7 @@ export type ManufacturerMergeResult = {
 
 /**
  *  Status of a manufacturer lifecycle.
- * 
+ *
  *  Serialized as SCREAMING_SNAKE_CASE; parsing is case-insensitive.
  */
 export type ManufacturerStatus = "ACTIVE" | "MERGED" | "OUT_OF_BUSINESS";
@@ -3868,31 +3911,31 @@ export type ModelCard_Serialize = {
 };
 
 /**  This represents the physical and mechanical state of the locomotive or rolling stock. */
-export type ModelCondition = 
+export type ModelCondition =
 /**  Brand new, no signs of use, factory fresh. */
-"MINT" | 
+"MINT" |
 /**  Almost like new, with only very minor signs of handling. */
-"NEAR_MINT" | 
+"NEAR_MINT" |
 /**  Clean, very light use, no missing detail parts. */
-"EXCELLENT" | 
+"EXCELLENT" |
 /**  Minor wear from use; paint is still strong. */
-"VERY_GOOD" | 
+"VERY_GOOD" |
 /**  Visible wear, small scratches, but functional. */
-"GOOD" | 
+"GOOD" |
 /**  Significant wear, missing small parts (couplers, buffers). */
-"FAIR" | 
+"FAIR" |
 /**  Heavy damage, non-functional, or heavily modified. */
-"POOR" | 
+"POOR" |
 /**  Not a runner; only useful for salvaging components. */
 "FOR_PARTS";
 
 /**
  *  A monetary amount in the smallest currency unit together with its currency.
- * 
+ *
  *  `MonetaryAmount` stores the raw integer amount (e.g. cents) in `amount` and
  *  the `currency` that the amount is denominated in. Prefer using the provided
  *  constructors rather than populating fields directly.
- * 
+ *
  *  `MonetaryAmount` provides helpers to build an instance from database parts
  *  (`MonetaryAmount::from_db`), to add values when currencies match
  *  (`add_same_currency`) and to format the value for display.
@@ -3900,7 +3943,7 @@ export type ModelCondition =
 export type MonetaryAmount = {
 	/**
 	 *  The monetary amount stored in the minor unit of the currency (e.g., cents for USD).
-	 * 
+	 *
 	 *  ### Why i64 over Decimal or Float?
 	 *  - **Precision**: Prevents floating-point rounding errors inherent in `f64`.
 	 *  - **Performance**: Integer arithmetic is natively supported and faster than `Numeric` types.
@@ -3921,7 +3964,7 @@ export type MonetaryAmountDto = {
 
 /**
  *  A valid calendar month in the range 1–12.
- * 
+ *
  *  The inner value is serialized / deserialized as a plain JSON number.
  *  TypeScript bindings generated by specta also emit `number`.
  */
@@ -3991,7 +4034,7 @@ export type NewTrackInventoryArgs_Serialize = {
 
 /**
  *  Strongly-typed identifier for an `OwnedRollingStock`.
- * 
+ *
  *  A small strongly-typed newtype for owned rolling stock identifiers used by the
  *  collecting domain. These identifiers are represented as TRNs (token resource
  *  names) and have the form `trn:owned-rolling-stock:{uuid}` where the suffix is
@@ -4002,7 +4045,7 @@ export type OwnedRollingStockId = string;
 
 /**
  *  A lightweight view of rolling stock that references catalog model data.
- * 
+ *
  *  This struct intentionally contains only the minimal information needed by
  *  the collecting domain to reference a catalog `RollingStock` and basic
  *  provenance. Detailed model information lives in the catalog domain and
@@ -4014,7 +4057,7 @@ export type OwnedRollingStockView = OwnedRollingStockView_Serialize | OwnedRolli
 
 /**
  *  A lightweight view of rolling stock that references catalog model data.
- * 
+ *
  *  This struct intentionally contains only the minimal information needed by
  *  the collecting domain to reference a catalog `RollingStock` and basic
  *  provenance. Detailed model information lives in the catalog domain and
@@ -4064,7 +4107,7 @@ export type OwnedRollingStockView_Deserialize = {
 
 /**
  *  A lightweight view of rolling stock that references catalog model data.
- * 
+ *
  *  This struct intentionally contains only the minimal information needed by
  *  the collecting domain to reference a catalog `RollingStock` and basic
  *  provenance. Detailed model information lives in the catalog domain and
@@ -4113,69 +4156,69 @@ export type OwnedRollingStockView_Serialize = {
 };
 
 /**  The types for passenger car rolling stocks */
-export type PassengerCarType = 
+export type PassengerCarType =
 /**
  *  A car usually placed between the locomotive and the rest of the train,
  *  featuring a wide-open interior for carrying checked baggage.
  */
-"BAGGAGE_CAR" | 
+"BAGGAGE_CAR" |
 /**
  *  A car providing limited food service (snacks/drinks) and a counter,
  *  smaller in scale than a full Dining Car.
  */
-"BUFFET_CAR" | 
+"BUFFET_CAR" |
 /**
  *  A hybrid car containing separate sections for both passengers and
  *  freight or baggage.
  */
-"COMBINE_CAR" | 
+"COMBINE_CAR" |
 /**
  *  A coach featuring a side corridor connecting individual private
  *  compartments, each with face-to-face seating rows.
  */
-"COMPARTMENT_COACH" | 
+"COMPARTMENT_COACH" |
 /**  A car dedicated to full-service meal preparation and seating for passengers. */
-"DINING_CAR" | 
+"DINING_CAR" |
 /**
  *  A car with two levels of passenger seating to increase capacity
  *  without increasing train length.
  */
-"DOUBLE_DECKER" | 
+"DOUBLE_DECKER" |
 /**
  *  A car with a glass-roofed section raised above the normal roofline,
  *  allowing 360-degree views of the scenery.
  */
-"DOME_CAR" | 
+"DOME_CAR" |
 /**
  *  A control car equipped with a driver's cab, allowing the locomotive
  *  to be operated from the opposite end in a push-pull configuration.
  */
-"DRIVING_TRAILER" | 
+"DRIVING_TRAILER" |
 /**
  *  A car featuring a bar and informal public seating, often used
  *  as a social space.
  */
-"LOUNGE" | 
+"LOUNGE" |
 /**
  *  The final car of a train, often featuring large windows or an open
  *  rear platform for scenic viewing.
  */
-"OBSERVATION" | 
+"OBSERVATION" |
 /**
  *  A coach with a central aisle and rows of seats similar to an
  *  airliner's cabin layout.
  */
-"OPEN_COACH" | 
+"OPEN_COACH" |
 /**
  *  A specialized car used for sorting mail while in transit to
  *  expedite delivery.
  */
-"RAILWAY_POST_OFFICE" | 
+"RAILWAY_POST_OFFICE" |
 /**
  *  A car with berths or private rooms for overnight travel.
  *  Also known as a "Sleeper" or "Pullman car."
  */
-"SLEEPING_CAR" | 
+"SLEEPING_CAR" |
 /**
  *  A "couchette" or "Sleeperette" car, providing reclining seats or
  *  basic fold-down bunks for a more economical overnight option.
@@ -4207,21 +4250,21 @@ export type PeriodOfActivity_Serialize = {
 
 /**
  *  Power method used by rolling stocks.
- * 
+ *
  *  This enum represents how a model locomotive obtains electrical power.
  *  The `Display` implementation returns a human-friendly name for each variant.
  */
-export type PowerMethod = 
+export type PowerMethod =
 /**  Alternating current (AC) power collection. */
-"AC" | 
+"AC" |
 /**  Direct current (DC) power collection. */
-"DC" | 
+"DC" |
 /**  Trix Express three-rail power pickup system. */
 "TRIX_EXPRESS";
 
 /**
  *  Details for a pre-order entry.
- * 
+ *
  *  Preorders record at least the deposit paid and the total price expected
  *  for the item. Both monetary amounts must use the same currency; use the
  *  `validate_currencies_match` helper to assert that condition.
@@ -4230,7 +4273,7 @@ export type PreOrderInfo = PreOrderInfo_Serialize | PreOrderInfo_Deserialize;
 
 /**
  *  Details for a pre-order entry.
- * 
+ *
  *  Preorders record at least the deposit paid and the total price expected
  *  for the item. Both monetary amounts must use the same currency; use the
  *  `validate_currencies_match` helper to assert that condition.
@@ -4252,7 +4295,7 @@ export type PreOrderInfo_Deserialize = {
 
 /**
  *  Details for a pre-order entry.
- * 
+ *
  *  Preorders record at least the deposit paid and the total price expected
  *  for the item. Both monetary amounts must use the same currency; use the
  *  `validate_currencies_match` helper to assert that condition.
@@ -4275,12 +4318,12 @@ export type PreOrderInfo_Serialize = {
 /**
  *  A product identifier (manufacturer model/code) used to uniquely identify
  *  a rolling stock model or catalogue item.
- * 
+ *
  *  This is a thin newtype wrapper around `String` to provide domain-level
  *  type-safety and to allow attaching trait impls specific to product codes.
- * 
+ *
  *  It derives `Serialize`/`Deserialize` for easy (de)serialization with Serde.
- * 
+ *
  *  Requirements
  *  - The product code MUST be a non-empty, non-blank string. Constructions via
  *    `TryFrom<&str>` / `TryFrom<String>` will return an error if the input is
@@ -4307,7 +4350,7 @@ export type PrototypeGroupView_Serialize = {
 
 /**
  *  Prototype in search results and formation element views.
- * 
+ *
  *  Uses a flat layout with a `specification_type` discriminator and nullable
  *  per-specification fields so that TypeScript consumers can switch on
  *  `specification_type` at runtime without requiring discriminated-union
@@ -4317,7 +4360,7 @@ export type PrototypeView = PrototypeView_Serialize | PrototypeView_Deserialize;
 
 /**
  *  Prototype in search results and formation element views.
- * 
+ *
  *  Uses a flat layout with a `specification_type` discriminator and nullable
  *  per-specification fields so that TypeScript consumers can switch on
  *  `specification_type` at runtime without requiring discriminated-union
@@ -4350,7 +4393,7 @@ export type PrototypeView_Deserialize = {
 
 /**
  *  Prototype in search results and formation element views.
- * 
+ *
  *  Uses a flat layout with a `specification_type` discriminator and nullable
  *  per-specification fields so that TypeScript consumers can switch on
  *  `specification_type` at runtime without requiring discriminated-union
@@ -4382,9 +4425,9 @@ export type PrototypeView_Serialize = {
 };
 
 /**  The condition under which a collectible item was purchased. */
-export type PurchaseCondition = 
+export type PurchaseCondition =
 /**  The item was purchased brand new from a retailer. */
-"NEW" | 
+"NEW" |
 /**  The item was purchased second-hand from another collector or seller. */
 "PRE_OWNED";
 
@@ -4425,11 +4468,11 @@ export type PurchaseGroup_Serialize = {
 
 /**
  *  Purchase information associated with a `CollectionItem`.
- * 
+ *
  *  A collection item may have acquisition-related metadata that describes how
  *  the user obtained (or intends to obtain) the item. This enum models the
  *  three supported acquisition states:
- * 
+ *
  *  - `Purchased`: the item was purchased and its value is counted in the
  *    collection total (unless explicitly excluded elsewhere).
  *  - `Sold`: the item was sold; we keep a record of the original purchase
@@ -4445,11 +4488,11 @@ export type PurchaseInfoId = string;
 
 /**
  *  Purchase information associated with a `CollectionItem`.
- * 
+ *
  *  A collection item may have acquisition-related metadata that describes how
  *  the user obtained (or intends to obtain) the item. This enum models the
  *  three supported acquisition states:
- * 
+ *
  *  - `Purchased`: the item was purchased and its value is counted in the
  *    collection total (unless explicitly excluded elsewhere).
  *  - `Sold`: the item was sold; we keep a record of the original purchase
@@ -4458,24 +4501,24 @@ export type PurchaseInfoId = string;
  *  - `PreOrdered`: the item is pre-ordered from a seller; the collector may
  *    have paid a deposit and the full total price is known as well.
  */
-export type PurchaseInfo_Deserialize = 
+export type PurchaseInfo_Deserialize =
 /**  A standard purchase record. */
-{ kind: "purchased"; data: PurchasedInfo_Deserialize } | 
+{ kind: "purchased"; data: PurchasedInfo_Deserialize } |
 /**
  *  A sold item record that preserves original purchase data and the
  *  subsequent sale information.
  */
-{ kind: "sold"; data: SoldInfo_Deserialize } | 
+{ kind: "sold"; data: SoldInfo_Deserialize } |
 /**  A preorder record with deposit and total price information. */
 { kind: "preOrdered"; data: PreOrderInfo_Deserialize };
 
 /**
  *  Purchase information associated with a `CollectionItem`.
- * 
+ *
  *  A collection item may have acquisition-related metadata that describes how
  *  the user obtained (or intends to obtain) the item. This enum models the
  *  three supported acquisition states:
- * 
+ *
  *  - `Purchased`: the item was purchased and its value is counted in the
  *    collection total (unless explicitly excluded elsewhere).
  *  - `Sold`: the item was sold; we keep a record of the original purchase
@@ -4484,14 +4527,14 @@ export type PurchaseInfo_Deserialize =
  *  - `PreOrdered`: the item is pre-ordered from a seller; the collector may
  *    have paid a deposit and the full total price is known as well.
  */
-export type PurchaseInfo_Serialize = 
+export type PurchaseInfo_Serialize =
 /**  A standard purchase record. */
-{ kind: "purchased"; data: PurchasedInfo_Serialize } | 
+{ kind: "purchased"; data: PurchasedInfo_Serialize } |
 /**
  *  A sold item record that preserves original purchase data and the
  *  subsequent sale information.
  */
-{ kind: "sold"; data: SoldInfo_Serialize } | 
+{ kind: "sold"; data: SoldInfo_Serialize } |
 /**  A preorder record with deposit and total price information. */
 { kind: "preOrdered"; data: PreOrderInfo_Serialize };
 
@@ -4544,7 +4587,7 @@ export type PurchaseWishlistArgs_Serialize = {
 
 /**
  *  Details for a purchased item.
- * 
+ *
  *  This struct holds the canonical purchase identifier and optional price
  *  information. `price` is optional to support legacy records where the
  *  monetary amount or currency was not stored.
@@ -4553,7 +4596,7 @@ export type PurchasedInfo = PurchasedInfo_Serialize | PurchasedInfo_Deserialize;
 
 /**
  *  Details for a purchased item.
- * 
+ *
  *  This struct holds the canonical purchase identifier and optional price
  *  information. `price` is optional to support legacy records where the
  *  monetary amount or currency was not stored.
@@ -4565,7 +4608,7 @@ export type PurchasedInfo_Deserialize = {
 	purchaseDate: string,
 	/**
 	 *  The price paid when purchasing the item, if known.
-	 * 
+	 *
 	 *  Represented as a domain `MonetaryAmount` (amount in smallest unit + currency).
 	 */
 	price?: MonetaryAmount | null,
@@ -4575,7 +4618,7 @@ export type PurchasedInfo_Deserialize = {
 
 /**
  *  Details for a purchased item.
- * 
+ *
  *  This struct holds the canonical purchase identifier and optional price
  *  information. `price` is optional to support legacy records where the
  *  monetary amount or currency was not stored.
@@ -4587,7 +4630,7 @@ export type PurchasedInfo_Serialize = {
 	purchaseDate: string,
 	/**
 	 *  The price paid when purchasing the item, if known.
-	 * 
+	 *
 	 *  Represented as a domain `MonetaryAmount` (amount in smallest unit + currency).
 	 */
 	price: MonetaryAmount | null,
@@ -4597,16 +4640,16 @@ export type PurchasedInfo_Serialize = {
 
 /**
  *  Represents one of the four three-month segments of a calendar year.
- * 
+ *
  *  These quarters follow the standard calendar year, beginning in January.
  */
-export type Quarter = 
+export type Quarter =
 /**  The first quarter: January, February, and March. */
-"Q1" | 
+"Q1" |
 /**  The second quarter: April, May, and June. */
-"Q2" | 
+"Q2" |
 /**  The third quarter: July, August, and September. */
-"Q3" | 
+"Q3" |
 /**  The fourth quarter: October, November, and December. */
 "Q4";
 
@@ -4643,7 +4686,7 @@ export type QueryCriteria_Serialize = {
 
 /**
  *  Domain types for handling minimum drivable radii.
- * 
+ *
  *  A `Radius` wraps a `Length` expressed in millimeters and enforces
  *  that the value is non-negative.
  */
@@ -4651,7 +4694,7 @@ export type Radius = Radius_Serialize | Radius_Deserialize;
 
 /**
  *  Domain types for handling minimum drivable radii.
- * 
+ *
  *  A `Radius` wraps a `Length` expressed in millimeters and enforces
  *  that the value is non-negative.
  */
@@ -4659,7 +4702,7 @@ export type Radius_Deserialize = string;
 
 /**
  *  Domain types for handling minimum drivable radii.
- * 
+ *
  *  A `Radius` wraps a `Length` expressed in millimeters and enforces
  *  that the value is non-negative.
  */
@@ -4667,23 +4710,23 @@ export type Radius_Serialize = string;
 
 /**
  *  The types for railcar rolling stocks
- * 
+ *
  *  A railcar is a self-propelled railway vehicle designed to transport passengers.
  *  The term _"railcar"_ is usually used in reference to a train consisting of a single coach
  *  (carriage, car), with a driver's cab at one or both ends.
- * 
+ *
  *  In its simplest form, a "railcar" may also be little more than a motorized railway handcar
  *  or draisine.
  */
-export type RailcarType = 
+export type RailcarType =
 /**  A self-propelled passenger vehicles also capable of hauling a train. */
-"POWER_CAR" | 
+"POWER_CAR" |
 /**
  *  Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
  *  traction or power related equipment, and are similar to passenger cars in a
  *  locomotive-hauled train.
  */
-"TRAILER_CAR" | 
+"TRAILER_CAR" |
 /**
  *  A non-motorized railcar trailer specifically configured for luggage,
  *  mail, or parcel transport.
@@ -4692,7 +4735,7 @@ export type RailcarType =
 
 /**
  *  A railway company (operator or owner).
- * 
+ *
  *  This struct models a real-world railway company. Some fields are optional
  *  because the corresponding database columns may be nullable.
  */
@@ -4700,11 +4743,11 @@ export type RailwayCompany = RailwayCompany_Serialize | RailwayCompany_Deseriali
 
 /**
  *  Strongly-typed identifier for a railway in the catalog domain.
- * 
+ *
  *  `RailwayCompanyId` wraps a string value and provides a distinct type instead of
  *  using plain strings everywhere. This improves type safety and makes intent
  *  explicit in function signatures and data structures.
- * 
+ *
  *  The identifier follows the TRN format: `trn:railway-company:{slug}`.
  *  All identifiers are automatically slugified and validated.
  */
@@ -4712,7 +4755,7 @@ export type RailwayCompanyId = string;
 
 /**
  *  A railway company (operator or owner).
- * 
+ *
  *  This struct models a real-world railway company. Some fields are optional
  *  because the corresponding database columns may be nullable.
  */
@@ -4734,7 +4777,7 @@ export type RailwayCompany_Deserialize = {
 
 /**
  *  A railway company (operator or owner).
- * 
+ *
  *  This struct models a real-world railway company. Some fields are optional
  *  because the corresponding database columns may be nullable.
  */
@@ -4756,17 +4799,17 @@ export type RailwayCompany_Serialize = {
 
 /**
  *  Strongly-typed railway model identifier.
- * 
+ *
  *  `RailwayModelId` follows a TRN-like pattern with manufacturer namespace
  *  and product code:
- * 
+ *
  *  trn:railway-model:{manufacturer_slug}:{product_code}
  */
 export type RailwayModelId = string;
 
 /**
  *  Response DTO for railway model image requests.
- * 
+ *
  *  This DTO contains either the image path (if found) or placeholder HTML.
  *  The frontend can check `has_image` to determine which field to use.
  */
@@ -4774,7 +4817,7 @@ export type RailwayModelImageResponse = RailwayModelImageResponse_Serialize | Ra
 
 /**
  *  Response DTO for railway model image requests.
- * 
+ *
  *  This DTO contains either the image path (if found) or placeholder HTML.
  *  The frontend can check `has_image` to determine which field to use.
  */
@@ -4789,7 +4832,7 @@ export type RailwayModelImageResponse_Deserialize = {
 
 /**
  *  Response DTO for railway model image requests.
- * 
+ *
  *  This DTO contains either the image path (if found) or placeholder HTML.
  *  The frontend can check `has_image` to determine which field to use.
  */
@@ -4812,12 +4855,12 @@ export type RailwayModelManufacturer = {
 
 /**
  *  Identifies which free-text field on a [`RailwayModel`] is being updated.
- * 
+ *
  *  Used by both the application use case input and the Tauri command args.
  */
-export type RailwayModelTextField = 
+export type RailwayModelTextField =
 /**  The `description` field (required, non-empty). */
-"Description" | 
+"Description" |
 /**  The `details` field (optional; an empty string is stored as `NULL`). */
 "Details";
 
@@ -4940,11 +4983,11 @@ export type RailwayModelView_Serialize = {
 };
 
 /**  The lifecycle status of a railway company. */
-export type RailwayStatus = 
+export type RailwayStatus =
 /**  The railway company is active and operational. */
-"ACTIVE" | 
+"ACTIVE" |
 /**  The railway company is inactive and no longer operational. */
-"INACTIVE" | 
+"INACTIVE" |
 /**  The railway company has merged with another entity. */
 "MERGED";
 
@@ -5052,31 +5095,31 @@ export type RestoreBackupArgs = {
 
 /**
  *  High-level classification for different types of railway rolling stock.
- * 
+ *
  *  This categorization distinguishes between traction units, hauled vehicles,
  *  and self-propelled passenger units.
  */
-export type RollingStockCategory = 
+export type RollingStockCategory =
 /**
  *  Independent traction units used to haul unpowered vehicles.
  *  Includes steam, diesel, and electric motive power.
  */
-"LOCOMOTIVE" | 
+"LOCOMOTIVE" |
 /**
  *  Vehicles designed specifically for the transport of goods,
  *  raw materials, or heavy equipment.
  */
-"FREIGHT_CAR" | 
+"FREIGHT_CAR" |
 /**
  *  Vehicles designed for passenger transport, usually featuring
  *  interior seating and climate control.
  */
-"PASSENGER_CAR" | 
+"PASSENGER_CAR" |
 /**
  *  Self-propelled, multi-unit passenger trains that use
  *  electricity as their motive power (EMUs).
  */
-"ELECTRIC_MULTIPLE_UNIT" | 
+"ELECTRIC_MULTIPLE_UNIT" |
 /**
  *  Lightweight, self-propelled single vehicles designed for
  *  lower-capacity passenger service on branch lines.
@@ -5441,31 +5484,31 @@ export type RollingStockView_Serialize = ({ electricMultipleUnit: {
 
 /**
  *  Model railway scales supported by the application.
- * 
+ *
  *  Each variant corresponds to a commonly used hobbyist scale name (for example
  *  `H0` or `00`). Use `Scale::ratio()` to obtain the numeric ratio that follows
  *  the `1:` notation (e.g. `Scale::H0` -> `1:87`). The `Display` implementation
  *  produces a human-friendly string such as `H0 (1:87)`.
  */
-export type Scale = 
+export type Scale =
 /**  H0 scale (1:87) */
-"H0" | 
+"H0" |
 /**  H0 narrow/metric (1:87) */
-"H0m" | 
+"H0m" |
 /**  H0e (1:87) */
-"H0e" | 
+"H0e" |
 /**  N scale (1:160) */
-"N" | 
+"N" |
 /**  TT scale (1:120) */
-"TT" | 
+"TT" |
 /**  Z scale (1:220) */
-"Z" | 
+"Z" |
 /**  G scale (garden) (1:22.5) */
-"G" | 
+"G" |
 /**  1 scale (1:32) */
-"1" | 
+"1" |
 /**  0 scale (1:43.5) */
-"0" | 
+"0" |
 /**  00 (double-zero) scale (1:76.2) */
 "00";
 
@@ -5519,27 +5562,27 @@ export type SellerMergeResult = {
 
 /**
  *  Represents the type/category of a seller.
- * 
+ *
  *  This enum is serialized/deserialized as screaming snake case (e.g. `SHOP`) and
  *  persisted to the database as text. It is used across the sellers feature to
  *  distinguish shops, private sellers, marketplaces and distributors.
- * 
+ *
  *  The type is intentionally strongly typed to avoid stringly-typed code and to
  *  provide a small surface for formatting and parsing (via `strum` and `sqlx`).
  */
-export type SellerType = 
+export type SellerType =
 /**  A retail shop or online store selling products directly to customers. */
-"SHOP" | 
+"SHOP" |
 /**  A private (individual) seller — non-commercial person selling items. */
-"PRIVATE" | 
+"PRIVATE" |
 /**  An online marketplace aggregating multiple sellers. */
-"MARKETPLACE" | 
+"MARKETPLACE" |
 /**  A commercial distributor or wholesaler that supplies retailers. */
 "DISTRIBUTOR";
 
 /**
  *  Presentation model for a `Seller` aggregate returned to the client.
- * 
+ *
  *  This view mirrors the persisted `Seller` fields but intentionally omits
  *  domain-only fields such as `pending_events`.
  */
@@ -5547,7 +5590,7 @@ export type SellerView = SellerView_Serialize | SellerView_Deserialize;
 
 /**
  *  Presentation model for a `Seller` aggregate returned to the client.
- * 
+ *
  *  This view mirrors the persisted `Seller` fields but intentionally omits
  *  domain-only fields such as `pending_events`.
  */
@@ -5574,7 +5617,7 @@ export type SellerView_Deserialize = {
 
 /**
  *  Presentation model for a `Seller` aggregate returned to the client.
- * 
+ *
  *  This view mirrors the persisted `Seller` fields but intentionally omits
  *  domain-only fields such as `pending_events`.
  */
@@ -5623,7 +5666,7 @@ export type Seller_Serialize = {
 
 /**
  *  Represents the service class(es) for a rolling stock or service.
- * 
+ *
  *  | **Variant**                      | **Description**           |
  *  |:---------------------------------|:--------------------------|
  *  | `ServiceLevel::First`            | `1st class`               |
@@ -5632,7 +5675,7 @@ export type Seller_Serialize = {
  *  | `ServiceLevel::FirstSecond`      | `Mixed 1st/2nd class`     |
  *  | `ServiceLevel::SecondThird`      | `Mixed 2nd/3rd class`     |
  *  | `ServiceLevel::FirstSecondThird` | `Mixed 1st/2nd/3rd class` |
- * 
+ *
  *  Parsing: `TryFrom<&str>` is implemented and accepts the string forms above
  *  (whitespace is trimmed). Formatting: `Display` is implemented and produces
  *  the corresponding string representation.
@@ -5766,7 +5809,7 @@ export type SimplifiedRollingStockArgs_Serialize = {
 
 /**
  *  Details for an item that was sold.
- * 
+ *
  *  We keep both the original purchase information and the sale data so the
  *  application can show provenance (what was paid originally) together with
  *  the sale outcome. The item should be excluded from collection value
@@ -5776,7 +5819,7 @@ export type SoldInfo = SoldInfo_Serialize | SoldInfo_Deserialize;
 
 /**
  *  Details for an item that was sold.
- * 
+ *
  *  We keep both the original purchase information and the sale data so the
  *  application can show provenance (what was paid originally) together with
  *  the sale outcome. The item should be excluded from collection value
@@ -5793,7 +5836,7 @@ export type SoldInfo_Deserialize = {
 	purchaseDate: string,
 	/**
 	 *  Original purchase price, if available.
-	 * 
+	 *
 	 *  Use `None` to indicate the original price is unknown or not stored.
 	 */
 	purchasePrice?: MonetaryAmount | null,
@@ -5816,7 +5859,7 @@ export type SoldInfo_Deserialize = {
 
 /**
  *  Details for an item that was sold.
- * 
+ *
  *  We keep both the original purchase information and the sale data so the
  *  application can show provenance (what was paid originally) together with
  *  the sale outcome. The item should be excluded from collection value
@@ -5833,7 +5876,7 @@ export type SoldInfo_Serialize = {
 	purchaseDate: string,
 	/**
 	 *  Original purchase price, if available.
-	 * 
+	 *
 	 *  Use `None` to indicate the original price is unknown or not stored.
 	 */
 	purchasePrice: MonetaryAmount | null,
@@ -5966,42 +6009,42 @@ export type TechnicalSpecifications_Serialize = {
 
 /**
  *  Rail profile code for a track product.
- * 
+ *
  *  This enum lists the common model railway rail heights ("Code" values)
  *  used to describe the rail profile. It derives `specta::Type` so it can be
  *  emitted into TypeScript bindings and `EnumString` to allow parsing from
  *  textual representations.
  */
-export type TrackCode = 
+export type TrackCode =
 /**  70-series rail profile (lightweight rail, often used for smaller scales). */
-"CODE_70" | 
+"CODE_70" |
 /**  75-series rail profile. */
-"CODE_75" | 
+"CODE_75" |
 /**  83-series rail profile (common medium-weight rail for many layouts). */
-"CODE_83" | 
+"CODE_83" |
 /**  100-series rail profile (heavy-duty rail profile). */
 "CODE_100";
 
 /**
  *  Strongly-typed identifier for a track product.
- * 
+ *
  *  `TrackId` is a transparent newtype wrapping a `String` that stores a TRN
  *  (Train) identifier for track products. The canonical form is:
- * 
+ *
  *  trn:track:{manufacturer_slug}:{product_code_slug}
- * 
+ *
  *  where both parts are slugified (lowercased, hyphen-separated).
  */
 export type TrackId = string;
 
 /**
  *  Strongly-typed identifier for a track inventory record.
- * 
+ *
  *  `TrackInventoryId` is a transparent newtype wrapping a `String` that stores
  *  the canonical TRN for inventory aggregates. The expected form is:
- * 
+ *
  *  `trn:track-inventory:{UUID}`
- * 
+ *
  *  Construct instances via `From<Uuid>`, `Default` (generates a new UUID) or
  *  the fallible `TryFrom<&str>`/`TryFrom<String>` implementations to validate
  *  external input. The type serializes as a plain string and is `sqlx::transparent`
@@ -6356,7 +6399,7 @@ export type UpdateRailwayModelClassificationArgs_Serialize = {
 
 /**
  *  Arguments for updating the delivery date of a railway model.
- * 
+ *
  *  Pass `delivery_date` as `None` or an empty string to clear the value;
  *  otherwise the string is parsed via [`DeliveryDate::parse`].
  */
@@ -6364,7 +6407,7 @@ export type UpdateRailwayModelDeliveryDateArgs = UpdateRailwayModelDeliveryDateA
 
 /**
  *  Arguments for updating the delivery date of a railway model.
- * 
+ *
  *  Pass `delivery_date` as `None` or an empty string to clear the value;
  *  otherwise the string is parsed via [`DeliveryDate::parse`].
  */
@@ -6377,7 +6420,7 @@ export type UpdateRailwayModelDeliveryDateArgs_Deserialize = {
 
 /**
  *  Arguments for updating the delivery date of a railway model.
- * 
+ *
  *  Pass `delivery_date` as `None` or an empty string to clear the value;
  *  otherwise the string is parsed via [`DeliveryDate::parse`].
  */
@@ -6751,7 +6794,7 @@ export type UpdateTrainFormationArgs_Serialize = {
 
 /**
  *  Arguments for updating editable fields on a specific wishlist item.
- * 
+ *
  *  Only provided (non-`null`) fields are changed; omitted fields are left untouched.
  *  For `desired_price_amount`: absent = unchanged, `null` = clear, number = set.
  */
@@ -6759,7 +6802,7 @@ export type UpdateWishlistItemArgs = UpdateWishlistItemArgs_Serialize | UpdateWi
 
 /**
  *  Arguments for updating editable fields on a specific wishlist item.
- * 
+ *
  *  Only provided (non-`null`) fields are changed; omitted fields are left untouched.
  *  For `desired_price_amount`: absent = unchanged, `null` = clear, number = set.
  */
@@ -6782,7 +6825,7 @@ export type UpdateWishlistItemArgs_Deserialize = {
 
 /**
  *  Arguments for updating editable fields on a specific wishlist item.
- * 
+ *
  *  Only provided (non-`null`) fields are changed; omitted fields are left untouched.
  *  For `desired_price_amount`: absent = unchanged, `null` = clear, number = set.
  */
@@ -6915,14 +6958,14 @@ export type UserSettings_Serialize = {
 
 /**
  *  A validation error returned by application use-cases.
- * 
+ *
  *  The structure contains:
  *  - `code`: a stable machine-readable identifier for the kind of validation error.
  *  - `message`: an optional human-facing message (ideally localized at the caller).
  *  - `params`: a map of parameter names to `ValidationErrorParam` values used to
  *    provide structured additional data about the failure (for example, an
  *    invalid numeric range or the name of a missing field).
- * 
+ *
  *  Usage notes:
  *  - `ValidationError.code` should be a stable machine identifier (for
  *    example `required_field`, `invalid_format`, ...).
@@ -6935,26 +6978,26 @@ export type ValidationError = ValidationError_Serialize | ValidationError_Deseri
 
 /**
  *  Parameter values for a validation error.
- * 
+ *
  *  The enum is tagged via serde so it serializes as an object with `type` and
  *  `value` keys (useful for interop with TypeScript and the frontend).
  */
-export type ValidationErrorParam = 
+export type ValidationErrorParam =
 /**  A numeric parameter (for example: a failing boundary value). */
-{ type: "Number"; value: number } | 
+{ type: "Number"; value: number } |
 /**  A textual parameter (for example: a field name or explanatory text). */
 { type: "Text"; value: string };
 
 /**
  *  A validation error returned by application use-cases.
- * 
+ *
  *  The structure contains:
  *  - `code`: a stable machine-readable identifier for the kind of validation error.
  *  - `message`: an optional human-facing message (ideally localized at the caller).
  *  - `params`: a map of parameter names to `ValidationErrorParam` values used to
  *    provide structured additional data about the failure (for example, an
  *    invalid numeric range or the name of a missing field).
- * 
+ *
  *  Usage notes:
  *  - `ValidationError.code` should be a stable machine identifier (for
  *    example `required_field`, `invalid_format`, ...).
@@ -6974,14 +7017,14 @@ export type ValidationError_Deserialize = {
 
 /**
  *  A validation error returned by application use-cases.
- * 
+ *
  *  The structure contains:
  *  - `code`: a stable machine-readable identifier for the kind of validation error.
  *  - `message`: an optional human-facing message (ideally localized at the caller).
  *  - `params`: a map of parameter names to `ValidationErrorParam` values used to
  *    provide structured additional data about the failure (for example, an
  *    invalid numeric range or the name of a missing field).
- * 
+ *
  *  Usage notes:
  *  - `ValidationError.code` should be a stable machine identifier (for
  *    example `required_field`, `invalid_format`, ...).
@@ -7000,13 +7043,13 @@ export type ValidationError_Serialize = {
 };
 
 /**  Validation status */
-export type ValidationStatus = 
+export type ValidationStatus =
 /**  Schema validation passed */
-"valid" | 
+"valid" |
 /**  Schema validation failed with errors */
 ({ invalid: {
 	error_count: number,
-} }) & { parseError?: never } | 
+} }) & { parseError?: never } |
 /**  Manifest could not be parsed */
 ({ parseError: {
 	message: string,
@@ -7014,7 +7057,7 @@ export type ValidationStatus =
 
 /**
  *  Strongly-typed identifier for a wishlist.
- * 
+ *
  *  Wraps a formatted `String` of the form `trn:wishlist:{uuid}`.
  */
 export type WishlistId = string;
@@ -7024,14 +7067,14 @@ export type WishlistItem = WishlistItem_Serialize | WishlistItem_Deserialize;
 
 /**
  *  Strongly-typed identifier for a wishlist item.
- * 
+ *
  *  Wraps a formatted `String` of the form `trn:wishlist-item:{uuid}`.
  */
 export type WishlistItemId = string;
 
 /**
  *  View model representing a single wishlist item.
- * 
+ *
  *  This is a lightweight, serializable representation of `WishlistItem` tailored
  *  for use in application queries and for returning over the interface layer.
  *  Fields mirror the domain `WishlistItem` but intentionally do not include
@@ -7041,7 +7084,7 @@ export type WishlistItemView = WishlistItemView_Serialize | WishlistItemView_Des
 
 /**
  *  View model representing a single wishlist item.
- * 
+ *
  *  This is a lightweight, serializable representation of `WishlistItem` tailored
  *  for use in application queries and for returning over the interface layer.
  *  Fields mirror the domain `WishlistItem` but intentionally do not include
@@ -7070,7 +7113,7 @@ export type WishlistItemView_Deserialize = {
 
 /**
  *  View model representing a single wishlist item.
- * 
+ *
  *  This is a lightweight, serializable representation of `WishlistItem` tailored
  *  for use in application queries and for returning over the interface layer.
  *  Fields mirror the domain `WishlistItem` but intentionally do not include
@@ -7131,7 +7174,7 @@ export type WishlistMonetaryAmountDto = {
 
 /**
  *  Lightweight preview information for a wishlist.
- * 
+ *
  *  Primarily used for list views where a full wishlist and its items are
  *  not required. `total_value` maps a `Currency` to the summed amount
  *  (stored in the DB as integer amounts, typically the smallest unit, e.g.
@@ -7141,7 +7184,7 @@ export type WishlistPreview = WishlistPreview_Serialize | WishlistPreview_Deseri
 
 /**
  *  Lightweight preview information for a wishlist.
- * 
+ *
  *  Primarily used for list views where a full wishlist and its items are
  *  not required. `total_value` maps a `Currency` to the summed amount
  *  (stored in the DB as integer amounts, typically the smallest unit, e.g.
@@ -7159,7 +7202,7 @@ export type WishlistPreview_Deserialize = {
 
 /**
  *  Lightweight preview information for a wishlist.
- * 
+ *
  *  Primarily used for list views where a full wishlist and its items are
  *  not required. `total_value` maps a `Currency` to the summed amount
  *  (stored in the DB as integer amounts, typically the smallest unit, e.g.
@@ -7177,43 +7220,43 @@ export type WishlistPreview_Serialize = {
 
 /**
  *  Priority assigned to a wishlist item.
- * 
+ *
  *  Indicates how important or urgent an item is for the user. The enum is
  *  serialized as SCREAMING_SNAKE_CASE (e.g. `"LOW"`, `"NORMAL"`, `"HIGH"`)
  *  and supports case-insensitive parsing via `FromStr` thanks to
  *  `strum_macros::EnumString`.
- * 
+ *
  *  The default variant is `Normal`.
  */
 export type WishlistPriority = "LOW" | "NORMAL" | "HIGH";
 
 /**
  *  Status of a wishlist item.
- * 
+ *
  *  Represents the current lifecycle state for an item on the wishlist. The
  *  enum is serialized as SCREAMING_SNAKE_CASE (e.g. `"WANTED"`,
  *  `"ON_ORDER"`, `"PURCHASED"`, `"IGNORED"`) and supports case-insensitive
  *  parsing via `FromStr` through `strum_macros::EnumString`.
- * 
+ *
  *  The default variant is `Wanted`.
  */
-export type WishlistStatus = 
+export type WishlistStatus =
 /**
  *  The user wants the item and it's a candidate for purchase.
- * 
+ *
  *  This is the default status used when adding a new item to a wishlist.
  */
-"WANTED" | 
+"WANTED" |
 /**  The item has been ordered from a seller and is expected to arrive. */
-"ON_ORDER" | 
+"ON_ORDER" |
 /**  The item has been acquired / purchased and is no longer actively wanted. */
-"PURCHASED" | 
+"PURCHASED" |
 /**  The item has been explicitly ignored by the user (not interested). */
 "IGNORED";
 
 /**
  *  View model representing a wishlist used by queries.
- * 
+ *
  *  `WishlistView` is returned by the query handlers. It contains the preview
  *  fields (matching `WishlistPreview`) and an optional `items` collection. For
  *  list queries each view will have `items == None` to keep payloads small;
@@ -7223,7 +7266,7 @@ export type WishlistView = WishlistView_Serialize | WishlistView_Deserialize;
 
 /**
  *  View model representing a wishlist used by queries.
- * 
+ *
  *  `WishlistView` is returned by the query handlers. It contains the preview
  *  fields (matching `WishlistPreview`) and an optional `items` collection. For
  *  list queries each view will have `items == None` to keep payloads small;
@@ -7253,7 +7296,7 @@ export type WishlistView_Deserialize = {
 
 /**
  *  View model representing a wishlist used by queries.
- * 
+ *
  *  `WishlistView` is returned by the query handlers. It contains the preview
  *  fields (matching `WishlistPreview`) and an optional `items` collection. For
  *  list queries each view will have `items == None` to keep payloads small;
@@ -7283,7 +7326,7 @@ export type WishlistView_Serialize = {
 
 /**
  *  A valid calendar year in the range 2000–2100.
- * 
+ *
  *  The inner value is serialized / deserialized as a plain JSON number.
  *  TypeScript bindings generated by specta also emit `number`.
  */

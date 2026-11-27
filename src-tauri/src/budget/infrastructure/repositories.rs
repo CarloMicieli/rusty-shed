@@ -217,7 +217,7 @@ impl<'conn> BudgetRepository for SqliteBudgetRepository<'conn> {
 
         match row {
             Some(r) => Ok(Some(
-                row_to_budget_config(r).map_err(|e| DomainError::Validation(e.to_string()))?,
+                row_to_budget_config(r).map_err(|e| DomainError::validation(e.to_string()))?,
             )),
             None => Ok(None),
         }
@@ -227,7 +227,7 @@ impl<'conn> BudgetRepository for SqliteBudgetRepository<'conn> {
         let rows = database::get_extra_budgets(self.executor, year).await?;
 
         rows.into_iter()
-            .map(|r| row_to_extra_budget(r).map_err(|e| DomainError::Validation(e.to_string())))
+            .map(|r| row_to_extra_budget(r).map_err(|e| DomainError::validation(e.to_string())))
             .collect()
     }
 
@@ -391,7 +391,7 @@ mod tests {
             .expect_err("invalid config row should fail");
 
         assert!(
-            matches!(error, DomainError::Validation(message) if message.contains("Invalid year"))
+            matches!(error, DomainError::Validation { message, .. } if message.contains("Invalid year"))
         );
     }
 
@@ -483,7 +483,7 @@ mod tests {
             .expect_err("invalid extra budget row should fail");
 
         assert!(
-            matches!(error, DomainError::Validation(message) if message.contains("Invalid currency"))
+            matches!(error, DomainError::Validation { message, .. } if message.contains("Invalid currency"))
         );
     }
 

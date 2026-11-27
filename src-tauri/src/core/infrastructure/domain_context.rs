@@ -5,7 +5,7 @@ use crate::core::domain::domain_error::DomainError;
 /// the domain module has no compile-time dependency on sqlx.
 impl From<sqlx::Error> for DomainError {
     fn from(e: sqlx::Error) -> Self {
-        DomainError::Infrastructure(e.to_string())
+        DomainError::infrastructure(e.to_string())
     }
 }
 
@@ -14,7 +14,7 @@ impl From<sqlx::Error> for DomainError {
 /// This trait follows the "Extension Trait" pattern, allowing you to enrich standard database
 /// results with application-level meaning while ensuring all failures are recorded in the system logs.
 pub trait WithDomainContext<T> {
-    /// Enrich a database result with context, log it as an error, and convert it to a [`DomainError`].
+    /// Enrich a database result with context and convert it to a [`DomainError`].
     ///
     /// This method is intended to be used at the boundary between your infrastructure (SQL)
     /// and your domain logic.
@@ -37,10 +37,7 @@ impl<T> WithDomainContext<T> for Result<T, sqlx::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            let span = tracing::info_span!("with_domain_context_sqlx", context = %msg);
-            let _enter = span.enter();
-            tracing::error!(error = ?err, "infrastructure sqlx error");
-            DomainError::Infrastructure(err.to_string())
+            DomainError::infrastructure(format!("{msg}: {err}"))
         })
     }
 }
@@ -49,10 +46,7 @@ impl<T> WithDomainContext<T> for Result<T, std::io::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            let span = tracing::info_span!("with_domain_context_io", context = %msg);
-            let _enter = span.enter();
-            tracing::error!(error = ?err, "infrastructure io error");
-            DomainError::Infrastructure(err.to_string())
+            DomainError::infrastructure(format!("{msg}: {err}"))
         })
     }
 }
@@ -61,10 +55,7 @@ impl<T> WithDomainContext<T> for Result<T, serde_json::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            let span = tracing::info_span!("with_domain_context_json", context = %msg);
-            let _enter = span.enter();
-            tracing::error!(error = ?err, "infrastructure serialization error");
-            DomainError::Infrastructure(err.to_string())
+            DomainError::infrastructure(format!("{msg}: {err}"))
         })
     }
 }
@@ -73,10 +64,7 @@ impl<T> WithDomainContext<T> for Result<T, anyhow::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            let span = tracing::info_span!("with_domain_context_anyhow", context = %msg);
-            let _enter = span.enter();
-            tracing::error!(error = ?err, "infrastructure generic error");
-            DomainError::Infrastructure(err.to_string())
+            DomainError::infrastructure(format!("{msg}: {err}"))
         })
     }
 }
@@ -97,7 +85,9 @@ mod tests {
     fn maps_sqlx_error_to_infrastructure_error() {
         let result = Err::<(), _>(sqlx::Error::RowNotFound).with_domain_context("load row");
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(message)) if !message.is_empty()));
+        assert!(
+            matches!(result, Err(DomainError::Infrastructure { message, .. }) if !message.is_empty())
+        );
     }
 
     #[test]
@@ -107,7 +97,7 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(DomainError::Infrastructure(message)) if message.contains("disk unavailable")
+            Err(DomainError::Infrastructure { message, .. }) if message.contains("disk unavailable")
         ));
     }
 
@@ -118,7 +108,7 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(DomainError::Infrastructure(message)) if message.contains("EOF while parsing an object")
+            Err(DomainError::Infrastructure { message, .. }) if message.contains("EOF while parsing an object")
         ));
     }
 
@@ -126,6 +116,8 @@ mod tests {
     fn maps_anyhow_error_to_infrastructure_error() {
         let result = Err::<(), _>(anyhow::anyhow!("boom")).with_domain_context("generic failure");
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(message)) if message == "boom"));
+        assert!(
+            matches!(result, Err(DomainError::Infrastructure { message, .. }) if message == "generic failure: boom")
+        );
     }
 }

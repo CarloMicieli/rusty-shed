@@ -1,5 +1,6 @@
 //! Shared tracing primitives for ADR-12 instrumentation.
 
+use crate::core::domain::ErrorId;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::error::CommandError;
 use tracing::Span;
@@ -10,14 +11,32 @@ pub trait AsTraceKind {
     fn trace_kind(&self) -> &'static str;
 }
 
+/// Identifies errors with a stable backend error reference.
+pub trait AsErrorId {
+    /// Return the identifier associated with this error.
+    fn error_id(&self) -> ErrorId;
+}
+
+impl AsErrorId for CommandError {
+    fn error_id(&self) -> ErrorId {
+        CommandError::error_id(self)
+    }
+}
+
+impl AsErrorId for DomainError {
+    fn error_id(&self) -> ErrorId {
+        DomainError::error_id(self)
+    }
+}
+
 impl AsTraceKind for CommandError {
     fn trace_kind(&self) -> &'static str {
         match self {
-            CommandError::ValidationError(_) => "validation",
-            CommandError::NotFound(_) => "not_found",
-            CommandError::PermissionDenied(_) => "unauthorized",
-            CommandError::BusinessRule(_) | CommandError::Conflict(_) => "domain",
-            CommandError::DatabaseError(_) => "infrastructure",
+            CommandError::ValidationError { .. } => "validation",
+            CommandError::NotFound { .. } => "not_found",
+            CommandError::PermissionDenied { .. } => "unauthorized",
+            CommandError::BusinessRule { .. } | CommandError::Conflict { .. } => "domain",
+            CommandError::DatabaseError { .. } => "infrastructure",
             CommandError::Unknown { .. } => "internal",
         }
     }
@@ -26,11 +45,11 @@ impl AsTraceKind for CommandError {
 impl AsTraceKind for DomainError {
     fn trace_kind(&self) -> &'static str {
         match self {
-            DomainError::Validation(_) | DomainError::ValidationError(_) => "validation",
+            DomainError::Validation { .. } | DomainError::ValidationError { .. } => "validation",
             DomainError::NotFound { .. } => "not_found",
-            DomainError::BusinessRule(_) | DomainError::Conflict(_) => "domain",
-            DomainError::Infrastructure(_) => "infrastructure",
-            DomainError::InvalidIdentifier(_) => "validation",
+            DomainError::BusinessRule { .. } | DomainError::Conflict { .. } => "domain",
+            DomainError::Infrastructure { .. } => "infrastructure",
+            DomainError::InvalidIdentifier { .. } => "validation",
         }
     }
 }
@@ -43,13 +62,14 @@ pub trait RecordTraceErrExt<T, E> {
 
 impl<T, E> RecordTraceErrExt<T, E> for Result<T, E>
 where
-    E: AsTraceKind + std::fmt::Display,
+    E: AsTraceKind + AsErrorId + std::fmt::Display,
 {
     fn record_trace_err(self) -> Self {
         if let Err(ref err) = self {
             let current = Span::current();
             current.record("error.type", err.trace_kind());
             current.record("error.message", tracing::field::display(err));
+            current.record("error.id", tracing::field::display(err.error_id()));
         }
         self
     }
@@ -73,18 +93,12 @@ mod tests {
             CommandError::validation_field("field", "invalid").trace_kind(),
             "validation"
         );
+        assert_eq!(CommandError::not_found("x").trace_kind(), "not_found");
         assert_eq!(
-            CommandError::NotFound("x".to_string()).trace_kind(),
-            "not_found"
-        );
-        assert_eq!(
-            CommandError::PermissionDenied("x".to_string()).trace_kind(),
+            CommandError::permission_denied("x").trace_kind(),
             "unauthorized"
         );
-        assert_eq!(
-            CommandError::DatabaseError("x".to_string()).trace_kind(),
-            "infrastructure"
-        );
+        assert_eq!(CommandError::database("x").trace_kind(), "infrastructure");
     }
 
     #[test]

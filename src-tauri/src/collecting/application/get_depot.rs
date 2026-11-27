@@ -60,12 +60,12 @@ mod tests {
         let mut mock = MockCollectionRepository::new();
         mock.expect_find_depot_view()
             .times(1)
-            .returning(|| Err(DomainError::Infrastructure("db unavailable".to_string())));
+            .returning(|| Err(DomainError::infrastructure("db unavailable".to_string())));
 
         let mut unit_of_work = FakeUow::new(mock, MockRailwayModelRepository::new());
 
         let result = GetDepot::execute(&mut unit_of_work).await;
 
-        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+        assert!(matches!(result, Err(DomainError::Infrastructure { .. })));
     }
 }

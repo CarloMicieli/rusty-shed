@@ -117,7 +117,7 @@ mod tests {
         let mut mock = MockDashboardRepository::new();
         mock.expect_find_summary()
             .times(1)
-            .returning(|_| Err(DomainError::Infrastructure("db error".to_string())));
+            .returning(|_| Err(DomainError::infrastructure("db error".to_string())));
 
         let mut uow = FakeDashboardUow::new(mock);
         let err = GetDashboardSummary::execute(&mut uow, 5, std::path::PathBuf::from("/tmp"))
@@ -125,7 +125,7 @@ mod tests {
             .expect_err("repository error should propagate");
 
         assert!(
-            matches!(err, DomainError::Infrastructure(_)),
+            matches!(err, DomainError::Infrastructure { .. }),
             "expected Infrastructure error, got {err:?}"
         );
     }

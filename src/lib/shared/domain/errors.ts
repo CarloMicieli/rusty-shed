@@ -33,7 +33,8 @@ export interface NormalizedError {
   retryable: boolean;
 
   /**
-   * Unique error identifier for log correlation (only present on unknown errors).
+   * Backend error identifier for log correlation.
+   * Optional only for legacy or client-only JavaScript errors.
    */
   errorId?: string;
 

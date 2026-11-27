@@ -20,6 +20,7 @@ impl UpdateTrackProductUseCase {
         let existing = repo.find_by_id(&input.track_id).await?;
         if existing.is_none() {
             return Err(CommandError::from(DomainError::NotFound {
+                id: crate::core::domain::ErrorId::generate(),
                 resource: "TrackProduct".to_string(),
                 identifier: input.track_id.to_string(),
             }));

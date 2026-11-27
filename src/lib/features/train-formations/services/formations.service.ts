@@ -28,14 +28,15 @@ import type { NormalizedError, SafeResult } from '$lib/services';
 
 function fromCommandError(err: CommandError): NormalizedError {
   if ('DatabaseError' in err && err.DatabaseError)
-    return { kind: 'database', message: err.DatabaseError };
-  if ('NotFound' in err && err.NotFound) return { kind: 'not_found', message: err.NotFound };
+    return { kind: 'database', message: err.DatabaseError.message };
+  if ('NotFound' in err && err.NotFound)
+    return { kind: 'not_found', message: err.NotFound.message };
   if ('ValidationError' in err) return { kind: 'validation', message: 'Validation failed' };
   if ('PermissionDenied' in err && err.PermissionDenied)
-    return { kind: 'permission_denied', message: err.PermissionDenied };
-  if ('Conflict' in err && err.Conflict) return { kind: 'unknown', message: err.Conflict };
+    return { kind: 'permission_denied', message: err.PermissionDenied.message };
+  if ('Conflict' in err && err.Conflict) return { kind: 'unknown', message: err.Conflict.message };
   if ('BusinessRule' in err && err.BusinessRule)
-    return { kind: 'unknown', message: err.BusinessRule };
+    return { kind: 'unknown', message: err.BusinessRule.message };
   if ('Unknown' in err && err.Unknown)
     return { kind: 'unknown', message: err.Unknown.message ?? 'Unknown error' };
   return { kind: 'unknown', message: 'Unknown error' };

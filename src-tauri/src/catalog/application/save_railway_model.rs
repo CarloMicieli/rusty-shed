@@ -47,11 +47,11 @@ fn map_simple_rolling_stock(
     match rs.category.parse::<RollingStockCategory>() {
         Ok(RollingStockCategory::Locomotive) => {
             let loco_type = rs.subcategory.ok_or_else(|| {
-                DomainError::Validation("subcategory required for locomotive".to_string())
+                DomainError::validation("subcategory required for locomotive".to_string())
             })?;
             let loco_type = loco_type
                 .parse::<LocomotiveType>()
-                .map_err(|e| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::validation(e.to_string()))?;
 
             Ok(RollingStockParams::LocomotiveParams {
                 railway_company_id: company_id,
@@ -148,7 +148,7 @@ fn map_simple_rolling_stock(
                 is_dummy: false,
             })
         }
-        Err(_) => Err(DomainError::Validation(
+        Err(_) => Err(DomainError::validation(
             "invalid rolling stock category".to_string(),
         )),
     }
@@ -173,28 +173,28 @@ impl SaveRailwayModel {
 
         // Basic validation / parsing
         let manufacturer_id = ManufacturerId::try_from(&input.manufacturer_id)
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         let product_code = ProductCode::try_from(input.product_code.clone())
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         let power_method = input
             .power_method
             .parse::<PowerMethod>()
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         let scale = Scale::try_from(input.scale.as_str())
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         let category = input
             .category
             .parse::<Category>()
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         let epoch = Epoch::from(input.epoch.as_str());
 
         let railway_model_id = RailwayModelId::new(&manufacturer_id, &product_code.to_string())
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+            .map_err(|e| DomainError::validation(e.to_string()))?;
 
         // Try to find an existing aggregate
         let existing = repo
@@ -245,7 +245,7 @@ impl SaveRailwayModel {
             // Append rolling stocks (but skip duplicates)
             for rs in input.rolling_stocks.into_iter() {
                 let company_id = RailwayCompanyId::try_from(&rs.railway_company_id)
-                    .map_err(|e| DomainError::Validation(e.to_string()))?;
+                    .map_err(|e| DomainError::validation(e.to_string()))?;
 
                 // Check if a rolling stock with the same series_code, road_number, and railway_id already exists
                 let already_exists = aggregate.rolling_stocks.iter().any(|existing_rs| {
@@ -285,7 +285,7 @@ impl SaveRailwayModel {
                 .into_iter()
                 .map(|rs| {
                     let company_id = RailwayCompanyId::try_from(&rs.railway_company_id)
-                        .map_err(|e| DomainError::Validation(e.to_string()))?;
+                        .map_err(|e| DomainError::validation(e.to_string()))?;
                     map_simple_rolling_stock(rs, company_id)
                 })
                 .collect::<Result<Vec<RollingStockParams>, DomainError>>()?;
@@ -470,7 +470,7 @@ mod tests {
         };
 
         let result = map_simple_rolling_stock(input, company_id);
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[test]
@@ -542,7 +542,7 @@ mod tests {
         };
 
         let result = map_simple_rolling_stock(input, company_id);
-        assert!(matches!(result, Err(DomainError::Validation(_))));
+        assert!(matches!(result, Err(DomainError::Validation { .. })));
     }
 
     #[tokio::test]
@@ -627,7 +627,7 @@ mod tests {
         let result = SaveRailwayModel::execute(&mut uow, input).await;
 
         assert!(
-            matches!(result, Err(DomainError::Validation(_))),
+            matches!(result, Err(DomainError::Validation { .. })),
             "{result:?}"
         );
     }

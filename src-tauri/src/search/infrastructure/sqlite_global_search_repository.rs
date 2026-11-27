@@ -152,7 +152,7 @@ impl<'conn> GlobalSearchRepository for SqliteGlobalSearchRepository<'conn> {
 
         for row in rows {
             let railway_model_id = RailwayModelId::try_from(row.railway_model_id.as_str())
-                .map_err(|e| DomainError::Validation(format!("invalid railway model id: {e}")))?;
+                .map_err(|e| DomainError::validation(format!("invalid railway model id: {e}")))?;
             let display_name = row.display_name.unwrap_or_default();
 
             // Emit a result for each source this model appears in.

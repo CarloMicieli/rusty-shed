@@ -71,7 +71,10 @@ impl TryFrom<AddMaintenanceEventArgs> for AddMaintenanceEventInput {
 
     fn try_from(value: AddMaintenanceEventArgs) -> Result<Self, Self::Error> {
         let maintenance_card_id = MaintenanceCardId::try_from(value.maintenance_card_id.clone())
-            .map_err(|_e| CommandError::ValidationError(HashMap::new()))?;
+            .map_err(|_e| CommandError::ValidationError {
+                fields: HashMap::new(),
+                error_id: crate::core::domain::ErrorId::generate(),
+            })?;
 
         Ok(AddMaintenanceEventInput {
             maintenance_card_id,

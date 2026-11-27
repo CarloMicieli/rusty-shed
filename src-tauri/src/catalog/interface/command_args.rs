@@ -1057,7 +1057,7 @@ impl TryFrom<UpdateRailwayModelDeliveryDateArgs> for UpdateRailwayModelDeliveryD
             match args.delivery_date.as_deref() {
                 None | Some("") => None,
                 Some(s) => Some(DeliveryDate::parse(s).map_err(|e| {
-                    DomainError::Validation(format!("invalid delivery_date: {}", e))
+                    DomainError::validation(format!("invalid delivery_date: {}", e))
                 })?),
             };
 
@@ -1202,7 +1202,7 @@ impl TryFrom<UpdateRollingStockSpecificationsArgs> for UpdateRollingStockSpecifi
                 None => Ok(None),
                 Some(ref v) if v.is_empty() => Ok(None),
                 Some(v) => v.parse::<T>().map(Some).map_err(|_| {
-                    DomainError::Validation(format!("invalid value for {field}: {v}"))
+                    DomainError::validation(format!("invalid value for {field}: {v}"))
                 }),
             }
         }

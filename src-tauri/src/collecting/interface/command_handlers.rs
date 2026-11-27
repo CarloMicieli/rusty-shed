@@ -465,7 +465,7 @@ fn parse_optional_seller_id(raw: Option<String>) -> Result<Option<SellerId>, Com
 
 fn parse_price(price_currency: &str, price_amount: i64) -> Result<MonetaryAmount, CommandError> {
     let currency = Currency::from_code(price_currency)
-        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+        .map_err(|e| CommandError::from(DomainError::validation(e.to_string())))?;
     Ok(MonetaryAmount::new(price_amount, currency))
 }
 
@@ -719,7 +719,7 @@ mod tests {
         };
         let result = remove_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -735,7 +735,7 @@ mod tests {
         };
         let result = remove_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -752,7 +752,7 @@ mod tests {
         };
         let result = update_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -769,7 +769,7 @@ mod tests {
         };
         let result = update_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -793,7 +793,7 @@ mod tests {
         };
         let result = update_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -817,7 +817,7 @@ mod tests {
         };
         let result = update_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -903,7 +903,7 @@ mod tests {
 
         let result = update_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -924,7 +924,7 @@ mod tests {
 
         let result = update_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -945,7 +945,7 @@ mod tests {
 
         let result = update_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -970,7 +970,7 @@ mod tests {
         };
         let result = add_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -993,7 +993,7 @@ mod tests {
         };
         let result = add_collection_item_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -1145,7 +1145,7 @@ mod tests {
         )
         .await;
 
-        assert!(matches!(result, Err(CommandError::ValidationError(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError { .. })));
     }
 
     #[sqlx::test(
@@ -1164,7 +1164,7 @@ mod tests {
 
         let result = sell_collection_item_inner(&state, args).await;
         assert!(
-            !matches!(result, Err(CommandError::ValidationError(_))),
+            !matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected non-validation result, got: {:?}",
             result
         );
@@ -1183,7 +1183,7 @@ mod tests {
 
         let result = receive_preorder_inner(&state, args).await;
         assert!(
-            !matches!(result, Err(CommandError::ValidationError(_))),
+            !matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected non-validation result, got: {:?}",
             result
         );
@@ -1197,7 +1197,7 @@ mod tests {
 
         let result = record_acquisition_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -1211,7 +1211,7 @@ mod tests {
 
         let result = record_acquisition_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -1225,7 +1225,7 @@ mod tests {
 
         let result = record_acquisition_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -1239,7 +1239,7 @@ mod tests {
 
         let result = record_acquisition_inner(&state, args).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );

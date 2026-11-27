@@ -33,6 +33,7 @@ impl RemoveCollectionItem {
         let collection_opt = repo.find_by_id(&collection_id).await?;
 
         let mut collection = collection_opt.ok_or(DomainError::NotFound {
+            id: crate::core::domain::ErrorId::generate(),
             resource: "Collection".to_string(),
             identifier: collection_id.to_string(),
         })?;

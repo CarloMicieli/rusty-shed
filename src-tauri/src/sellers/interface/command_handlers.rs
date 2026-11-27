@@ -187,12 +187,12 @@ pub async fn update_seller_inner(
             .get(&seller_id)
             .await
             .map_err(CommandError::from)?
-            .ok_or_else(|| CommandError::NotFound(format!("Seller '{}' not found", seller_id)))?;
+            .ok_or_else(|| CommandError::not_found(format!("Seller '{}' not found", seller_id)))?;
         (seller.name, seller.is_system_seeded)
     };
 
     if is_system_seeded && current_name.trim() != payload.name.trim() {
-        return Err(CommandError::BusinessRule(
+        return Err(CommandError::business_rule(
             "System-seeded seller names cannot be edited".to_string(),
         ));
     }
@@ -359,7 +359,7 @@ mod tests {
         let state = app_state(pool);
         let result = create_seller_inner(&state, minimal_payload("")).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -374,7 +374,7 @@ mod tests {
         };
         let result = create_seller_inner(&state, payload).await;
         assert!(
-            matches!(result, Err(CommandError::ValidationError(_))),
+            matches!(result, Err(CommandError::ValidationError { .. })),
             "Expected ValidationError, got: {:?}",
             result
         );
@@ -389,7 +389,7 @@ mod tests {
         };
         let result = create_seller_inner(&state, payload).await;
         assert!(
-            !matches!(result, Err(CommandError::ValidationError(_))),
+            !matches!(result, Err(CommandError::ValidationError { .. })),
             "Did not expect ValidationError, got: {:?}",
             result
         );
@@ -436,7 +436,7 @@ mod tests {
         .await;
 
         assert!(
-            matches!(result, Err(CommandError::BusinessRule(_))),
+            matches!(result, Err(CommandError::BusinessRule { .. })),
             "Expected BusinessRule, got: {:?}",
             result
         );
@@ -522,7 +522,7 @@ mod tests {
 
         let result = delete_seller_inner(&state, missing_id).await;
         assert!(
-            matches!(result, Err(CommandError::NotFound(_))),
+            matches!(result, Err(CommandError::NotFound { .. })),
             "Expected NotFound, got: {:?}",
             result
         );
@@ -777,7 +777,7 @@ mod tests {
         let result = merge_sellers_inner(&state, merge_args(shared_id, shared_id)).await;
 
         assert!(
-            matches!(result, Err(CommandError::BusinessRule(_))),
+            matches!(result, Err(CommandError::BusinessRule { .. })),
             "Expected BusinessRule, got: {:?}",
             result
         );
@@ -796,7 +796,7 @@ mod tests {
         let result = merge_sellers_inner(&state, merge_args(source_id, target_id)).await;
 
         assert!(
-            matches!(result, Err(CommandError::NotFound(_))),
+            matches!(result, Err(CommandError::NotFound { .. })),
             "Expected NotFound, got: {:?}",
             result
         );
@@ -815,7 +815,7 @@ mod tests {
         let result = merge_sellers_inner(&state, merge_args(source_id, target_id)).await;
 
         assert!(
-            matches!(result, Err(CommandError::NotFound(_))),
+            matches!(result, Err(CommandError::NotFound { .. })),
             "Expected NotFound, got: {:?}",
             result
         );
@@ -837,7 +837,7 @@ mod tests {
         let result = merge_sellers_inner(&state, merge_args(source_id, target_id)).await;
 
         assert!(
-            matches!(result, Err(CommandError::BusinessRule(_))),
+            matches!(result, Err(CommandError::BusinessRule { .. })),
             "Expected BusinessRule, got: {:?}",
             result
         );

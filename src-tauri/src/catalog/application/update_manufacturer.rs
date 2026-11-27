@@ -33,12 +33,13 @@ impl UpdateManufacturer {
             repo.find_seeded_and_name(&input.id)
                 .await?
                 .ok_or_else(|| DomainError::NotFound {
+                    id: crate::core::domain::ErrorId::generate(),
                     resource: "Manufacturer".to_string(),
                     identifier: input.id.to_string(),
                 })?;
 
         if is_seeded && current_name.trim() != input.name.trim() {
-            return Err(DomainError::BusinessRule(
+            return Err(DomainError::business_rule(
                 "System-seeded manufacturer names cannot be edited".to_string(),
             ));
         }
