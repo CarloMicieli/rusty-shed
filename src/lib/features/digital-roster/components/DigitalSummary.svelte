@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Activity, TrainFront, Zap } from '@lucide/svelte';
+  import Activity from '@lucide/svelte/icons/activity';
+  import TrainFront from '@lucide/svelte/icons/train-front';
+  import Zap from '@lucide/svelte/icons/zap';
   import type { DigitalSummary } from '$lib/bindings';
   import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
 

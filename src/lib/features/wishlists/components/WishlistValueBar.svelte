@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CircleDollarSign } from '@lucide/svelte';
+  import CircleDollarSign from '@lucide/svelte/icons/circle-dollar-sign';
   import * as m from '$lib/paraglide/messages.js';
   import type { WishlistItem } from '$lib/bindings';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';

@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { X, Settings2 } from '@lucide/svelte';
+  import X from '@lucide/svelte/icons/x';
+  import Settings2 from '@lucide/svelte/icons/settings-2';
 
   interface Props {
     onClose: () => void;

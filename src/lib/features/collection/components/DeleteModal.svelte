@@ -3,7 +3,7 @@
   import { Dialog as DialogPrimitive } from 'bits-ui';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Button } from '$lib/components/ui/button';
-  import { AlertTriangle } from '@lucide/svelte';
+  import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 
   type Props = {
     open?: boolean;

@@ -18,7 +18,9 @@
     TableRow,
     TableCell
   } from '$lib/components';
-  import { ArrowUpDown, ArrowUpNarrowWide, ArrowDownWideNarrow } from '@lucide/svelte';
+  import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
+  import ArrowUpNarrowWide from '@lucide/svelte/icons/arrow-up-narrow-wide';
+  import ArrowDownWideNarrow from '@lucide/svelte/icons/arrow-down-wide-narrow';
 
   interface User {
     id: number;

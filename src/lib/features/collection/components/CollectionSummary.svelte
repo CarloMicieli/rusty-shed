@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { Box, Bus, Package, TrainFront, Zap, Wallet } from '@lucide/svelte';
+  import Box from '@lucide/svelte/icons/box';
+  import Bus from '@lucide/svelte/icons/bus';
+  import Package from '@lucide/svelte/icons/package';
+  import TrainFront from '@lucide/svelte/icons/train-front';
+  import Zap from '@lucide/svelte/icons/zap';
+  import Wallet from '@lucide/svelte/icons/wallet';
   import type { IconComponent } from '$lib/config/icons';
   import * as m from '$lib/paraglide/messages.js';
   import type { CollectionSummary } from '$lib/bindings';

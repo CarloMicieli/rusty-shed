@@ -1,6 +1,8 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { Calendar, AlertTriangle, CheckCircle2 } from '@lucide/svelte';
+  import Calendar from '@lucide/svelte/icons/calendar';
+  import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
+  import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import * as m from '$lib/paraglide/messages.js';
   import { getUrgencyLevel } from '../utils/urgency';
   import type { MaintenanceCardView } from '$lib/bindings';

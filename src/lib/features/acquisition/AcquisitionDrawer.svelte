@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { ShoppingBag } from '@lucide/svelte';
+  import ShoppingBag from '@lucide/svelte/icons/shopping-bag';
   import {
     commands,
     type Manufacturer,

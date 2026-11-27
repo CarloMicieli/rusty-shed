@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { TrainFront, X, Filter, LayoutGrid, Rows3, SlidersHorizontal } from '@lucide/svelte';
+  import TrainFront from '@lucide/svelte/icons/train-front';
+  import X from '@lucide/svelte/icons/x';
+  import Filter from '@lucide/svelte/icons/filter';
+  import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+  import Rows3 from '@lucide/svelte/icons/rows-3';
+  import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';

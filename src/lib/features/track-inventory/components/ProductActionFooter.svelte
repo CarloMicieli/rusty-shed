@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { Loader2 } from '@lucide/svelte';
+  import Loader2 from '@lucide/svelte/icons/loader-2';
   import { Button } from '$lib/components';
 
   interface Props {

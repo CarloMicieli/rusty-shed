@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { Ruler, Compass, X } from '@lucide/svelte';
+  import Ruler from '@lucide/svelte/icons/ruler';
+  import Compass from '@lucide/svelte/icons/compass';
+  import X from '@lucide/svelte/icons/x';
   import type { ManufacturerId, TrackType, TrackCode } from '$lib/bindings';
   import { Input } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';

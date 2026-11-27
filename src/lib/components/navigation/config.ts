@@ -1,14 +1,12 @@
-import {
-  LayoutDashboard,
-  TrainFront,
-  Wallet,
-  Heart,
-  Wrench,
-  Warehouse,
-  Cpu,
-  TrainTrack,
-  Combine
-} from '@lucide/svelte';
+import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+import TrainFront from '@lucide/svelte/icons/train-front';
+import Wallet from '@lucide/svelte/icons/wallet';
+import Heart from '@lucide/svelte/icons/heart';
+import Wrench from '@lucide/svelte/icons/wrench';
+import Warehouse from '@lucide/svelte/icons/warehouse';
+import Cpu from '@lucide/svelte/icons/cpu';
+import TrainTrack from '@lucide/svelte/icons/train-track';
+import Combine from '@lucide/svelte/icons/combine';
 import * as m from '$lib/paraglide/messages.js';
 import type { NavigationItem } from './types';
 

@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import type { TrackPurchaseView } from '$lib/features/track-inventory';
-  import { Store, ArrowRight } from '@lucide/svelte';
+  import Store from '@lucide/svelte/icons/store';
+  import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {

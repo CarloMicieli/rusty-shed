@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { CheckCircle2, XCircle } from '@lucide/svelte';
+  import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+  import XCircle from '@lucide/svelte/icons/x-circle';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {

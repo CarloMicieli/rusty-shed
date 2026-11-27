@@ -1,6 +1,10 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { Search, SearchX, X, BookOpen, Check } from '@lucide/svelte';
+  import Search from '@lucide/svelte/icons/search';
+  import SearchX from '@lucide/svelte/icons/search-x';
+  import X from '@lucide/svelte/icons/x';
+  import BookOpen from '@lucide/svelte/icons/book-open';
+  import Check from '@lucide/svelte/icons/check';
   import * as m from '$lib/paraglide/messages';
   import * as Popover from '$lib/components/ui/popover';
   import { commands, type PrototypeGroupView, type PrototypeView } from '$lib/bindings';

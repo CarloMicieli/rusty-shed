@@ -14,7 +14,9 @@
    */
 
   import { Button } from '$lib/components';
-  import { Calendar, Database, Download } from '@lucide/svelte';
+  import Calendar from '@lucide/svelte/icons/calendar';
+  import Database from '@lucide/svelte/icons/database';
+  import Download from '@lucide/svelte/icons/download';
   import { getCloudBackupController } from '../controllers/cloudBackup.svelte';
   import type { BackupListItem } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
