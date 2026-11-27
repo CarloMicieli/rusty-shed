@@ -35,7 +35,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   app_train_formations: () => 'Train Formations',
   app_settings: () => 'Settings',
   app_debug: () => 'Debug',
-  app_version_prefix: () => 'v.'
+  app_version_prefix: () => 'v.',
+  app_sidebar_expand: () => 'Expand sidebar',
+  app_sidebar_collapse: () => 'Collapse sidebar'
 }));
 
 // Mock Badge component

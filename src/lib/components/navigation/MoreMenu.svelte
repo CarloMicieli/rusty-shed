@@ -23,7 +23,7 @@
 <Sheet
   {open}
   side="bottom"
-  class="!right-4 !bottom-24 !left-auto !max-h-64 !w-72 overflow-y-auto !rounded-t-lg !bg-background !opacity-100"
+  class="!right-4 !bottom-24 !left-auto !max-h-64 !w-72 overflow-y-auto !rounded-t-lg !border !border-border-subtle !bg-card !opacity-100"
   onOpenChange={handleOpenChange}
 >
   <div class="flex flex-col space-y-2 px-4 py-4">

@@ -28,7 +28,7 @@
 <div
   class="flex {leading
     ? 'justify-between'
-    : 'justify-end'} items-center gap-3 border-t border-border px-6 py-4"
+    : 'justify-end'} items-center gap-3 border-t border-border px-4 py-3 sm:px-6 sm:py-4"
 >
   {#if leading}
     <div>{@render leading()}</div>
@@ -41,7 +41,7 @@
       type="button"
       onclick={onSubmit}
       disabled={submitting || isLoading || disabled}
-      class="variant-steampunk-lever rounded-sm bg-primary font-bebas font-bold text-primary-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:bg-primary/90"
+      class="rounded-sm bg-primary font-bebas font-bold text-primary-foreground shadow-xs hover:bg-primary/90"
     >
       {#if submitting}
         <span

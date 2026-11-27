@@ -59,11 +59,6 @@
  * background-color and color are intentionally omitted — layout.css
  * handles those inside @layer base so the theme system can override them.
  */
-:root {
-  --brass: #b5a642;
-  --copper: #b87333;
-}
-
 body {
   margin: 0;
   /* Default font — bg/color handled by @layer base in layout.css */
@@ -116,11 +111,11 @@ input[type='reset'] {
 [data-theme='steampunk-light'] pre,
 [data-theme='steampunk-light'] .typewriter {
   font-family: var(--font-family-mono);
-  color: var(--color-copper-700, #a85427); /* --color-copper-700: burnished copper on parchment */
+  color: var(--color-copper-700);
 }
 
 /* Signal Fault toast — Amber border for non-fatal background errors */
 .toast-signal {
-  border: 1px solid #d48a42 !important;
+  border: 1px solid var(--color-warning-600) !important;
   border-radius: 8px;
 }

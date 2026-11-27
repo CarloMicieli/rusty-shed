@@ -6,8 +6,6 @@
 
 @plugin '@tailwindcss/typography';
 
-@custom-variant dark (&:is(.dark *));
-
 :root {
   --radius: 0.625rem;
   --page-content-max-width: 88rem;
@@ -82,64 +80,6 @@
   --color-copper-700: #a86428;
 }
 
-.dark {
-  /* Background & Surface (Zinc-based Dark) */
-  --background: hsl(240 10% 3.9%); /* zinc-950 */
-  --foreground: hsl(0 0% 98%); /* zinc-50 */
-
-  --card: hsl(240 10% 7%); /* zinc-900 */
-  --card-foreground: hsl(0 0% 98%); /* zinc-50 */
-
-  --popover: hsl(240 10% 7%); /* zinc-900 */
-  --popover-foreground: hsl(0 0% 98%); /* zinc-50 */
-
-  /* Primary - Copper/Brass accent */
-  --primary: hsl(30 50% 50%); /* Copper tone */
-  --primary-foreground: hsl(240 10% 3.9%); /* zinc-950 */
-
-  /* Secondary */
-  --secondary: hsl(240 5.9% 15%); /* zinc-800 */
-  --secondary-foreground: hsl(0 0% 98%); /* zinc-50 */
-
-  /* Muted */
-  --muted: hsl(240 5.9% 15%); /* zinc-800 */
-  --muted-foreground: hsl(240 5% 64.9%); /* zinc-400 */
-
-  /* Accent */
-  --accent: hsl(240 5.9% 15%); /* zinc-800 */
-  --accent-foreground: hsl(0 0% 98%); /* zinc-50 */
-
-  /* Destructive */
-  --destructive: hsl(0 62.8% 30.6%); /* red-800 */
-  --destructive-foreground: hsl(0 0% 98%); /* zinc-50 */
-
-  /* Border & Input */
-  --border: hsl(240 5.9% 20%); /* zinc-700 */
-  --input: hsl(240 5.9% 20%); /* zinc-700 */
-  --ring: hsl(30 50% 50%); /* Matches primary */
-
-  /* Chart colors */
-  --chart-1: hsl(30 50% 50%);
-  --chart-2: hsl(25 45% 45%);
-  --chart-3: hsl(20 40% 40%);
-  --chart-4: hsl(35 55% 55%);
-  --chart-5: hsl(30 35% 35%);
-
-  /* Sidebar (High-Contrast Darker) */
-  --sidebar: color-mix(
-    in srgb,
-    hsl(240 10% 2%),
-    hsl(30 50% 50%) 5%
-  ); /* Darker than background with copper tint */
-  --sidebar-foreground: hsl(0 0% 90%); /* Slightly dimmed */
-  --sidebar-primary: hsl(30 50% 50%); /* Copper accent */
-  --sidebar-primary-foreground: hsl(240 10% 2%);
-  --sidebar-accent: hsl(240 5.9% 12%); /* Hover state */
-  --sidebar-accent-foreground: hsl(0 0% 98%);
-  --sidebar-border: hsl(240 5.9% 15%); /* Subtle border */
-  --sidebar-ring: hsl(30 50% 50%);
-}
-
 @theme inline {
   --font-family-mono: 'JetBrains Mono', 'Courier New', monospace;
   --font-family-heading: 'Bebas Neue', sans-serif;
@@ -180,6 +120,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
   --color-layout-border: var(--layout-border);
   --color-layout-surface: var(--layout-surface);
   /* Steampunk palette utilities — bg-brass-*, text-copper-*, etc. */

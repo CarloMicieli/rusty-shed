@@ -210,6 +210,12 @@
   --border: hsl(240 6% 15%);
   --input: hsl(240 6% 15%);
   --ring: hsl(30 50% 50%);
+  --surface-elevated: var(--color-surface-700);
+  --surface-hover: var(--color-surface-600);
+  --border-subtle: var(--color-surface-600);
+  --border-strong: var(--color-surface-500);
+  --brass: var(--color-brass-600);
+  --copper: var(--color-copper-600);
 
   /* Sidebar — Warm Iron: brownish-dark so the outer wrapper (area 1) matches the nav bar's copper-tinted look */
   /* We use color-mix to bake the 5% primary tint into the base sidebar color */

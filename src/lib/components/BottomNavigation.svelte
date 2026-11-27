@@ -32,8 +32,7 @@
 </script>
 
 <div
-  class="pb-safe-area fixed right-0 bottom-0 left-0 z-50 border-t-2 border-primary bg-card lg:hidden"
-  style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);"
+  class="pb-safe-area fixed right-0 bottom-0 left-0 z-50 border-t border-border-subtle bg-card lg:hidden"
 >
   <div class="flex h-16 items-center justify-around">
     {#each PRIMARY_ITEMS as item (item.id)}
@@ -47,7 +46,6 @@
         {#if isActive(item, pathname)}
           <div
             class="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-b-full bg-primary"
-            style="box-shadow: 0 0 8px currentColor, 0 0 12px currentColor;"
           ></div>
         {/if}
         <item.icon size={20} />
@@ -70,7 +68,6 @@
       {#if isMoreButtonActive(SECONDARY_ITEMS, pathname)}
         <div
           class="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-b-full bg-primary"
-          style="box-shadow: 0 0 8px currentColor, 0 0 12px currentColor;"
         ></div>
       {/if}
       <Ellipsis size={20} />

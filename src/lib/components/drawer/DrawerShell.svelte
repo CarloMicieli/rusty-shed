@@ -99,7 +99,7 @@
 
   <!-- Drawer panel -->
   <div
-    class="fixed inset-y-0 right-0 z-50 flex w-full {sizeClass} translate-x-0 flex-col border-l-2 border-primary bg-card shadow-2xl transition-transform duration-300"
+    class="fixed right-0 bottom-0 left-0 z-50 flex h-[85dvh] w-full flex-col rounded-t-lg border-t-2 border-primary bg-card shadow-2xl transition-transform duration-300 sm:inset-y-0 sm:left-auto sm:h-full {sizeClass} sm:translate-x-0 sm:rounded-none sm:border-t-0 sm:border-l-2"
     role="dialog"
     aria-modal="true"
     aria-labelledby={labelledby}
