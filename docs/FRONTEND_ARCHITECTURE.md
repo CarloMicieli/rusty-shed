@@ -50,6 +50,7 @@ Infrastructure Layer (provides implementations)
 Features are vertical slices of the application, not horizontal layers. Each feature owns its domain, application, infrastructure, and presentation code.
 
 This prevents:
+
 - Implicit global dependencies
 - Cross-feature coupling
 - Unclear feature boundaries
@@ -63,21 +64,21 @@ Testability is not a goal—it is a **constraint**. If code cannot be tested wit
 
 ## 2. Technical Stack
 
-| Concern                      | Choice                                      | Version |
-| ----------------------------- | ------------------------------------------- | ------- |
-| **Frontend Framework**        | Svelte 5 (Runes: `$state`, `$derived`, `$effect`) | 5.x     |
-| **Backend Framework**         | Tauri 2.0                                   | 2.x     |
-| **Type Bridge**               | tauri-specta                                | Latest  |
-| **Reactive State**            | Svelte 5 runes (`$state`, `$derived`)      | Native  |
-| **Component Library**         | shadcn-svelte (bits-ui)                    | Latest  |
-| **CSS Framework**             | Tailwind CSS 4                              | 4.x     |
-| **Type Safety**               | TypeScript strict mode                      | 5.x+    |
-| **i18n**                      | Paraglide-JS                                | Latest  |
-| **Unit Testing**              | Vitest                                      | Latest  |
-| **Component Testing**         | Svelte Testing Library + @testing-library  | Latest  |
-| **E2E Testing**               | Playwright                                  | Latest  |
-| **Linting & Boundaries**      | ESLint + eslint-plugin-boundaries           | Latest  |
-| **Static Analysis**           | svelte-check                                | Latest  |
+| Concern                  | Choice                                            | Version |
+| ------------------------ | ------------------------------------------------- | ------- |
+| **Frontend Framework**   | Svelte 5 (Runes: `$state`, `$derived`, `$effect`) | 5.x     |
+| **Backend Framework**    | Tauri 2.0                                         | 2.x     |
+| **Type Bridge**          | tauri-specta                                      | Latest  |
+| **Reactive State**       | Svelte 5 runes (`$state`, `$derived`)             | Native  |
+| **Component Library**    | shadcn-svelte (bits-ui)                           | Latest  |
+| **CSS Framework**        | Tailwind CSS 4                                    | 4.x     |
+| **Type Safety**          | TypeScript strict mode                            | 5.x+    |
+| **i18n**                 | Paraglide-JS                                      | Latest  |
+| **Unit Testing**         | Vitest                                            | Latest  |
+| **Component Testing**    | Svelte Testing Library + @testing-library         | Latest  |
+| **E2E Testing**          | Playwright                                        | Latest  |
+| **Linting & Boundaries** | ESLint + eslint-plugin-boundaries                 | Latest  |
+| **Static Analysis**      | svelte-check                                      | Latest  |
 
 ---
 
@@ -90,12 +91,14 @@ Each feature is organized into four **conceptual** layers. Dependencies flow inw
 **Responsibility:** Business rules, entities, value objects, and invariants that remain true regardless of how the application is delivered.
 
 **What lives here:**
+
 - Type definitions (entities, value objects)
 - Business rules and validation
 - Exceptions and invariants
 - Domain-specific logic
 
 **What does NOT live here:**
+
 - Framework imports (Svelte, Tauri)
 - Generated bindings
 - UI state
@@ -133,6 +136,7 @@ export interface CollectionRules {
 **Responsibility:** Orchestrates domain logic and coordinates use cases. Defines the interfaces (ports) it needs; never implements IPC, persistence, or UI concerns.
 
 **What lives here:**
+
 - Use cases (application services)
 - Repository interfaces (ports)
 - State coordination logic
@@ -140,6 +144,7 @@ export interface CollectionRules {
 - Error aggregation
 
 **What does NOT live here:**
+
 - Tauri invocations
 - Generated bindings
 - Svelte component logic
@@ -188,6 +193,7 @@ export class CreateCollectionItem {
 **Responsibility:** Provides concrete implementations of application-layer interfaces. Handles Tauri IPC, error translation, serialization, and all technical details.
 
 **What lives here:**
+
 - Repository implementations (adapters)
 - Tauri command wrappers
 - Generated Specta bindings
@@ -196,6 +202,7 @@ export class CreateCollectionItem {
 - Platform-specific implementations
 
 **What does NOT live here:**
+
 - Business logic
 - UI state
 - Domain rules
@@ -259,12 +266,14 @@ export class TauriCollectionRepository implements CollectionRepository {
 **Responsibility:** Svelte components, layouts, and UI state management. Receives data from application state; never calls Tauri or repositories directly.
 
 **What lives here:**
+
 - Svelte components and pages
 - UI state (form data, local filters, animations)
 - Event handlers
 - Responsive layouts
 
 **What does NOT live here:**
+
 - Business logic
 - Tauri invocations
 - Generated bindings
@@ -306,6 +315,7 @@ export class TauriCollectionRepository implements CollectionRepository {
 State classes coordinate operations, hold reactive state, and expose a clean API to components. They are **not** generic state frameworks; they are feature-specific.
 
 **Responsibilities:**
+
 - Hold reactive state (`$state`)
 - Expose read-only state via getters
 - Coordinate operations via injected use cases/services
@@ -313,6 +323,7 @@ State classes coordinate operations, hold reactive state, and expose a clean API
 - Handle race conditions and cancellation
 
 **Non-Responsibilities:**
+
 - Calling Tauri directly
 - Implementing business logic
 - Translating Tauri errors
@@ -333,7 +344,7 @@ export class CollectionState {
 
   constructor(
     private readonly getCollection: GetCollection,
-    private readonly createItem: CreateCollectionItem,
+    private readonly createItem: CreateCollectionItem
   ) {}
 
   get items() {
@@ -379,7 +390,7 @@ export class CollectionState {
 
     try {
       await this.deleteItemUseCase.execute(id);
-      this.#items = this.#items.filter(item => item.id !== id);
+      this.#items = this.#items.filter((item) => item.id !== id);
     } catch (err) {
       this.#error = toAppError(err);
     }
@@ -388,6 +399,7 @@ export class CollectionState {
 ```
 
 **Key Details:**
+
 - Private fields with `#` enforce encapsulation
 - Getters expose state as read-only
 - Operations are coordinated, not implemented
@@ -408,7 +420,7 @@ Define explicit policies for concurrent requests to prevent race conditions.
 async load() {
   const thisRequestId = ++this.#requestId;
   const items = await this.getCollection.execute();
-  
+
   if (thisRequestId === this.#requestId) {
     this.#items = items; // Ignore stale responses
   }
@@ -473,7 +485,7 @@ export class CollectionState {
 
   get filteredItems() {
     return $derived.by(() => {
-      return this.#items.filter(item =>
+      return this.#items.filter((item) =>
         item.name.toLowerCase().includes(this.#filter.toLowerCase())
       );
     });
@@ -621,7 +633,9 @@ Becomes:
 
 ```typescript
 // Default: errors reject the promise
-commands.createItem(input).catch(error => { /* Tauri error */ });
+commands.createItem(input).catch((error) => {
+  /* Tauri error */
+});
 ```
 
 **Alternative (Explicit Result Type):**
@@ -642,8 +656,11 @@ Becomes:
 // With ErrorHandlingMode::Result
 type Result<T, E> = { status: 'ok'; data: T } | { status: 'error'; error: E };
 const result = await commands.createItem(input);
-if (result.status === 'ok') { /* success */ }
-else { /* error */ }
+if (result.status === 'ok') {
+  /* success */
+} else {
+  /* error */
+}
 ```
 
 **Recommendation:** Use the default promise-based approach. The infrastructure layer translates promise rejections into `AppError` using `mapTauriError`. This keeps the boundary clean.
@@ -728,27 +745,29 @@ src/lib/
 
 ### 6.2 File Responsibilities
 
-| File                            | Responsibility                               |
-| ------------------------------- | -------------------------------------------- |
-| `domain/*.types.ts`             | Entities, value objects, type definitions    |
-| `domain/*.rules.ts`             | Validation functions, business invariants    |
-| `application/ports/*.ts`        | Interface contracts (what the app needs)     |
-| `application/use-cases/*.ts`    | Single-responsibility use case classes       |
-| `application/*State.svelte.ts`  | Reactive state coordination                  |
-| `application/index.ts`          | Public exports (use cases, state interfaces) |
-| `infrastructure/*.ts`           | Repository implementations, error mappers    |
-| `presentation/*.svelte`         | Svelte components (UI, layout, interaction)  |
-| `*.context.ts`                  | Svelte Context API providers and consumers   |
-| `index.ts` (feature root)        | Public exports (types, context, state)       |
+| File                           | Responsibility                               |
+| ------------------------------ | -------------------------------------------- |
+| `domain/*.types.ts`            | Entities, value objects, type definitions    |
+| `domain/*.rules.ts`            | Validation functions, business invariants    |
+| `application/ports/*.ts`       | Interface contracts (what the app needs)     |
+| `application/use-cases/*.ts`   | Single-responsibility use case classes       |
+| `application/*State.svelte.ts` | Reactive state coordination                  |
+| `application/index.ts`         | Public exports (use cases, state interfaces) |
+| `infrastructure/*.ts`          | Repository implementations, error mappers    |
+| `presentation/*.svelte`        | Svelte components (UI, layout, interaction)  |
+| `*.context.ts`                 | Svelte Context API providers and consumers   |
+| `index.ts` (feature root)      | Public exports (types, context, state)       |
 
 ### 6.3 Feature Boundaries
 
 **Features must not:**
+
 - Access another feature's internal implementation (`application/`, `infrastructure/`, `domain/`)
 - Share state classes (state classes are feature-scoped)
 - Import application or domain code from other features
 
 **Features may:**
+
 - Use shared components from `src/lib/shared/`
 - Import types from other features' `index.ts` (public exports only)
 - Appear as a consumer in another feature's application layer (e.g., dashboard consuming collection types)
@@ -762,7 +781,6 @@ import type { CollectionItem } from '$lib/features/collection/index';
 // ❌ Not allowed: Reaching into internal layers
 // import { CollectionState } from '$lib/features/collection/application/CollectionState.svelte';
 ```
-
 
 ---
 
@@ -787,12 +805,14 @@ The testing pyramid ensures confidence at multiple levels without excessive E2E 
 ### 7.2 Unit Tests (Domain & Application)
 
 **What to test:**
+
 - Domain validation rules
 - Use case execution with fake repositories
 - State coordination logic
 - Error handling paths
 
 **What NOT to test:**
+
 - Svelte compiler output
 - Component rendering (that's component testing)
 - Actual Tauri IPC
@@ -841,18 +861,18 @@ class FakeCollectionRepository implements CollectionRepository {
   }
 
   async getById(id: string) {
-    return this.items.find(item => item.id === id) ?? null;
+    return this.items.find((item) => item.id === id) ?? null;
   }
 
   async update(id: string, input: Partial<CreateCollectionItemInput>) {
-    const item = this.items.find(i => i.id === id);
+    const item = this.items.find((i) => i.id === id);
     if (!item) throw new Error('Not found');
     Object.assign(item, input);
     return item;
   }
 
   async delete(id: string) {
-    this.items = this.items.filter(i => i.id !== id);
+    this.items = this.items.filter((i) => i.id !== id);
   }
 }
 
@@ -893,9 +913,7 @@ class FakeGetCollection implements GetCollection {
 
 describe('CollectionState', () => {
   it('loads items and updates state', async () => {
-    const getCollection = new FakeGetCollection([
-      { id: '1', name: 'ICE 3', scale: 'H0' }
-    ]);
+    const getCollection = new FakeGetCollection([{ id: '1', name: 'ICE 3', scale: 'H0' }]);
     const state = new CollectionState(getCollection);
 
     expect(state.loading).toBe(false);
@@ -928,6 +946,7 @@ describe('CollectionState', () => {
 ### 7.3 Component Tests (Presentation)
 
 **What to test:**
+
 - User interactions (clicks, form input)
 - DOM updates after state changes
 - Event handler invocations
@@ -946,7 +965,7 @@ class FakeCollectionState {
   error = null;
 
   async deleteItem(id: string) {
-    this.items = this.items.filter(i => i.id !== id);
+    this.items = this.items.filter((i) => i.id !== id);
   }
 }
 
@@ -1114,6 +1133,7 @@ export default [
 ```
 
 This ensures:
+
 - Presentation cannot import infrastructure or generated bindings
 - Application cannot import Tauri APIs directly
 - Domain is completely isolated
@@ -1162,6 +1182,7 @@ Run in CI: `npx depcruise src`
 ### 8.5 Use Case Test Coverage
 
 Code review requirement: Every use case must have corresponding unit tests that verify:
+
 - Success path
 - Error paths
 - Edge cases
@@ -1196,7 +1217,7 @@ function createCollectionFeature() {
 
 export function createApplication() {
   return {
-    collection: createCollectionFeature(),
+    collection: createCollectionFeature()
     // wishlist, depot, dashboard...
   };
 }
@@ -1268,7 +1289,7 @@ Use Tailwind breakpoints and conditional rendering:
 </script>
 
 <!-- Desktop: sidebar + main content -->
-<div class="hidden lg:grid lg:grid-cols-4 gap-4">
+<div class="hidden gap-4 lg:grid lg:grid-cols-4">
   <aside class="lg:col-span-1">
     <CollectionFilters />
   </aside>
@@ -1527,6 +1548,7 @@ Implement these changes in phases:
 - [ ] Configure TypeScript strict mode
 
 **Verification:**
+
 - `pnpm svelte-check` passes
 - `pnpm lint` passes
 - No application-layer imports of Tauri
@@ -1540,6 +1562,7 @@ Implement these changes in phases:
 - [ ] Update root layout
 
 **Verification:**
+
 - State classes accept injected dependencies
 - No direct Tauri calls outside infrastructure
 - Application compiles and runs
@@ -1553,6 +1576,7 @@ Implement these changes in phases:
 - [ ] Configure Vitest + Testing Library
 
 **Verification:**
+
 - `pnpm test` passes
 - Domain and application layers testable without Tauri
 - Coverage reports show adequate coverage
@@ -1566,6 +1590,7 @@ Implement these changes in phases:
 - [ ] Add test coverage gates
 
 **Verification:**
+
 - CI enforces all architectural rules
 - No manual enforcement needed in code review
 
@@ -1576,6 +1601,7 @@ Implement these changes in phases:
 - [ ] Add integration tests for multi-feature workflows
 
 **Verification:**
+
 - All features follow the architecture
 - No backward compatibility issues
 
@@ -1629,11 +1655,13 @@ export class GetCollection {
 **Don't duplicate Rust business rules in TypeScript.**
 
 Your Rust domain owns:
+
 - Item validation
 - Inventory constraints
 - Scale-based rules
 
 Your TypeScript domain owns:
+
 - Selection state (which items are selected?)
 - Filter state (how is the list filtered?)
 - UI-specific validation (are required fields filled?)
@@ -1642,15 +1670,15 @@ Your TypeScript domain owns:
 
 ## 14. Changes from Previous Version
 
-| Previous Requirement                      | New Requirement                                      |
-| ----------------------------------------- | ---------------------------------------------------- |
-| Feature controller calls Tauri directly   | Controller depends on injected use case/port         |
-| State classes wrapping Tauri invokes      | State classes coordinate; infrastructure handles IPC |
-| Try/catch around every invoke             | Centralized error translation at boundary           |
-| Generated bindings used throughout        | Generated bindings isolated to infrastructure        |
-| No explicit testing strategy              | Testing pyramid with concrete examples              |
-| No dependency injection                   | Explicit composition root and Context injection     |
-| ESLint rules optional                     | ESLint boundaries enforced in CI                    |
+| Previous Requirement                    | New Requirement                                      |
+| --------------------------------------- | ---------------------------------------------------- |
+| Feature controller calls Tauri directly | Controller depends on injected use case/port         |
+| State classes wrapping Tauri invokes    | State classes coordinate; infrastructure handles IPC |
+| Try/catch around every invoke           | Centralized error translation at boundary            |
+| Generated bindings used throughout      | Generated bindings isolated to infrastructure        |
+| No explicit testing strategy            | Testing pyramid with concrete examples               |
+| No dependency injection                 | Explicit composition root and Context injection      |
+| ESLint rules optional                   | ESLint boundaries enforced in CI                     |
 
 ---
 
