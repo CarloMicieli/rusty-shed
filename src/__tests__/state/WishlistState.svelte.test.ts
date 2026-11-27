@@ -165,6 +165,19 @@ describe('WishlistState', () => {
       expect(state.wishlists).toHaveLength(0);
       expect(state.isLoading).toBe(false);
     });
+
+    it('auto-selects the only wishlist when no default exists', async () => {
+      const previews = [makePreview('single')];
+      mockInvoke
+        .mockResolvedValueOnce(previews)
+        .mockResolvedValueOnce({ id: 'single', name: 'Wishlist single', items: [] });
+
+      const state = createWishlistState();
+      await state.fetchWishlists();
+
+      expect(state.activeWishlistId).toBe('single');
+      expect(mockInvoke).toHaveBeenCalledWith('get_wishlist_by_id', { id: 'single' });
+    });
   });
 
   describe('selectWishlist', () => {
@@ -178,6 +191,17 @@ describe('WishlistState', () => {
       await state.selectWishlist('w1');
 
       expect(state.activeWishlistId).toBe('w1');
+    });
+
+    describe('loadWishlistItems', () => {
+      it('keeps existing state when loading items fails', async () => {
+        mockInvoke.mockRejectedValueOnce({ Unknown: 'load failed' });
+        const state = createWishlistState();
+
+        await state.loadWishlistItems('wl-err');
+
+        expect(state.itemsByWishlist['wl-err']).toBeUndefined();
+      });
     });
 
     it('does not re-load items when already loaded', async () => {
@@ -297,6 +321,84 @@ describe('WishlistState', () => {
       await state.removeItem('w1', 'i1');
 
       expect(state.itemsByWishlist['w1']).toHaveLength(1);
+    });
+  });
+
+  describe('moveItemToList', () => {
+    it('does nothing when source item is missing', async () => {
+      const state = createWishlistState();
+
+      await state.moveItemToList('missing-item', 'wl-from', 'wl-to');
+
+      expect(mockInvoke).not.toHaveBeenCalled();
+      expect(state.itemsByWishlist['wl-from']).toBeUndefined();
+      expect(state.itemsByWishlist['wl-to']).toBeUndefined();
+    });
+  });
+
+  describe('addRailwayModelToWishlist', () => {
+    it('refreshes active list items and wishlist previews on success', async () => {
+      const previews = [makePreview('w1', true)];
+      mockInvoke
+        .mockResolvedValueOnce(previews) // fetch wishlists
+        .mockResolvedValueOnce({ id: 'w1', name: 'Wishlist w1', items: [] }) // load selected list
+        .mockResolvedValueOnce(null) // add_railway_model_to_wish_list
+        .mockResolvedValueOnce({ id: 'w1', name: 'Wishlist w1', items: [makeItem('i1')] }) // refresh active items
+        .mockResolvedValueOnce(previews); // refresh wishlists
+
+      const state = createWishlistState();
+      await state.fetchWishlists();
+
+      const ok = await state.addRailwayModelToWishlist({
+        railwayModel: {
+          manufacturerId: 'm-1',
+          productCode: 'P1',
+          description: 'Model',
+          category: 'LOCOMOTIVE',
+          scale: 'H0',
+          epoch: 'IV',
+          powerMethod: 'DC',
+          rollingStocks: []
+        },
+        wishlistId: 'w1',
+        priority: 'NORMAL',
+        status: null,
+        desiredPriceAmount: null,
+        desiredPriceCurrency: null,
+        notes: null,
+        addedDate: null
+      });
+
+      expect(ok).toBe(true);
+      expect(state.itemsByWishlist['w1']).toHaveLength(1);
+    });
+
+    it('returns false and does not refresh state when add command fails', async () => {
+      mockInvoke.mockRejectedValueOnce({ DatabaseError: 'insert failed' });
+      const state = createWishlistState();
+
+      const ok = await state.addRailwayModelToWishlist({
+        railwayModel: {
+          manufacturerId: 'm-1',
+          productCode: 'P1',
+          description: 'Model',
+          category: 'LOCOMOTIVE',
+          scale: 'H0',
+          epoch: 'IV',
+          powerMethod: 'DC',
+          rollingStocks: []
+        },
+        wishlistId: 'w1',
+        priority: 'NORMAL',
+        status: null,
+        desiredPriceAmount: null,
+        desiredPriceCurrency: null,
+        notes: null,
+        addedDate: null
+      });
+
+      expect(ok).toBe(false);
+      expect(mockInvoke).toHaveBeenCalledTimes(1);
     });
   });
 

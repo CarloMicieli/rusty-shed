@@ -37,8 +37,10 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 import { invoke } from '@tauri-apps/api/core';
 import { createCollectionState } from '$lib/features/collection/CollectionState.svelte';
 import type { CollectionView, Scale } from '$lib/bindings';
+import { toaster } from '$lib/toaster';
 
 const mockInvoke = vi.mocked(invoke);
+const mockToaster = vi.mocked(toaster);
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -502,6 +504,58 @@ describe('CollectionState', () => {
       });
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('deleteItem', () => {
+    it('returns null and shows error when item does not exist', async () => {
+      const state = createCollectionState();
+
+      const result = await state.deleteItem('missing-id');
+
+      expect(result).toBeNull();
+      expect(mockToaster.error).toHaveBeenCalledWith('Item not found');
+      expect(mockInvoke).not.toHaveBeenCalled();
+    });
+
+    it('returns null and shows backend error message when remove command fails', async () => {
+      const items = [makeItem('1')];
+      mockInvoke
+        .mockResolvedValueOnce(makeCollection(items)) // fetchCollection
+        .mockRejectedValueOnce({ DatabaseError: 'cannot remove' }); // remove_collection_item
+
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      const result = await state.deleteItem('1');
+
+      expect(result).toBeNull();
+      expect(mockToaster.error).toHaveBeenCalledWith('Failed to remove item: cannot remove');
+    });
+
+    it('removes item and refreshes collection on success', async () => {
+      const items = [makeItem('1')];
+      mockInvoke
+        .mockResolvedValueOnce(makeCollection(items)) // fetchCollection
+        .mockResolvedValueOnce({ ok: true }) // remove_collection_item
+        .mockResolvedValueOnce(makeCollection([])); // forceRefresh
+
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      const result = await state.deleteItem('1');
+
+      expect(result).toEqual({ ok: true });
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'remove_collection_item',
+        expect.objectContaining({
+          args: expect.objectContaining({
+            collectionItemId: '1',
+            category: 'LOCOMOTIVES'
+          })
+        })
+      );
+      expect(mockToaster.success).toHaveBeenCalledWith('Item removed from collection');
     });
   });
 });
