@@ -16,7 +16,7 @@ The codebase has a strong architectural foundation:
 - Paraglide-JS, Tailwind CSS 4, shadcn-svelte composition, and the steampunk design
   system should be preserved.
 
-The verified backlog contains **18 independently actionable tasks**. Seven proposed
+The verified backlog contains **17 independently actionable tasks**. Seven proposed
 abstractions from the first draft are not backlog tasks:
 
 | Proposed abstraction | Decision | Rationale |
@@ -125,11 +125,13 @@ user-facing literals in audited components.
   second store, but layout and route code can read stale or separately cached data.
 - **Reason for change:** A single collection cache reduces synchronization bugs and
   removes repeated IPC and item lookup logic.
-- **Suggested implementation:** Choose one existing owner: the feature
-  `CollectionState` context for feature views and route state, or a thin module-level
-  cache for global lookups. Do not create a new container. Migrate layout, route,
-  SearchBar, and mutations one call at a time, then remove the duplicate owner and
-  update tests. Preserve route refresh and cache-hit behavior.
+- **Suggested implementation:** Before choosing an owner, map every consumer,
+  lifecycle trigger, mutation path, cache-hit behavior, route refresh, and remount
+  behavior. Compare the feature `CollectionState` context with the thin module-level
+  `collectionStore`; retain the smallest owner that can serve layout, route, SearchBar,
+  and feature mutations consistently. Do not create a new container. Migrate
+  consumers one call at a time, then remove the duplicate owner and update tests.
+  Preserve route refresh and cache-hit behavior while mapping the risk explicitly.
 - **Expected outcome:** One collection fetch/cache owner, consistent item lookup, and
   no mutation that silently updates only one copy.
 - **Acceptance criteria:** No production component reads or writes both collection
@@ -137,6 +139,9 @@ user-facing literals in audited components.
   update every view observing the collection; no stale item remains after refresh.
 - **Dependencies:** None.
 - **Estimated effort:** L
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-002: Consolidate duplicate Tauri normalization into the existing adapters
 
@@ -153,9 +158,12 @@ user-facing literals in audited components.
   service or validator. It removes drift in error normalization and gives one
   documented import path.
 - **Suggested implementation:** Decide one canonical module aligned with the existing
-  Clean Architecture adapter location. Re-export compatibility types/functions only
-  if needed during migration, update imports, and delete duplicate implementation
-  after all call sites move. Keep generated `commands` and tauri-specta types intact.
+  Clean Architecture adapter location. Before merging, compare the normalized error
+  contracts, dependencies, and every import of each adapter. Preserve the union
+  member behavior that differs unless tests or source evidence proves it is accidental.
+  Re-export compatibility types/functions only if needed during migration, update
+  imports, and delete duplicate implementation after all call sites move. Keep
+  generated `commands` and tauri-specta types intact.
 - **Expected outcome:** One implementation of normalization and `safeInvoke`;
   existing tests continue to pass with the same public behavior.
 - **Acceptance criteria:** Only one production implementation contains
@@ -164,6 +172,9 @@ user-facing literals in audited components.
   the canonical adapter and generated bindings.
 - **Dependencies:** None.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-003: Migrate remaining direct Tauri adapter use
 
@@ -185,6 +196,9 @@ user-facing literals in audited components.
   tests pass.
 - **Dependencies:** FE-002.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-004: Add stale-response protection to SearchBar
 
@@ -201,7 +215,10 @@ user-facing literals in audited components.
 - **Suggested implementation:** Add a monotonically increasing request sequence or
   invalidate a pending request when input changes. Ignore obsolete completions.
   Clear stale UI state on close/Escape. Keep the 300 ms debounce and 10-result limit.
-  Reuse generated command methods rather than a new service.
+  Reuse generated command methods rather than a new service. Cancellation is optional:
+  investigate whether the generated binding or Tauri `InvokeOptions` exposes a real
+  AbortSignal. If cancellation is not supported end to end, use request invalidation
+  and do not introduce a transport abstraction solely for search.
 - **Expected outcome:** The displayed results always correspond to the latest query
   submitted by the user.
 - **Acceptance criteria:** Tests prove an older promise cannot replace a newer result;
@@ -209,6 +226,9 @@ user-facing literals in audited components.
   remain unchanged.
 - **Dependencies:** None.
 - **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-005: Replace manual SearchBar result parsing
 
@@ -231,6 +251,9 @@ user-facing literals in audited components.
   empty, and error states.
 - **Dependencies:** FE-004.
 - **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-006: Localize remaining SearchBar literals
 
@@ -249,6 +272,9 @@ user-facing literals in audited components.
   contain no missing key; no search UI branch contains the hardcoded English message.
 - **Dependencies:** None.
 - **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-007: Standardize existing drawer field primitives
 
@@ -268,7 +294,9 @@ user-facing literals in audited components.
 - **Suggested implementation:** Define the existing primitives as the canonical
   choices, add only props needed to correct concrete gaps (such as consistent
   `id`/`aria-describedby`/`aria-invalid` behavior), and migrate repeated markup in
-  a targeted set of drawers. Do not add `FormFieldWrapper` or a general form DSL.
+  a targeted set of drawers one representative component at a time. Verify tests
+  after each migration rather than changing all drawers in one assignment. Do not
+  add `FormFieldWrapper` or a general form DSL.
 - **Expected outcome:** Drawers compose existing primitives with consistent labels,
   errors, disabled state, and IDs.
 - **Acceptance criteria:** Migrated drawers have associated labels and error text;
@@ -276,6 +304,9 @@ user-facing literals in audited components.
   required and invalid states.
 - **Dependencies:** FE-008 and FE-009 may use the same primitives.
 - **Estimated effort:** L
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-008: Complete shared DrawerShell adoption
 
@@ -299,6 +330,9 @@ user-facing literals in audited components.
   drawers; no drawer bypasses the shell solely to reproduce discard behavior.
 - **Dependencies:** None.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-009: Add focus management to DrawerShell
 
@@ -312,14 +346,20 @@ user-facing literals in audited components.
 - **Reason for change:** Focus loss is a concrete accessibility regression for keyboard
   and assistive-technology users.
 - **Suggested implementation:** Use Svelte DOM lifecycle APIs and existing shadcn
-  dialog primitives if compatible; otherwise implement a small scoped focus trap in
-  the shell. Save the active element when opened and restore it when closed.
+  dialog primitives if compatible. Prefer the existing `dialog` or `alert-dialog`
+  primitives, which already provide accessible behavior through bits-ui, for the
+  drawer shell and nested discard confirmation. Do not implement a custom focus trap
+  unless the existing primitives cannot preserve the drawer layout or cannot be
+  composed correctly. Save the active element when opened and restore it when closed.
 - **Expected outcome:** Keyboard focus remains within the open drawer and returns to
   the opener after close.
 - **Acceptance criteria:** Automated tests verify initial focus, Tab cycling, Escape,
   close, and focus restoration; no scroll-lock leak remains after close/unmount.
 - **Dependencies:** FE-008.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-010: Localize model-details control labels
 
@@ -343,6 +383,9 @@ user-facing literals in audited components.
   same backend payload.
 - **Dependencies:** None.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-011: Narrow the RollingStockCard responsibility split
 
@@ -358,7 +401,9 @@ user-facing literals in audited components.
 - **Reason for change:** Targeted extraction can improve maintainability while
   avoiding component churn.
 - **Suggested implementation:** Identify only the remaining duplicated state or
-  rendering branch in one focused pass. Prefer moving a complete behavior to an
+  rendering branch in one focused pass. Keep this task conditional on a reproduced
+  defect, a confirmed duplicated state path, or a failing test: do not split the
+  component solely to reduce line count. Prefer moving a complete behavior to an
   existing child or `useRollingStockEditor` before creating a new component. Do not
   introduce a generic model-details state class.
 - **Expected outcome:** The card delegates its existing editor behavior cleanly and
@@ -368,6 +413,9 @@ user-facing literals in audited components.
   pass; no new abstraction exceeds the complexity it replaces.
 - **Dependencies:** FE-010 only if option labels are touched.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-012: Prevent stale model-details overrides after refresh
 
@@ -391,6 +439,9 @@ user-facing literals in audited components.
   and failure/reload; stale units are not rendered after authoritative data changes.
 - **Dependencies:** None.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-013: Add image upload/crop lifecycle tests before refactoring
 
@@ -416,6 +467,9 @@ user-facing literals in audited components.
   repeated crop/upload operations; no URL or file-reader resource leak is observed.
 - **Dependencies:** None.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-014: Document and audit the edit context contract
 
@@ -438,6 +492,9 @@ user-facing literals in audited components.
   fallback; documentation identifies exactly which component establishes the context.
 - **Dependencies:** None.
 - **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-015: Add feature-boundary lint rules with baseline
 
@@ -463,6 +520,9 @@ user-facing literals in audited components.
   private/relative cross-feature violations fail lint.
 - **Dependencies:** None.
 - **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-016: Add a repeatable list performance baseline
 
@@ -488,28 +548,9 @@ user-facing literals in audited components.
   is added; one measured bottleneck is recorded before optimization.
 - **Dependencies:** None.
 - **Estimated effort:** M
-
-### FE-017: Remove derived-state speculation until profiling shows a cost
-
-- **Priority:** Low
-- **Verification status:** Not justified
-- **Category:** Performance
-- **Affected files:** Potential: `RollingStockCard.svelte`,
-  `RailwayModelCard.svelte`, model-details components
-- **Problem description:** The previous plan assumed some `$derived` chains recalculate
-  unnecessarily, but no benchmark or reactive dependency trace supports that claim.
-- **Reason for change:** Svelte runes are already fine-grained; premature memoization
-  would add state and debugging risk.
-- **Suggested implementation:** No refactor by default. If FE-016 or application
-  profiling identifies a hot derived computation, profile that exact expression and
-  simplify or split it. Preserve Svelte 5 runes.
-- **Expected outcome:** Avoided unnecessary reactivity work, with no added memoization
-  layers.
-- **Acceptance criteria:** No task implementation changes `$derived` solely for
-  line count or architectural preference; any future change cites a recorded
-  bottleneck and before/after measurement.
-- **Dependencies:** FE-016.
-- **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ### FE-018: Audit bundle icons and table usage with build evidence
 
@@ -533,6 +574,9 @@ user-facing literals in audited components.
   measured optimization.
 - **Dependencies:** None.
 - **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
 
 ## E. Abstraction Review
 
@@ -556,91 +600,140 @@ The following abstractions are explicitly rejected from the implementation backl
   cases. Shared primitives should remain composable rather than becoming a generic
   data framework.
 
-## F. Implementation Roadmap
+## F. Definition of Done
 
-### Phase 1: State and IPC correctness
+Every task is complete only when all of the following are demonstrated:
 
-- **Tasks:** FE-001, FE-002, FE-003
-- **Objective:** Establish one collection state owner and one canonical Tauri
-  normalization path.
-- **Dependencies:** FE-003 depends on FE-002.
-- **Estimated effort:** 1 L + 1 M + 1 M
-- **Validation strategy:** Run collection, layout, route, service, and tauri adapter
-  tests; run Svelte and TypeScript checks; verify refresh and cache behavior manually.
+- The original problem is demonstrably resolved, with the applicable acceptance
+  criteria passing.
+- Existing functionality is preserved for relevant routes, drawers, forms, state
+  lifecycles, and generated IPC contracts.
+- Targeted tests cover the changed behavior, including success and relevant failure
+  or stale-state cases.
+- No unnecessary architectural abstraction was introduced; existing Svelte 5,
+  tauri-specta, feature, shared, shadcn-svelte, Tailwind, and i18n patterns remain
+  preferred.
+- Documentation is updated when conventions, provider ownership, or public behavior
+  changes.
+- Static checks pass, including `pnpm svelte-check`, relevant lint and format checks,
+  and relevant Vitest suites. Cargo tests are required when backend behavior changes.
+- The final diff contains no unrelated edits, generated noise, secrets, or speculative
+  follow-up work.
 
-### Phase 2: Search and immediate i18n correctness
+## G. Execution Protocol
+
+Assign one task to one coding-agent pass when possible. The agent should:
+
+1. Read the task and verify its affected files and dependencies.
+2. Inspect the implementation and all relevant tests before editing.
+3. Identify the smallest safe change and record migration regressions to avoid.
+4. Implement the task without merging unrelated tasks or adding a new abstraction
+   unless the acceptance criteria require it.
+5. Add or update targeted tests.
+6. Run relevant checks and inspect the complete diff.
+7. Report completed acceptance criteria and remaining concerns.
+
+For each task, maintain this execution metadata:
+
+- **Status:** `Not started`, `In progress`, `Blocked`, or `Completed`.
+- **Completion date:** ISO date in `YYYY-MM-DD` format, or `—` while unfinished.
+- **Implementation commit:** Short commit hash, or `—` while unfinished.
+
+Update the status in the task entry, not only in external issue trackers. A task
+must become `Blocked` only when a concrete dependency or missing evidence prevents
+completion, and the blocker should be added beside the task.
+
+## H. Implementation Roadmap
+
+### Phase 1: Search correctness, typing, and localization
 
 - **Tasks:** FE-004, FE-005, FE-006
 - **Objective:** Prevent stale search results, remove manual response casting, and
   localize the remaining verified string.
-- **Dependencies:** FE-005 follows FE-004 only for sequencing, not code ownership.
+- **Dependencies:** FE-005 follows FE-004 for sequencing; FE-006 is independent.
 - **Estimated effort:** 3 S
 - **Validation strategy:** Add stale-promise tests and run SearchBar tests; verify
   English and Italian message generation.
 
-### Phase 3: Drawer and form consistency
+### Phase 2: Tauri integration consolidation
+
+- **Tasks:** FE-002, FE-003
+- **Objective:** Establish one canonical IPC normalization path and migrate direct
+  Tauri calls.
+- **Dependencies:** FE-003 depends on FE-002.
+- **Estimated effort:** 2 M
+- **Validation strategy:** Run adapter, service, and direct-call consumer tests;
+  run svelte-check and verify all production invoke imports.
+
+### Phase 3: Collection state consolidation
+
+- **Tasks:** FE-001
+- **Objective:** Establish one collection owner only after all state lifecycles and
+  consumers have been mapped.
+- **Dependencies:** None.
+- **Estimated effort:** L
+- **Validation strategy:** Run collection, layout, route, SearchBar, and mutation
+  tests; manually verify refresh, re-entry, and stale-item behavior.
+
+### Phase 4: Drawer and form consistency
 
 - **Tasks:** FE-007, FE-008, FE-009
 - **Objective:** Improve existing field primitives and shared drawer behavior before
   any new form abstraction.
-- **Dependencies:** FE-009 follows FE-008; FE-007 can proceed independently.
+- **Dependencies:** FE-009 follows FE-008; FE-007 should be migrated incrementally
+  and validated with representative component tests.
 - **Estimated effort:** 1 L + 1 M + 1 M
 - **Validation strategy:** Run drawer/component tests, keyboard focus tests,
   svelte-check, and an accessibility review of representative desktop/mobile drawers.
 
-### Phase 4: Model-details responsibility and localization
+### Phase 5: Model-details improvements
 
 - **Tasks:** FE-010, FE-011, FE-012, FE-014
-- **Objective:** Fix verified localization/state context issues and remove only
+- **Objective:** Fix verified localization/state context issues and change components only
   demonstrated responsibility problems.
 - **Dependencies:** FE-011 should follow FE-012 where refresh ownership overlaps.
 - **Estimated effort:** 3 M + 1 S
 - **Validation strategy:** Run model-details tests, edit-context tests, save/delete
   refresh tests, and locale checks.
 
-### Phase 5: Verification before further extraction
+### Phase 6: Verification and architectural governance
 
-- **Tasks:** FE-013, FE-016, FE-018
-- **Objective:** Establish lifecycle and performance evidence before image, list,
+- **Tasks:** FE-013, FE-015, FE-016, FE-018
+- **Objective:** Establish lifecycle and performance evidence and add narrow architecture
+  governance before image, list,
   derived-state, or bundle refactors.
-- **Dependencies:** FE-017 can be considered only after FE-016 yields evidence.
-- **Estimated effort:** 2 M + 1 S
+- **Dependencies:** FE-015 can follow once the collection/IPC ownership is stable.
+- **Estimated effort:** 3 M + 1 S
 - **Validation strategy:** Run image tests; produce a list benchmark and production
-  bundle report; record any follow-up implementation only from observed bottlenecks.
+  bundle report; generate a feature dependency report and run lint; record any
+  follow-up implementation only from observed bottlenecks.
 
-### Phase 6: Architecture governance
+### Deferred decision: derived-state optimization
 
-- **Tasks:** FE-015
-- **Objective:** Add narrow, evidence-based feature boundary enforcement.
-- **Dependencies:** None, but should occur after Phase 1 import ownership is stable.
-- **Estimated effort:** M
-- **Validation strategy:** Generate a dependency report, run lint, and verify that
-  public imports and known exceptions remain valid.
-
-### Deferred: Evidence-required optimization
-
-- **Tasks:** FE-017
+- **Task ID:** None (moved out of the active backlog)
 - **Objective:** No implementation until profiling proves reactive recomputation is
   expensive.
-- **Dependencies:** FE-016.
-- **Estimated effort:** S only if a concrete defect is confirmed.
+- **Dependency:** FE-016 list measurement may provide relevant evidence, but it does
+  not justify creating a task automatically.
+- **Effort:** S only if a concrete defect is confirmed and a detailed task is added.
 - **Validation strategy:** Before/after benchmark for the exact derived expression.
 
-## G. Task Count and Consolidation
+## I. Task Count and Consolidation
 
 The previous summary of 56 tasks was not supported by 56 detailed entries. This
-backlog lists 18 tasks, and every entry contains the required implementation fields.
+backlog lists 17 tasks, and every entry contains the required implementation fields.
 Overlapping recommendations were consolidated or removed:
 
-- Component-size recommendations FE-002/FE-003/FE-012 were reduced to one targeted
-  responsibility task and one model-details stale-state investigation.
+- Component-size recommendations were reduced to a conditional responsibility task
+  (FE-011) and a separate stale-state investigation (FE-012), rather than a broad
+  line-count refactor.
 - `TauriCommandService`, `TauriBindingValidator`, and runtime response-validation
   recommendations became one adapter consolidation and one direct-import migration.
 - Drawer abstractions became existing-primitive and existing-shell improvements.
 - Generic virtualization and `DataTable` work became a measurement task.
 - Derived-state and bundle-size recommendations remain deferred until measured.
 
-## H. Quality Assurance Checklist
+## J. Quality Assurance Checklist
 
 For each completed task:
 
