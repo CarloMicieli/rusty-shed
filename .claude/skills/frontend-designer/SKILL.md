@@ -26,12 +26,12 @@ This skill does not independently define the visual identity or desktop interact
 
 Before implementing or auditing UI, read:
 
-1. `docs/ux/DESIGN_SYSTEM.md`
-2. `docs/FRONTEND_ARCHITECTURE.md`
+1. `docs/ux/design-system.md`
+2. `docs/frontend-architecture.md`
 
 Authority:
-- `DESIGN_SYSTEM.md` is the single source of truth for visual decisions: colors, typography, spacing, radii, surfaces, borders, shadows, states, motion, and component appearance.
-- `FRONTEND_ARCHITECTURE.md` is the source of truth for application structure, routing, component organization, Svelte conventions, and frontend integration patterns.
+- `design-system.md` is the single source of truth for visual decisions: colors, typography, spacing, radii, surfaces, borders, shadows, states, motion, and component appearance.
+- `frontend-architecture.md` is the source of truth for application structure, routing, component organization, Svelte conventions, and frontend integration patterns.
 - This skill defines implementation practices, not a competing visual system.
 
 Inspect the relevant existing components, utilities, theme files, and package versions before choosing an implementation. Do not assume a component, token, utility, or dependency exists without checking.
@@ -45,7 +45,7 @@ All visual styling must use the existing design system.
 Requirements:
 1. Prefer semantic theme utilities such as `bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, and `ring-ring` when they are defined by the project.
 2. Use existing project-specific utilities and component variants before creating new ones.
-3. Do not introduce literal hex, RGB, HSL, or OKLCH colors in component markup or local styles unless `DESIGN_SYSTEM.md` explicitly documents the exception.
+3. Do not introduce literal hex, RGB, HSL, or OKLCH colors in component markup or local styles unless `design-system.md` explicitly documents the exception.
 4. Do not invent arbitrary spacing, dimensions, typography, radii, borders, shadows, or opacity values when an established token or component pattern exists.
 5. Do not assume a token exists based only on its name. Verify it in the theme and project styles.
 6. Do not copy visual values from screenshots or unrelated components when they conflict with the design-system definitions.
@@ -79,7 +79,7 @@ When extending shadcn-svelte components:
 
 ## 5. Svelte 5 Implementation
 
-Use idiomatic Svelte 5 patterns, consistent with `FRONTEND_ARCHITECTURE.md`.
+Use idiomatic Svelte 5 patterns, consistent with `frontend-architecture.md`.
 
 Requirements:
 1. Use `$props()` for component props and defaults.
@@ -119,12 +119,12 @@ Requirements:
 
 Before building a page or major view:
 1. Inspect the existing route and layout structure.
-2. Review `FRONTEND_ARCHITECTURE.md` for the intended page composition.
+2. Review `frontend-architecture.md` for the intended page composition.
 3. Identify shared shell components and existing patterns.
 4. Determine whether the view needs navigation, contextual panels, command areas, or other application-level regions.
 5. Use the layout defined by the project; do not impose a new shell or panel arrangement merely because it appears in an older skill or example.
 
-For full views, preserve the application's established Mechanical Precision visual language as specified in `DESIGN_SYSTEM.md`.
+For full views, preserve the application's established Mechanical Precision visual language as specified in `design-system.md`.
 
 ## 8. Performance and Robustness
 
@@ -157,8 +157,8 @@ Do not report stylistic preferences as violations unless they conflict with the 
 ## 10. Completion Checklist
 
 Before considering UI work complete, verify:
-- [ ] `DESIGN_SYSTEM.md` was followed.
-- [ ] `FRONTEND_ARCHITECTURE.md` was followed.
+- [ ] `design-system.md` was followed.
+- [ ] `frontend-architecture.md` was followed.
 - [ ] Existing tokens and primitives were reused.
 - [ ] No undocumented hardcoded visual values were introduced.
 - [ ] Svelte 5 runes are used appropriately.

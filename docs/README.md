@@ -73,8 +73,8 @@ Keep track of future purchases.
 
 ## Architecture Documentation
 
-- [Feature Implementation](FEATURE_IMPLEMENTATION.md)
-- [Query System](QUERY_SYSTEM.md)
-- [Frontend Architecture](FRONTEND_ARCHITECTURE.md)
+- [Feature Implementation](feature-implementation.md)
+- [Query System](query-system.md)
+- [Frontend Architecture](frontend-architecture.md)
 
 ---

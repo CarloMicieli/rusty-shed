@@ -18,16 +18,16 @@ This skill governs:
 - Feedback, confirmations, and error recovery.
 - Desktop ergonomics and interaction consistency.
 
-This skill does not define colors, typography, spacing, radii, shadows, or component appearance. Those decisions belong exclusively to `docs/ux/DESIGN_SYSTEM.md`.
+This skill does not define colors, typography, spacing, radii, shadows, or component appearance. Those decisions belong exclusively to `docs/ux/design-system.md`.
 
 ## 2. Mandatory Project References
 
 Before designing or changing a workflow, consult:
 
-1. `docs/ux/DESIGN_SYSTEM.md`
-2. `docs/FRONTEND_ARCHITECTURE.md`
+1. `docs/ux/design-system.md`
+2. `docs/frontend-architecture.md`
 
-Use `DESIGN_SYSTEM.md` for all visual decisions and `FRONTEND_ARCHITECTURE.md` for the actual application shell, navigation structure, routing, and frontend conventions.
+Use `design-system.md` for all visual decisions and `frontend-architecture.md` for the actual application shell, navigation structure, routing, and frontend conventions.
 
 Inspect the existing workflow before proposing a new pattern. Prefer consistency with established application behavior unless there is a clear usability reason to change it.
 
@@ -52,7 +52,7 @@ Interactive elements must communicate that they are interactive.
 
 Requirements:
 1. Use established button, menu, link, tab, and control components.
-2. Ensure actions have a recognizable interactive treatment consistent with `DESIGN_SYSTEM.md`.
+2. Ensure actions have a recognizable interactive treatment consistent with `design-system.md`.
 3. Provide hover, focus, pressed, selected, and disabled feedback where applicable.
 4. Do not make plain descriptive text appear actionable.
 5. Do not use a clickable generic container when a semantic button or link is appropriate.
@@ -108,7 +108,7 @@ Requirements:
 - Put the most decision-relevant information before secondary metadata.
 - Avoid decorative content that competes with operational information.
 
-Use established project layout patterns. Do not independently prescribe a three-panel shell or other fixed layout; consult `FRONTEND_ARCHITECTURE.md`.
+Use established project layout patterns. Do not independently prescribe a three-panel shell or other fixed layout; consult `frontend-architecture.md`.
 
 ## 8. Layering, Dialogs, and Overlays
 
@@ -124,7 +124,7 @@ Requirements:
 7. Avoid stacking multiple overlays unless the workflow clearly requires it.
 8. Return focus appropriately when an overlay closes.
 
-The actual surface, backdrop, opacity, blur, border, and elevation values must come from `DESIGN_SYSTEM.md`.
+The actual surface, backdrop, opacity, blur, border, and elevation values must come from `design-system.md`.
 
 ## 9. Feedback and Error Recovery
 
