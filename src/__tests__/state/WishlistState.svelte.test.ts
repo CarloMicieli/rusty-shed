@@ -23,7 +23,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 
 import { invoke } from '@tauri-apps/api/core';
 import { createWishlistState } from '$lib/features/wishlists/WishlistState.svelte';
-import type { WishlistPreview } from '$lib/bindings';
+import type { WishlistItem, WishlistPreview } from '$lib/bindings';
 
 const mockInvoke = vi.mocked(invoke);
 
@@ -41,12 +41,12 @@ function makePreview(id: string, isDefault = false): WishlistPreview {
   };
 }
 
-function makeItem(id: string, railwayModelId = 'model-1') {
+function makeItem(id: string, railwayModelId = 'model-1'): WishlistItem {
   return {
     id,
     railwayModelId,
-    priority: 'NORMAL',
-    status: 'WANTED',
+    priority: 'NORMAL' as WishlistItem['priority'],
+    status: 'WANTED' as WishlistItem['status'],
     addedDate: '2026-01-01',
     removedDate: null,
     notes: null,
@@ -334,6 +334,77 @@ describe('WishlistState', () => {
       expect(state.itemsByWishlist['wl-from']).toBeUndefined();
       expect(state.itemsByWishlist['wl-to']).toBeUndefined();
     });
+
+    it('moves item between lists on success and updates counters', async () => {
+      const state = createWishlistState();
+      state.wishlists.push(makePreview('wl-from'), makePreview('wl-to'));
+      state.wishlists[0].count = 1;
+      state.itemsByWishlist['wl-from'] = [makeItem('i-1')];
+      state.itemsByWishlist['wl-to'] = [];
+      mockInvoke.mockResolvedValueOnce(null);
+
+      await state.moveItemToList('i-1', 'wl-from', 'wl-to');
+
+      expect(state.itemsByWishlist['wl-from']).toHaveLength(0);
+      expect(state.itemsByWishlist['wl-to']).toHaveLength(1);
+      expect(state.wishlists.find((w) => w.id === 'wl-from')?.count).toBe(0);
+      expect(state.wishlists.find((w) => w.id === 'wl-to')?.count).toBe(1);
+    });
+
+    it('reverts move when backend call fails', async () => {
+      const state = createWishlistState();
+      state.wishlists.push(makePreview('wl-from'), makePreview('wl-to'));
+      state.wishlists[0].count = 1;
+      state.itemsByWishlist['wl-from'] = [makeItem('i-1')];
+      state.itemsByWishlist['wl-to'] = [];
+      mockInvoke.mockRejectedValueOnce({ DatabaseError: 'cannot move' });
+
+      await state.moveItemToList('i-1', 'wl-from', 'wl-to');
+
+      expect(state.itemsByWishlist['wl-from']).toHaveLength(1);
+      expect(state.itemsByWishlist['wl-to']).toHaveLength(0);
+    });
+  });
+
+  describe('renameWishlist and setDefaultWishlist', () => {
+    it('renames wishlist optimistically and persists on success', async () => {
+      const state = createWishlistState();
+      state.wishlists.push(makePreview('w1'));
+      mockInvoke.mockResolvedValueOnce(null);
+
+      await state.renameWishlist('w1', 'Renamed');
+
+      expect(state.wishlists[0].name).toBe('Renamed');
+      expect(mockInvoke).toHaveBeenCalledWith('rename_wishlist', {
+        input: { wishlistId: 'w1', name: 'Renamed' }
+      });
+    });
+
+    it('reverts rename when backend returns an error', async () => {
+      const state = createWishlistState();
+      state.wishlists.push(makePreview('w1'));
+      mockInvoke.mockRejectedValueOnce({ Unknown: 'rename failed' });
+
+      await state.renameWishlist('w1', 'Renamed');
+
+      expect(state.wishlists[0].name).toBe('Wishlist w1');
+    });
+
+    it('sets default wishlist and reverts on failure', async () => {
+      const state = createWishlistState();
+      state.wishlists.push(makePreview('w1', true), makePreview('w2'));
+      mockInvoke.mockResolvedValueOnce(null);
+
+      await state.setDefaultWishlist('w2');
+      expect(state.wishlists.find((w) => w.id === 'w2')?.isDefault).toBe(true);
+      expect(state.activeWishlistId).toBe('w2');
+
+      mockInvoke.mockRejectedValueOnce({ DatabaseError: 'denied' });
+      await state.setDefaultWishlist('w1');
+
+      expect(state.wishlists.find((w) => w.id === 'w2')?.isDefault).toBe(true);
+      expect(state.activeWishlistId).toBe('w2');
+    });
   });
 
   describe('addRailwayModelToWishlist', () => {
@@ -399,6 +470,34 @@ describe('WishlistState', () => {
 
       expect(ok).toBe(false);
       expect(mockInvoke).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('onPurchaseSuccess and preview normalization', () => {
+    it('reloads items and confirms purchase success', async () => {
+      mockInvoke.mockResolvedValueOnce({ id: 'w1', name: 'Wishlist w1', items: [makeItem('i-1')] });
+      const state = createWishlistState();
+
+      await state.onPurchaseSuccess('w1');
+
+      expect(state.itemsByWishlist['w1']).toHaveLength(1);
+    });
+
+    it('normalizes preview with snake_case fallback fields', () => {
+      const state = createWishlistState();
+      const normalized = state._normalizePreview({
+        id: 'w1',
+        name: 'Wishlist',
+        notes: null,
+        is_default: true,
+        count: 2,
+        updated_at: '2026-03-01T00:00:00Z',
+        total_value: { EUR: 25 }
+      });
+
+      expect(normalized.isDefault).toBe(true);
+      expect(normalized.updatedAt).toBe('2026-03-01T00:00:00Z');
+      expect(normalized.totalValue).toEqual({ EUR: 25 });
     });
   });
 

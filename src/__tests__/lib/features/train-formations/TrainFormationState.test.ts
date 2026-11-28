@@ -330,4 +330,102 @@ describe('TrainFormationState', () => {
       owned_rolling_stock_id: null
     });
   });
+
+  it('reports failures for detail, update and delete operations', async () => {
+    vi.mocked(svc.getTrainFormation).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'not_found', message: 'Detail missing' }
+    });
+    vi.mocked(svc.updateTrainFormation).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'validation', message: 'Update rejected' }
+    });
+    vi.mocked(svc.deleteTrainFormation).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'unknown', message: 'Delete failed' }
+    });
+    const state = new TrainFormationState();
+
+    await state.loadDetail('missing');
+    await expect(
+      state.update('missing', {
+        name: 'Missing',
+        category_id: 'trn:formation-category:eurocity',
+        epoch: 'IV',
+        start_year: null,
+        end_year: null,
+        notes: null
+      })
+    ).resolves.toBe(false);
+    await expect(state.delete('missing')).resolves.toBe(false);
+
+    expect(mockedToaster.error).toHaveBeenCalledWith('Detail missing');
+    expect(mockedToaster.error).toHaveBeenCalledWith('Update rejected');
+    expect(mockedToaster.error).toHaveBeenCalledWith('Delete failed');
+  });
+
+  it('handles add/remove/assign failures and setTractionOverride errors', async () => {
+    vi.mocked(svc.addFormationElement).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'unknown', message: 'Add failed' }
+    });
+    vi.mocked(svc.removeFormationElement).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'unknown', message: 'Remove failed' }
+    });
+    vi.mocked(svc.assignRollingStockToElement).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'unknown', message: 'Assign failed' }
+    });
+    vi.mocked(svc.setTractionOverride).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'unknown', message: 'Traction failed' }
+    });
+    const state = new TrainFormationState();
+
+    await expect(
+      state.addElement('formation-1', {
+        prototype_id: 'trn:prototype:1',
+        owned_rolling_stock_id: null
+      })
+    ).resolves.toBe(false);
+    await expect(state.removeElement('element-1')).resolves.toBe(false);
+    await expect(
+      state.assignRollingStock('element-1', { owned_rolling_stock_id: 'trn:owned-rolling-stock:1' })
+    ).resolves.toBe(false);
+    await state.setTractionOverride('element-1', 2);
+
+    expect(mockedToaster.error).toHaveBeenCalledWith('Add failed');
+    expect(mockedToaster.error).toHaveBeenCalledWith('Remove failed');
+    expect(mockedToaster.error).toHaveBeenCalledWith('Assign failed');
+    expect(mockedToaster.error).toHaveBeenCalledWith('Traction failed');
+  });
+
+  it('creates custom prototype failures and keeps categories untouched on load failure', async () => {
+    vi.mocked(svc.getFormationCategories).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'unknown', message: 'Categories unavailable' }
+    });
+    vi.mocked(svc.createCustomPrototype).mockResolvedValueOnce({
+      ok: false,
+      error: { kind: 'validation', message: 'Prototype invalid' }
+    });
+    const state = new TrainFormationState();
+
+    await state.loadCategories();
+    await expect(
+      state.createCustomPrototype({
+        railway_company_id: 'trn:railway-company:fs',
+        series_code: 'E.444',
+        friendly_name: null,
+        is_motorized: true,
+        default_is_dummy: false,
+        notes: null,
+        specification_type: 'LOCOMOTIVE'
+      })
+    ).resolves.toBeNull();
+
+    expect(state.categories).toEqual([]);
+    expect(mockedToaster.error).toHaveBeenCalledWith('Prototype invalid');
+  });
 });

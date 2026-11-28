@@ -24,6 +24,7 @@ vi.mock('$lib/components/DatePickerInput.svelte', () => ({
 
 import RenameInventoryDialog from '$lib/features/track-inventory/components/RenameInventoryDialog.svelte';
 import PurchaseFormFields from '$lib/features/track-inventory/components/PurchaseFormFields.svelte';
+import ProductFormFields from '$lib/features/track-inventory/components/ProductFormFields.svelte';
 
 describe('RenameInventoryDialog', () => {
   beforeEach(() => cleanup());
@@ -140,5 +141,73 @@ describe('PurchaseFormFields', () => {
     });
 
     expect(screen.getByText(/Price is required/)).toBeInTheDocument();
+  });
+});
+
+describe('ProductFormFields', () => {
+  beforeEach(() => cleanup());
+
+  it('renders core product fields and manufacturer options', () => {
+    render(ProductFormFields, {
+      props: {
+        manufacturers: [
+          { id: 'm1', name: 'Roco' },
+          { id: 'm2', name: 'Peco' }
+        ],
+        manufacturerId: 'm1',
+        productCode: '6110',
+        description: 'Curved section'
+      }
+    });
+
+    expect(screen.getByLabelText('track_product_field_product_code *')).toHaveValue('6110');
+    expect(screen.getByLabelText('track_product_field_description')).toHaveValue('Curved section');
+    expect(screen.getByText(/track_product_field_track_type/)).toBeInTheDocument();
+    expect(screen.getByText(/track_product_field_track_code/)).toBeInTheDocument();
+  });
+
+  it('updates text, numeric, and checkbox fields through bindings', async () => {
+    const { container } = render(ProductFormFields, {
+      props: {
+        productCode: '',
+        description: '',
+        length: '',
+        radius: '',
+        withRoadbed: false
+      }
+    });
+
+    const productCodeInput = screen.getByLabelText('track_product_field_product_code *');
+    const descriptionInput = screen.getByLabelText('track_product_field_description');
+    const numberInputs = container.querySelectorAll('input[type="number"]');
+    const roadbedCheckbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
+
+    await fireEvent.input(productCodeInput, { target: { value: 'R5-100' } });
+    await fireEvent.input(descriptionInput, { target: { value: 'Straight 100mm' } });
+    await fireEvent.input(numberInputs[0], { target: { value: '100' } });
+    await fireEvent.input(numberInputs[1], { target: { value: '500' } });
+    await fireEvent.click(roadbedCheckbox);
+
+    expect(productCodeInput).toHaveValue('R5-100');
+    expect(descriptionInput).toHaveValue('Straight 100mm');
+    expect(numberInputs[0]).toHaveValue(100);
+    expect(numberInputs[1]).toHaveValue(500);
+    expect(roadbedCheckbox.checked).toBe(true);
+  });
+
+  it('disables form controls while submitting and shows errors', () => {
+    const { container } = render(ProductFormFields, {
+      props: {
+        submitting: true,
+        error: 'Duplicate product code'
+      }
+    });
+
+    expect(screen.getByLabelText('track_product_field_product_code *')).toBeDisabled();
+    expect(screen.getByLabelText('track_product_field_description')).toBeDisabled();
+    expect(container.querySelector('input[type="checkbox"]')).toBeDisabled();
+    expect(
+      screen.getByText(/track_product_error_prefix: Duplicate product code/)
+    ).toBeInTheDocument();
   });
 });
