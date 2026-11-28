@@ -30,14 +30,12 @@ vi.mock('$lib/paraglide/messages', async (importOriginal) => {
 });
 
 vi.mock('$lib/features/track-inventory/components/PurchaseFormFields.svelte', async () => {
-  const mod =
-    await import('/home/carlo/Projects/rusty-shed/src/__tests__/fixtures/PurchaseFormFieldsStub.svelte');
+  const mod = await import('../../../fixtures/PurchaseFormFieldsStub.svelte');
   return { default: mod.default };
 });
 
 vi.mock('$lib/features/track-inventory/components/CreateProductDialog.svelte', async () => {
-  const mod =
-    await import('/home/carlo/Projects/rusty-shed/src/__tests__/fixtures/CreateProductDialogStub.svelte');
+  const mod = await import('../../../fixtures/CreateProductDialogStub.svelte');
   return { default: mod.default };
 });
 
