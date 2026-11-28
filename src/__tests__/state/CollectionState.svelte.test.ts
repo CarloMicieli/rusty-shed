@@ -43,6 +43,8 @@ import { collectionStore } from '$lib/state/collection.svelte';
 const mockInvoke = vi.mocked(invoke);
 const mockToaster = vi.mocked(toaster);
 const mockCollectionStore = vi.mocked(collectionStore);
+type CollectionItem = CollectionView['items'][number];
+type OwnedRollingStock = CollectionItem['rollingStocks'][number];
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -93,6 +95,29 @@ function makeItem(
     notes: null,
     rollingStocks: [],
     purchaseInfo: null
+  };
+}
+
+function makeRollingStock(overrides: Partial<OwnedRollingStock> = {}): OwnedRollingStock {
+  return {
+    id: 'trs:owned-rolling-stock:test:1',
+    rollingStockId: 'trs:rolling-stock:test:1',
+    notes: null,
+    series: null,
+    seriesName: null,
+    roadNumber: null,
+    livery: null,
+    countryCode: null,
+    category: null,
+    subcategory: null,
+    control: null,
+    railwayCompanyName: null,
+    digital: null,
+    depot: null,
+    dccInterface: null,
+    lengthOverBuffers: null,
+    currentCouplerId: null,
+    ...overrides
   };
 }
 
@@ -266,7 +291,7 @@ describe('CollectionState', () => {
           category: 'LOCOMOTIVES' as const,
           epoch: 'VI' as const
         },
-        rollingStocks: [{ railwayCompanyName: 'DB' }]
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'DB' })]
       };
       const withoutCompany = {
         ...makeItem('2', { scale: 'H0' }),
@@ -275,7 +300,7 @@ describe('CollectionState', () => {
           category: 'LOCOMOTIVES' as const,
           epoch: 'VI' as const
         },
-        rollingStocks: [{ railwayCompanyName: 'FS' }]
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'FS' })]
       };
       const wrongCategory = {
         ...makeItem('3', { scale: 'H0' }),
@@ -284,7 +309,7 @@ describe('CollectionState', () => {
           category: 'PASSENGER_CARS' as const,
           epoch: 'VI' as const
         },
-        rollingStocks: [{ railwayCompanyName: 'DB' }]
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'DB' })]
       };
       mockInvoke.mockResolvedValueOnce(
         makeCollection([withCompany, withoutCompany, wrongCategory])
@@ -309,7 +334,7 @@ describe('CollectionState', () => {
           ...makeItem('1').railwayModel,
           manufacturer: { name: 'ACME Rail' }
         }
-      };
+      } as unknown as CollectionItem;
       mockInvoke.mockResolvedValueOnce(makeCollection([item]));
       const state = createCollectionState();
       await state.fetchCollection();
@@ -404,7 +429,10 @@ describe('CollectionState', () => {
           category: 'LOCOMOTIVES' as const,
           epoch: 'IV' as const
         },
-        rollingStocks: [{ railwayCompanyName: 'FS' }, { railwayCompanyName: 'DB' }]
+        rollingStocks: [
+          makeRollingStock({ railwayCompanyName: 'FS' }),
+          makeRollingStock({ railwayCompanyName: 'DB' })
+        ]
       };
       const itemB = {
         ...makeItem('2', { scale: 'H0' }),
@@ -413,7 +441,7 @@ describe('CollectionState', () => {
           category: 'PASSENGER_CARS' as const,
           epoch: 'VI' as const
         },
-        rollingStocks: [{ railwayCompanyName: 'DB' }]
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'DB' })]
       };
       mockInvoke.mockResolvedValueOnce(makeCollection([itemA, itemB]));
       const state = createCollectionState();

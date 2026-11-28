@@ -247,7 +247,10 @@ describe('BudgetState', () => {
     });
 
     it('maps unknown status to projected label fallback', () => {
-      const record = makeRecord({ status: 'UNEXPECTED_STATUS' });
+      const record = {
+        ...makeRecord(),
+        status: 'UNEXPECTED_STATUS'
+      } as unknown as MonthlyBudgetRecordDto;
       const service = makeMockService({ config: makeConfig(), monthlyRecords: [record] });
       const state = new BudgetState(service);
       expect(state.enhancedMonthlyRecords[0].statusLabel).toBe('Projected');
