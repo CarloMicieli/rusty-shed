@@ -6,7 +6,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 // Now import after mocks are set up
-import { safeInvoke, invokeOrThrow } from '$lib/services/tauri';
+import { safeInvoke, invokeOrThrow, normalizeError } from '$lib/services/tauri';
 import { invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
 
 const mockInvoke = vi.mocked(invoke);
@@ -238,6 +238,156 @@ describe('invokeOrThrow', () => {
     await expect(invokeOrThrow('get_missing')).rejects.toMatchObject({
       kind: 'not_found',
       message: 'Resource not found'
+    });
+  });
+
+  describe('normalizeError', () => {
+    it('handles object-style DatabaseError with fallback message and error id', () => {
+      expect(
+        normalizeError({
+          DatabaseError: { message: 'db down', error_id: 'err-1' }
+        })
+      ).toEqual({ kind: 'database', message: 'db down', errorId: 'err-1' });
+
+      expect(
+        normalizeError({
+          DatabaseError: { foo: 'bar' }
+        })
+      ).toEqual({ kind: 'database', message: 'Database error occurred' });
+    });
+
+    it('handles object-style NotFound and PermissionDenied variants', () => {
+      expect(
+        normalizeError({
+          NotFound: { message: 'missing', error_id: 'nf-1' }
+        })
+      ).toEqual({ kind: 'not_found', message: 'missing', errorId: 'nf-1' });
+
+      expect(
+        normalizeError({
+          PermissionDenied: { message: 'denied', error_id: 'pd-1' }
+        })
+      ).toEqual({ kind: 'permission_denied', message: 'denied', errorId: 'pd-1' });
+    });
+
+    it('uses fallback messages for partial NotFound and PermissionDenied objects', () => {
+      expect(normalizeError({ NotFound: {} })).toEqual({
+        kind: 'not_found',
+        message: 'Resource not found'
+      });
+      expect(normalizeError({ PermissionDenied: {} })).toEqual({
+        kind: 'permission_denied',
+        message: 'Permission denied'
+      });
+    });
+
+    it('normalizes ValidationError field arrays/objects/string values', () => {
+      const normalized = normalizeError({
+        ValidationError: {
+          fields: {
+            name: [{ message: 'required' }],
+            code: [{ code: 'invalid_format' }],
+            email: 'invalid',
+            misc: [null]
+          },
+          error_id: 'val-1'
+        }
+      });
+
+      expect(normalized).toEqual({
+        kind: 'validation',
+        message: 'Validation failed',
+        errorId: 'val-1',
+        fields: {
+          name: 'required',
+          code: 'invalid_format',
+          email: 'invalid',
+          misc: 'Invalid value'
+        }
+      });
+    });
+
+    it('handles Unknown, BusinessRule and Conflict object/string forms', () => {
+      expect(normalizeError({ Unknown: { message: 'u', error_id: 'u-1' } })).toEqual({
+        kind: 'unknown',
+        message: 'u',
+        errorId: 'u-1'
+      });
+      expect(normalizeError({ Unknown: 'plain unknown' })).toEqual({
+        kind: 'unknown',
+        message: 'plain unknown'
+      });
+      expect(normalizeError({ BusinessRule: { message: 'rule', error_id: 'b-1' } })).toEqual({
+        kind: 'unknown',
+        message: 'rule',
+        errorId: 'b-1'
+      });
+      expect(normalizeError({ Conflict: 'already exists' })).toEqual({
+        kind: 'unknown',
+        message: 'already exists'
+      });
+      expect(normalizeError({ Conflict: { message: 'clash', error_id: 'c-1' } })).toEqual({
+        kind: 'unknown',
+        message: 'clash',
+        errorId: 'c-1'
+      });
+    });
+
+    it('uses fallback messages for partial Unknown/BusinessRule/Conflict objects', () => {
+      expect(normalizeError({ Unknown: {} })).toEqual({
+        kind: 'unknown',
+        message: 'An unexpected error occurred'
+      });
+      expect(normalizeError({ BusinessRule: {} })).toEqual({
+        kind: 'unknown',
+        message: 'Business rule violation'
+      });
+      expect(normalizeError({ Conflict: {} })).toEqual({
+        kind: 'unknown',
+        message: 'Data conflict'
+      });
+    });
+
+    it('handles validation payload when fields are missing or non-record', () => {
+      expect(normalizeError({ ValidationError: { error_id: 'v-2' } })).toEqual({
+        kind: 'validation',
+        message: 'Validation failed',
+        errorId: 'v-2',
+        fields: { error_id: 'v-2' }
+      });
+      expect(normalizeError({ ValidationError: 'bad-format' as unknown })).toEqual({
+        kind: 'unknown',
+        message: '[object Object]'
+      });
+    });
+
+    it('normalizes direct field object values and non-object values', () => {
+      const normalized = normalizeError({
+        ValidationError: {
+          fields: {
+            a: { message: 'm' },
+            b: { code: 'c' },
+            c: 42
+          }
+        }
+      });
+
+      expect(normalized).toEqual({
+        kind: 'validation',
+        message: 'Validation failed',
+        fields: {
+          a: 'm',
+          b: 'c',
+          c: 'Invalid value'
+        }
+      });
+    });
+
+    it('handles empty javascript Error message with fallback text', () => {
+      expect(normalizeError(new Error(''))).toEqual({
+        kind: 'unknown',
+        message: 'An unexpected error occurred'
+      });
     });
   });
 

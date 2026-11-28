@@ -100,6 +100,7 @@ describe('useRollingStockEditor', () => {
         }
       ]
     });
+
     const onModelUpdated = vi.fn();
     const editor = useRollingStockEditor(makeModel, onModelUpdated);
 
@@ -115,6 +116,43 @@ describe('useRollingStockEditor', () => {
       closeCouplers: true,
       digitalShunting: false,
       isDummy: false
+    });
+  });
+
+  it('maps passenger car specific fields including service level', async () => {
+    commandMocks.getRailwayModelById.mockResolvedValue({
+      rollingStock: [
+        {
+          passengerCar: {
+            id: 'unit-passenger',
+            series_code: 'UIC-X',
+            series: null,
+            road_number: null,
+            friendly_name: null,
+            livery: null,
+            technical_specifications: {
+              coupling: {
+                socket: 'NEM',
+                close_couplers: null,
+                digital_shunting: null
+              }
+            },
+            passenger_car_type: 'COACH',
+            service_level: 'FIRST_CLASS'
+          }
+        }
+      ]
+    });
+
+    const editor = useRollingStockEditor(makeModel, vi.fn());
+    await editor.loadSpec('unit-passenger');
+
+    expect(editor.formState.get('unit-passenger')).toMatchObject({
+      category: 'PASSENGER_CAR',
+      subcategory: 'COACH',
+      serviceLevel: 'FIRST_CLASS',
+      closeCouplers: null,
+      digitalShunting: null
     });
   });
 
@@ -208,6 +246,59 @@ describe('useRollingStockEditor', () => {
       })
     );
     expect(onModelUpdated).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call updateRollingStockSpecifications when saving bool spec without loaded form', async () => {
+    const editor = useRollingStockEditor(makeModel, vi.fn());
+
+    await editor.saveBoolSpec('unknown-unit', 'digitalShunting', true);
+
+    expect(commandMocks.updateRollingStockSpecifications).not.toHaveBeenCalled();
+  });
+
+  it('saves arbitrary specification field and refreshes model', async () => {
+    commandMocks.getRailwayModelById.mockResolvedValueOnce({
+      rollingStock: [
+        {
+          locomotive: {
+            id: 'unit-1',
+            series_code: 'E656',
+            series: 'E656',
+            road_number: '001',
+            friendly_name: null,
+            livery: null,
+            depot: null,
+            is_dummy: false,
+            dcc_interface: null,
+            control: null,
+            locomotive_type: 'ELECTRIC',
+            technical_specifications: null
+          }
+        }
+      ]
+    });
+    commandMocks.updateRollingStockSpecifications.mockResolvedValue(undefined);
+    const onModelUpdated = vi.fn();
+    const editor = useRollingStockEditor(makeModel, onModelUpdated);
+
+    await editor.loadSpec('unit-1');
+    await editor.saveSpec('unit-1', 'bodyShell', 'Plastic');
+
+    expect(commandMocks.updateRollingStockSpecifications).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rollingStockId: 'unit-1',
+        bodyShell: 'Plastic'
+      })
+    );
+    expect(onModelUpdated).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips saveSpec when form is not loaded', async () => {
+    const editor = useRollingStockEditor(makeModel, vi.fn());
+
+    await editor.saveSpec('missing-unit', 'bodyShell', 'Plastic');
+
+    expect(commandMocks.updateRollingStockSpecifications).not.toHaveBeenCalled();
   });
 
   it('resets subcategory and service level when a category changes', async () => {

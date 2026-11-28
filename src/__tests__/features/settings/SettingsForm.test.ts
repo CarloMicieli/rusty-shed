@@ -1,123 +1,187 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, screen, waitFor, cleanup } from '@testing-library/svelte';
-import SettingsForm from '$lib/features/settings/components/SettingsForm.svelte';
-import { settingsState } from '$lib/features/settings/SettingsState.svelte';
-import * as m from '$lib/paraglide/messages';
+import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
+import { get, writable, type Writable } from 'svelte/store';
+import SettingsForm from '$lib/components/SettingsForm.svelte';
+import type { SettingsDto, UpdateSettingsPayload } from '$lib/services';
+import * as m from '$lib/paraglide/messages.js';
 
-// Mock settingsState
-vi.mock('$lib/features/settings/SettingsState.svelte', () => ({
-  settingsState: {
-    settings: {
-      currency: 'EUR',
-      language: 'en',
-      theme: 'steampunk-dark',
-      measureUnit: 'Metric',
-      favouriteScale: 'HO',
-      powerMethod: 'DC'
-    },
-    update: vi.fn().mockResolvedValue(undefined)
-  }
-}));
+type FormShape = UpdateSettingsPayload;
 
-vi.mock('$lib/paraglide/runtime.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('$lib/paraglide/runtime.js')>();
+const mockSuperFormState = vi.hoisted(() => {
+  let latestFormStore: Writable<FormShape> | null = null;
+  let currentValid = true;
+  let currentErrors: Partial<Record<keyof FormShape, string>> = {};
+  let currentTainted: boolean | Record<string, boolean> = false;
+
   return {
-    ...actual,
-    setLocale: vi.fn(),
-    isServer: false,
-    experimentalMiddlewareLocaleSplitting: false
+    setValid(value: boolean) {
+      currentValid = value;
+    },
+    setErrors(value: Partial<Record<keyof FormShape, string>>) {
+      currentErrors = value;
+    },
+    setTainted(value: boolean | Record<string, boolean>) {
+      currentTainted = value;
+    },
+    updateForm(updater: (value: FormShape) => FormShape) {
+      if (!latestFormStore) throw new Error('superForm store not initialized');
+      latestFormStore.update((current) => updater(current));
+    },
+    createStore(initial: FormShape) {
+      latestFormStore = writable({ ...initial });
+      return latestFormStore;
+    },
+    getSnapshot() {
+      if (!latestFormStore) throw new Error('superForm store not initialized');
+      return get(latestFormStore);
+    },
+    getValid() {
+      return currentValid;
+    },
+    getErrors() {
+      return currentErrors;
+    },
+    getTainted() {
+      return currentTainted;
+    },
+    reset() {
+      latestFormStore = null;
+      currentValid = true;
+      currentErrors = {};
+      currentTainted = false;
+    }
   };
 });
 
-// Mock themeState (runes-based singleton)
-vi.mock('$lib/stores/themeStore.svelte', () => ({
-  themeState: {
-    current: 'steampunk-dark',
-    resolved: 'dark',
-    isLoading: false,
-    setTheme: vi.fn().mockResolvedValue(undefined),
-    getState: vi.fn().mockReturnValue({ current: 'steampunk-dark', resolved: 'dark' })
-  }
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([key, value]) => [
+      key,
+      typeof value === 'function' ? () => key : value
+    ])
+  );
+});
+
+vi.mock('sveltekit-superforms/adapters', () => ({
+  zodClient: vi.fn((schema: unknown) => schema)
 }));
 
-// Mock the nested selectors if needed, or simply let them render if they are simple inputs.
-// If they require Tauri invoke, we should mock Tauri. Since they likely just have logic or select tags, let them render.
-// But some might call invoke() on mount? Let's assume they don't, or we mock Tauri if they do.
-vi.mock('@tauri-apps/api/core', () => ({
-  invoke: vi.fn().mockResolvedValue([])
+vi.mock('sveltekit-superforms', () => ({
+  superForm: vi.fn(
+    (
+      initial: FormShape,
+      options: {
+        onUpdate?: (ctx: {
+          form: { valid: boolean; data: FormShape; errors: unknown };
+        }) => Promise<void> | void;
+      }
+    ) => {
+      const form = mockSuperFormState.createStore(initial);
+      const tainted = writable(mockSuperFormState.getTainted());
+      const errors = writable(mockSuperFormState.getErrors());
+
+      const enhance = (node: HTMLFormElement) => {
+        const onSubmit = async (event: Event) => {
+          event.preventDefault();
+          tainted.set(mockSuperFormState.getTainted());
+          errors.set(mockSuperFormState.getErrors());
+          await options.onUpdate?.({
+            form: {
+              valid: mockSuperFormState.getValid(),
+              data: get(form),
+              errors: mockSuperFormState.getErrors()
+            }
+          });
+        };
+
+        node.addEventListener('submit', onSubmit);
+        return {
+          destroy() {
+            node.removeEventListener('submit', onSubmit);
+          }
+        };
+      };
+
+      return { form, tainted, errors, enhance };
+    }
+  )
 }));
+
+vi.mock('$lib/components/ui/select', () => ({
+  Root: function SelectRoot() {},
+  Trigger: function SelectTrigger() {},
+  Content: function SelectContent() {},
+  Item: function SelectItem() {}
+}));
+
+const baseSettings: SettingsDto = {
+  currency: 'EUR',
+  measureUnit: 'Metric',
+  favouriteScale: 'H0',
+  powerMethod: 'DC',
+  language: 'en',
+  theme: 'steampunk-dark',
+  has_completed_onboarding: false
+};
 
 describe('SettingsForm.svelte', () => {
   beforeEach(() => {
-    cleanup();
     vi.clearAllMocks();
+    mockSuperFormState.reset();
   });
 
-  it('renders with initial values from settingsState', () => {
-    render(SettingsForm);
-    expect(screen.getByText(m.settings_heading())).toBeInTheDocument();
-    expect(screen.getByText(m.settings_description())).toBeInTheDocument();
+  it('renders with provided settings and default save state', () => {
+    const onsubmit = vi.fn();
+    render(SettingsForm, { settings: baseSettings, onsubmit });
+
+    expect(screen.getByText(m.settings_title())).toBeInTheDocument();
+    expect(screen.getByText(m.settings_subtitle())).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: m.save_button() })).toBeEnabled();
+    expect(screen.queryByText(m.settings_saving_button())).not.toBeInTheDocument();
   });
 
-  it('submits form with current values', async () => {
-    render(SettingsForm);
+  it('calls onsubmit with latest form data when form update is valid', async () => {
+    const onsubmit = vi.fn();
+    render(SettingsForm, { settings: baseSettings, onsubmit });
 
-    // Wait for potential effects to settle
-    await new Promise((r) => setTimeout(r, 0));
+    mockSuperFormState.setTainted({ currency: true });
+    mockSuperFormState.updateForm((current) => ({ ...current, currency: 'USD' }));
 
-    const submitButton = screen.getByRole('button', { name: new RegExp(m.save_button(), 'i') });
-    expect(submitButton).toBeInTheDocument();
-
-    // Submit form
-    await fireEvent.click(submitButton);
-
-    // Verify update was called
-    expect(settingsState.update).toHaveBeenCalledWith({
-      currency: 'EUR',
-      language: 'en',
-      theme: 'steampunk-dark',
-      measureUnit: 'Metric',
-      favouriteScale: 'HO',
-      powerMethod: 'DC'
-    });
-
-    // Verify success message appears
-    await waitFor(() => {
-      expect(screen.getByText(m.settings_saved_toast())).toBeInTheDocument();
-    });
-  });
-
-  it('displays error if save fails', async () => {
-    const errorMessage = 'Network Error';
-    vi.mocked(settingsState.update).mockRejectedValueOnce(new Error(errorMessage));
-
-    render(SettingsForm);
-
-    const submitButton = screen.getByRole('button', { name: new RegExp(m.save_button(), 'i') });
-    await fireEvent.click(submitButton);
+    await fireEvent.click(screen.getByRole('button', { name: m.save_button() }));
 
     await waitFor(() => {
-      expect(screen.getByText(new RegExp(m.settings_update_failed()))).toBeInTheDocument();
+      expect(onsubmit).toHaveBeenCalledTimes(1);
+      expect(onsubmit).toHaveBeenCalledWith({
+        measureUnit: 'Metric',
+        favouriteScale: 'H0',
+        powerMethod: 'DC',
+        language: 'en',
+        theme: 'steampunk-dark',
+        currency: 'USD'
+      });
     });
   });
 
-  it('displays saving label when submitting', async () => {
-    // Delay the update to check the 'saving' state
-    let resolveUpdate!: (value?: void | PromiseLike<void>) => void;
-    const updatePromise = new Promise<void>((r) => (resolveUpdate = r));
-    vi.mocked(settingsState.update).mockImplementation(() => updatePromise as Promise<void>);
+  it('does not call onsubmit when superform reports invalid update', async () => {
+    const onsubmit = vi.fn();
+    mockSuperFormState.setValid(false);
+    mockSuperFormState.setErrors({ currency: 'errors_currency_required' });
 
-    render(SettingsForm);
+    render(SettingsForm, { settings: baseSettings, onsubmit });
 
-    const submitButton = screen.getByRole('button', { name: new RegExp(m.save_button(), 'i') });
-    await fireEvent.click(submitButton);
+    await fireEvent.click(screen.getByRole('button', { name: m.save_button() }));
 
-    // While saving, the button text changes
     await waitFor(() => {
-      expect(screen.getByText(m.settings_saving_button())).toBeInTheDocument();
+      expect(onsubmit).not.toHaveBeenCalled();
     });
+  });
 
-    // Resolve the promise to finish saving
-    resolveUpdate();
+  it('shows saving state and disables submit button when saving is true', () => {
+    const onsubmit = vi.fn();
+    render(SettingsForm, { settings: baseSettings, onsubmit, saving: true });
+
+    expect(screen.getByRole('button', { name: m.settings_saving_button() })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: m.save_button() })).not.toBeInTheDocument();
   });
 });

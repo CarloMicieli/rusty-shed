@@ -105,4 +105,81 @@ describe('entityLibrary service', () => {
 
     expect(result).toEqual(errorResult);
   });
+
+  it('normalizes thrown javascript errors into Unknown command error shape', async () => {
+    mockCommands.getManufacturers.mockRejectedValueOnce(new Error('network fail'));
+
+    const result = await getManufacturers();
+
+    expect(result).toEqual({
+      status: 'error',
+      error: { Unknown: { message: 'network fail', error_id: 'frontend-unknown' } }
+    });
+  });
+
+  it('handles wrapped ok results with non-array data as empty list', async () => {
+    mockCommands.getSellers.mockResolvedValueOnce({
+      status: 'ok',
+      data: { not: 'an-array' }
+    });
+
+    const result = await getSellers();
+
+    expect(result).toEqual({ status: 'ok', data: [] });
+  });
+
+  it('maps direct-array command results (legacy shape)', async () => {
+    mockCommands.getManufacturers.mockResolvedValueOnce([
+      {
+        id: 'trn:manufacturer:legacy',
+        name: 'Legacy',
+        registeredCompanyName: null,
+        countryCode: null,
+        status: 'ACTIVE',
+        websiteUrl: null,
+        isSystemSeeded: false,
+        usageCount: 0
+      }
+    ]);
+
+    const result = await getManufacturers();
+
+    expect(result).toEqual({
+      status: 'ok',
+      data: [
+        {
+          id: 'trn:manufacturer:legacy',
+          name: 'Legacy',
+          countryCode: null,
+          isSystemSeeded: false,
+          usageCount: 0
+        }
+      ]
+    });
+  });
+
+  it('preserves Unknown command errors with message and error_id', async () => {
+    mockCommands.getSellers.mockResolvedValueOnce({
+      status: 'error',
+      error: { Unknown: { message: 'upstream unknown', error_id: 'u-1' } }
+    });
+
+    const result = await getSellers();
+
+    expect(result).toEqual({
+      status: 'error',
+      error: { Unknown: { message: 'upstream unknown', error_id: 'u-1' } }
+    });
+  });
+
+  it('falls back to frontend unknown for non-Error thrown values', async () => {
+    mockCommands.getSellers.mockRejectedValueOnce('boom');
+
+    const result = await getSellers();
+
+    expect(result).toEqual({
+      status: 'error',
+      error: { Unknown: { message: 'Unknown error', error_id: 'frontend-unknown' } }
+    });
+  });
 });

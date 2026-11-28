@@ -1,147 +1,331 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { get, writable, type Writable } from 'svelte/store';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/components/drawer', async () => {
-  const drawerField = await import('../stubs/DrawerFieldStub.svelte');
-  const epochStub = await import('../stubs/EpochPickerStub.svelte');
+import type { AcquisitionFormState } from '$lib/features/acquisition/types';
+
+const commandMocks = vi.hoisted(() => ({
+  getManufacturers: vi.fn().mockResolvedValue([{ id: 'mfg-1', name: 'Roco' }]),
+  getSellers: vi.fn().mockResolvedValue([{ id: 'seller-1', name: 'Model Shop' }]),
+  recordAcquisition: vi.fn().mockResolvedValue(undefined)
+}));
+
+const toasterMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn(),
+  loading: vi.fn(),
+  promise: vi.fn(),
+  custom: vi.fn(),
+  message: vi.fn(),
+  dismiss: vi.fn()
+}));
+
+const superFormHarness = vi.hoisted(() => {
+  let formStore: Writable<AcquisitionFormState> | null = null;
+  let submitValid = true;
+
   return {
-    DrawerInput: drawerField.default,
-    EpochPicker: epochStub.default
+    reset() {
+      formStore = null;
+      submitValid = true;
+    },
+    setSubmitValid(next: boolean) {
+      submitValid = next;
+    },
+    snapshot(): AcquisitionFormState {
+      if (!formStore) {
+        throw new Error('form store not initialized');
+      }
+      return get(formStore);
+    },
+    createFormStore(initial: AcquisitionFormState) {
+      formStore = writable(structuredClone(initial));
+      return formStore;
+    },
+    resetStore(next: AcquisitionFormState) {
+      if (!formStore) return;
+      formStore.set(structuredClone(next));
+    },
+    isValid() {
+      return submitValid;
+    }
   };
 });
 
-vi.mock('$lib/paraglide/messages.js', () => ({
-  acquisition_item_manufacturer_label: () => 'Manufacturer',
-  acquisition_item_manufacturer_placeholder: () => 'Select manufacturer',
-  acquisition_item_product_code_label: () => 'Product code',
-  acquisition_item_description_label: () => 'Description',
-  acquisition_item_category_label: () => 'Category',
-  acquisition_item_category_placeholder: () => 'Select category',
-  acquisition_item_epoch_label: () => 'Epoch',
-  acquisition_item_price_label: () => 'Price',
-  action_duplicate_item: () => 'Duplicate',
-  action_remove_item: () => 'Remove',
-  acquisition_seller_label: () => 'Seller',
-  acquisition_date_label: () => 'Date',
-  acquisition_batch_scale_label: () => 'Scale',
-  acquisition_batch_power_label: () => 'Power',
-  enum_power_method_ac: () => 'AC',
-  enum_power_method_dc: () => 'DC',
-  enum_power_method_trix_express: () => 'Trix Express',
-  enum_scale_ho: () => 'H0',
-  enum_scale_tt: () => 'TT',
-  enum_scale_n: () => 'N',
-  enum_scale_z: () => 'Z',
-  enum_scale_1: () => '1',
-  enum_scale_0: () => '0',
-  enum_scale_s: () => 'S',
-  enum_scale_hon3: () => 'HOn3',
-  enum_scale_hon30: () => 'HOn30',
-  enum_scale_hon2: () => 'HOn2',
-  enum_scale_hon2_5: () => 'HOn2 1/2',
-  enum_scale_g: () => 'G',
-  enum_scale_oo: () => 'OO',
-  enum_scale_ooo: () => 'OOO',
-  enum_scale_ii: () => 'II',
-  enum_scale_iii: () => 'III',
-  enum_scale_iv: () => 'IV',
-  enum_scale_v: () => 'V',
-  enum_scale_vi: () => 'VI',
-  enum_scale_vii: () => 'VII',
-  quick_add_drawer_title_seller: () => 'Add Seller',
-  quick_add_drawer_title_manufacturer: () => 'Add Manufacturer'
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([key, value]) => [
+      key,
+      typeof value === 'function' ? () => key : value
+    ])
+  );
+});
+
+vi.mock('$lib/bindings', () => ({
+  commands: commandMocks
 }));
 
-import AcquisitionItemCard from '$lib/features/acquisition/components/AcquisitionItemCard.svelte';
-import AcquisitionBatchFields from '$lib/features/acquisition/components/AcquisitionBatchFields.svelte';
+vi.mock('$lib/toaster', () => ({
+  toaster: toasterMocks
+}));
 
-describe('Acquisition quick-add triggers', () => {
-  it('emits manufacturer quick-add trigger with item uid', async () => {
-    const user = userEvent.setup();
-    const onQuickAddManufacturer = vi.fn();
+vi.mock('$lib/features/settings/SettingsState.svelte', () => ({
+  settingsState: {
+    settings: {
+      currency: 'EUR',
+      favouriteScale: 'H0',
+      powerMethod: 'DC'
+    }
+  }
+}));
 
-    render(AcquisitionItemCard, {
-      props: {
-        item: {
-          uid: 'item-1',
-          manufacturerId: null,
-          productCode: '',
-          description: '',
-          category: null,
-          epoch: null,
-          priceAmount: null
-        },
-        index: 0,
-        manufacturers: [],
-        currency: 'EUR',
-        errors: {},
-        canRemove: true,
-        onUpdate: vi.fn(),
-        onDuplicate: vi.fn(),
-        onRemove: vi.fn(),
-        onQuickAddManufacturer
+vi.mock('sveltekit-superforms/adapters', () => ({
+  zod4: vi.fn((schema: unknown) => schema)
+}));
+
+vi.mock('sveltekit-superforms', () => ({
+  superForm: vi.fn(
+    (
+      initial: AcquisitionFormState,
+      options: {
+        onUpdate?: (ctx: {
+          form: { valid: boolean; data: AcquisitionFormState; errors: Record<string, unknown> };
+        }) => Promise<void> | void;
       }
-    });
+    ) => {
+      const form = superFormHarness.createFormStore(initial);
+      const errors = writable<Record<string, unknown>>({});
+      const tainted = writable<Record<string, unknown>>({});
 
-    await user.click(screen.getByRole('button', { name: 'Add Manufacturer' }));
-    expect(onQuickAddManufacturer).toHaveBeenCalledWith('item-1');
-  });
+      const enhance = (node: HTMLFormElement) => {
+        const onSubmit = async (event: Event) => {
+          event.preventDefault();
+          await options.onUpdate?.({
+            form: {
+              valid: superFormHarness.isValid(),
+              data: get(form),
+              errors: {}
+            }
+          });
+        };
 
-  it('keeps existing batch field values when opening quick-add actions (cancel/persistence)', async () => {
-    const user = userEvent.setup();
-    const onSellerChange = vi.fn();
-    const onDateChange = vi.fn();
-
-    render(AcquisitionBatchFields, {
-      props: {
-        sellerId: 'trn:seller:existing-shop',
-        onSellerChange,
-        purchaseDate: '2026-05-17',
-        onDateChange,
-        batchDefaults: { scale: 'H0', powerMethod: 'DC' },
-        onBatchDefaultChange: vi.fn(),
-        sellers: [
-          {
-            id: 'trn:seller:existing-shop',
-            name: 'Existing Shop',
-            sellerType: 'SHOP',
-            email: null,
-            phone: null,
-            websiteUrl: null,
-            address: null,
-            isSystemSeeded: false,
-            usageCount: 0
+        node.addEventListener('submit', onSubmit);
+        return {
+          destroy() {
+            node.removeEventListener('submit', onSubmit);
           }
-        ],
-        onQuickAddSeller: vi.fn()
-      }
-    });
+        };
+      };
 
-    await user.click(screen.getByRole('button', { name: 'Add Seller' }));
+      return {
+        form,
+        errors,
+        tainted,
+        enhance,
+        reset: ({ data }: { data: AcquisitionFormState }) => superFormHarness.resetStore(data),
+        isTainted: () => false
+      };
+    }
+  )
+}));
 
-    expect(onSellerChange).not.toHaveBeenCalled();
-    expect(onDateChange).not.toHaveBeenCalled();
+vi.mock('$lib/components', async () => {
+  const buttonStub = await import('./stubs/ButtonStub.svelte');
+  return {
+    Button: buttonStub.default
+  };
+});
+
+vi.mock('$lib/components/drawer', async () => {
+  const [shellStub, headerStub, footerStub, quickAddShellStub] = await Promise.all([
+    import('./stubs/DrawerShellStub.svelte'),
+    import('./stubs/DrawerHeaderStub.svelte'),
+    import('./stubs/DrawerFooterStub.svelte'),
+    import('./stubs/QuickAddShellStub.svelte')
+  ]);
+
+  return {
+    DrawerShell: shellStub.default,
+    DrawerHeader: headerStub.default,
+    DrawerFooter: footerStub.default,
+    QuickAddShell: quickAddShellStub.default
+  };
+});
+
+vi.mock('$lib/features/acquisition/components/AcquisitionBatchFields.svelte', async () => {
+  const stub = await import('./stubs/AcquisitionBatchFieldsStub.svelte');
+  return { default: stub.default };
+});
+
+vi.mock('$lib/features/acquisition/components/AcquisitionItemCard.svelte', async () => {
+  const stub = await import('./stubs/AcquisitionItemCardStub.svelte');
+  return { default: stub.default };
+});
+
+vi.mock('$lib/features/quick-add/QuickAddEntityForm.svelte', async () => {
+  const stub = await import('../stubs/QuickAddEntityFormStub.svelte');
+  return { default: stub.default };
+});
+
+import AcquisitionDrawer from '$lib/features/acquisition/AcquisitionDrawer.svelte';
+import { commands } from '$lib/bindings';
+
+describe('AcquisitionDrawer', () => {
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    superFormHarness.reset();
   });
 
-  it('emits seller quick-add callback', async () => {
-    const user = userEvent.setup();
-    const onQuickAddSeller = vi.fn();
+  it('loads reference data when opening', async () => {
+    const onClose = vi.fn();
+    const onSuccess = vi.fn();
 
-    render(AcquisitionBatchFields, {
-      props: {
-        sellerId: null,
-        onSellerChange: vi.fn(),
-        purchaseDate: '2026-05-17',
-        onDateChange: vi.fn(),
-        batchDefaults: { scale: null, powerMethod: null },
-        onBatchDefaultChange: vi.fn(),
-        sellers: [],
-        onQuickAddSeller
-      }
+    const { rerender } = render(AcquisitionDrawer, {
+      props: { open: false, onClose, onSuccess }
     });
 
-    await user.click(screen.getByRole('button', { name: 'Add Seller' }));
-    expect(onQuickAddSeller).toHaveBeenCalledOnce();
+    expect(commands.getManufacturers).not.toHaveBeenCalled();
+    expect(commands.getSellers).not.toHaveBeenCalled();
+
+    await rerender({ open: true, onClose, onSuccess });
+
+    await waitFor(() => {
+      expect(commands.getManufacturers).toHaveBeenCalledOnce();
+      expect(commands.getSellers).toHaveBeenCalledOnce();
+    });
+  });
+
+  it('adds, duplicates, and removes items', async () => {
+    const user = userEvent.setup();
+
+    render(AcquisitionDrawer, {
+      props: { open: true, onClose: vi.fn(), onSuccess: vi.fn() }
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('acquisition-item-card')).toHaveLength(1);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'acquisition_add_item_button' }));
+    await waitFor(() => {
+      expect(screen.getAllByTestId('acquisition-item-card')).toHaveLength(2);
+    });
+
+    const duplicateButtons = screen.getAllByRole('button', { name: /duplicate-/ });
+    await user.click(duplicateButtons[0]);
+    await waitFor(() => {
+      expect(screen.getAllByTestId('acquisition-item-card')).toHaveLength(3);
+    });
+
+    const removeButtons = screen.getAllByRole('button', { name: /remove-/ });
+    await user.click(removeButtons[0]);
+    await waitFor(() => {
+      expect(screen.getAllByTestId('acquisition-item-card')).toHaveLength(2);
+    });
+  });
+
+  it('submits successfully and calls recordAcquisition + onSuccess + onClose', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const onSuccess = vi.fn();
+
+    render(AcquisitionDrawer, {
+      props: { open: true, onClose, onSuccess }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'acquisition_finalize_button' }));
+
+    await waitFor(() => {
+      expect(commands.recordAcquisition).toHaveBeenCalledOnce();
+      expect(onSuccess).toHaveBeenCalledOnce();
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(toasterMocks.success).toHaveBeenCalledWith('acquisition_toast_success');
+    });
+  });
+
+  it('shows error toast and does not call success callbacks when submit fails', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const onSuccess = vi.fn();
+    vi.mocked(commands.recordAcquisition).mockRejectedValueOnce(new Error('save failed'));
+
+    render(AcquisitionDrawer, {
+      props: { open: true, onClose, onSuccess }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'acquisition_finalize_button' }));
+
+    await waitFor(() => {
+      expect(commands.recordAcquisition).toHaveBeenCalledOnce();
+      expect(toasterMocks.error).toHaveBeenCalledWith('acquisition_error_finalize');
+    });
+
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('opens manufacturer quick-add and applies created manufacturer to submit payload', async () => {
+    const user = userEvent.setup();
+
+    render(AcquisitionDrawer, {
+      props: { open: true, onClose: vi.fn(), onSuccess: vi.fn() }
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('acquisition-item-card')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText(/^quick-add-/));
+    expect(screen.getByLabelText('quick_add_drawer_title_manufacturer')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'quick-form-success' }));
+    expect(toasterMocks.success).toHaveBeenCalledWith('quick_add_manufacturer_success');
+
+    await user.click(screen.getByRole('button', { name: 'acquisition_finalize_button' }));
+
+    await waitFor(() => {
+      expect(commands.recordAcquisition).toHaveBeenCalledOnce();
+    });
+
+    expect(commands.recordAcquisition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            manufacturerId: 'trn:manufacturer:new-maker'
+          })
+        ])
+      })
+    );
+  });
+
+  it('opens seller quick-add and applies created seller to submit payload', async () => {
+    const user = userEvent.setup();
+
+    render(AcquisitionDrawer, {
+      props: { open: true, onClose: vi.fn(), onSuccess: vi.fn() }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'quick-add-seller' }));
+    expect(screen.getByLabelText('quick_add_drawer_title_seller')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'quick-form-success' }));
+    expect(toasterMocks.success).toHaveBeenCalledWith('quick_add_seller_success');
+
+    await user.click(screen.getByRole('button', { name: 'acquisition_finalize_button' }));
+
+    await waitFor(() => {
+      expect(commands.recordAcquisition).toHaveBeenCalledOnce();
+    });
+
+    expect(commands.recordAcquisition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sellerId: 'trn:seller:new-party'
+      })
+    );
   });
 });

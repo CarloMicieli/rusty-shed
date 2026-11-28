@@ -13,9 +13,18 @@
     onSubmit?: (values: FormValues) => Promise<unknown>;
     onSuccess: (entity: unknown) => void;
     onCancel: () => void;
+    onDirtyChange?: (dirty: boolean) => void;
   }
 
-  let { target, initialValues = {}, submitLabel, onSubmit, onSuccess, onCancel }: Props = $props();
+  let {
+    target,
+    initialValues = {},
+    submitLabel,
+    onSubmit,
+    onSuccess,
+    onCancel,
+    onDirtyChange
+  }: Props = $props();
 
   async function triggerSuccess() {
     if (onSubmit) {
@@ -56,6 +65,7 @@
 </script>
 
 <button type="button" onclick={triggerSuccess}>quick-form-success</button>
+<button type="button" onclick={() => onDirtyChange?.(true)}>quick-form-dirty</button>
 <button type="button" onclick={onCancel}>quick-form-cancel</button>
 {#if submitLabel}
   <span>{submitLabel}</span>
