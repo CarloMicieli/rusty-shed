@@ -377,6 +377,40 @@ describe('WishlistService', () => {
       expect(mockToaster.error).toHaveBeenCalled();
     });
 
+    it('adds retry action for retryable create failures', async () => {
+      mockInvoke.mockRejectedValue({ DatabaseError: 'temporary outage' });
+
+      await service.createWishlist('New List');
+
+      expect(mockToaster.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          action: expect.objectContaining({
+            label: 'Retry',
+            onClick: expect.any(Function)
+          })
+        })
+      );
+    });
+
+    it('retries create action when toast retry action is clicked', async () => {
+      mockInvoke
+        .mockRejectedValueOnce({ DatabaseError: 'temporary outage' })
+        .mockResolvedValueOnce(makeWishlist({ id: 'wl-retry', name: 'Retry List' }));
+
+      await service.createWishlist('Retry List');
+
+      const [, options] = mockToaster.error.mock.calls[0];
+      const action = (options as { action?: { onClick?: () => void } })?.action;
+      expect(action?.onClick).toBeTypeOf('function');
+
+      action?.onClick?.();
+      await Promise.resolve();
+
+      expect(mockInvoke).toHaveBeenCalledTimes(2);
+      expect(service.wishlists).toHaveLength(1);
+    });
+
     it('dismisses loading toast on failure', async () => {
       const toastId = 'toast-456';
       mockToaster.loading.mockReturnValue(toastId);
@@ -507,6 +541,25 @@ describe('WishlistService', () => {
       expect(mockToaster.error).toHaveBeenCalled();
     });
 
+    it('adds retry action for retryable rename failures', async () => {
+      mockInvoke.mockImplementation(async (cmd) => {
+        if (String(cmd) === 'rename_wishlist') throw { DatabaseError: 'temporary outage' };
+        throw new Error(`Unmocked: ${String(cmd)}`);
+      });
+
+      await service.renameWishlist('wl-1', 'New Name');
+
+      expect(mockToaster.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          action: expect.objectContaining({
+            label: 'Retry',
+            onClick: expect.any(Function)
+          })
+        })
+      );
+    });
+
     it('dismisses loading toast on failure', async () => {
       const toastId = 'toast-abc';
       mockToaster.loading.mockReturnValue(toastId);
@@ -629,6 +682,25 @@ describe('WishlistService', () => {
       await service.deleteWishlist('wl-1');
 
       expect(mockToaster.error).toHaveBeenCalled();
+    });
+
+    it('adds retry action for retryable delete failures', async () => {
+      mockInvoke.mockImplementation(async (cmd) => {
+        if (String(cmd) === 'delete_wishlist') throw { DatabaseError: 'temporary outage' };
+        throw new Error(`Unmocked: ${String(cmd)}`);
+      });
+
+      await service.deleteWishlist('wl-1');
+
+      expect(mockToaster.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          action: expect.objectContaining({
+            label: 'Retry',
+            onClick: expect.any(Function)
+          })
+        })
+      );
     });
 
     it('dismisses loading toast on failure', async () => {

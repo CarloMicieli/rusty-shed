@@ -24,15 +24,18 @@ function makeMockService(overrides: Partial<BudgetService> = {}): BudgetService 
   return {
     config: null,
     isLoading: false,
+    isTransitioning: false,
     hasConfig: false,
     dashboardSummary: null,
     extraBudgets: [],
     quarterlySummaries: [],
     monthlyRecords: [],
     loadConfig: vi.fn().mockResolvedValue(undefined),
+    loadBootstrap: vi.fn().mockResolvedValue(undefined),
     loadMonthlyRecords: vi.fn().mockResolvedValue(undefined),
     loadQuarterlySummaries: vi.fn().mockResolvedValue(undefined),
     loadDashboard: vi.fn().mockResolvedValue(undefined),
+    hasWarmFinanceState: vi.fn().mockReturnValue(false),
     addExtraBudget: vi.fn().mockResolvedValue({}),
     setBudgetConfig: vi.fn().mockResolvedValue(undefined),
     reset: vi.fn(),
@@ -243,6 +246,13 @@ describe('BudgetState', () => {
       expect(state.enhancedMonthlyRecords[0].statusLabel).toBe('Projected');
     });
 
+    it('maps unknown status to projected label fallback', () => {
+      const record = makeRecord({ status: 'UNEXPECTED_STATUS' });
+      const service = makeMockService({ config: makeConfig(), monthlyRecords: [record] });
+      const state = new BudgetState(service);
+      expect(state.enhancedMonthlyRecords[0].statusLabel).toBe('Projected');
+    });
+
     it('returns empty array when no records exist', () => {
       const service = makeMockService({ monthlyRecords: [] });
       const state = new BudgetState(service);
@@ -261,6 +271,12 @@ describe('BudgetState', () => {
       const service = makeMockService({ hasConfig: true });
       const state = new BudgetState(service);
       expect(state.hasConfig).toBe(true);
+    });
+
+    it('proxies isTransitioning from service', () => {
+      const service = makeMockService({ isTransitioning: true });
+      const state = new BudgetState(service);
+      expect(state.isTransitioning).toBe(true);
     });
 
     it('proxies dashboardSummary from service', () => {
@@ -292,6 +308,60 @@ describe('BudgetState', () => {
       const state = new BudgetState(service);
       await state.loadMonthlyRecords(2026);
       expect(service.loadMonthlyRecords).toHaveBeenCalledWith(2026);
+    });
+
+    it('loadBootstrap() calls service.loadBootstrap()', async () => {
+      const service = makeMockService();
+      const state = new BudgetState(service);
+      await state.loadBootstrap(2027);
+      expect(service.loadBootstrap).toHaveBeenCalledWith(2027);
+    });
+
+    it('loadQuarterlySummaries() delegates year and currency', async () => {
+      const service = makeMockService();
+      const state = new BudgetState(service);
+      await state.loadQuarterlySummaries(2028, 'USD');
+      expect(service.loadQuarterlySummaries).toHaveBeenCalledWith(2028, 'USD');
+    });
+
+    it('loadDashboard() calls service.loadDashboard()', async () => {
+      const service = makeMockService();
+      const state = new BudgetState(service);
+      await state.loadDashboard();
+      expect(service.loadDashboard).toHaveBeenCalledOnce();
+    });
+
+    it('addExtraBudget() returns service payload', async () => {
+      const payload = { id: 10 };
+      const service = makeMockService({ addExtraBudget: vi.fn().mockResolvedValue(payload) });
+      const state = new BudgetState(service);
+      await expect(
+        state.addExtraBudget({
+          year: 2026,
+          month: 1,
+          amount: 2500,
+          currency: 'EUR',
+          reason: 'Top-up'
+        })
+      ).resolves.toEqual(payload);
+    });
+
+    it('save() delegates to setBudgetConfig', async () => {
+      const service = makeMockService();
+      const state = new BudgetState(service);
+      await state.save('YEARLY', 120000, 'EUR');
+      expect(service.setBudgetConfig).toHaveBeenCalledWith({
+        mode: 'YEARLY',
+        baseAmount: 120000,
+        currency: 'EUR'
+      });
+    });
+
+    it('hasWarmFinanceState() proxies to service', () => {
+      const service = makeMockService({ hasWarmFinanceState: vi.fn().mockReturnValue(true) });
+      const state = new BudgetState(service);
+      expect(state.hasWarmFinanceState(2026)).toBe(true);
+      expect(service.hasWarmFinanceState).toHaveBeenCalledWith(2026);
     });
 
     it('reset() calls service.reset()', () => {
