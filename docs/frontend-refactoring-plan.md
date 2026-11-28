@@ -1,0 +1,750 @@
+# Frontend Technical Debt Implementation Backlog
+
+## A. Executive Summary
+
+This document replaces the earlier speculative audit with an implementation backlog
+verified against the current frontend source. It is documentation-only: none of the
+tasks below require application source changes before the task itself is started.
+
+The codebase has a strong architectural foundation:
+
+- Svelte 5 runes are used consistently in the audited application code.
+- Frontend work is organized by feature, with shared services and UI primitives.
+- `tauri-specta` generated bindings provide the primary typed IPC contract.
+- Existing infrastructure already includes `safeInvoke`, `TauriAdapter`, `DrawerShell`,
+  `FormInput`, `FormSelect`, `VirtualGrid`, and feature-level state classes.
+- Paraglide-JS, Tailwind CSS 4, shadcn-svelte composition, and the steampunk design
+  system should be preserved.
+
+The verified backlog contains **17 independently actionable tasks**. Seven proposed
+abstractions from the first draft are not backlog tasks:
+
+| Proposed abstraction | Decision | Rationale |
+|---|---|---|
+| `StateContainer` | Not justified | No concrete initialization defect was established; feature state classes and Svelte context are already the established patterns. |
+| `TauriCommandService` | Replace with smaller consolidation | `safeInvoke` and `TauriAdapter` already normalize IPC. A class would duplicate these functions unless they are first reconciled. |
+| `FormFieldWrapper` | Not needed | `FormInput`, `FormSelect`, `FormPrice`, and shared `FormField.svelte` already cover field composition; the missing work is consistency and adoption. |
+| `useDrawerForm` | Not needed initially | `DrawerShell` already owns discard confirmation and change detection is local to individual form state. A hook should be added only if repeated lifecycle defects are demonstrated. |
+| `ModelDetailsState` | Not justified | `useRollingStockEditor.svelte.ts` already owns rolling-stock editing behavior and is used by the model-details components. |
+| `TauriBindingValidator` | Not justified | The generated bindings are the source of truth. Validation belongs in response-specific logic or Rust, not in a blanket runtime validator. |
+| Generic `DataTable` | Not justified | Lists use distinct card/table layouts. `Table`, `VirtualGrid`, and feature-specific views already solve the proven use cases; a generic table would add indirection. |
+
+## B. Verification Method
+
+Status definitions:
+
+- **Verified**: the source contains the cited problem and a specific measurable or
+  maintainable improvement can be demonstrated.
+- **Partially verified**: a real problem exists, but only in a subset of affected code
+  or the proposed scope must be narrowed.
+- **Requires further investigation**: evidence is insufficient for a refactor; a
+  benchmark or usage audit must precede implementation.
+- **Not justified**: the current source already solves the problem or an abstraction
+  would add more complexity than it removes.
+
+The audit distinguished line count from actual responsibility. Large line count alone
+is not treated as evidence of a defect. Performance work requires an existing
+bottleneck or a repeatable measurement.
+
+## C. Consolidated Findings
+
+### C1. Collection state has two authoritative caches
+
+`CollectionState.svelte.ts` and `src/lib/state/collection.svelte.ts` maintain separate
+copies of collection data. Layout and route code call `collectionStore`, while feature
+components call `CollectionState`, and mutation methods in `CollectionState` also
+refresh `collectionStore`. This is verified duplication.
+
+Affected call sites include:
+
+- `src/routes/+layout.svelte`
+- `src/routes/collection/[itemId]/+page.svelte`
+- `src/lib/components/SearchBar.svelte`
+- `src/lib/features/collection/CollectionState.svelte.ts`
+
+### C2. Tauri integration has two normalization implementations
+
+`src/lib/services/tauri.ts` and `src/lib/shared/services/TauriAdapter.ts` contain
+overlapping error normalization. They are in separate clean-architecture locations,
+but some application code uses generated `commands`, while one service still calls
+`@tauri-apps/api/core` directly.
+
+### C3. Search requires cancellation and stale-response protection
+
+`src/lib/components/SearchBar.svelte` already debounces input, but its debounce only
+cancels the timer: an already-running search can finish after a newer query and replace
+its results. It also manually inspects generated command result shapes and contains
+hardcoded English “No results found” text.
+
+### C4. Existing UI primitives should be standardized, not replaced
+
+The drawer package already includes field wrappers and `DrawerShell` provides one
+location for close/discard behavior. The actual debt is inconsistent adoption:
+components combine direct markup, bindable fields, callbacks, and custom error markup.
+
+### C5. Responsibility has already been partially extracted
+
+`RollingStockCard.svelte` is 666 lines, but the source also contains specialized
+components such as `RollingStockCardHeader`, `RollingStockIdentificationFields`,
+`RollingStockTechnicalSpecs`, and `useRollingStockEditor.svelte.ts`. `RailwayModelCard`,
+`RailwayModelPreviewCard`, and the model-details tabs already separate several concerns.
+Further splitting should be narrow and driven by defects, not by a generic line target.
+
+### C6. Virtualization is already in the main card grids
+
+`CollectionDashboard.svelte` and `WishlistItems.svelte` use `VirtualGrid`. A second
+generic virtualization abstraction is not currently justified. Remaining work is to
+benchmark whether any additional list is a measured bottleneck.
+
+### C7. Accessibility needs concrete fixes
+
+`DrawerShell.svelte` implements Escape and discard confirmation but has no explicit
+focus trap or focus restoration. Several custom dialogs also use overlay markup rather
+than the existing shadcn dialog primitives. These are verified, but the fix scope
+should start with the shared drawer shell and the highest-impact dialogs.
+
+### C8. Internationalization has residual hardcoded UI text
+
+Search contains hardcoded English text, and model-details option lists contain English
+labels. Before introducing broader i18n automation, the backlog should remove verified
+user-facing literals in audited components.
+
+## D. Refactoring Tasks
+
+### FE-001: Remove the collection store/cache duplicate
+
+- **Priority:** Critical
+- **Verification status:** Verified
+- **Category:** State management
+- **Affected files:** `src/lib/state/collection.svelte.ts`,
+  `src/lib/features/collection/CollectionState.svelte.ts`,
+  `src/routes/+layout.svelte`, `src/routes/collection/[itemId]/+page.svelte`,
+  `src/lib/components/SearchBar.svelte`
+- **Problem description:** Collection data and loading state are stored in both
+  `CollectionState` and the module-level `collectionStore`. Mutations refresh the
+  second store, but layout and route code can read stale or separately cached data.
+- **Reason for change:** A single collection cache reduces synchronization bugs and
+  removes repeated IPC and item lookup logic.
+- **Suggested implementation:** Before choosing an owner, map every consumer,
+  lifecycle trigger, mutation path, cache-hit behavior, route refresh, and remount
+  behavior. Compare the feature `CollectionState` context with the thin module-level
+  `collectionStore`; retain the smallest owner that can serve layout, route, SearchBar,
+  and feature mutations consistently. Do not create a new container. Migrate
+  consumers one call at a time, then remove the duplicate owner and update tests.
+  Preserve route refresh and cache-hit behavior while mapping the risk explicitly.
+- **Expected outcome:** One collection fetch/cache owner, consistent item lookup, and
+  no mutation that silently updates only one copy.
+- **Acceptance criteria:** No production component reads or writes both collection
+  owners; route refresh/re-entry behavior passes existing tests; collection mutations
+  update every view observing the collection; no stale item remains after refresh.
+- **Dependencies:** None.
+- **Estimated effort:** L
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-002: Consolidate duplicate Tauri normalization into the existing adapters
+
+- **Priority:** High
+- **Verification status:** Verified
+- **Category:** Tauri integration
+- **Affected files:** `src/lib/services/tauri.ts`,
+  `src/lib/shared/services/TauriAdapter.ts`, `src/lib/services/index.ts`,
+  `src/lib/shared/services/index.ts`
+- **Problem description:** Two modules implement similar `normalizeError` and
+  `SafeResult` behavior. Application code may receive subtly different normalized
+  fields from different import paths.
+- **Reason for change:** Reconciliation is smaller and safer than introducing a new
+  service or validator. It removes drift in error normalization and gives one
+  documented import path.
+- **Suggested implementation:** Decide one canonical module aligned with the existing
+  Clean Architecture adapter location. Before merging, compare the normalized error
+  contracts, dependencies, and every import of each adapter. Preserve the union
+  member behavior that differs unless tests or source evidence proves it is accidental.
+  Re-export compatibility types/functions only if needed during migration, update
+  imports, and delete duplicate implementation after all call sites move. Keep
+  generated `commands` and tauri-specta types intact.
+- **Expected outcome:** One implementation of normalization and `safeInvoke`;
+  existing tests continue to pass with the same public behavior.
+- **Acceptance criteria:** Only one production implementation contains
+  `normalizeError`; all production call sites use the canonical export; test coverage
+  includes the full `NormalizedError` union; no direct `invoke` use remains outside
+  the canonical adapter and generated bindings.
+- **Dependencies:** None.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-003: Migrate remaining direct Tauri adapter use
+
+- **Priority:** Medium
+- **Verification status:** Verified
+- **Category:** Tauri integration
+- **Affected files:** `src/lib/features/track-inventory/services/TrackInventoryService.svelte.ts`,
+  `src/lib/state/finance.svelte.ts`, any remaining direct-import search results
+- **Problem description:** A few production files import `invoke` directly instead of
+  using the repository's generated bindings or safe IPC adapter.
+- **Reason for change:** Direct calls bypass consistent error normalization and make
+  command contracts harder to discover.
+- **Suggested implementation:** Replace direct calls with existing generated
+  `commands` methods where generated methods exist. Where custom `invoke` behavior
+  is required, route it through the canonical adapter selected in FE-002.
+- **Expected outcome:** IPC calls are typed and normalized consistently.
+- **Acceptance criteria:** Production source outside generated bindings and the
+  canonical adapter has no `@tauri-apps/api/core` `invoke` import; relevant service
+  tests pass.
+- **Dependencies:** FE-002.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-004: Add stale-response protection to SearchBar
+
+- **Priority:** High
+- **Verification status:** Verified
+- **Category:** Performance and correctness
+- **Affected files:** `src/lib/components/SearchBar.svelte`,
+  `src/__tests__/lib/components/SearchBar.test.ts`
+- **Problem description:** The debounce cancels only the pending timer. A slow
+  response for an earlier query can overwrite newer results, and rapid changes can
+  still launch work for stale values.
+- **Reason for change:** Stale results are an observable correctness bug and frequent
+  typing makes it likely.
+- **Suggested implementation:** Add a monotonically increasing request sequence or
+  invalidate a pending request when input changes. Ignore obsolete completions.
+  Clear stale UI state on close/Escape. Keep the 300 ms debounce and 10-result limit.
+  Reuse generated command methods rather than a new service. Cancellation is optional:
+  investigate whether the generated binding or Tauri `InvokeOptions` exposes a real
+  AbortSignal. If cancellation is not supported end to end, use request invalidation
+  and do not introduce a transport abstraction solely for search.
+- **Expected outcome:** The displayed results always correspond to the latest query
+  submitted by the user.
+- **Acceptance criteria:** Tests prove an older promise cannot replace a newer result;
+  a cleared/closed query cannot restore results; debounce behavior and 10-result limit
+  remain unchanged.
+- **Dependencies:** None.
+- **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-005: Replace manual SearchBar result parsing
+
+- **Priority:** Medium
+- **Verification status:** Verified
+- **Category:** Type safety
+- **Affected files:** `src/lib/components/SearchBar.svelte`
+- **Problem description:** SearchBar manually inspects result objects and casts data
+  to `RailwayModelView`, despite generated command return types.
+- **Reason for change:** Manual parsing duplicates the generated contract and can
+  diverge after bindings are regenerated.
+- **Suggested implementation:** Use the actual return shape of `commands.searchRailwayModels`
+  and `commands.getRailwayModelById`; adjust only after generated binding types are
+  inspected. Remove casts and defensive branches that do not correspond to a real
+  generated result variant.
+- **Expected outcome:** Search is compiler-checked against tauri-specta and contains
+  no manual duplicate response validation.
+- **Acceptance criteria:** SearchBar has no `as RailwayModelView` or `unknown` response
+  parsing for these commands; `pnpm svelte-check` passes; search tests cover success,
+  empty, and error states.
+- **Dependencies:** FE-004.
+- **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-006: Localize remaining SearchBar literals
+
+- **Priority:** Medium
+- **Verification status:** Verified
+- **Category:** Internationalization
+- **Affected files:** `src/lib/components/SearchBar.svelte`
+- **Problem description:** “No results found” is hardcoded, while surrounding UI uses
+  Paraglide.
+- **Reason for change:** It is a direct i18n violation visible to every locale.
+- **Suggested implementation:** Add matching English and Italian Paraglide keys and
+  replace both desktop and mobile strings. Reuse an existing key if one already
+  expresses the same message.
+- **Expected outcome:** SearchBar contains no user-facing unlocalized result text.
+- **Acceptance criteria:** Both key files define the key; English and Italian builds
+  contain no missing key; no search UI branch contains the hardcoded English message.
+- **Dependencies:** None.
+- **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-007: Standardize existing drawer field primitives
+
+- **Priority:** High
+- **Verification status:** Verified
+- **Category:** Forms and UI consistency
+- **Affected files:** `src/lib/components/drawer/FormInput.svelte`,
+  `src/lib/components/drawer/FormSelect.svelte`,
+  `src/lib/components/drawer/FormPrice.svelte`,
+  `src/lib/components/drawer/FormFieldsRenderer.svelte`,
+  `src/lib/features/` drawer implementations
+- **Problem description:** Repeated field markup remains even though field primitives
+  exist. Some components expose bindable values, others callbacks or direct state
+  mutation. Some select fields have `span` labels rather than associated `label`
+  elements.
+- **Reason for change:** Consistency can be improved without a new wrapper abstraction.
+- **Suggested implementation:** Define the existing primitives as the canonical
+  choices, add only props needed to correct concrete gaps (such as consistent
+  `id`/`aria-describedby`/`aria-invalid` behavior), and migrate repeated markup in
+  a targeted set of drawers one representative component at a time. Verify tests
+  after each migration rather than changing all drawers in one assignment. Do not
+  add `FormFieldWrapper` or a general form DSL.
+- **Expected outcome:** Drawers compose existing primitives with consistent labels,
+  errors, disabled state, and IDs.
+- **Acceptance criteria:** Migrated drawers have associated labels and error text;
+  no duplicated label/error markup remains in those drawers; component tests cover
+  required and invalid states.
+- **Dependencies:** FE-008 and FE-009 may use the same primitives.
+- **Estimated effort:** L
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-008: Complete shared DrawerShell adoption
+
+- **Priority:** Medium
+- **Verification status:** Verified
+- **Category:** Drawer consistency
+- **Affected files:** `src/lib/components/drawer/DrawerShell.svelte` and the
+  `<DrawerShell>` implementations under `src/lib/features/`
+- **Problem description:** Nine feature drawers use `DrawerShell`, but adoption and
+  close behavior differ. The shell accepts `hasChanges` and owns discard UI, but
+  individual drawers decide when that state is true.
+- **Reason for change:** It is low-risk to improve existing shell usage rather than
+  introduce `useDrawerForm`.
+- **Suggested implementation:** Audit each `DrawerShell` caller for accurate
+  `hasChanges`, close callbacks, submission pending state, and translated discard
+  text. Fix only concrete mismatches. Do not create a drawer form composable.
+- **Expected outcome:** Closing or pressing Escape has consistent dirty-state behavior
+  across existing drawers.
+- **Acceptance criteria:** Each audited drawer passes the correct dirty state and
+  close callback; dirty and clean close behavior is tested in at least representative
+  drawers; no drawer bypasses the shell solely to reproduce discard behavior.
+- **Dependencies:** None.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-009: Add focus management to DrawerShell
+
+- **Priority:** High
+- **Verification status:** Verified
+- **Category:** Accessibility
+- **Affected files:** `src/lib/components/drawer/DrawerShell.svelte`,
+  `src/__tests__/` drawer component tests
+- **Problem description:** The drawer has dialog semantics and Escape handling but
+  does not explicitly trap focus or restore focus to the opening control.
+- **Reason for change:** Focus loss is a concrete accessibility regression for keyboard
+  and assistive-technology users.
+- **Suggested implementation:** Use Svelte DOM lifecycle APIs and existing shadcn
+  dialog primitives if compatible. Prefer the existing `dialog` or `alert-dialog`
+  primitives, which already provide accessible behavior through bits-ui, for the
+  drawer shell and nested discard confirmation. Do not implement a custom focus trap
+  unless the existing primitives cannot preserve the drawer layout or cannot be
+  composed correctly. Save the active element when opened and restore it when closed.
+- **Expected outcome:** Keyboard focus remains within the open drawer and returns to
+  the opener after close.
+- **Acceptance criteria:** Automated tests verify initial focus, Tab cycling, Escape,
+  close, and focus restoration; no scroll-lock leak remains after close/unmount.
+- **Dependencies:** FE-008.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-010: Localize model-details control labels
+
+- **Priority:** Medium
+- **Verification status:** Verified
+- **Category:** Internationalization
+- **Affected files:** `src/lib/components/model-details/RailwayModelTabsContainer.svelte`,
+  `src/lib/components/model-details/RollingStockCard.svelte`
+- **Problem description:** Option lists include English labels such as DCC Ready,
+  Analogue, DCC interface names, and coupler sockets.
+- **Reason for change:** Paraglide is the established localization framework and
+  these values are user-facing.
+- **Suggested implementation:** Distinguish protocol/model identifiers, which should
+  remain technical constants, from translated labels. Add keys for translated labels
+  and pass localized text into existing option structures. Avoid changing persisted
+  enum values.
+- **Expected outcome:** UI labels follow the active locale while data values remain
+  stable.
+- **Acceptance criteria:** No user-facing label in the audited lists is hardcoded;
+  keys exist in English and Italian; saving unchanged technical values produces the
+  same backend payload.
+- **Dependencies:** None.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-011: Narrow the RollingStockCard responsibility split
+
+- **Priority:** Medium
+- **Verification status:** Partially verified
+- **Category:** Component responsibility
+- **Affected files:** `src/lib/components/model-details/RollingStockCard.svelte`,
+  `src/lib/components/model-details/components/`,
+  `src/lib/components/model-details/useRollingStockEditor.svelte.ts`
+- **Problem description:** The card is large and mixes orchestration with some UI,
+  but several concerns have already been extracted. A second large split is not
+  justified without identifying a specific failing test or duplicated state path.
+- **Reason for change:** Targeted extraction can improve maintainability while
+  avoiding component churn.
+- **Suggested implementation:** Identify only the remaining duplicated state or
+  rendering branch in one focused pass. Keep this task conditional on a reproduced
+  defect, a confirmed duplicated state path, or a failing test: do not split the
+  component solely to reduce line count. Prefer moving a complete behavior to an
+  existing child or `useRollingStockEditor` before creating a new component. Do not
+  introduce a generic model-details state class.
+- **Expected outcome:** The card delegates its existing editor behavior cleanly and
+  no unrelated responsibilities remain in its markup.
+- **Acceptance criteria:** At least one measurable responsibility is removed (for
+  example loading/spec state or identification rendering); existing component tests
+  pass; no new abstraction exceeds the complexity it replaces.
+- **Dependencies:** FE-010 only if option labels are touched.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-012: Prevent stale model-details overrides after refresh
+
+- **Priority:** Medium
+- **Verification status:** Requires further investigation
+- **Category:** State synchronization
+- **Affected files:** `src/lib/components/model-details/RailwayModelTabsContainer.svelte`,
+  `src/lib/components/model-details/RollingStockCard.svelte`,
+  `src/lib/components/model-details/useRollingStockEditor.svelte.ts`
+- **Problem description:** Optimistic or local overrides exist for rolling-stock edits
+  and deletions. It is unclear whether refresh, remount, or failed reload consistently
+  clears them.
+- **Reason for change:** If stale overrides survive a refresh, they can display deleted
+  or outdated entities.
+- **Suggested implementation:** Reproduce refresh/remount cases in tests. First fix
+  only the incorrect ownership or reset behavior in `useRollingStockEditor` or the
+  existing tab component. Do not add `ModelDetailsState`.
+- **Expected outcome:** Local overrides are temporary and cannot outlive authoritative
+  model updates.
+- **Acceptance criteria:** Tests cover create/update/delete followed by parent refresh
+  and failure/reload; stale units are not rendered after authoritative data changes.
+- **Dependencies:** None.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-013: Add image upload/crop lifecycle tests before refactoring
+
+- **Priority:** Low
+- **Verification status:** Requires further investigation
+- **Category:** Code quality
+- **Affected files:** `src/lib/components/model-details/ImageUpload.svelte`,
+  `src/lib/components/model-details/ImageCropDialog.svelte`,
+  `src/lib/components/model-details/__tests__/ImageUpload.test.ts`,
+  `src/lib/components/model-details/__tests__/ImageCropDialog.test.ts`,
+  `src/lib/shared/services/ImageService.svelte.ts`
+- **Problem description:** The image components are substantial and existing tests
+  cover parts of upload/crop behavior, but there is no demonstrated duplicate
+  implementation to justify a new `ImageUploadService`.
+- **Reason for change:** A service should follow a concrete repeated behavior or
+  lifecycle defect, not component size alone.
+- **Suggested implementation:** Expand tests around object URL cleanup, crop
+  cancellation, invalid files, Tauri file conversion, and remount. Refactor only if
+  tests or duplicate logic identify a shared responsibility.
+- **Expected outcome:** Image behavior is verified and any later extraction is based
+  on demonstrated reuse.
+- **Acceptance criteria:** Tests cover success, cancel, invalid input, unmount, and
+  repeated crop/upload operations; no URL or file-reader resource leak is observed.
+- **Dependencies:** None.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-014: Document and audit the edit context contract
+
+- **Priority:** Low
+- **Verification status:** Partially verified
+- **Category:** State management
+- **Affected files:** `src/lib/components/model-details/editContext.svelte.ts`,
+  model-details components that call `getEditContext` or `setEditContext`
+- **Problem description:** `editContext.svelte.ts` provides an isolated fallback when
+  no provider exists. This can hide missing provider wiring, and the active-edit
+  invariant is not documented.
+- **Reason for change:** A small documentation and test improvement can prevent
+  inconsistent edit locking without moving state into a larger container.
+- **Suggested implementation:** Document provider ownership and fallback behavior,
+  strengthen tests for nested/provider and fallback cases, and migrate only callers
+  that demonstrably use mismatched context instances.
+- **Expected outcome:** The active-edit context has one clear ownership rule and is
+  easy to debug.
+- **Acceptance criteria:** Tests cover provider, nested provider, and no-provider
+  fallback; documentation identifies exactly which component establishes the context.
+- **Dependencies:** None.
+- **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-015: Add feature-boundary lint rules with baseline
+
+- **Priority:** Medium
+- **Verification status:** Requires further investigation
+- **Category:** Architecture governance
+- **Affected files:** `eslint.config.js`, `src/lib/features/*`,
+  `src/lib/components/*`, `src/lib/shared/*`
+- **Problem description:** Feature imports may cross feature boundaries, but a full
+  dependency map is not yet established. Blanket rules could break legitimate shared
+  imports.
+- **Reason for change:** Enforcing boundaries can protect the existing feature-based
+  architecture once exceptions are understood.
+- **Suggested implementation:** Generate a direct-import report first. Add narrow
+  rules for shared code not importing features and features not importing private
+  paths of other features. Allow explicit public exports through feature indexes.
+  Run in warning mode briefly if the existing tooling supports it, then enforce only
+  the verified violations.
+- **Expected outcome:** New cross-feature private imports are blocked without
+  rewriting intentional shared usage.
+- **Acceptance criteria:** A dependency report is reviewed; lint configuration contains
+  no broad “ban every cross-feature import” rule; intentional public imports pass;
+  private/relative cross-feature violations fail lint.
+- **Dependencies:** None.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-016: Add a repeatable list performance baseline
+
+- **Priority:** Medium
+- **Verification status:** Requires further investigation
+- **Category:** Performance
+- **Affected files:** `src/lib/features/collection/CollectionDashboard.svelte`,
+  `src/lib/features/wishlists/components/WishlistItems.svelte`,
+  `src/lib/components/VirtualGrid.svelte`, relevant Vitest or Playwright harnesses
+- **Problem description:** The virtual grids exist and are likely useful for large
+  lists, but no baseline proves that other lists need virtualization or that changing
+  derived state improves an observed bottleneck.
+- **Reason for change:** Performance optimization should be gated by data and
+  measurement rather than component count.
+- **Suggested implementation:** Add a small synthetic dataset benchmark or Playwright
+  scenario that reports mounted row count and interaction timing for collection and
+  wishlist views. Audit remaining lists only if the baseline identifies high mounted
+  element count or interaction delay.
+- **Expected outcome:** A reproducible measurement identifies the next real list
+  bottleneck.
+- **Acceptance criteria:** Baseline is documented in test output or a test asserts an
+  existing virtual-grid invariant; no speculative virtualizer or generic `DataTable`
+  is added; one measured bottleneck is recorded before optimization.
+- **Dependencies:** None.
+- **Estimated effort:** M
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+### FE-018: Audit bundle icons and table usage with build evidence
+
+- **Priority:** Low
+- **Verification status:** Requires further investigation
+- **Category:** Build and performance
+- **Affected files:** `vite.config.ts` or `vite.config.js`,
+  `package.json`, components importing `@lucide/svelte`
+- **Problem description:** Lucide imports are mostly direct icon imports, and the
+  repository already includes table primitives. The first draft proposed icon barrels
+  and a generic table without build or usage evidence.
+- **Reason for change:** The existing build may already tree-shake direct imports;
+  a barrel or sprite could regress loading and maintainability.
+- **Suggested implementation:** Generate a production bundle report and inspect
+  chunk composition. Audit direct icon imports and table usage, but change code only
+  if a repeatable large icon chunk or unused table implementation is measured.
+- **Expected outcome:** A measured decision on whether icon or table code contributes
+  meaningful bundle weight.
+- **Acceptance criteria:** Bundle report is attached or recorded; no new icon library,
+  sprite, or generic `DataTable` is introduced; a follow-up task exists only for a
+  measured optimization.
+- **Dependencies:** None.
+- **Estimated effort:** S
+- **Status:** Not started
+- **Completion date:** —
+- **Implementation commit:** —
+
+## E. Abstraction Review
+
+The following abstractions are explicitly rejected from the implementation backlog:
+
+- **StateContainer:** no concrete defect and unnecessary centralization over feature
+  state and Svelte context.
+- **TauriCommandService:** the existing adapter pair can be reconciled; a class adds
+  another lifecycle without a demonstrated need.
+- **FormFieldWrapper:** existing `FormInput`, `FormSelect`, `FormPrice`, and shared
+  `FormField` are sufficient; consistency should be fixed by migration and prop
+  normalization.
+- **useDrawerForm:** `DrawerShell` already owns discard confirmation and form state
+  differs substantially enough that a hook would couple submission, validation, and
+  feature-specific data.
+- **ModelDetailsState:** `useRollingStockEditor` already owns behavior; a state wrapper
+  would duplicate existing runes and callbacks.
+- **TauriBindingValidator:** generated bindings are compile-time contracts. Blanket
+  runtime validation adds maintenance and may duplicate Rust validation.
+- **Generic DataTable:** cards, tables, and virtual grids already serve distinct use
+  cases. Shared primitives should remain composable rather than becoming a generic
+  data framework.
+
+## F. Definition of Done
+
+Every task is complete only when all of the following are demonstrated:
+
+- The original problem is demonstrably resolved, with the applicable acceptance
+  criteria passing.
+- Existing functionality is preserved for relevant routes, drawers, forms, state
+  lifecycles, and generated IPC contracts.
+- Targeted tests cover the changed behavior, including success and relevant failure
+  or stale-state cases.
+- No unnecessary architectural abstraction was introduced; existing Svelte 5,
+  tauri-specta, feature, shared, shadcn-svelte, Tailwind, and i18n patterns remain
+  preferred.
+- Documentation is updated when conventions, provider ownership, or public behavior
+  changes.
+- Static checks pass, including `pnpm svelte-check`, relevant lint and format checks,
+  and relevant Vitest suites. Cargo tests are required when backend behavior changes.
+- The final diff contains no unrelated edits, generated noise, secrets, or speculative
+  follow-up work.
+
+## G. Execution Protocol
+
+Assign one task to one coding-agent pass when possible. The agent should:
+
+1. Read the task and verify its affected files and dependencies.
+2. Inspect the implementation and all relevant tests before editing.
+3. Identify the smallest safe change and record migration regressions to avoid.
+4. Implement the task without merging unrelated tasks or adding a new abstraction
+   unless the acceptance criteria require it.
+5. Add or update targeted tests.
+6. Run relevant checks and inspect the complete diff.
+7. Report completed acceptance criteria and remaining concerns.
+
+For each task, maintain this execution metadata:
+
+- **Status:** `Not started`, `In progress`, `Blocked`, or `Completed`.
+- **Completion date:** ISO date in `YYYY-MM-DD` format, or `—` while unfinished.
+- **Implementation commit:** Short commit hash, or `—` while unfinished.
+
+Update the status in the task entry, not only in external issue trackers. A task
+must become `Blocked` only when a concrete dependency or missing evidence prevents
+completion, and the blocker should be added beside the task.
+
+## H. Implementation Roadmap
+
+### Phase 1: Search correctness, typing, and localization
+
+- **Tasks:** FE-004, FE-005, FE-006
+- **Objective:** Prevent stale search results, remove manual response casting, and
+  localize the remaining verified string.
+- **Dependencies:** FE-005 follows FE-004 for sequencing; FE-006 is independent.
+- **Estimated effort:** 3 S
+- **Validation strategy:** Add stale-promise tests and run SearchBar tests; verify
+  English and Italian message generation.
+
+### Phase 2: Tauri integration consolidation
+
+- **Tasks:** FE-002, FE-003
+- **Objective:** Establish one canonical IPC normalization path and migrate direct
+  Tauri calls.
+- **Dependencies:** FE-003 depends on FE-002.
+- **Estimated effort:** 2 M
+- **Validation strategy:** Run adapter, service, and direct-call consumer tests;
+  run svelte-check and verify all production invoke imports.
+
+### Phase 3: Collection state consolidation
+
+- **Tasks:** FE-001
+- **Objective:** Establish one collection owner only after all state lifecycles and
+  consumers have been mapped.
+- **Dependencies:** None.
+- **Estimated effort:** L
+- **Validation strategy:** Run collection, layout, route, SearchBar, and mutation
+  tests; manually verify refresh, re-entry, and stale-item behavior.
+
+### Phase 4: Drawer and form consistency
+
+- **Tasks:** FE-007, FE-008, FE-009
+- **Objective:** Improve existing field primitives and shared drawer behavior before
+  any new form abstraction.
+- **Dependencies:** FE-009 follows FE-008; FE-007 should be migrated incrementally
+  and validated with representative component tests.
+- **Estimated effort:** 1 L + 1 M + 1 M
+- **Validation strategy:** Run drawer/component tests, keyboard focus tests,
+  svelte-check, and an accessibility review of representative desktop/mobile drawers.
+
+### Phase 5: Model-details improvements
+
+- **Tasks:** FE-010, FE-011, FE-012, FE-014
+- **Objective:** Fix verified localization/state context issues and change components only
+  demonstrated responsibility problems.
+- **Dependencies:** FE-011 should follow FE-012 where refresh ownership overlaps.
+- **Estimated effort:** 3 M + 1 S
+- **Validation strategy:** Run model-details tests, edit-context tests, save/delete
+  refresh tests, and locale checks.
+
+### Phase 6: Verification and architectural governance
+
+- **Tasks:** FE-013, FE-015, FE-016, FE-018
+- **Objective:** Establish lifecycle and performance evidence and add narrow architecture
+  governance before image, list,
+  derived-state, or bundle refactors.
+- **Dependencies:** FE-015 can follow once the collection/IPC ownership is stable.
+- **Estimated effort:** 3 M + 1 S
+- **Validation strategy:** Run image tests; produce a list benchmark and production
+  bundle report; generate a feature dependency report and run lint; record any
+  follow-up implementation only from observed bottlenecks.
+
+### Deferred decision: derived-state optimization
+
+- **Task ID:** None (moved out of the active backlog)
+- **Objective:** No implementation until profiling proves reactive recomputation is
+  expensive.
+- **Dependency:** FE-016 list measurement may provide relevant evidence, but it does
+  not justify creating a task automatically.
+- **Effort:** S only if a concrete defect is confirmed and a detailed task is added.
+- **Validation strategy:** Before/after benchmark for the exact derived expression.
+
+## I. Task Count and Consolidation
+
+The previous summary of 56 tasks was not supported by 56 detailed entries. This
+backlog lists 17 tasks, and every entry contains the required implementation fields.
+Overlapping recommendations were consolidated or removed:
+
+- Component-size recommendations were reduced to a conditional responsibility task
+  (FE-011) and a separate stale-state investigation (FE-012), rather than a broad
+  line-count refactor.
+- `TauriCommandService`, `TauriBindingValidator`, and runtime response-validation
+  recommendations became one adapter consolidation and one direct-import migration.
+- Drawer abstractions became existing-primitive and existing-shell improvements.
+- Generic virtualization and `DataTable` work became a measurement task.
+- Derived-state and bundle-size recommendations remain deferred until measured.
+
+## J. Quality Assurance Checklist
+
+For each completed task:
+
+- [ ] Only task-related files changed.
+- [ ] Existing Clean Architecture and feature boundaries remain intact.
+- [ ] Svelte 5 runes and generated tauri-specta bindings remain the source patterns.
+- [ ] English and Italian Paraglide keys are present for every new user-facing string.
+- [ ] The implementation includes or updates targeted tests.
+- [ ] No generic abstraction is introduced without a concrete repeated defect.
+- [ ] Performance claims include before/after or a reproducible baseline.
+- [ ] `pnpm svelte-check` passes.
+- [ ] Relevant Vitest suites pass.
+- [ ] Relevant Cargo tests pass only when backend behavior is part of the task.
+- [ ] Lint and format checks pass.
