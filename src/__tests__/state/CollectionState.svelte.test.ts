@@ -38,9 +38,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { createCollectionState } from '$lib/features/collection/CollectionState.svelte';
 import type { CollectionView, Scale } from '$lib/bindings';
 import { toaster } from '$lib/toaster';
+import { collectionStore } from '$lib/state/collection.svelte';
 
 const mockInvoke = vi.mocked(invoke);
 const mockToaster = vi.mocked(toaster);
+const mockCollectionStore = vi.mocked(collectionStore);
+type CollectionItem = CollectionView['items'][number];
+type OwnedRollingStock = CollectionItem['rollingStocks'][number];
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -94,6 +98,29 @@ function makeItem(
   };
 }
 
+function makeRollingStock(overrides: Partial<OwnedRollingStock> = {}): OwnedRollingStock {
+  return {
+    id: 'trs:owned-rolling-stock:test:1',
+    rollingStockId: 'trs:rolling-stock:test:1',
+    notes: null,
+    series: null,
+    seriesName: null,
+    roadNumber: null,
+    livery: null,
+    countryCode: null,
+    category: null,
+    subcategory: null,
+    control: null,
+    railwayCompanyName: null,
+    digital: null,
+    depot: null,
+    dccInterface: null,
+    lengthOverBuffers: null,
+    currentCouplerId: null,
+    ...overrides
+  };
+}
+
 // ─── tests ─────────────────────────────────────────────────────────────────
 
 describe('CollectionState', () => {
@@ -134,6 +161,16 @@ describe('CollectionState', () => {
 
     expect(state.totalCount).toBe(3);
     expect(state.rawItems).toHaveLength(3);
+  });
+
+  it('fetchCollection skips IPC when collection is already cached', async () => {
+    mockInvoke.mockResolvedValueOnce(makeCollection([makeItem('1')]));
+    const state = createCollectionState();
+
+    await state.fetchCollection();
+    await state.fetchCollection();
+
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
   });
 
   it('handles fetch error gracefully without throwing', async () => {
@@ -245,6 +282,68 @@ describe('CollectionState', () => {
       expect(state.filteredItems).toHaveLength(1);
       expect(state.filteredItems[0].id).toBe('1');
     });
+
+    it('filters by company, category and epoch together', async () => {
+      const withCompany = {
+        ...makeItem('1', { scale: 'H0' }),
+        railwayModel: {
+          ...makeItem('1', { scale: 'H0' }).railwayModel,
+          category: 'LOCOMOTIVES' as const,
+          epoch: 'VI' as const
+        },
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'DB' })]
+      };
+      const withoutCompany = {
+        ...makeItem('2', { scale: 'H0' }),
+        railwayModel: {
+          ...makeItem('2', { scale: 'H0' }).railwayModel,
+          category: 'LOCOMOTIVES' as const,
+          epoch: 'VI' as const
+        },
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'FS' })]
+      };
+      const wrongCategory = {
+        ...makeItem('3', { scale: 'H0' }),
+        railwayModel: {
+          ...makeItem('3', { scale: 'H0' }).railwayModel,
+          category: 'PASSENGER_CARS' as const,
+          epoch: 'VI' as const
+        },
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'DB' })]
+      };
+      mockInvoke.mockResolvedValueOnce(
+        makeCollection([withCompany, withoutCompany, wrongCategory])
+      );
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      flushSync(() => {
+        state.toggleCompany('DB');
+        state.toggleCategory('LOCOMOTIVES');
+        state.toggleEpoch('VI');
+      });
+
+      expect(state.filteredItems).toHaveLength(1);
+      expect(state.filteredItems[0].id).toBe('1');
+    });
+
+    it('uses manufacturer.name when manufacturer is object', async () => {
+      const item = {
+        ...makeItem('1'),
+        railwayModel: {
+          ...makeItem('1').railwayModel,
+          manufacturer: { name: 'ACME Rail' }
+        }
+      } as unknown as CollectionItem;
+      mockInvoke.mockResolvedValueOnce(makeCollection([item]));
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      flushSync(() => state.setQuery('acme'));
+
+      expect(state.filteredItems).toHaveLength(1);
+      expect(state.filteredItems[0].id).toBe('1');
+    });
   });
 
   describe('filter management', () => {
@@ -296,6 +395,63 @@ describe('CollectionState', () => {
       expect(state.filters.query).toBe('');
       expect(state.filters.tags.size).toBe(0);
     });
+
+    it('toggleScale syncs legacy scale field and clears when removed', () => {
+      const state = createCollectionState();
+
+      flushSync(() => state.toggleScale('H0'));
+      expect(state.filters.scales.has('H0')).toBe(true);
+      expect(state.filters.scale).toBe('H0');
+
+      flushSync(() => state.toggleScale('H0'));
+      expect(state.filters.scales.size).toBe(0);
+      expect(state.filters.scale).toBeNull();
+    });
+
+    it('hasActiveFilters toggles true and false as filters change', () => {
+      const state = createCollectionState();
+      expect(state.hasActiveFilters).toBe(false);
+
+      flushSync(() => state.toggleCompany('DB'));
+      expect(state.hasActiveFilters).toBe(true);
+
+      flushSync(() => state.toggleCompany('DB'));
+      expect(state.hasActiveFilters).toBe(false);
+    });
+  });
+
+  describe('derived filter metadata', () => {
+    it('computes sorted unique scales, companies, categories and epochs', async () => {
+      const itemA = {
+        ...makeItem('1', { scale: 'N' }),
+        railwayModel: {
+          ...makeItem('1', { scale: 'N' }).railwayModel,
+          category: 'LOCOMOTIVES' as const,
+          epoch: 'IV' as const
+        },
+        rollingStocks: [
+          makeRollingStock({ railwayCompanyName: 'FS' }),
+          makeRollingStock({ railwayCompanyName: 'DB' })
+        ]
+      };
+      const itemB = {
+        ...makeItem('2', { scale: 'H0' }),
+        railwayModel: {
+          ...makeItem('2', { scale: 'H0' }).railwayModel,
+          category: 'PASSENGER_CARS' as const,
+          epoch: 'VI' as const
+        },
+        rollingStocks: [makeRollingStock({ railwayCompanyName: 'DB' })]
+      };
+      mockInvoke.mockResolvedValueOnce(makeCollection([itemA, itemB]));
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      expect(state.availableScaleIds).toEqual(['H0', 'N']);
+      expect(state.availableCompanies).toEqual(['DB', 'FS']);
+      expect(state.availableCategories).toEqual(['LOCOMOTIVES', 'PASSENGER_CARS']);
+      expect(state.availableEpochs).toEqual(['IV', 'VI']);
+    });
   });
 
   describe('addRailwayModel', () => {
@@ -334,6 +490,8 @@ describe('CollectionState', () => {
       });
 
       expect(result).toBe(true);
+      expect(mockToaster.success).toHaveBeenCalledWith('Model added', { duration: 3000 });
+      expect(mockCollectionStore.refresh).toHaveBeenCalledOnce();
     });
 
     it('returns false when Tauri command fails', async () => {
@@ -492,6 +650,7 @@ describe('CollectionState', () => {
 
       expect(result).toBe(true);
       expect(mockInvoke).toHaveBeenCalledWith('receive_preorder', expect.anything());
+      expect(mockCollectionStore.refresh).toHaveBeenCalledOnce();
     });
 
     it('returns false when Tauri command fails', async () => {
@@ -556,6 +715,25 @@ describe('CollectionState', () => {
         })
       );
       expect(mockToaster.success).toHaveBeenCalledWith('Item removed from collection');
+      expect(mockCollectionStore.refresh).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('placeholder CRUD methods', () => {
+    it('createItem returns null and logs warning', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const state = createCollectionState();
+
+      await expect(state.createItem({ foo: 'bar' })).resolves.toBeNull();
+      expect(warn).toHaveBeenCalled();
+    });
+
+    it('updateItem returns null and logs warning', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const state = createCollectionState();
+
+      await expect(state.updateItem({ foo: 'bar' })).resolves.toBeNull();
+      expect(warn).toHaveBeenCalled();
     });
   });
 });
