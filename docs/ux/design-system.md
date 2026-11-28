@@ -2180,7 +2180,7 @@ When creating a new component, ensure:
 - [ ] Focus management: Visible 3px ring with 2px offset
 - [ ] Respects prefers-reduced-motion
 - [ ] Tested with Vitest (unit) + browser (visual)
-- [ ] Documented in COMPONENTS_TREE.md
+- [ ] Documented in components-tree.md
 - [ ] No legacy store usage or $: reactive declarations
 
 ---

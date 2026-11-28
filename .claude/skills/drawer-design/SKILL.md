@@ -24,12 +24,12 @@ It does not define an independent visual theme or form-validation architecture.
 
 Before implementing or modifying a drawer, consult:
 
-1. `docs/ux/DESIGN_SYSTEM.md`
-2. `docs/FRONTEND_ARCHITECTURE.md`
+1. `docs/ux/design-system.md`
+2. `docs/frontend-architecture.md`
 
 Authority:
-- `DESIGN_SYSTEM.md` defines all drawer surfaces, colors, typography, spacing, borders, radii, shadows, icon treatments, and interaction states.
-- `FRONTEND_ARCHITECTURE.md` defines the project's component organization, routing, and frontend implementation conventions.
+- `design-system.md` defines all drawer surfaces, colors, typography, spacing, borders, radii, shadows, icon treatments, and interaction states.
+- `frontend-architecture.md` defines the project's component organization, routing, and frontend implementation conventions.
 - This skill defines drawer-specific composition and behavior.
 
 Inspect existing drawers and shared components before creating a new pattern. Reuse established project components where possible.
@@ -77,7 +77,7 @@ Requirements:
 - Avoid duplicating information already prominent in the content.
 - Keep header actions limited to actions relevant to the drawer itself.
 
-Icon size, container treatment, colors, typography, spacing, and close-button styling must follow `DESIGN_SYSTEM.md`. Do not hardcode pixel sizes or colors from older drawer examples.
+Icon size, container treatment, colors, typography, spacing, and close-button styling must follow `design-system.md`. Do not hardcode pixel sizes or colors from older drawer examples.
 
 ## 6. Content Organization
 
@@ -107,7 +107,7 @@ Guidance:
 
 A two-column layout can work for short related fields, while long descriptions generally benefit from a full-width layout. These are layout guidelines, not mandatory fixed grids.
 
-Field components, labels, hints, required indicators, and error states must follow the project's form conventions and `DESIGN_SYSTEM.md`. Use `web-form` for validation and submission behavior.
+Field components, labels, hints, required indicators, and error states must follow the project's form conventions and `design-system.md`. Use `web-form` for validation and submission behavior.
 
 ## 8. Selection and Specialized Inputs
 
@@ -121,7 +121,7 @@ Examples:
 - Use appropriate numeric and currency controls for numeric values.
 - Explain domain-specific units or scales where they are not self-evident.
 
-Do not hardcode a particular dropdown style, currency placement, placeholder example, or scale-label format in this skill. Follow domain conventions already established in the application and the visual rules in `DESIGN_SYSTEM.md`.
+Do not hardcode a particular dropdown style, currency placement, placeholder example, or scale-label format in this skill. Follow domain conventions already established in the application and the visual rules in `design-system.md`.
 
 ## 9. Footer and Actions
 
@@ -136,7 +136,7 @@ Requirements:
 6. Confirm or warn before destructive actions when appropriate.
 7. Avoid placing unrelated navigation or low-priority actions in the footer.
 
-Button variants, colors, dimensions, alignment, and spacing must follow `DESIGN_SYSTEM.md`.
+Button variants, colors, dimensions, alignment, and spacing must follow `design-system.md`.
 
 ## 10. Drawer Behavior and Accessibility
 
@@ -195,6 +195,6 @@ When auditing a drawer, verify:
 7. Primary and secondary actions are clear.
 8. Loading, submitting, success, and error states are handled.
 9. Keyboard focus and close behavior are correct.
-10. All visual decisions follow `DESIGN_SYSTEM.md`.
+10. All visual decisions follow `design-system.md`.
 
 For each issue, explain the impact and provide a concrete correction using existing project components and tokens.

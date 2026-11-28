@@ -25,12 +25,12 @@ It does not define an independent visual system or dictate whether every form mu
 
 Before implementing or modifying a form, consult:
 
-1. `docs/ux/DESIGN_SYSTEM.md`
-2. `docs/FRONTEND_ARCHITECTURE.md`
+1. `docs/ux/design-system.md`
+2. `docs/frontend-architecture.md`
 
 Authority:
-- `DESIGN_SYSTEM.md` is the single source of truth for all visual decisions, including field styling, labels, descriptions, required indicators, invalid states, and form layout appearance.
-- `FRONTEND_ARCHITECTURE.md` defines the project's frontend execution model, Svelte conventions, routing, component organization, and Tauri integration patterns.
+- `design-system.md` is the single source of truth for all visual decisions, including field styling, labels, descriptions, required indicators, invalid states, and form layout appearance.
+- `frontend-architecture.md` defines the project's frontend execution model, Svelte conventions, routing, component organization, and Tauri integration patterns.
 - This skill defines form-specific architecture, validation, and data-contract requirements.
 
 Inspect the existing form implementation, Rust command, input types, and package versions before selecting an implementation.
@@ -133,7 +133,7 @@ Do not invent frontend constraints that contradict backend behavior. If a mismat
 
 ## 6. Svelte 5 State Management
 
-Use Svelte 5 runes for component-local state, consistent with `FRONTEND_ARCHITECTURE.md`.
+Use Svelte 5 runes for component-local state, consistent with `frontend-architecture.md`.
 
 Requirements:
 - `$props()` for component properties and defaults.
@@ -198,7 +198,7 @@ Required fields must:
 - Expose required state programmatically when appropriate.
 - Have labels correctly associated with their controls.
 
-The exact indicator and styling must come from `DESIGN_SYSTEM.md`.
+The exact indicator and styling must come from `design-system.md`.
 
 ### Invalid Fields
 
@@ -206,7 +206,7 @@ Invalid fields must:
 - Display descriptive, actionable error messages.
 - Expose invalid state programmatically, such as with `aria-invalid`.
 - Associate the error text with the corresponding control.
-- Follow the invalid-state styling defined by `DESIGN_SYSTEM.md`.
+- Follow the invalid-state styling defined by `design-system.md`.
 
 Do not rely exclusively on a red border or color to communicate an error.
 
@@ -288,8 +288,8 @@ For each finding, include:
 ## 13. Completion Checklist
 
 Before considering form work complete, verify:
-- [ ] `DESIGN_SYSTEM.md` was followed for all visual decisions.
-- [ ] `FRONTEND_ARCHITECTURE.md` was followed.
+- [ ] `design-system.md` was followed for all visual decisions.
+- [ ] `frontend-architecture.md` was followed.
 - [ ] The corresponding Rust command and input types were inspected.
 - [ ] Zod schema matches the intended command contract.
 - [ ] Rust Garde validation remains authoritative.

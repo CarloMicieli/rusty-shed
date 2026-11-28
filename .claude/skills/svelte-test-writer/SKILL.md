@@ -294,7 +294,7 @@ it('shows error on fetch failure', async () => {
 
 ## Documentation & Resources
 
-- **Full Guide:** [docs/testing/SVELTE_5_TESTING.md](SVELTE_5_TESTING.md)
+- **Full Guide:** [docs/testing/svelte-5-testing.md](svelte-5-testing.md)
 - **Test Template:** [docs/testing/test-template.svelte.ts](test-template.svelte.ts)
 - **Memory Note:** [.claude/projects/.../memory/svelte-testing.md](../../.claude/projects/-home-carlo-Projects-rusty-shed/memory/svelte-testing.md)
 - **Project Tests:** [src/__tests__/](../../src/__tests__/)
