@@ -683,6 +683,124 @@ describe('BudgetService', () => {
     });
   });
 
+  // ── loadBootstrap() + warm-state cache ───────────────────────────────────
+
+  describe('loadBootstrap()', () => {
+    it('hydrates config, dashboard and monthly records from bootstrap payload', async () => {
+      const config = makeConfig();
+      const dashboard = makeDashboard();
+      const monthlyRecords = [makeMonthlyRecord({ month: 1 }), makeMonthlyRecord({ month: 2 })];
+
+      setupInvokeMock({
+        get_budget_bootstrap: () => ({
+          config,
+          dashboardSummary: dashboard,
+          monthlyRecords
+        })
+      });
+
+      await service.loadBootstrap(2026);
+
+      expect(service.config).toEqual(config);
+      expect(service.dashboardSummary).toEqual(dashboard);
+      expect(service.monthlyRecords).toEqual(monthlyRecords);
+      expect(service.hasWarmFinanceState(2026)).toBe(true);
+    });
+
+    it('reuses warm state for the same year without refetching bootstrap', async () => {
+      const monthlyRecords = [makeMonthlyRecord({ month: 1 })];
+
+      setupInvokeMock({
+        get_budget_bootstrap: () => ({
+          config: makeConfig(),
+          dashboardSummary: makeDashboard(),
+          monthlyRecords
+        })
+      });
+
+      await service.loadBootstrap(2026);
+      await service.loadBootstrap(2026);
+
+      expect(mockInvoke).toHaveBeenCalledTimes(1);
+      expect(service.monthlyRecords).toEqual(monthlyRecords);
+    });
+
+    it('falls back to partial loading when bootstrap request fails', async () => {
+      const config = makeConfig();
+      const dashboard = makeDashboard();
+      const monthlyRecords = [makeMonthlyRecord({ month: 3 })];
+
+      setupInvokeMock({
+        get_budget_bootstrap: () => {
+          throw new Error('bootstrap failed');
+        },
+        get_budget_config: () => config,
+        get_budget_dashboard: () => dashboard,
+        get_monthly_budget_records: () => monthlyRecords
+      });
+
+      await service.loadBootstrap(2026);
+
+      expect(service.config).toEqual(config);
+      expect(service.dashboardSummary).toEqual(dashboard);
+      expect(service.monthlyRecords).toEqual(monthlyRecords);
+      expect(mockToaster.error).not.toHaveBeenCalled();
+    });
+
+    it('keeps records empty when fallback resolves no config', async () => {
+      setupInvokeMock({
+        get_budget_bootstrap: () => {
+          throw new Error('bootstrap failed');
+        },
+        get_budget_config: () => null,
+        get_budget_dashboard: () => makeDashboard()
+      });
+
+      await service.loadBootstrap(2026);
+
+      expect(service.config).toBeNull();
+      expect(service.monthlyRecords).toEqual([]);
+      expect(mockInvoke).not.toHaveBeenCalledWith('get_monthly_budget_records', expect.anything());
+    });
+
+    it('throws when fallback config and dashboard requests both fail', async () => {
+      setupInvokeMock({
+        get_budget_bootstrap: () => {
+          throw new Error('bootstrap failed');
+        },
+        get_budget_config: () => {
+          throw new Error('config failed');
+        },
+        get_budget_dashboard: () => {
+          throw new Error('dashboard failed');
+        }
+      });
+
+      await expect(service.loadBootstrap(2026)).rejects.toThrow('config failed');
+      expect(mockToaster.error).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('hasWarmFinanceState()', () => {
+    it('is false without dashboard data', () => {
+      expect(service.hasWarmFinanceState(2026)).toBe(false);
+    });
+
+    it('is true when dashboard exists and config is null', async () => {
+      setupInvokeMock({
+        get_budget_bootstrap: () => ({
+          config: null,
+          dashboardSummary: makeDashboard(),
+          monthlyRecords: null
+        })
+      });
+
+      await service.loadBootstrap(2026);
+
+      expect(service.hasWarmFinanceState(2026)).toBe(true);
+    });
+  });
+
   // ── hasConfig derived ─────────────────────────────────────────────────────
 
   describe('hasConfig', () => {
